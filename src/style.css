@@ -12,10 +12,10 @@
   --text-secondary: hsl(218, 12%, 65%);
   --text-muted: hsl(218, 10%, 45%);
 
-  --accent-color: hsl(88, 85%, 53%);
-  --accent-color-rgb: 153, 235, 36;
-  --accent-hover: hsl(88, 90%, 45%);
-  --accent-glow: hsla(88, 85%, 53%, 0.15);
+  --accent-color: hsl(16, 100%, 50%);
+  --accent-color-rgb: 255, 66, 0;
+  --accent-hover: hsl(16, 100%, 45%);
+  --accent-glow: hsla(16, 100%, 50%, 0.15);
   
   --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.2);
   --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.4);
@@ -52,7 +52,7 @@ body {
 .glass-container {
   width: 700px;
   height: 550px;
-  background: radial-gradient(circle at 0% 0%, hsla(222, 18%, 12%, 0.7) 0%, hsla(222, 25%, 8%, 0.85) 100%);
+  background: hsla(222, 18%, 12%, 0.85);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-lg);
@@ -427,7 +427,7 @@ body {
 
 .progress-bar-fill {
   height: 100%;
-  background: linear-gradient(90deg, var(--accent-color), hsl(110, 85%, 55%));
+  background: var(--accent-color);
   border-radius: var(--radius-full);
   width: 0%;
   transition: width 0.1s linear;

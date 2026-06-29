@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "glaido-app",
+  "productName": "Aura",
   "version": "0.1.0",
-  "identifier": "com.glaido.app",
+  "identifier": "com.aura.app",
   "build": {
     "frontendDist": "../src"
   },
@@ -11,7 +11,7 @@
     "windows": [
       {
         "label": "main",
-        "title": "Glaido Settings",
+        "title": "Настройки Aura",
         "url": "index.html",
         "width": 700,
         "height": 550,
@@ -21,8 +21,8 @@
       {
         "label": "overlay",
         "url": "overlay.html",
-        "width": 110,
-        "height": 35,
+        "width": 280,
+        "height": 100,
         "decorations": false,
         "alwaysOnTop": true,
         "transparent": true,
