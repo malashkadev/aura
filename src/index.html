@@ -1,39 +1,175 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="stylesheet" href="styles.css" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Tauri App</title>
-    <script type="module" src="/main.js" defer></script>
-  </head>
-
-  <body>
-    <main class="container">
-      <h1>Welcome to Tauri</h1>
-
-      <div class="row">
-        <a href="https://tauri.app" target="_blank">
-          <img src="/assets/tauri.svg" class="logo tauri" alt="Tauri logo" />
-        </a>
-        <a
-          href="https://developer.mozilla.org/en-US/docs/Web/JavaScript"
-          target="_blank"
-        >
-          <img
-            src="/assets/javascript.svg"
-            class="logo vanilla"
-            alt="JavaScript logo"
-          />
-        </a>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Configure settings for Glaido dictation assistant" />
+  <title>Glaido Settings</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <script type="module" src="main.js" defer></script>
+</head>
+<body>
+  <div class="glass-container">
+    <header class="app-header">
+      <div class="logo-container">
+        <div class="logo-glow"></div>
+        <svg class="app-logo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path>
+          <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+          <line x1="12" x2="12" y1="19" y2="22"></line>
+        </svg>
+        <span class="logo-text">GLAIDO</span>
       </div>
-      <p>Click on the Tauri logo to learn more about the framework</p>
+      <h1 class="header-title">Settings</h1>
+    </header>
 
-      <form class="row" id="greet-form">
-        <input id="greet-input" placeholder="Enter a name..." />
-        <button type="submit">Greet</button>
-      </form>
-      <p id="greet-msg"></p>
-    </main>
-  </body>
+    <div class="main-layout">
+      <!-- Sidebar Navigation -->
+      <nav class="settings-nav" aria-label="Settings Categories">
+        <button type="button" class="nav-tab active" id="tab-btn-general" data-tab="general">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="nav-icon"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+          General
+        </button>
+        <button type="button" class="nav-tab" id="tab-btn-cloud" data-tab="cloud">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="nav-icon"><path d="M17.5 19A3.5 3.5 0 0 0 21 15.5c0-2.79-2.54-4.5-5-4.5-.42-1.04-1.21-1.88-2.21-2.42a6 6 0 0 0-10.74 3.92A5 5 0 0 0 3 22h12.5a4.5 4.5 0 0 0 2-3z"></path></svg>
+          Cloud API
+        </button>
+        <button type="button" class="nav-tab" id="tab-btn-about" data-tab="about">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="nav-icon"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+          About
+        </button>
+      </nav>
+
+      <!-- Content Area -->
+      <main class="settings-content" id="settings-main-content">
+        <!-- Tab: General -->
+        <section class="tab-panel active" id="panel-general" aria-labelledby="tab-btn-general">
+          <div class="card">
+            <h2 class="card-title">Transcription Engine</h2>
+            <p class="card-desc">Choose between online high-accuracy processing or completely offline local speech-to-text.</p>
+            
+            <div class="engine-toggle-group">
+              <label class="engine-option" id="label-cloud">
+                <input type="radio" name="transcription_mode" value="cloud" checked id="radio-cloud" />
+                <span class="engine-card">
+                  <span class="engine-name">Cloud AI</span>
+                  <span class="engine-meta">Gemini / OpenAI (Requires API Key)</span>
+                </span>
+              </label>
+              <label class="engine-option" id="label-local">
+                <input type="radio" name="transcription_mode" value="local" id="radio-local" />
+                <span class="engine-card">
+                  <span class="engine-name">Local AI</span>
+                  <span class="engine-meta">Whisper.cpp (100% Offline & Private)</span>
+                </span>
+              </label>
+            </div>
+          </div>
+
+          <div class="card" id="card-local-model" style="display: none;">
+            <h2 class="card-title">Offline Whisper Model</h2>
+            <p class="card-desc">Select and download a model size. Larger models are more accurate but consume more CPU/RAM.</p>
+            
+            <div class="form-group">
+              <label for="select-model" class="field-label">Model Size</label>
+              <select id="select-model" class="custom-select">
+                <option value="tiny">Tiny (~75 MB - Ultra Fast)</option>
+                <option value="base" selected>Base (~145 MB - Recommended)</option>
+                <option value="small">Small (~465 MB - Accurate)</option>
+                <option value="medium">Medium (~1.5 GB - Advanced)</option>
+              </select>
+            </div>
+
+            <div class="download-section">
+              <button type="button" class="btn-primary" id="btn-download-model">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="btn-icon"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                Download Model
+              </button>
+              
+              <div class="download-progress-container" id="progress-container" style="display: none;">
+                <div class="progress-info">
+                  <span class="progress-status" id="progress-status">Downloading...</span>
+                  <span class="progress-percent" id="progress-percent">0%</span>
+                </div>
+                <div class="progress-bar-bg">
+                  <div class="progress-bar-fill" id="progress-bar-fill" style="width: 0%;"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <h2 class="card-title">Global Hotkey</h2>
+            <p class="card-desc">Hold this shortcut to start recording, release to transcribe and paste.</p>
+            <div class="hotkey-display">
+              <span class="hotkey-label">Alt</span>
+              <span class="hotkey-plus">+</span>
+              <span class="hotkey-label">N</span>
+              <span class="hotkey-badge">Global Hook Active</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- Tab: Cloud API -->
+        <section class="tab-panel" id="panel-cloud" aria-labelledby="tab-btn-cloud" style="display: none;">
+          <div class="card">
+            <h2 class="card-title">API Configuration</h2>
+            <p class="card-desc">Provide your API keys to authenticate with Gemini or OpenAI cloud services.</p>
+
+            <div class="form-group">
+              <label for="select-provider" class="field-label">API Provider</label>
+              <select id="select-provider" class="custom-select">
+                <option value="gemini" selected>Google Gemini AI</option>
+                <option value="openai">OpenAI (Whisper + GPT)</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="input-api-key" class="field-label">API Key</label>
+              <div class="api-key-input-wrapper">
+                <input type="password" id="input-api-key" class="custom-input" placeholder="Enter your API key here..." autocomplete="off" />
+                <button type="button" class="btn-toggle-visibility" id="btn-toggle-key" aria-label="Toggle API Key Visibility">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="eye-icon"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Tab: About -->
+        <section class="tab-panel" id="panel-about" aria-labelledby="tab-btn-about" style="display: none;">
+          <div class="card about-card">
+            <div class="about-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" x2="12" y1="19" y2="22"></line></svg>
+            </div>
+            <h2 class="about-app-title">Glaido Dictation Layer</h2>
+            <p class="about-version">v0.1.0 (Beta)</p>
+            <p class="about-description">
+              A premium, high-speed hold-to-talk dictation client. Tap and hold Alt+N, speak in Russian or English, and release to instantly transcribe and edit the context under your cursor.
+            </p>
+            <hr class="divider" />
+            <div class="status-list">
+              <div class="status-item">
+                <span class="status-name">Keyboard Hook</span>
+                <span class="status-indicator online">Connected</span>
+              </div>
+              <div class="status-item">
+                <span class="status-name">Tray Daemon</span>
+                <span class="status-indicator online">Active</span>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <footer class="app-footer">
+      <div class="footer-status" id="footer-status-text">Ready</div>
+      <button type="button" class="btn-save" id="btn-save-settings">Save Settings</button>
+    </footer>
+  </div>
+</body>
 </html>

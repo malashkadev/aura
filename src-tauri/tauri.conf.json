@@ -10,9 +10,23 @@
     "withGlobalTauri": true,
     "windows": [
       {
-        "title": "Glaido Core",
-        "width": 800,
-        "height": 600
+        "label": "main",
+        "title": "Glaido Settings",
+        "url": "index.html",
+        "width": 700,
+        "height": 550,
+        "resizable": false,
+        "visible": true
+      },
+      {
+        "label": "overlay",
+        "url": "overlay.html",
+        "width": 280,
+        "height": 100,
+        "decorations": false,
+        "alwaysOnTop": true,
+        "transparent": true,
+        "visible": false
       }
     ],
     "security": {
