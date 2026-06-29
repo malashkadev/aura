@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="Configure settings for Glaido dictation assistant" />
-  <title>Glaido Settings</title>
+  <meta name="description" content="Настройка параметров голосового ввода Glaido" />
+  <title>Настройки Glaido</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -23,75 +23,75 @@
         </svg>
         <span class="logo-text">GLAIDO</span>
       </div>
-      <h1 class="header-title">Settings</h1>
+      <h1 class="header-title">Настройки</h1>
     </header>
 
     <div class="main-layout">
-      <!-- Sidebar Navigation -->
-      <nav class="settings-nav" aria-label="Settings Categories">
+      <!-- Навигационная панель -->
+      <nav class="settings-nav" aria-label="Категории настроек">
         <button type="button" class="nav-tab active" id="tab-btn-general" data-tab="general">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="nav-icon"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
-          General
+          Основные
         </button>
         <button type="button" class="nav-tab" id="tab-btn-cloud" data-tab="cloud">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="nav-icon"><path d="M17.5 19A3.5 3.5 0 0 0 21 15.5c0-2.79-2.54-4.5-5-4.5-.42-1.04-1.21-1.88-2.21-2.42a6 6 0 0 0-10.74 3.92A5 5 0 0 0 3 22h12.5a4.5 4.5 0 0 0 2-3z"></path></svg>
-          Cloud API
+          Облачный ИИ
         </button>
         <button type="button" class="nav-tab" id="tab-btn-about" data-tab="about">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="nav-icon"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
-          About
+          О программе
         </button>
       </nav>
 
-      <!-- Content Area -->
+      <!-- Основная область содержимого -->
       <main class="settings-content" id="settings-main-content">
-        <!-- Tab: General -->
+        <!-- Вкладка: Основные -->
         <section class="tab-panel active" id="panel-general" aria-labelledby="tab-btn-general">
           <div class="card">
-            <h2 class="card-title">Transcription Engine</h2>
-            <p class="card-desc">Choose between online high-accuracy processing or completely offline local speech-to-text.</p>
+            <h2 class="card-title">Движок распознавания</h2>
+            <p class="card-desc">Выберите между облачной обработкой высокого качества или полностью автономным локальным распознаванием речи.</p>
             
             <div class="engine-toggle-group">
               <label class="engine-option" id="label-cloud">
                 <input type="radio" name="transcription_mode" value="cloud" checked id="radio-cloud" />
                 <span class="engine-card">
-                  <span class="engine-name">Cloud AI</span>
-                  <span class="engine-meta">Gemini / OpenAI (Requires API Key)</span>
+                  <span class="engine-name">Облачный ИИ</span>
+                  <span class="engine-meta">Gemini / OpenAI / Groq (требуется API-ключ)</span>
                 </span>
               </label>
               <label class="engine-option" id="label-local">
                 <input type="radio" name="transcription_mode" value="local" id="radio-local" />
                 <span class="engine-card">
-                  <span class="engine-name">Local AI</span>
-                  <span class="engine-meta">Whisper.cpp (100% Offline & Private)</span>
+                  <span class="engine-name">Локальный ИИ</span>
+                  <span class="engine-meta">Whisper.cpp (100% оффлайн и приватно)</span>
                 </span>
               </label>
             </div>
           </div>
 
           <div class="card" id="card-local-model" style="display: none;">
-            <h2 class="card-title">Offline Whisper Model</h2>
-            <p class="card-desc">Select and download a model size. Larger models are more accurate but consume more CPU/RAM.</p>
+            <h2 class="card-title">Локальная модель Whisper</h2>
+            <p class="card-desc">Выберите и скачайте подходящую модель. Более крупные модели точнее, но требуют больше ресурсов CPU и памяти.</p>
             
             <div class="form-group">
-              <label for="select-model" class="field-label">Model Size</label>
+              <label for="select-model" class="field-label">Размер модели</label>
               <select id="select-model" class="custom-select">
-                <option value="tiny">Tiny (~75 MB - Ultra Fast)</option>
-                <option value="base" selected>Base (~145 MB - Recommended)</option>
-                <option value="small">Small (~465 MB - Accurate)</option>
-                <option value="medium">Medium (~1.5 GB - Advanced)</option>
+                <option value="tiny">Tiny (~75 МБ - сверхбыстрая)</option>
+                <option value="base" selected>Base (~145 МБ - рекомендуемая)</option>
+                <option value="small">Small (~465 МБ - точная для русского)</option>
+                <option value="medium">Medium (~1.5 ГБ - продвинутая)</option>
               </select>
             </div>
 
             <div class="download-section">
               <button type="button" class="btn-primary" id="btn-download-model">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="btn-icon"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-                Download Model
+                Скачать модель
               </button>
               
               <div class="download-progress-container" id="progress-container" style="display: none;">
                 <div class="progress-info">
-                  <span class="progress-status" id="progress-status">Downloading...</span>
+                  <span class="progress-status" id="progress-status">Скачивание...</span>
                   <span class="progress-percent" id="progress-percent">0%</span>
                 </div>
                 <div class="progress-bar-bg">
@@ -102,30 +102,30 @@
           </div>
 
           <div class="card">
-            <h2 class="card-title">Global Hotkey</h2>
-            <p class="card-desc">Hold this shortcut to start recording, release to transcribe and paste.</p>
+            <h2 class="card-title">Глобальная горячая клавиша</h2>
+            <p class="card-desc">Зажмите выбранную комбинацию для начала записи, отпустите для распознавания и вставки текста.</p>
             <div class="form-group">
-              <label for="select-hotkey" class="field-label">Choose Combination</label>
+              <label for="select-hotkey" class="field-label">Выберите комбинацию</label>
               <select id="select-hotkey" class="custom-select">
-                <option value="Alt+N" selected>Alt + N (Default)</option>
-                <option value="Alt+Space">Alt + Space</option>
+                <option value="Alt+N" selected>Alt + N (По умолчанию)</option>
+                <option value="Alt+Space">Alt + Пробел</option>
                 <option value="Alt+K">Alt + K</option>
-                <option value="Ctrl+Space">Ctrl + Space</option>
-                <option value="F8">F8 (Single Key)</option>
-                <option value="Caps Lock">Caps Lock (Single Key)</option>
+                <option value="Ctrl+Space">Ctrl + Пробел</option>
+                <option value="F8">F8 (Одиночная клавиша)</option>
+                <option value="Caps Lock">Caps Lock (Одиночная клавиша)</option>
               </select>
             </div>
           </div>
         </section>
 
-        <!-- Tab: Cloud API -->
+        <!-- Вкладка: Настройка API -->
         <section class="tab-panel" id="panel-cloud" aria-labelledby="tab-btn-cloud" style="display: none;">
           <div class="card">
-            <h2 class="card-title">API Configuration</h2>
-            <p class="card-desc">Provide your API keys to authenticate with Gemini or OpenAI cloud services.</p>
+            <h2 class="card-title">Настройка облачного API</h2>
+            <p class="card-desc">Укажите ваши API-ключи для авторизации в облачных сервисах Gemini, OpenAI или Groq.</p>
 
             <div class="form-group">
-              <label for="select-provider" class="field-label">API Provider</label>
+              <label for="select-provider" class="field-label">Провайдер API</label>
               <select id="select-provider" class="custom-select">
                 <option value="gemini" selected>Google Gemini AI</option>
                 <option value="openai">OpenAI (Whisper + GPT)</option>
@@ -134,10 +134,10 @@
             </div>
 
             <div class="form-group">
-              <label for="input-api-key" class="field-label">API Key</label>
+              <label for="input-api-key" class="field-label">API-ключ</label>
               <div class="api-key-input-wrapper">
-                <input type="password" id="input-api-key" class="custom-input" placeholder="Enter your API key here..." autocomplete="off" />
-                <button type="button" class="btn-toggle-visibility" id="btn-toggle-key" aria-label="Toggle API Key Visibility">
+                <input type="password" id="input-api-key" class="custom-input" placeholder="Введите ваш API-ключ здесь..." autocomplete="off" />
+                <button type="button" class="btn-toggle-visibility" id="btn-toggle-key" aria-label="Показать/скрыть ключ">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="eye-icon"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
                 </button>
               </div>
@@ -145,26 +145,26 @@
           </div>
         </section>
 
-        <!-- Tab: About -->
+        <!-- Вкладка: О программе -->
         <section class="tab-panel" id="panel-about" aria-labelledby="tab-btn-about" style="display: none;">
           <div class="card about-card">
             <div class="about-icon">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" x2="12" y1="19" y2="22"></line></svg>
             </div>
-            <h2 class="about-app-title">Glaido Dictation Layer</h2>
-            <p class="about-version">v0.1.0 (Beta)</p>
+            <h2 class="about-app-title">Голосовой ввод Glaido</h2>
+            <p class="about-version">v0.1.0 (Бета)</p>
             <p class="about-description">
-              A premium, high-speed hold-to-talk dictation client. Tap and hold Alt+N, speak in Russian or English, and release to instantly transcribe and edit the context under your cursor.
+              Премиальный высокоскоростной клиент голосового ввода. Зажмите выбранную горячую клавишу, продиктуйте мысль на русском или английском языке, и отпустите клавишу для мгновенной транскрипции и вставки текста под курсор.
             </p>
             <hr class="divider" />
             <div class="status-list">
               <div class="status-item">
-                <span class="status-name">Keyboard Hook</span>
-                <span class="status-indicator online">Connected</span>
+                <span class="status-name">Хук клавиатуры</span>
+                <span class="status-indicator online">Подключен</span>
               </div>
               <div class="status-item">
-                <span class="status-name">Tray Daemon</span>
-                <span class="status-indicator online">Active</span>
+                <span class="status-name">Агент системного трея</span>
+                <span class="status-indicator online">Активен</span>
               </div>
             </div>
           </div>
@@ -173,8 +173,8 @@
     </div>
 
     <footer class="app-footer">
-      <div class="footer-status" id="footer-status-text">Ready</div>
-      <button type="button" class="btn-save" id="btn-save-settings">Save Settings</button>
+      <div class="footer-status" id="footer-status-text">Готово</div>
+      <button type="button" class="btn-save" id="btn-save-settings">Сохранить настройки</button>
     </footer>
   </div>
 </body>
