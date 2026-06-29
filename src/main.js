@@ -1,18 +1,175 @@
+// Retrieve Tauri APIs from window.__TAURI__
 const { invoke } = window.__TAURI__.core;
+const { listen } = window.__TAURI__.event;
 
-let greetInputEl;
-let greetMsgEl;
-
-async function greet() {
-  // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-  greetMsgEl.textContent = await invoke("greet", { name: greetInputEl.value });
-}
-
-window.addEventListener("DOMContentLoaded", () => {
-  greetInputEl = document.querySelector("#greet-input");
-  greetMsgEl = document.querySelector("#greet-msg");
-  document.querySelector("#greet-form").addEventListener("submit", (e) => {
-    e.preventDefault();
-    greet();
+document.addEventListener("DOMContentLoaded", () => {
+  // Navigation Tabs
+  const tabs = document.querySelectorAll(".nav-tab");
+  const panels = document.querySelectorAll(".tab-panel");
+  
+  tabs.forEach(tab => {
+    tab.addEventListener("click", () => {
+      tabs.forEach(t => t.classList.remove("active"));
+      panels.forEach(p => p.style.display = "none");
+      
+      tab.classList.add("active");
+      const targetPanel = document.getElementById(`panel-${tab.dataset.tab}`);
+      if (targetPanel) {
+        targetPanel.style.display = "flex";
+      }
+    });
   });
+
+  // Toggle API Key visibility
+  const apiKeyInput = document.getElementById("input-api-key");
+  const toggleKeyBtn = document.getElementById("btn-toggle-key");
+  toggleKeyBtn.addEventListener("click", () => {
+    if (apiKeyInput.type === "password") {
+      apiKeyInput.type = "text";
+      toggleKeyBtn.classList.add("visible");
+    } else {
+      apiKeyInput.type = "password";
+      toggleKeyBtn.classList.remove("visible");
+    }
+  });
+
+  // Engine change (Cloud vs Local) toggling Whisper card visibility
+  const radioCloud = document.getElementById("radio-cloud");
+  const radioLocal = document.getElementById("radio-local");
+  const localModelCard = document.getElementById("card-local-model");
+
+  function updateEngineUI() {
+    if (radioLocal.checked) {
+      localModelCard.style.display = "flex";
+    } else {
+      localModelCard.style.display = "none";
+    }
+  }
+
+  radioCloud.addEventListener("change", updateEngineUI);
+  radioLocal.addEventListener("change", updateEngineUI);
+
+  // Settings elements
+  const selectModel = document.getElementById("select-model");
+  const selectProvider = document.getElementById("select-provider");
+  const btnDownloadModel = document.getElementById("btn-download-model");
+  const btnSaveSettings = document.getElementById("btn-save-settings");
+  
+  const progressContainer = document.getElementById("progress-container");
+  const progressStatus = document.getElementById("progress-status");
+  const progressPercent = document.getElementById("progress-percent");
+  const progressBarFill = document.getElementById("progress-bar-fill");
+  const footerStatusText = document.getElementById("footer-status-text");
+
+  // Load Settings from Backend
+  async function loadSettings() {
+    try {
+      showStatus("Loading settings...");
+      const settings = await invoke("get_settings");
+      
+      if (settings) {
+        if (settings.transcription_mode === "local") {
+          radioLocal.checked = true;
+        } else {
+          radioCloud.checked = true;
+        }
+        
+        selectModel.value = settings.model_name || "base";
+        selectProvider.value = settings.api_provider || "gemini";
+        apiKeyInput.value = settings.api_key || "";
+        
+        updateEngineUI();
+        showStatus("Settings loaded");
+      }
+    } catch (err) {
+      console.error(err);
+      showStatus(`Error loading settings: ${err}`, true);
+    }
+  }
+
+  // Save Settings to Backend
+  async function saveSettings() {
+    try {
+      showStatus("Saving settings...");
+      
+      const settings = {
+        transcription_mode: radioLocal.checked ? "local" : "cloud",
+        api_provider: selectProvider.value,
+        api_key: apiKeyInput.value,
+        model_name: selectModel.value,
+        hotkey: "Alt+N"
+      };
+
+      await invoke("set_settings", { settings });
+      showStatus("Settings saved successfully!");
+      
+      // Temporary success animation in footer status
+      setTimeout(() => {
+        showStatus("Ready");
+      }, 3000);
+    } catch (err) {
+      console.error(err);
+      showStatus(`Error saving settings: ${err}`, true);
+    }
+  }
+
+  // Download Whisper Model
+  async function downloadModel() {
+    const modelName = selectModel.value;
+    try {
+      showStatus(`Starting download for '${modelName}' model...`);
+      btnDownloadModel.disabled = true;
+      progressContainer.style.display = "flex";
+      progressBarFill.style.width = "0%";
+      progressPercent.textContent = "0%";
+      progressStatus.textContent = "Connecting to Hugging Face...";
+      
+      await invoke("download_model_command", { modelName });
+    } catch (err) {
+      console.error(err);
+      showStatus(`Download failed: ${err}`, true);
+      btnDownloadModel.disabled = false;
+      progressStatus.textContent = "Error occurred";
+    }
+  }
+
+  // Listen to model-download-progress events from Rust
+  listen("model-download-progress", (event) => {
+    const payload = event.payload;
+    if (!payload) return;
+
+    const percent = Math.round(payload.percentage);
+    progressBarFill.style.width = `${percent}%`;
+    progressPercent.textContent = `${percent}%`;
+    
+    if (payload.done) {
+      progressStatus.textContent = `Model '${payload.model}' ready`;
+      showStatus(`Model '${payload.model}' downloaded!`);
+      btnDownloadModel.disabled = false;
+      setTimeout(() => {
+        progressContainer.style.display = "none";
+      }, 4000);
+    } else {
+      const mbDownloaded = (payload.downloaded / 1024 / 1024).toFixed(1);
+      const totalMb = payload.total ? (payload.total / 1024 / 1024).toFixed(1) : "?";
+      progressStatus.textContent = `Downloading: ${mbDownloaded} / ${totalMb} MB`;
+    }
+  });
+
+  // Helpers
+  function showStatus(msg, isError = false) {
+    footerStatusText.textContent = msg;
+    if (isError) {
+      footerStatusText.style.color = "hsl(0, 85%, 65%)";
+    } else {
+      footerStatusText.style.color = "";
+    }
+  }
+
+  // Bind Events
+  btnSaveSettings.addEventListener("click", saveSettings);
+  btnDownloadModel.addEventListener("click", downloadModel);
+
+  // Initialize
+  loadSettings();
 });

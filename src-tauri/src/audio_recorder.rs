@@ -14,6 +14,9 @@ struct ActiveRecording {
     output_path: String,
 }
 
+unsafe impl Send for ActiveRecording {}
+unsafe impl Sync for ActiveRecording {}
+
 impl AudioRecorder {
     /// Creates a new `AudioRecorder` instance.
     pub fn new() -> Self {

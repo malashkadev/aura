@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Glaido Voice Recording Overlay" />
+  <title>Recording Overlay</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg-glass: rgba(10, 12, 16, 0.76);
+      --border-glass: rgba(255, 255, 255, 0.08);
+      --accent-color: hsl(88, 85%, 53%);
+      --accent-glow: rgba(153, 235, 36, 0.3);
+      --text-color: #ffffff;
+      --text-secondary: rgba(255, 255, 255, 0.7);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: transparent;
+      color: var(--text-color);
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+      user-select: none;
+    }
+
+    .overlay-card {
+      width: calc(100vw - 8px);
+      height: calc(100vh - 8px);
+      background: var(--bg-glass);
+      border: 1.5px solid var(--border-glass);
+      border-radius: 16px;
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+      display: flex;
+      align-items: center;
+      padding: 0 20px;
+      gap: 16px;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* Icon Area */
+    .icon-wrapper {
+      position: relative;
+      width: 44px;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      flex-shrink: 0;
+      transition: all 0.3s ease;
+    }
+
+    .icon-svg {
+      width: 22px;
+      height: 22px;
+      color: var(--text-color);
+      transition: all 0.3s ease;
+      z-index: 2;
+    }
+
+    /* Pulsing mic wave ring */
+    .pulse-ring {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      background: var(--accent-color);
+      opacity: 0;
+      z-index: 1;
+    }
+
+    /* Text details */
+    .status-info {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .status-text {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.05rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+
+    .status-desc {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+
+    /* Recording State Styling */
+    .state-recording .icon-wrapper {
+      background: hsla(88, 85%, 53%, 0.12);
+      border-color: var(--accent-color);
+      box-shadow: 0 0 15px var(--accent-glow);
+    }
+
+    .state-recording .icon-svg {
+      color: var(--accent-color);
+    }
+
+    .state-recording .pulse-ring {
+      animation: pulse-ring-animation 1.6s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+    }
+
+    @keyframes pulse-ring-animation {
+      0% {
+        transform: scale(0.95);
+        opacity: 0.6;
+      }
+      80%, 100% {
+        transform: scale(1.4);
+        opacity: 0;
+      }
+    }
+
+    /* Processing State Styling */
+    .state-processing .icon-wrapper {
+      background: rgba(255, 255, 255, 0.05);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .state-processing .icon-svg {
+      animation: rotate-spinner 1.2s linear infinite;
+    }
+
+    @keyframes rotate-spinner {
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="overlay-card state-recording" id="overlay-container">
+    <div class="icon-wrapper">
+      <div class="pulse-ring"></div>
+      
+      <!-- Mic Icon (Default for recording) -->
+      <svg id="icon-mic" class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path>
+        <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+        <line x1="12" x2="12" y1="19" y2="22"></line>
+      </svg>
+
+      <!-- Spinner Icon (Hidden by default, shown during processing) -->
+      <svg id="icon-spinner" class="icon-svg" style="display: none;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+        <circle cx="12" cy="12" r="10" stroke-dasharray="42" stroke-dashoffset="14" opacity="0.3"></circle>
+        <path d="M12 2a10 10 0 0 1 10 10" stroke-linecap="round"></path>
+      </svg>
+    </div>
+    
+    <div class="status-info">
+      <span class="status-text" id="label-status">Listening...</span>
+      <span class="status-desc" id="label-desc">Alt+N is held down</span>
+    </div>
+  </div>
+
+  <script>
+    const { listen } = window.__TAURI__.event;
+    
+    const container = document.getElementById("overlay-container");
+    const iconMic = document.getElementById("icon-mic");
+    const iconSpinner = document.getElementById("icon-spinner");
+    const labelStatus = document.getElementById("label-status");
+    const labelDesc = document.getElementById("label-desc");
+
+    // Listen to recording-state updates from Tauri Rust backend
+    listen("recording-state", (event) => {
+      const state = event.payload; // "recording" or "processing"
+      
+      if (state === "processing") {
+        container.className = "overlay-card state-processing";
+        iconMic.style.display = "none";
+        iconSpinner.style.display = "block";
+        labelStatus.textContent = "Processing...";
+        labelDesc.textContent = "Transcribing voice context";
+      } else {
+        container.className = "overlay-card state-recording";
+        iconMic.style.display = "block";
+        iconSpinner.style.display = "none";
+        labelStatus.textContent = "Listening...";
+        labelDesc.textContent = "Alt+N is held down";
+      }
+    });
+  </script>
+</body>
+</html>
