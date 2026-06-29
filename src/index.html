@@ -104,11 +104,16 @@
           <div class="card">
             <h2 class="card-title">Global Hotkey</h2>
             <p class="card-desc">Hold this shortcut to start recording, release to transcribe and paste.</p>
-            <div class="hotkey-display">
-              <span class="hotkey-label">Alt</span>
-              <span class="hotkey-plus">+</span>
-              <span class="hotkey-label">N</span>
-              <span class="hotkey-badge">Global Hook Active</span>
+            <div class="form-group">
+              <label for="select-hotkey" class="field-label">Choose Combination</label>
+              <select id="select-hotkey" class="custom-select">
+                <option value="Alt+N" selected>Alt + N (Default)</option>
+                <option value="Alt+Space">Alt + Space</option>
+                <option value="Alt+K">Alt + K</option>
+                <option value="Ctrl+Space">Ctrl + Space</option>
+                <option value="F8">F8 (Single Key)</option>
+                <option value="Caps Lock">Caps Lock (Single Key)</option>
+              </select>
             </div>
           </div>
         </section>
