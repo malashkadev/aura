@@ -65,7 +65,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // Load Settings from Backend
   async function loadSettings() {
     try {
-      showStatus("Loading settings...");
+      showStatus("Загрузка настроек...");
       const settings = await invoke("get_settings");
       
       if (settings) {
@@ -83,18 +83,18 @@ document.addEventListener("DOMContentLoaded", () => {
         }
         
         updateEngineUI();
-        showStatus("Settings loaded");
+        showStatus("Настройки загружены");
       }
     } catch (err) {
       console.error(err);
-      showStatus(`Error loading settings: ${err}`, true);
+      showStatus(`Ошибка загрузки настроек: ${err}`, true);
     }
   }
 
   // Save Settings to Backend
   async function saveSettings() {
     try {
-      showStatus("Saving settings...");
+      showStatus("Сохранение настроек...");
       
       const settings = {
         transcription_mode: radioLocal.checked ? "local" : "cloud",
@@ -105,15 +105,15 @@ document.addEventListener("DOMContentLoaded", () => {
       };
 
       await invoke("set_settings", { settings });
-      showStatus("Settings saved successfully!");
+      showStatus("Настройки успешно сохранены!");
       
       // Temporary success animation in footer status
       setTimeout(() => {
-        showStatus("Ready");
+        showStatus("Готово");
       }, 3000);
     } catch (err) {
       console.error(err);
-      showStatus(`Error saving settings: ${err}`, true);
+      showStatus(`Ошибка сохранения настроек: ${err}`, true);
     }
   }
 
@@ -121,19 +121,19 @@ document.addEventListener("DOMContentLoaded", () => {
   async function downloadModel() {
     const modelName = selectModel.value;
     try {
-      showStatus(`Starting download for '${modelName}' model...`);
+      showStatus(`Запуск скачивания для модели '${modelName}'...`);
       btnDownloadModel.disabled = true;
       progressContainer.style.display = "flex";
       progressBarFill.style.width = "0%";
       progressPercent.textContent = "0%";
-      progressStatus.textContent = "Connecting to Hugging Face...";
+      progressStatus.textContent = "Подключение к Hugging Face...";
       
       await invoke("download_model_command", { modelName });
     } catch (err) {
       console.error(err);
-      showStatus(`Download failed: ${err}`, true);
+      showStatus(`Ошибка скачивания: ${err}`, true);
       btnDownloadModel.disabled = false;
-      progressStatus.textContent = "Error occurred";
+      progressStatus.textContent = "Произошла ошибка";
     }
   }
 
@@ -147,8 +147,8 @@ document.addEventListener("DOMContentLoaded", () => {
     progressPercent.textContent = `${percent}%`;
     
     if (payload.done) {
-      progressStatus.textContent = `Model '${payload.model}' ready`;
-      showStatus(`Model '${payload.model}' downloaded!`);
+      progressStatus.textContent = `Модель '${payload.model}' готова`;
+      showStatus(`Модель '${payload.model}' скачана!`);
       btnDownloadModel.disabled = false;
       setTimeout(() => {
         progressContainer.style.display = "none";
@@ -156,7 +156,7 @@ document.addEventListener("DOMContentLoaded", () => {
     } else {
       const mbDownloaded = (payload.downloaded / 1024 / 1024).toFixed(1);
       const totalMb = payload.total ? (payload.total / 1024 / 1024).toFixed(1) : "?";
-      progressStatus.textContent = `Downloading: ${mbDownloaded} / ${totalMb} MB`;
+      progressStatus.textContent = `Скачивание: ${mbDownloaded} / ${totalMb} МБ`;
     }
   });
 
