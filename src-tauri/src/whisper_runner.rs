@@ -214,7 +214,6 @@ pub fn run_local_whisper<R: Runtime>(
     app_handle: &tauri::AppHandle<R>,
     model_name: &str,
     wav_path: &str,
-    lang: &str,
 ) -> Result<String, String> {
     // 1. Locate sidecar binary
     let sidecar_path = find_sidecar(app_handle)?;
@@ -247,7 +246,7 @@ pub fn run_local_whisper<R: Runtime>(
             "-f",
             wav_path,
             "-l",
-            lang,
+            "auto",
             "-nt",
             "-np",
         ])

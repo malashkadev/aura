@@ -102,18 +102,12 @@ pub async fn transcribe_and_clean(
     api_key: &str,
     wav_path: &str,
     selected_text: &str,
-    target_lang: &str,
 ) -> Result<String, String> {
     let client = reqwest::Client::new();
 
     // Read the WAV file bytes
     let wav_bytes = fs::read(wav_path)
         .map_err(|e| format!("Failed to read WAV file at {wav_path}: {e}"))?;
-
-    let lang_instruction = match target_lang {
-        "en" => "IMPORTANT: The speaker is dictating in English. You must transcribe and output the speech in English. Do NOT translate it to Russian.",
-        _ => "IMPORTANT: The speaker is dictating in Russian. You must transcribe and output the speech in Russian. Do NOT translate it to English.",
-    };
 
     match provider {
         ApiProvider::Gemini => {
@@ -122,8 +116,8 @@ pub async fn transcribe_and_clean(
 
             // Construct Gemini request JSON body
             let prompt = format!(
-                "You are an elite dictation and editing assistant. Task: Transcribe and clean up the speech from the audio. Selected Text Context: The user has selected the following text: [SELECTED_TEXT]\n\nLanguage Instruction: [LANG_INSTRUCTION]\n\nInstructions:\n1. Return ONLY the transcribed text. Do NOT add any explanations, introductory text, greetings, or conversational remarks.\n2. Clean up speech by removing filler words and adding proper punctuation and grammar. Keep the language natural and matching the speaker's language.\n3. CRITICAL: If the dictation is simply a statement, question, commentary, or general speech, you must transcribe it word-for-word (with punctuation). Do NOT answer questions, do NOT write explanations, and do NOT discuss the topic.\n4. If and ONLY if the dictation contains a clear, direct, and explicit command to edit, rewrite, or format the selected text context (e.g., 'make this formal', 'translate this to English', 'wrap in a function'), then perform that edit on the selected text and return the final edited result. If no such editing command is present, ignore the selected text context and simply output the transcribed dictation."
-            ).replace("[SELECTED_TEXT]", selected_text).replace("[LANG_INSTRUCTION]", lang_instruction);
+                "You are an elite dictation and editing assistant. Task: Transcribe and clean up the speech from the audio. Selected Text Context: The user has selected the following text: [SELECTED_TEXT]\n\nInstructions:\n1. Return ONLY the transcribed text. Do NOT add any explanations, introductory text, greetings, or conversational remarks.\n2. Clean up speech by removing filler words and adding proper punctuation and grammar. Keep the language natural and matching the speaker's language.\n3. CRITICAL language rule: The output text must be in the EXACT SAME LANGUAGE as the transcribed audio. Do NOT translate the text. If the speaker speaks in Russian, output Russian. If the speaker speaks in English, output English.\n4. CRITICAL: If the dictation is simply a statement, question, commentary, or general speech, you must transcribe it word-for-word (with punctuation). Do NOT answer questions, do NOT write explanations, and do NOT discuss the topic.\n5. If and ONLY if the dictation contains a clear, direct, and explicit command to edit, rewrite, or format the selected text context (e.g., 'make this formal', 'translate this to English', 'wrap in a function'), then perform that edit on the selected text and return the final edited result. If no such editing command is present, ignore the selected text context and simply output the transcribed dictation."
+            ).replace("[SELECTED_TEXT]", selected_text);
 
             let request_body = GeminiRequest {
                 contents: vec![GeminiContent {
@@ -228,8 +222,8 @@ pub async fn transcribe_and_clean(
             let chat_endpoint = "https://api.openai.com/v1/chat/completions";
 
             let system_prompt = format!(
-                "You are an elite dictation and editing assistant. Task: Transcribe and clean up the speech from the audio. Selected Text Context: The user has selected the following text: [SELECTED_TEXT]\n\nLanguage Instruction: [LANG_INSTRUCTION]\n\nInstructions:\n1. Return ONLY the transcribed text. Do NOT add any explanations, introductory text, greetings, or conversational remarks.\n2. Clean up speech by removing filler words and adding proper punctuation and grammar. Keep the language natural and matching the speaker's language.\n3. CRITICAL: If the dictation is simply a statement, question, commentary, or general speech, you must transcribe it word-for-word (with punctuation). Do NOT answer questions, do NOT write explanations, and do NOT discuss the topic.\n4. If and ONLY if the dictation contains a clear, direct, and explicit command to edit, rewrite, or format the selected text context (e.g., 'make this formal', 'translate this to English', 'wrap in a function'), then perform that edit on the selected text and return the final edited result. If no such editing command is present, ignore the selected text context and simply output the transcribed dictation."
-            ).replace("[SELECTED_TEXT]", selected_text).replace("[LANG_INSTRUCTION]", lang_instruction);
+                "You are an elite dictation and editing assistant. Task: Transcribe and clean up the speech from the audio. Selected Text Context: The user has selected the following text: [SELECTED_TEXT]\n\nInstructions:\n1. Return ONLY the transcribed text. Do NOT add any explanations, introductory text, greetings, or conversational remarks.\n2. Clean up speech by removing filler words and adding proper punctuation and grammar. Keep the language natural and matching the speaker's language.\n3. CRITICAL language rule: The output text must be in the EXACT SAME LANGUAGE as the transcribed audio. Do NOT translate the text. If the speaker speaks in Russian, output Russian. If the speaker speaks in English, output English.\n4. CRITICAL: If the dictation is simply a statement, question, commentary, or general speech, you must transcribe it word-for-word (with punctuation). Do NOT answer questions, do NOT write explanations, and do NOT discuss the topic.\n5. If and ONLY if the dictation contains a clear, direct, and explicit command to edit, rewrite, or format the selected text context (e.g., 'make this formal', 'translate this to English', 'wrap in a function'), then perform that edit on the selected text and return the final edited result. If no such editing command is present, ignore the selected text context and simply output the transcribed dictation."
+            ).replace("[SELECTED_TEXT]", selected_text);
 
             let chat_request = ChatCompletionRequest {
                 model: "gpt-4o-mini".to_string(),
@@ -321,8 +315,8 @@ pub async fn transcribe_and_clean(
             let chat_endpoint = "https://api.groq.com/openai/v1/chat/completions";
 
             let system_prompt = format!(
-                "You are an elite dictation and editing assistant. Task: Transcribe and clean up the speech from the audio. Selected Text Context: The user has selected the following text: [SELECTED_TEXT]\n\nLanguage Instruction: [LANG_INSTRUCTION]\n\nInstructions:\n1. Return ONLY the transcribed text. Do NOT add any explanations, introductory text, greetings, or conversational remarks.\n2. Clean up speech by removing filler words and adding proper punctuation and grammar. Keep the language natural and matching the speaker's language.\n3. CRITICAL: If the dictation is simply a statement, question, commentary, or general speech, you must transcribe it word-for-word (with punctuation). Do NOT answer questions, do NOT write explanations, and do NOT discuss the topic.\n4. If and ONLY if the dictation contains a clear, direct, and explicit command to edit, rewrite, or format the selected text context (e.g., 'make this formal', 'translate this to English', 'wrap in a function'), then perform that edit on the selected text and return the final edited result. If no such editing command is present, ignore the selected text context and simply output the transcribed dictation."
-            ).replace("[SELECTED_TEXT]", selected_text).replace("[LANG_INSTRUCTION]", lang_instruction);
+                "You are an elite dictation and editing assistant. Task: Transcribe and clean up the speech from the audio. Selected Text Context: The user has selected the following text: [SELECTED_TEXT]\n\nInstructions:\n1. Return ONLY the transcribed text. Do NOT add any explanations, introductory text, greetings, or conversational remarks.\n2. Clean up speech by removing filler words and adding proper punctuation and grammar. Keep the language natural and matching the speaker's language.\n3. CRITICAL language rule: The output text must be in the EXACT SAME LANGUAGE as the transcribed audio. Do NOT translate the text. If the speaker speaks in Russian, output Russian. If the speaker speaks in English, output English.\n4. CRITICAL: If the dictation is simply a statement, question, commentary, or general speech, you must transcribe it word-for-word (with punctuation). Do NOT answer questions, do NOT write explanations, and do NOT discuss the topic.\n5. If and ONLY if the dictation contains a clear, direct, and explicit command to edit, rewrite, or format the selected text context (e.g., 'make this formal', 'translate this to English', 'wrap in a function'), then perform that edit on the selected text and return the final edited result. If no such editing command is present, ignore the selected text context and simply output the transcribed dictation."
+            ).replace("[SELECTED_TEXT]", selected_text);
 
             let chat_request = ChatCompletionRequest {
                 model: "llama-3.3-70b-versatile".to_string(),
