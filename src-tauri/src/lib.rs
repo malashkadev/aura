@@ -75,12 +75,12 @@ pub fn run() {
                         }
 
                         // 4. Start recording to temporary WAV path
-                        let temp_path = std::env::temp_dir().join("glaido-temp.wav");
+                        let temp_path = std::env::temp_dir().join("aura-temp.wav");
                         let temp_path_str = temp_path.to_string_lossy().to_string();
 
                         if let Some(state) = app_handle.try_state::<AppState>() {
                             let state = state.inner();
-                            if let Err(e) = state.audio_recorder.start_recording(&temp_path_str, Some(app_handle.clone())) {
+                            if let Err(e) = state.audio_recorder.start_recording(&temp_path_str) {
                                 eprintln!("Failed to start recording: {}", e);
                             }
                         }
@@ -107,7 +107,7 @@ pub fn run() {
                         // 3. Perform transcription in a background task
                         let app_handle_clone = app_handle.clone();
                         tauri::async_runtime::spawn(async move {
-                            let temp_path = std::env::temp_dir().join("glaido-temp.wav");
+                            let temp_path = std::env::temp_dir().join("aura-temp.wav");
                             let temp_path_str = temp_path.to_string_lossy().to_string();
 
                             // Load settings

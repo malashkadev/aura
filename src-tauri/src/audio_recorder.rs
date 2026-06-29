@@ -17,8 +17,6 @@ struct ActiveRecording {
 unsafe impl Send for ActiveRecording {}
 unsafe impl Sync for ActiveRecording {}
 
-use tauri::Emitter;
-
 impl AudioRecorder {
     /// Creates a new `AudioRecorder` instance.
     pub fn new() -> Self {
@@ -28,7 +26,7 @@ impl AudioRecorder {
     }
 
     /// Starts recording audio from the default input device to the specified output WAV path.
-    pub fn start_recording(&self, output_path: &str, app_handle: Option<tauri::AppHandle>) -> Result<(), String> {
+    pub fn start_recording(&self, output_path: &str) -> Result<(), String> {
         let mut state_guard = self.state.lock().map_err(|e| e.to_string())?;
         if state_guard.is_some() {
             return Err("Already recording".to_string());
@@ -54,21 +52,13 @@ impl AudioRecorder {
 
         let stream = match sample_format {
             cpal::SampleFormat::I16 => {
-                let app_handle_clone = app_handle.clone();
                 device.build_input_stream(
                     &config.into(),
                     move |data: &[i16], _: &cpal::InputCallbackInfo| {
-                        let mut sum_sq = 0.0;
                         if let Ok(mut guard) = raw_samples_clone.lock() {
                             for &sample in data {
-                                let val = sample as f32 / 32768.0;
-                                guard.push(val);
-                                sum_sq += val * val;
+                                guard.push(sample as f32 / 32768.0);
                             }
-                        }
-                        let rms = if data.is_empty() { 0.0 } else { (sum_sq / data.len() as f32).sqrt() };
-                        if let Some(ref handle) = app_handle_clone {
-                            let _ = handle.emit("audio-amplitude", rms);
                         }
                     },
                     err_fn,
@@ -76,21 +66,13 @@ impl AudioRecorder {
                 )
             }
             cpal::SampleFormat::U16 => {
-                let app_handle_clone = app_handle.clone();
                 device.build_input_stream(
                     &config.into(),
                     move |data: &[u16], _: &cpal::InputCallbackInfo| {
-                        let mut sum_sq = 0.0;
                         if let Ok(mut guard) = raw_samples_clone.lock() {
                             for &sample in data {
-                                let val = (sample as f32 - 32768.0) / 32768.0;
-                                guard.push(val);
-                                sum_sq += val * val;
+                                guard.push((sample as f32 - 32768.0) / 32768.0);
                             }
-                        }
-                        let rms = if data.is_empty() { 0.0 } else { (sum_sq / data.len() as f32).sqrt() };
-                        if let Some(ref handle) = app_handle_clone {
-                            let _ = handle.emit("audio-amplitude", rms);
                         }
                     },
                     err_fn,
@@ -98,20 +80,11 @@ impl AudioRecorder {
                 )
             }
             cpal::SampleFormat::F32 => {
-                let app_handle_clone = app_handle.clone();
                 device.build_input_stream(
                     &config.into(),
                     move |data: &[f32], _: &cpal::InputCallbackInfo| {
-                        let mut sum_sq = 0.0;
                         if let Ok(mut guard) = raw_samples_clone.lock() {
                             guard.extend_from_slice(data);
-                            for &val in data {
-                                sum_sq += val * val;
-                            }
-                        }
-                        let rms = if data.is_empty() { 0.0 } else { (sum_sq / data.len() as f32).sqrt() };
-                        if let Some(ref handle) = app_handle_clone {
-                            let _ = handle.emit("audio-amplitude", rms);
                         }
                     },
                     err_fn,
