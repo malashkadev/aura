@@ -133,12 +133,9 @@ pub fn run() {
                                 String::new()
                             };
 
-                            // Detect active layout language
-                            let target_lang = keyboard_simulator::get_active_layout_language();
-
                             // Perform transcription
                             let transcription_result = if settings.transcription_mode == "local" {
-                                whisper_runner::run_local_whisper(&app_handle_clone, &settings.model_name, &temp_path_str, &target_lang)
+                                whisper_runner::run_local_whisper(&app_handle_clone, &settings.model_name, &temp_path_str)
                             } else {
                                 let provider = match settings.api_provider.as_str() {
                                     "openai" => ai_client::ApiProvider::OpenAi,
@@ -150,7 +147,6 @@ pub fn run() {
                                     &settings.api_key,
                                     &temp_path_str,
                                     &selected_text,
-                                    &target_lang,
                                 ).await
                             };
 
