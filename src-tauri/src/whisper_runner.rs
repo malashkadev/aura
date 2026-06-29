@@ -110,7 +110,18 @@ pub async fn download_model<R: Runtime>(
 
     let dest_path = models_dir.join(&filename);
     if dest_path.exists() {
-        if fs::metadata(&dest_path).map(|m| m.len()).unwrap_or(0) > 0 {
+        let size = fs::metadata(&dest_path).map(|m| m.len()).unwrap_or(0);
+        if size > 0 {
+            let _ = app_handle.emit(
+                "model-download-progress",
+                DownloadProgress {
+                    model: model_name.to_string(),
+                    downloaded: size,
+                    total: Some(size),
+                    percentage: 100.0,
+                    done: true,
+                },
+            );
             return Ok(dest_path);
         }
     }
