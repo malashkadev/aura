@@ -6,9 +6,6 @@ use windows_sys::Win32::UI::WindowsAndMessaging::{
     TranslateMessage, UnhookWindowsHookEx, KBDLLHOOKSTRUCT, MSG,
     WH_KEYBOARD_LL, WM_KEYDOWN, WM_KEYUP, WM_SYSKEYDOWN, WM_SYSKEYUP,
 };
-use windows_sys::Win32::UI::Input::KeyboardAndMouse::{
-    VK_LMENU, VK_MENU, VK_RMENU,
-};
 
 use std::sync::Mutex;
 
