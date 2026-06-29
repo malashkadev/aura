@@ -52,6 +52,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // Settings elements
   const selectModel = document.getElementById("select-model");
   const selectProvider = document.getElementById("select-provider");
+  const selectHotkey = document.getElementById("select-hotkey");
   const btnDownloadModel = document.getElementById("btn-download-model");
   const btnSaveSettings = document.getElementById("btn-save-settings");
   
@@ -77,6 +78,9 @@ document.addEventListener("DOMContentLoaded", () => {
         selectModel.value = settings.model_name || "base";
         selectProvider.value = settings.api_provider || "gemini";
         apiKeyInput.value = settings.api_key || "";
+        if (selectHotkey) {
+          selectHotkey.value = settings.hotkey || "Alt+N";
+        }
         
         updateEngineUI();
         showStatus("Settings loaded");
@@ -97,7 +101,7 @@ document.addEventListener("DOMContentLoaded", () => {
         api_provider: selectProvider.value,
         api_key: apiKeyInput.value,
         model_name: selectModel.value,
-        hotkey: "Alt+N"
+        hotkey: selectHotkey ? selectHotkey.value : "Alt+N"
       };
 
       await invoke("set_settings", { settings });

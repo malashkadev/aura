@@ -20,7 +20,9 @@ async fn get_settings(app_handle: tauri::AppHandle) -> Result<settings::Settings
 
 #[tauri::command]
 async fn set_settings(app_handle: tauri::AppHandle, settings: settings::Settings) -> Result<(), String> {
-    settings::save_settings(&app_handle, &settings)
+    settings::save_settings(&app_handle, &settings)?;
+    keyboard_hook::update_hotkey(&settings.hotkey);
+    Ok(())
 }
 
 #[tauri::command]
@@ -34,6 +36,11 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .setup(|app| {
             let app_handle = app.handle().clone();
+
+            // Load settings and apply configured hotkey on startup
+            if let Ok(settings) = settings::load_settings(&app_handle) {
+                keyboard_hook::update_hotkey(&settings.hotkey);
+            }
 
             // Manage global state for audio recording and context text
             app.manage(AppState {

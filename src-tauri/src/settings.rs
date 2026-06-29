@@ -39,8 +39,13 @@ pub fn load_settings(app_handle: &tauri::AppHandle) -> Result<Settings, String> 
     }
     let content = fs::read_to_string(&path)
         .map_err(|e| format!("Failed to read settings file: {}", e))?;
-    let settings: Settings = serde_json::from_str(&content)
-        .map_err(|e| format!("Failed to parse settings JSON: {}", e))?;
+    let settings: Settings = match serde_json::from_str(&content) {
+        Ok(s) => s,
+        Err(e) => {
+            eprintln!("Warning: Failed to parse settings JSON: {}. Falling back to default settings.", e);
+            Settings::default()
+        }
+    };
     Ok(settings)
 }
 

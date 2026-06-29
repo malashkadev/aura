@@ -10,13 +10,74 @@ use windows_sys::Win32::UI::Input::KeyboardAndMouse::{
     VK_LMENU, VK_MENU, VK_RMENU,
 };
 
+use std::sync::Mutex;
+
+struct HotkeyConfig {
+    modifier_vk: u32,
+    key_vk: u32,
+}
+
+static HOTKEY_CONFIG: Mutex<HotkeyConfig> = Mutex::new(HotkeyConfig {
+    modifier_vk: 18, // VK_MENU (Alt)
+    key_vk: 0x4E,    // VK_N (N)
+});
+
 static CALLBACK: OnceLock<Box<dyn Fn(bool) + Send + Sync>> = OnceLock::new();
-static ALT_PRESSED: AtomicBool = AtomicBool::new(false);
+static MODIFIER_PRESSED: AtomicBool = AtomicBool::new(false);
 static SHORTCUT_ACTIVE: AtomicBool = AtomicBool::new(false);
-static N_SUPPRESSED: AtomicBool = AtomicBool::new(false);
+static KEY_SUPPRESSED: AtomicBool = AtomicBool::new(false);
+
+fn is_modifier_key(vk_code: u32, target_modifier_vk: u32) -> bool {
+    match target_modifier_vk {
+        18 => vk_code == 18 || vk_code == 164 || vk_code == 165, // Alt / LAlt / RAlt
+        17 => vk_code == 17 || vk_code == 162 || vk_code == 163, // Ctrl / LCtrl / RCtrl
+        16 => vk_code == 16 || vk_code == 160 || vk_code == 161, // Shift / LShift / RShift
+        _ => false,
+    }
+}
+
+/// Dynamically updates the hotkey configuration.
+pub fn update_hotkey(hotkey_str: &str) {
+    let mut modifier = 0;
+    let mut key = 0;
+    
+    let parts: Vec<&str> = hotkey_str.split('+').collect();
+    for part in parts {
+        let clean = part.trim().to_lowercase();
+        match clean.as_str() {
+            "alt" => modifier = 18,
+            "ctrl" | "control" => modifier = 17,
+            "shift" => modifier = 16,
+            other => {
+                if other.len() == 1 {
+                    key = other.chars().next().unwrap().to_ascii_uppercase() as u32;
+                } else {
+                    match other {
+                        "space" => key = 0x20,
+                        "capslock" | "caps lock" => key = 0x14,
+                        "f8" => key = 0x77,
+                        "f9" => key = 0x78,
+                        "f10" => key = 0x79,
+                        _ => {}
+                    }
+                }
+            }
+        }
+    }
+    
+    if let Ok(mut guard) = HOTKEY_CONFIG.lock() {
+        guard.modifier_vk = modifier;
+        guard.key_vk = key;
+        
+        // Reset state flags
+        MODIFIER_PRESSED.store(false, Ordering::SeqCst);
+        SHORTCUT_ACTIVE.store(false, Ordering::SeqCst);
+        KEY_SUPPRESSED.store(false, Ordering::SeqCst);
+    }
+}
 
 /// Starts the global low-level keyboard hook on a background thread.
-/// The `callback` is called with `true` when Alt+N is pressed/held,
+/// The `callback` is called with `true` when the configured hotkey is pressed/held,
 /// and `false` when it is released.
 pub fn start_hook<F>(callback: F) -> Result<(), &'static str>
 where
@@ -68,41 +129,53 @@ unsafe extern "system" fn low_level_keyboard_proc(
         let is_down = wparam == WM_KEYDOWN as usize || wparam == WM_SYSKEYDOWN as usize;
         let is_up = wparam == WM_KEYUP as usize || wparam == WM_SYSKEYUP as usize;
 
-        let is_alt = vk_code == VK_LMENU as u32 || vk_code == VK_RMENU as u32 || vk_code == VK_MENU as u32;
-        let is_n = vk_code == 0x4E; // VK_N
+        let (modifier_vk, key_vk) = {
+            if let Ok(guard) = HOTKEY_CONFIG.lock() {
+                (guard.modifier_vk, guard.key_vk)
+            } else {
+                (18, 0x4E) // Alt+N default
+            }
+        };
 
-        if is_alt {
+        let is_modifier = is_modifier_key(vk_code, modifier_vk);
+        let is_target_key = vk_code == key_vk;
+
+        if modifier_vk != 0 && is_modifier {
             if is_down {
-                ALT_PRESSED.store(true, Ordering::SeqCst);
+                MODIFIER_PRESSED.store(true, Ordering::SeqCst);
             } else if is_up {
-                ALT_PRESSED.store(false, Ordering::SeqCst);
+                MODIFIER_PRESSED.store(false, Ordering::SeqCst);
                 if SHORTCUT_ACTIVE.swap(false, Ordering::SeqCst) {
                     if let Some(cb) = CALLBACK.get() {
                         cb(false);
                     }
                 }
             }
-        } else if is_n {
+        } else if is_target_key {
+            let modifier_satisfied = modifier_vk == 0 || MODIFIER_PRESSED.load(Ordering::SeqCst);
+
             if is_down {
-                if ALT_PRESSED.load(Ordering::SeqCst) {
-                    N_SUPPRESSED.store(true, Ordering::SeqCst);
+                if modifier_satisfied {
+                    KEY_SUPPRESSED.store(true, Ordering::SeqCst);
                     if !SHORTCUT_ACTIVE.swap(true, Ordering::SeqCst) {
                         if let Some(cb) = CALLBACK.get() {
                             cb(true);
                         }
                     }
-                    return 1; // Suppress the N key event
+                    return 1; // Suppress key event
                 } else {
-                    N_SUPPRESSED.store(false, Ordering::SeqCst);
+                    KEY_SUPPRESSED.store(false, Ordering::SeqCst);
                 }
             } else if is_up {
-                if N_SUPPRESSED.swap(false, Ordering::SeqCst) {
+                if KEY_SUPPRESSED.swap(false, Ordering::SeqCst) || modifier_satisfied {
                     if SHORTCUT_ACTIVE.swap(false, Ordering::SeqCst) {
                         if let Some(cb) = CALLBACK.get() {
                             cb(false);
                         }
                     }
-                    return 1; // Suppress the N key event
+                    if modifier_satisfied {
+                        return 1; // Suppress key event
+                    }
                 }
             }
         }
