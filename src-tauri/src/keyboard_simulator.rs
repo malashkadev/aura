@@ -98,3 +98,27 @@ pub fn simulate_paste() {
     }
 }
 
+#[link(name = "user32")]
+extern "system" {
+    pub fn GetForegroundWindow() -> isize;
+    pub fn GetWindowThreadProcessId(hwnd: isize, lpdwprocessid: *mut u32) -> u32;
+    pub fn GetKeyboardLayout(idthread: u32) -> isize;
+}
+
+pub fn get_active_layout_language() -> String {
+    unsafe {
+        let hwnd = GetForegroundWindow();
+        if hwnd == 0 {
+            return "ru".to_string();
+        }
+        let thread_id = GetWindowThreadProcessId(hwnd, std::ptr::null_mut());
+        let layout = GetKeyboardLayout(thread_id);
+        let lang_id = (layout as usize) & 0xFFFF;
+        match lang_id {
+            0x0419 => "ru".to_string(), // Russian
+            0x0409 | 0x0809 | 0x0c09 | 0x1009 | 0x1409 | 0x1809 | 0x1c09 | 0x2009 | 0x2409 | 0x2809 | 0x2c09 | 0x3009 => "en".to_string(), // English variants
+            _ => "ru".to_string(), // Default fallback
+        }
+    }
+}
+
