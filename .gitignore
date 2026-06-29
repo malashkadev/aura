@@ -1,0 +1,16 @@
+# Ignore binary executables
+glaido-core.exe
+*.exe
+
+# Ignore node_modules
+node_modules/
+
+# Ignore Rust build artifacts
+target/
+
+# Ignore local config/databases
+*.db
+*.db-shm
+*.db-wal
+.window-state.json
+settings.json
