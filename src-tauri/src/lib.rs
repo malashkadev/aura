@@ -139,6 +139,7 @@ pub fn run() {
                             } else {
                                 let provider = match settings.api_provider.as_str() {
                                     "openai" => ai_client::ApiProvider::OpenAi,
+                                    "groq" => ai_client::ApiProvider::Groq,
                                     _ => ai_client::ApiProvider::Gemini,
                                 };
                                 ai_client::transcribe_and_clean(

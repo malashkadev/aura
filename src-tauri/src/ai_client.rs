@@ -7,6 +7,7 @@ use std::fs;
 pub enum ApiProvider {
     Gemini,
     OpenAi,
+    Groq,
 }
 
 // --- Gemini Request / Response Schemas ---
@@ -268,6 +269,99 @@ pub async fn transcribe_and_clean(
                 .and_then(|c| c.message)
                 .and_then(|m| m.content)
                 .ok_or_else(|| "OpenAI Chat Completion response did not contain expected text content structure.".to_string())?;
+
+            Ok(cleaned_text)
+        }
+        ApiProvider::Groq => {
+            // --- Step 1: Call Groq Whisper API for transcription ---
+            let whisper_endpoint = "https://api.groq.com/openai/v1/audio/transcriptions";
+
+            let file_part = multipart::Part::bytes(wav_bytes)
+                .file_name("audio.wav")
+                .mime_str("audio/wav")
+                .map_err(|e| format!("Failed to prepare audio multipart part: {e}"))?;
+
+            let form = multipart::Form::new()
+                .part("file", file_part)
+                .text("model", "whisper-large-v3");
+
+            let whisper_response = client
+                .post(whisper_endpoint)
+                .bearer_auth(api_key)
+                .multipart(form)
+                .send()
+                .await
+                .map_err(|e| format!("Groq Whisper API request failed: {e}"))?;
+
+            let status = whisper_response.status();
+            if !status.is_success() {
+                let error_body = whisper_response
+                    .text()
+                    .await
+                    .unwrap_or_else(|_| "<failed to read response body>".to_string());
+                return Err(format!(
+                    "Groq Whisper API returned status code {status}. Response body: {error_body}"
+                ));
+            }
+
+            let whisper_resp: WhisperResponse = whisper_response
+                .json()
+                .await
+                .map_err(|e| format!("Failed to parse Groq Whisper JSON response: {e}"))?;
+
+            let transcribed_text = whisper_resp.text;
+
+            // --- Step 2: Call Groq Chat Completions with Llama-3.3-70b-versatile to clean ---
+            let chat_endpoint = "https://api.groq.com/openai/v1/chat/completions";
+
+            let system_prompt = format!(
+                "You are an elite dictation and editing assistant. Clean up the dictation by removing filler words, correcting grammar, and adding proper punctuation. If the dictation contains a command to edit the selected text, perform the edit on the selected text. Return ONLY the final transcribed/edited text. Context: The user had this text selected: [SELECTED_TEXT]"
+            ).replace("[SELECTED_TEXT]", selected_text);
+
+            let chat_request = ChatCompletionRequest {
+                model: "llama-3.3-70b-versatile".to_string(),
+                messages: vec![
+                    ChatMessage {
+                        role: "system".to_string(),
+                        content: system_prompt,
+                    },
+                    ChatMessage {
+                        role: "user".to_string(),
+                        content: transcribed_text,
+                    },
+                ],
+            };
+
+            let chat_response = client
+                .post(chat_endpoint)
+                .bearer_auth(api_key)
+                .json(&chat_request)
+                .send()
+                .await
+                .map_err(|e| format!("Groq Chat Completion API request failed: {e}"))?;
+
+            let status = chat_response.status();
+            if !status.is_success() {
+                let error_body = chat_response
+                    .text()
+                    .await
+                    .unwrap_or_else(|_| "<failed to read response body>".to_string());
+                return Err(format!(
+                    "Groq Chat Completions API returned status code {status}. Response body: {error_body}"
+                ));
+            }
+
+            let chat_resp: ChatCompletionResponse = chat_response
+                .json()
+                .await
+                .map_err(|e| format!("Failed to parse Groq Chat Completion JSON response: {e}"))?;
+
+            let cleaned_text = chat_resp
+                .choices
+                .and_then(|c| c.into_iter().next())
+                .and_then(|c| c.message)
+                .and_then(|m| m.content)
+                .ok_or_else(|| "Groq Chat Completion response did not contain expected text content structure.".to_string())?;
 
             Ok(cleaned_text)
         }
