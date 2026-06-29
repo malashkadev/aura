@@ -1,5 +1,7 @@
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
 pub mod keyboard_hook;
+pub mod audio_recorder;
+
 
 #[tauri::command]
 fn greet(name: &str) -> String {
