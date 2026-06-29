@@ -1,6 +1,8 @@
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
 pub mod keyboard_hook;
 pub mod audio_recorder;
+pub mod ai_client;
+
 
 
 #[tauri::command]
