@@ -2,6 +2,8 @@
 pub mod keyboard_hook;
 pub mod audio_recorder;
 pub mod ai_client;
+pub mod whisper_runner;
+
 
 
 
