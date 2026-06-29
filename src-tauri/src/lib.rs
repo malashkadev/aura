@@ -80,7 +80,7 @@ pub fn run() {
 
                         if let Some(state) = app_handle.try_state::<AppState>() {
                             let state = state.inner();
-                            if let Err(e) = state.audio_recorder.start_recording(&temp_path_str) {
+                            if let Err(e) = state.audio_recorder.start_recording(&temp_path_str, Some(app_handle.clone())) {
                                 eprintln!("Failed to start recording: {}", e);
                             }
                         }
