@@ -80,13 +80,7 @@ body {
 }
 
 .logo-glow {
-  position: absolute;
-  width: 32px;
-  height: 32px;
-  background-color: var(--accent-color);
-  filter: blur(12px);
-  opacity: 0.4;
-  border-radius: var(--radius-full);
+  display: none;
 }
 
 .app-logo {
@@ -257,7 +251,6 @@ body {
 .engine-option input:checked + .engine-card {
   border-color: var(--accent-color);
   background-color: hsla(var(--accent-color-rgb), 0.04);
-  box-shadow: 0 0 16px var(--accent-glow);
 }
 
 .engine-name {
@@ -310,7 +303,6 @@ body {
 
 .custom-select:focus {
   border-color: var(--accent-color);
-  box-shadow: 0 0 0 2px var(--accent-glow);
 }
 
 .api-key-input-wrapper {
@@ -335,7 +327,6 @@ body {
 
 .custom-input:focus {
   border-color: var(--accent-color);
-  box-shadow: 0 0 0 2px var(--accent-glow);
 }
 
 .btn-toggle-visibility {
@@ -387,7 +378,6 @@ body {
 
 .btn-primary:hover {
   background-color: var(--accent-hover);
-  box-shadow: 0 0 16px hsla(var(--accent-color-rgb), 0.3);
 }
 
 .btn-icon {
@@ -487,7 +477,6 @@ body {
   align-items: center;
   justify-content: center;
   border: 1px solid hsla(var(--accent-color-rgb), 0.15);
-  box-shadow: 0 0 20px var(--accent-glow);
 }
 
 .about-icon svg {
@@ -590,7 +579,6 @@ body {
   height: 8px;
   background-color: var(--accent-color);
   border-radius: var(--radius-full);
-  box-shadow: 0 0 8px var(--accent-color);
   animation: pulse 2s infinite;
 }
 
