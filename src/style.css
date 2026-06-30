@@ -658,6 +658,7 @@ body {
   border-radius: var(--radius-full);
   padding: 3px;
   transition: var(--transition);
+  flex-shrink: 0;
 }
 
 .toggle-thumb {
