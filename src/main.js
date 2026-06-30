@@ -79,7 +79,7 @@ document.addEventListener("DOMContentLoaded", () => {
         selectProvider.value = settings.api_provider || "gemini";
         apiKeyInput.value = settings.api_key || "";
         if (selectHotkey) {
-          selectHotkey.value = settings.hotkey || "Alt+N";
+          selectHotkey.value = settings.hotkey || "Alt+V";
         }
         
         updateEngineUI();
@@ -101,7 +101,7 @@ document.addEventListener("DOMContentLoaded", () => {
         api_provider: selectProvider.value,
         api_key: apiKeyInput.value,
         model_name: selectModel.value,
-        hotkey: selectHotkey ? selectHotkey.value : "Alt+N"
+        hotkey: selectHotkey ? selectHotkey.value : "Alt+V"
       };
 
       await invoke("set_settings", { settings });
