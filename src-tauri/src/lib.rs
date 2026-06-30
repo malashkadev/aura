@@ -130,12 +130,14 @@ pub fn run() {
                 let app_handle = app_handle.clone();
                 tauri::async_runtime::spawn(async move {
                     if is_down {
+                        eprintln!("Aura Dev Log: Alt+V pressed (is_down = true)");
                         // Clear typed so far, detect active language, and set is_recording to true
                         if let Some(state) = app_handle.try_state::<AppState>() {
                             let state = state.inner();
                             
                             // Detect active keyboard language at the moment of press
                             let lang = keyboard_simulator::get_active_layout_language();
+                            eprintln!("Aura Dev Log: Active layout language = {}", lang);
                             if let Ok(mut guard) = state.selected_language.lock() {
                                 *guard = lang;
                             }
@@ -153,6 +155,7 @@ pub fn run() {
                         // Start recording to temporary WAV path
                         let temp_path = std::env::temp_dir().join("aura-temp.wav");
                         let temp_path_str = temp_path.to_string_lossy().to_string();
+                        eprintln!("Aura Dev Log: Starting audio recording to {}", temp_path_str);
 
                         let app_handle_clone = app_handle.clone();
                         if let Some(state) = app_handle.try_state::<AppState>() {
@@ -160,7 +163,7 @@ pub fn run() {
                             if let Err(e) = state.audio_recorder.start_recording(&temp_path_str, move |vol| {
                                 let _ = app_handle_clone.emit("volume-level", vol);
                             }) {
-                                eprintln!("Failed to start recording: {}", e);
+                                eprintln!("Aura Dev Log ERROR: Failed to start recording: {}", e);
                             }
                         }
 
@@ -194,6 +197,7 @@ pub fn run() {
                         // Spawn background streaming loop
                         let app_handle_loop = app_handle.clone();
                         tauri::async_runtime::spawn(async move {
+                            eprintln!("Aura Dev Log: Spawning background streaming loop task...");
                             // Wait initial 1.5 seconds to gather initial audio
                             tokio::time::sleep(std::time::Duration::from_millis(1500)).await;
 
@@ -208,15 +212,20 @@ pub fn run() {
                                 };
 
                                 if !is_recording {
+                                    eprintln!("Aura Dev Log: is_recording is false. Exiting streaming loop.");
                                     break;
                                 }
 
+                                eprintln!("Aura Dev Log: Loop tick - reading samples...");
                                 if let Some(state) = app_handle_loop.try_state::<AppState>() {
                                     let state = state.inner();
                                     if let Ok((samples, sample_rate, channels)) = state.audio_recorder.get_recorded_samples() {
+                                        eprintln!("Aura Dev Log: Retrieved {} samples (rate={}, channels={})", samples.len(), sample_rate, channels);
                                         // Ensure we have at least 0.5s of audio (8000 samples)
                                         if samples.len() > 8000 {
-                                            if audio_recorder::process_and_write_wav(&samples, channels, sample_rate, &chunk_path_str).is_ok() {
+                                            let write_res = audio_recorder::process_and_write_wav(&samples, channels, sample_rate, &chunk_path_str);
+                                            eprintln!("Aura Dev Log: process_and_write_wav result = {:?}", write_res);
+                                            if write_res.is_ok() {
                                                 if let Ok(settings) = settings::load_settings(&app_handle_loop) {
                                                     let selected_language = if let Ok(guard) = state.selected_language.lock() {
                                                         guard.clone()
@@ -224,6 +233,7 @@ pub fn run() {
                                                         "ru".to_string()
                                                     };
 
+                                                    eprintln!("Aura Dev Log: Calling streaming transcribe_and_clean...");
                                                     let transcription_result = if settings.transcription_mode == "local" {
                                                         whisper_runner::run_local_whisper(&app_handle_loop, &settings.model_name, &chunk_path_str)
                                                     } else {
@@ -242,29 +252,38 @@ pub fn run() {
                                                         ).await
                                                     };
 
-                                                    if let Ok(text) = transcription_result {
-                                                        let trimmed = text.trim();
-                                                        if !trimmed.is_empty() && !is_silence_hallucination(trimmed) {
-                                                            if let Ok(mut typed_guard) = state.typed_so_far.lock() {
-                                                                let suffix = get_incremental_suffix(&*typed_guard, trimmed);
-                                                                if !suffix.is_empty() {
-                                                                    let to_type = if typed_guard.is_empty() || typed_guard.ends_with(' ') || suffix.starts_with(' ') {
-                                                                        suffix.clone()
-                                                                    } else {
-                                                                        format!(" {}", suffix)
-                                                                    };
-                                                                    keyboard_simulator::type_string(&to_type);
-                                                                    if typed_guard.is_empty() {
-                                                                        *typed_guard = trimmed.to_string();
-                                                                    } else {
-                                                                        *typed_guard = format!("{}{}", typed_guard, to_type);
+                                                    match transcription_result {
+                                                        Ok(text) => {
+                                                            let trimmed = text.trim();
+                                                            eprintln!("Aura Dev Log: Streaming transcription success: '{}'", trimmed);
+                                                            if !trimmed.is_empty() && !is_silence_hallucination(trimmed) {
+                                                                if let Ok(mut typed_guard) = state.typed_so_far.lock() {
+                                                                    let suffix = get_incremental_suffix(&*typed_guard, trimmed);
+                                                                    eprintln!("Aura Dev Log: typed_so_far = '{}', suffix to type = '{}'", *typed_guard, suffix);
+                                                                    if !suffix.is_empty() {
+                                                                        let to_type = if typed_guard.is_empty() || typed_guard.ends_with(' ') || suffix.starts_with(' ') {
+                                                                            suffix.clone()
+                                                                        } else {
+                                                                            format!(" {}", suffix)
+                                                                        };
+                                                                        keyboard_simulator::type_string(&to_type);
+                                                                        if typed_guard.is_empty() {
+                                                                            *typed_guard = trimmed.to_string();
+                                                                        } else {
+                                                                            *typed_guard = format!("{}{}", typed_guard, to_type);
+                                                                        }
                                                                     }
                                                                 }
                                                             }
                                                         }
+                                                        Err(e) => {
+                                                            eprintln!("Aura Dev Log ERROR: Streaming transcription failed: {}", e);
+                                                        }
                                                     }
                                                 }
                                             }
+                                        } else {
+                                            eprintln!("Aura Dev Log: Not enough samples ({} <= 8000), skipping transcription.", samples.len());
                                         }
                                     }
                                 }
@@ -274,6 +293,7 @@ pub fn run() {
                             }
                         });
                     } else {
+                        eprintln!("Aura Dev Log: Alt+V released (is_down = false)");
                         // Check duration of hotkey press
                         let press_duration = if let Some(state) = app_handle.try_state::<AppState>() {
                             let state = state.inner();
@@ -288,7 +308,9 @@ pub fn run() {
                         };
 
                         if let Some(d) = press_duration {
+                            eprintln!("Aura Dev Log: Press duration = {} ms", d.as_millis());
                             if d.as_millis() < 300 {
+                                eprintln!("Aura Dev Log: Press too short (< 300ms), discarding.");
                                 // Ignore quick taps (accidental press or empty duration)
                                 if let Some(state) = app_handle.try_state::<AppState>() {
                                     let state = state.inner();
@@ -307,9 +329,8 @@ pub fn run() {
                         // Stop recording
                         if let Some(state) = app_handle.try_state::<AppState>() {
                             let state = state.inner();
-                            if let Err(e) = state.audio_recorder.stop_recording() {
-                                eprintln!("Failed to stop recording: {}", e);
-                            }
+                            let stop_res = state.audio_recorder.stop_recording();
+                            eprintln!("Aura Dev Log: stop_recording result = {:?}", stop_res);
                         }
 
                         // Perform final transcription in a background task
@@ -325,7 +346,7 @@ pub fn run() {
                             let settings = match settings::load_settings(&app_handle_clone) {
                                 Ok(s) => s,
                                 Err(e) => {
-                                    eprintln!("Failed to load settings: {}", e);
+                                    eprintln!("Aura Dev Log ERROR: Failed to load settings: {}", e);
                                     if let Some(overlay) = app_handle_clone.get_webview_window("overlay") {
                                         let _ = overlay.hide();
                                     }
@@ -350,6 +371,7 @@ pub fn run() {
                                 ("ru".to_string(), String::new())
                             };
 
+                            eprintln!("Aura Dev Log: Calling final transcribe_and_clean...");
                             // Perform transcription on the full audio file
                             let transcription_result = if settings.transcription_mode == "local" {
                                 whisper_runner::run_local_whisper(&app_handle_clone, &settings.model_name, &temp_path_str)
@@ -369,22 +391,29 @@ pub fn run() {
                                 ).await
                             };
 
-                            if let Ok(text) = transcription_result {
-                                let trimmed = text.trim();
-                                if !trimmed.is_empty() && !is_silence_hallucination(trimmed) {
-                                    if let Some(state) = app_handle_clone.try_state::<AppState>() {
-                                        let state = state.inner();
-                                        if let Ok(mut typed_guard) = state.typed_so_far.lock() {
-                                            // Delete the temporary text typed during the live streaming phase
-                                            let chars_to_delete = typed_guard.chars().count();
-                                            if chars_to_delete > 0 {
-                                                keyboard_simulator::type_backspaces(chars_to_delete);
+                            match transcription_result {
+                                Ok(text) => {
+                                    let trimmed = text.trim();
+                                    eprintln!("Aura Dev Log: Final transcription success: '{}'", trimmed);
+                                    if !trimmed.is_empty() && !is_silence_hallucination(trimmed) {
+                                        if let Some(state) = app_handle_clone.try_state::<AppState>() {
+                                            let state = state.inner();
+                                            if let Ok(mut typed_guard) = state.typed_so_far.lock() {
+                                                // Delete the temporary text typed during the live streaming phase
+                                                let chars_to_delete = typed_guard.chars().count();
+                                                eprintln!("Aura Dev Log: Deleting {} temporary chars, then typing final formatted text.", chars_to_delete);
+                                                if chars_to_delete > 0 {
+                                                    keyboard_simulator::type_backspaces(chars_to_delete);
+                                                }
+                                                // Type the final cleaned/formatted text under the cursor
+                                                keyboard_simulator::type_string(trimmed);
+                                                *typed_guard = trimmed.to_string();
                                             }
-                                            // Type the final cleaned/formatted text under the cursor
-                                            keyboard_simulator::type_string(trimmed);
-                                            *typed_guard = trimmed.to_string();
                                         }
                                     }
+                                }
+                                Err(e) => {
+                                    eprintln!("Aura Dev Log ERROR: Final transcription failed: {}", e);
                                 }
                             }
 
