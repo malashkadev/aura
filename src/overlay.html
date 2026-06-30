@@ -68,74 +68,76 @@
   </svg>
 
   <script>
-    const { listen } = window.__TAURI__.event;
+    window.addEventListener("DOMContentLoaded", () => {
+      const { listen } = window.__TAURI__.event;
 
-    const bars = document.querySelectorAll(".sound-bar");
-    let currentState = "recording";
-    let animationFrameId = null;
-    let angle = 0;
+      const bars = document.querySelectorAll(".sound-bar");
+      let currentState = "recording";
+      let animationFrameId = null;
+      let angle = 0;
 
-    // Reset all bars to default quiet state
-    function resetBars() {
-      bars.forEach(bar => {
-        bar.setAttribute("height", "6");
-        bar.setAttribute("y", "11.6001");
-      });
-    }
-
-    // Smooth loading sine-wave animation for "processing" state
-    function animateProcessing() {
-      if (currentState !== "processing") return;
-      bars.forEach((bar, index) => {
-        const h = 6 + Math.sin(angle + index * 0.8) * 8;
-        const y = 14.6 - (h / 2);
-        bar.setAttribute("height", h);
-        bar.setAttribute("y", y);
-      });
-      angle += 0.12;
-      animationFrameId = requestAnimationFrame(animateProcessing);
-    }
-
-    // Listen for recording-state updates
-    listen("recording-state", (event) => {
-      currentState = event.payload; // "recording" or "processing"
-
-      if (animationFrameId) {
-        cancelAnimationFrame(animationFrameId);
-        animationFrameId = null;
+      // Reset all bars to default quiet state
+      function resetBars() {
+        bars.forEach(bar => {
+          bar.setAttribute("height", "6");
+          bar.setAttribute("y", "11.6001");
+        });
       }
 
-      if (currentState === "processing") {
-        angle = 0;
-        animateProcessing();
-      } else {
-        resetBars();
+      // Smooth loading sine-wave animation for "processing" state
+      function animateProcessing() {
+        if (currentState !== "processing") return;
+        bars.forEach((bar, index) => {
+          const h = 6 + Math.sin(angle + index * 0.8) * 8;
+          const y = 14.6 - (h / 2);
+          bar.setAttribute("height", h);
+          bar.setAttribute("y", y);
+        });
+        angle += 0.12;
+        animationFrameId = requestAnimationFrame(animateProcessing);
       }
-    });
 
-    // Listen to real-time voice volume updates from Rust
-    listen("volume-level", (event) => {
-      if (currentState !== "recording") return;
+      // Listen for recording-state updates
+      listen("recording-state", (event) => {
+        currentState = event.payload; // "recording" or "processing"
 
-      // Extract raw volume value safely
-      let volume = 0.0;
-      if (event.payload !== null && event.payload !== undefined) {
-        volume = typeof event.payload === "number" ? event.payload : parseFloat(event.payload);
-        if (isNaN(volume)) volume = 0.0;
-      }
-      
-      bars.forEach((bar, index) => {
-        let h = 6;
-        // Make wave react to even tiny volume fluctuations
-        if (volume > 0.00005) {
-          const boosted = Math.sqrt(volume); // e.g. sqrt(0.001) = 0.031
-          const factor = 0.3 + Math.sin(index * 0.7) * 0.4 + Math.random() * 0.3;
-          h = 6 + (boosted * 80.0 * factor);
-          h = Math.min(22, Math.max(6, h));
+        if (animationFrameId) {
+          cancelAnimationFrame(animationFrameId);
+          animationFrameId = null;
         }
-        const y = 14.6 - (h / 2);
-        bar.setAttribute("height", h.toString());
-        bar.setAttribute("y", y.toString());
+
+        if (currentState === "processing") {
+          angle = 0;
+          animateProcessing();
+        } else {
+          resetBars();
+        }
+      });
+
+      // Listen to real-time voice volume updates from Rust
+      listen("volume-level", (event) => {
+        if (currentState !== "recording") return;
+
+        // Extract raw volume value safely
+        let volume = 0.0;
+        if (event.payload !== null && event.payload !== undefined) {
+          volume = typeof event.payload === "number" ? event.payload : parseFloat(event.payload);
+          if (isNaN(volume)) volume = 0.0;
+        }
+        
+        bars.forEach((bar, index) => {
+          let h = 6;
+          // Make wave react to even tiny volume fluctuations
+          if (volume > 0.00005) {
+            const boosted = Math.sqrt(volume); // e.g. sqrt(0.001) = 0.031
+            const factor = 0.3 + Math.sin(index * 0.7) * 0.4 + Math.random() * 0.3;
+            h = 6 + (boosted * 80.0 * factor);
+            h = Math.min(22, Math.max(6, h));
+          }
+          const y = 14.6 - (h / 2);
+          bar.setAttribute("height", h.toString());
+          bar.setAttribute("y", y.toString());
+        });
       });
     });
   </script>
