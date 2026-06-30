@@ -242,3 +242,59 @@ pub fn type_backspaces(count: usize) {
     restore_modifiers(&released);
 }
 
+pub fn replace_text(backspace_count: usize, new_text: &str) {
+    let released = release_modifiers();
+    unsafe {
+        // 1. Send backspaces
+        for _ in 0..backspace_count {
+            let mut inputs = [std::mem::zeroed::<INPUT>(); 2];
+            inputs[0].r#type = INPUT_KEYBOARD;
+            inputs[0].Anonymous.ki = KEYBDINPUT {
+                wVk: 0x08, // VK_BACK
+                wScan: 0,
+                dwFlags: 0,
+                time: 0,
+                dwExtraInfo: 0,
+            };
+            inputs[1].r#type = INPUT_KEYBOARD;
+            inputs[1].Anonymous.ki = KEYBDINPUT {
+                wVk: 0x08,
+                wScan: 0,
+                dwFlags: KEYEVENTF_KEYUP,
+                time: 0,
+                dwExtraInfo: 0,
+            };
+            SendInput(2, inputs.as_mut_ptr(), std::mem::size_of::<INPUT>() as i32);
+            std::thread::sleep(std::time::Duration::from_millis(3));
+        }
+        
+        // 2. Send characters
+        for ch in new_text.chars() {
+            let mut buf = [0; 2];
+            let utf16_chars = ch.encode_utf16(&mut buf);
+            for &mut val in utf16_chars {
+                let mut inputs = [std::mem::zeroed::<INPUT>(); 2];
+                inputs[0].r#type = INPUT_KEYBOARD;
+                inputs[0].Anonymous.ki = KEYBDINPUT {
+                    wVk: 0,
+                    wScan: val,
+                    dwFlags: KEYEVENTF_UNICODE,
+                    time: 0,
+                    dwExtraInfo: 0,
+                };
+                inputs[1].r#type = INPUT_KEYBOARD;
+                inputs[1].Anonymous.ki = KEYBDINPUT {
+                    wVk: 0,
+                    wScan: val,
+                    dwFlags: KEYEVENTF_UNICODE | KEYEVENTF_KEYUP,
+                    time: 0,
+                    dwExtraInfo: 0,
+                };
+                SendInput(2, inputs.as_mut_ptr(), std::mem::size_of::<INPUT>() as i32);
+                std::thread::sleep(std::time::Duration::from_millis(1));
+            }
+        }
+    }
+    restore_modifiers(&released);
+}
+
