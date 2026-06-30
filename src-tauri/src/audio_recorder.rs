@@ -26,7 +26,10 @@ impl AudioRecorder {
     }
 
     /// Starts recording audio from the default input device to the specified output WAV path.
-    pub fn start_recording(&self, output_path: &str) -> Result<(), String> {
+    pub fn start_recording<F>(&self, output_path: &str, on_volume: F) -> Result<(), String>
+    where
+        F: Fn(f32) + Send + Sync + 'static,
+    {
         let mut state_guard = self.state.lock().map_err(|e| e.to_string())?;
         if state_guard.is_some() {
             return Err("Already recording".to_string());
@@ -48,6 +51,11 @@ impl AudioRecorder {
         let raw_samples = Arc::new(Mutex::new(Vec::new()));
         let raw_samples_clone = raw_samples.clone();
 
+        let on_volume = Arc::new(on_volume);
+        let on_volume_i16 = on_volume.clone();
+        let on_volume_u16 = on_volume.clone();
+        let on_volume_f32 = on_volume.clone();
+
         let err_fn = |err| eprintln!("an error occurred on stream: {}", err);
 
         let stream = match sample_format {
@@ -55,11 +63,16 @@ impl AudioRecorder {
                 device.build_input_stream(
                     &config.into(),
                     move |data: &[i16], _: &cpal::InputCallbackInfo| {
+                        let mut sum_sq = 0.0;
                         if let Ok(mut guard) = raw_samples_clone.lock() {
                             for &sample in data {
-                                guard.push(sample as f32 / 32768.0);
+                                let f = sample as f32 / 32768.0;
+                                guard.push(f);
+                                sum_sq += f * f;
                             }
                         }
+                        let rms = if data.is_empty() { 0.0 } else { (sum_sq / data.len() as f32).sqrt() };
+                        on_volume_i16(rms);
                     },
                     err_fn,
                     None
@@ -69,11 +82,16 @@ impl AudioRecorder {
                 device.build_input_stream(
                     &config.into(),
                     move |data: &[u16], _: &cpal::InputCallbackInfo| {
+                        let mut sum_sq = 0.0;
                         if let Ok(mut guard) = raw_samples_clone.lock() {
                             for &sample in data {
-                                guard.push((sample as f32 - 32768.0) / 32768.0);
+                                let f = (sample as f32 - 32768.0) / 32768.0;
+                                guard.push(f);
+                                sum_sq += f * f;
                             }
                         }
+                        let rms = if data.is_empty() { 0.0 } else { (sum_sq / data.len() as f32).sqrt() };
+                        on_volume_u16(rms);
                     },
                     err_fn,
                     None
@@ -83,9 +101,15 @@ impl AudioRecorder {
                 device.build_input_stream(
                     &config.into(),
                     move |data: &[f32], _: &cpal::InputCallbackInfo| {
+                        let mut sum_sq = 0.0;
                         if let Ok(mut guard) = raw_samples_clone.lock() {
                             guard.extend_from_slice(data);
+                            for &sample in data {
+                                sum_sq += sample * sample;
+                            }
                         }
+                        let rms = if data.is_empty() { 0.0 } else { (sum_sq / data.len() as f32).sqrt() };
+                        on_volume_f32(rms);
                     },
                     err_fn,
                     None

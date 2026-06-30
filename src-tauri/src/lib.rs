@@ -132,9 +132,12 @@ pub fn run() {
                         let temp_path = std::env::temp_dir().join("aura-temp.wav");
                         let temp_path_str = temp_path.to_string_lossy().to_string();
 
+                        let app_handle_clone = app_handle.clone();
                         if let Some(state) = app_handle.try_state::<AppState>() {
                             let state = state.inner();
-                            if let Err(e) = state.audio_recorder.start_recording(&temp_path_str) {
+                            if let Err(e) = state.audio_recorder.start_recording(&temp_path_str, move |vol| {
+                                let _ = app_handle_clone.emit("volume-level", vol);
+                            }) {
                                 eprintln!("Failed to start recording: {}", e);
                             }
                         }
