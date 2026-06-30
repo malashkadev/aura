@@ -372,39 +372,36 @@ pub fn run() {
                                     if !trimmed.is_empty() && !is_silence_hallucination(trimmed) {
                                         if let Some(state) = app_handle_clone.try_state::<AppState>() {
                                             let state = state.inner();
-                                            if let Ok(mut typed_guard) = state.typed_so_far.lock() {
-                                                let streaming_enabled = if let Ok(settings) = settings::load_settings(&app_handle_clone) {
-                                                    settings.streaming_enabled
-                                                } else {
-                                                    false
-                                                };
+                                            let streaming_enabled = if let Ok(settings) = settings::load_settings(&app_handle_clone) {
+                                                settings.streaming_enabled
+                                            } else {
+                                                false
+                                            };
 
-                                                if streaming_enabled {
+                                            if streaming_enabled {
+                                                if let Ok(mut typed_guard) = state.typed_so_far.lock() {
                                                     // Perform a smart diff replacement to only touch changed suffixes and avoid erasing the whole line
                                                     diff_and_type(&mut *typed_guard, trimmed);
+                                                }
+                                            } else {
+                                                // Perform instantaneous clipboard paste for classic stable mode (v1.0 behavior)
+                                                let original_clipboard = if let Ok(mut cb) = arboard::Clipboard::new() {
+                                                    cb.get_text().ok()
                                                 } else {
-                                                    // Perform instantaneous clipboard paste for classic stable mode (v1.0 behavior)
-                                                    let original_clipboard = if let Ok(mut cb) = arboard::Clipboard::new() {
-                                                        cb.get_text().ok()
-                                                    } else {
-                                                        None
-                                                    };
+                                                    None
+                                                };
 
+                                                if let Ok(mut cb) = arboard::Clipboard::new() {
+                                                    let _ = cb.set_text(trimmed.to_string());
+                                                }
+
+                                                keyboard_simulator::simulate_paste();
+
+                                                tokio::time::sleep(std::time::Duration::from_millis(150)).await;
+
+                                                if let Some(orig) = original_clipboard {
                                                     if let Ok(mut cb) = arboard::Clipboard::new() {
-                                                        let _ = cb.set_text(trimmed.to_string());
-                                                    }
-
-                                                    keyboard_simulator::simulate_paste();
-
-                                                    // Drop the mutex guard before sleeping to allow it to be sent across await boundaries
-                                                    drop(typed_guard);
-
-                                                    tokio::time::sleep(std::time::Duration::from_millis(150)).await;
-
-                                                    if let Some(orig) = original_clipboard {
-                                                        if let Ok(mut cb) = arboard::Clipboard::new() {
-                                                            let _ = cb.set_text(orig);
-                                                        }
+                                                        let _ = cb.set_text(orig);
                                                     }
                                                 }
                                             }
