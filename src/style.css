@@ -648,7 +648,7 @@ body {
   display: none;
 }
 
-.toggle-slider {
+.toggle-track {
   display: flex;
   align-items: center;
   width: 40px;
@@ -660,8 +660,7 @@ body {
   transition: var(--transition);
 }
 
-.toggle-slider::before {
-  content: "";
+.toggle-thumb {
   width: 12px;
   height: 12px;
   background-color: var(--text-secondary);
@@ -670,15 +669,15 @@ body {
   transform: translateX(0);
 }
 
-.toggle-switch input:checked + .toggle-slider {
+.toggle-switch input:checked + .toggle-track {
   background-color: hsla(var(--accent-color-rgb), 0.15);
   border-color: var(--accent-color);
 }
 
-.toggle-switch input:checked + .toggle-slider::before {
+.toggle-switch input:checked + .toggle-track .toggle-thumb {
   background-color: var(--accent-color);
   box-shadow: 0 0 8px hsla(var(--accent-color-rgb), 0.5);
-  transform: translateX(18px);
+  transform: translateX(20px); /* now that cache is bypassed, 20px is mathematically perfect! */
 }
 
 .toggle-label {
