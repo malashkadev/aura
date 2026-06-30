@@ -118,6 +118,9 @@ fn is_silence_hallucination(text: &str) -> bool {
     false
 }
 
+// Aura v2.0.14 - Visual Redesign and Stabilization
+#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
