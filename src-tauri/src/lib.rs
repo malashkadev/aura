@@ -221,7 +221,7 @@ pub fn run() {
 
                                                             eprintln!("Aura Dev Log: Calling streaming transcribe_and_clean...");
                                                             let transcription_result = if settings.transcription_mode == "local" {
-                                                                whisper_runner::run_local_whisper(&app_handle_loop, &settings.model_name, &chunk_path_str)
+                                                                whisper_runner::run_local_whisper(&app_handle_loop, &settings.model_name, &chunk_path_str, &selected_language)
                                                             } else {
                                                                 let provider = match settings.api_provider.as_str() {
                                                                     "openai" => ai_client::ApiProvider::OpenAi,
@@ -364,7 +364,7 @@ pub fn run() {
                             let api_call_start = std::time::Instant::now();
                             // Perform transcription on the full audio file
                             let transcription_result = if settings.transcription_mode == "local" {
-                                whisper_runner::run_local_whisper(&app_handle_clone, &settings.model_name, &temp_path_str)
+                                whisper_runner::run_local_whisper(&app_handle_clone, &settings.model_name, &temp_path_str, &selected_language)
                             } else {
                                 let provider = match settings.api_provider.as_str() {
                                     "openai" => ai_client::ApiProvider::OpenAi,
