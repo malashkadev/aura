@@ -158,9 +158,9 @@
             Math.sin(time * (0.9 + index * 0.12) + index * 1.6) * 0.4 + 
             Math.cos(time * 0.65 - index * 0.95) * 0.25;
           
-          // Apply multiplier (55.0) to normalized wave coefficient
-          h = 6.0 + (boosted * 55.0 * Math.max(0.05, wave));
-          h = Math.min(22.0, Math.max(6.0, h));
+          // Apply multiplier (32.0) to normalized wave coefficient
+          h = 6.0 + (boosted * 32.0 * Math.max(0.05, wave));
+          h = Math.min(16.0, Math.max(6.0, h));
         }
         state.targetHeight = h;
       });
