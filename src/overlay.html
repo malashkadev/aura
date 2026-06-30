@@ -1,23 +1,10 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="Индикатор записи голоса Aura" />
-  <title>Панель записи</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@600;700&display=swap" rel="stylesheet" />
+  <title>Aura Overlay</title>
   <style>
-    :root {
-      --bg-glass: rgba(10, 12, 16, 0.76);
-      --border-glass: rgba(255, 255, 255, 0.08);
-      --accent-color: hsl(16, 100%, 50%);
-      --accent-glow: rgba(255, 66, 0, 0.3);
-      --text-color: #ffffff;
-      --text-secondary: rgba(255, 255, 255, 0.7);
-    }
-
     * {
       box-sizing: border-box;
       margin: 0;
@@ -25,182 +12,131 @@
     }
 
     body {
-      font-family: 'Inter', sans-serif;
       background: transparent;
-      color: var(--text-color);
       width: 100vw;
       height: 100vh;
+      overflow: hidden;
       display: flex;
       justify-content: center;
       align-items: center;
-      overflow: hidden;
       user-select: none;
     }
 
-    .overlay-card {
-      width: calc(100vw - 8px);
-      height: calc(100vh - 8px);
-      background: var(--bg-glass);
-      border: 1.5px solid var(--border-glass);
-      border-radius: 16px;
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
-      display: flex;
-      align-items: center;
-      padding: 0 20px;
-      gap: 16px;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    svg {
+      width: 103px;
+      height: 30px;
+      display: block;
+      /* Add subtle orange drop-shadow for premium look on dark wallpapers */
+      filter: drop-shadow(0 2px 8px rgba(255, 66, 0, 0.2));
     }
 
-    /* Icon Area */
-    .icon-wrapper {
-      position: relative;
-      width: 44px;
-      height: 44px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border-radius: 50%;
-      background: rgba(255, 255, 255, 0.04);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      flex-shrink: 0;
-      transition: all 0.3s ease;
-    }
-
-    .icon-svg {
-      width: 22px;
-      height: 22px;
-      color: var(--text-color);
-      transition: all 0.3s ease;
-      z-index: 2;
-    }
-
-    /* Pulsing mic wave ring */
-    .pulse-ring {
-      position: absolute;
-      width: 100%;
-      height: 100%;
-      border-radius: 50%;
-      background: var(--accent-color);
-      opacity: 0;
-      z-index: 1;
-    }
-
-    /* Text details */
-    .status-info {
-      display: flex;
-      flex-direction: column;
-      gap: 3px;
-    }
-
-    .status-text {
-      font-family: 'Outfit', sans-serif;
-      font-size: 1.05rem;
-      font-weight: 700;
-      letter-spacing: 0.02em;
-    }
-
-    .status-desc {
-      font-size: 0.75rem;
-      color: var(--text-secondary);
-      font-weight: 500;
-    }
-
-    /* Recording State Styling */
-    .state-recording .icon-wrapper {
-      background: hsla(16, 100%, 50%, 0.12);
-      border-color: var(--accent-color);
-      box-shadow: 0 0 15px var(--accent-glow);
-    }
-
-    .state-recording .icon-svg {
-      color: var(--accent-color);
-    }
-
-    .state-recording .pulse-ring {
-      animation: pulse-ring-animation 1.6s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
-    }
-
-    @keyframes pulse-ring-animation {
-      0% {
-        transform: scale(0.95);
-        opacity: 0.6;
-      }
-      80%, 100% {
-        transform: scale(1.4);
-        opacity: 0;
-      }
-    }
-
-    /* Processing State Styling */
-    .state-processing .icon-wrapper {
-      background: rgba(255, 255, 255, 0.05);
-      border-color: rgba(255, 255, 255, 0.2);
-    }
-
-    .state-processing .icon-svg {
-      animation: rotate-spinner 1.2s linear infinite;
-    }
-
-    @keyframes rotate-spinner {
-      100% {
-        transform: rotate(360deg);
-      }
+    /* Target the bars for smooth transition */
+    .sound-bar {
+      transition: height 0.08s ease, y 0.08s ease;
     }
   </style>
 </head>
 <body>
-  <div class="overlay-card state-recording" id="overlay-container">
-    <div class="icon-wrapper">
-      <div class="pulse-ring"></div>
-      
-      <!-- Mic Icon (Default for recording) -->
-      <svg id="icon-mic" class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path>
-        <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
-        <line x1="12" x2="12" y1="19" y2="22"></line>
-      </svg>
- 
-      <!-- Spinner Icon (Hidden by default, shown during processing) -->
-      <svg id="icon-spinner" class="icon-svg" style="display: none;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
-        <circle cx="12" cy="12" r="10" stroke-dasharray="42" stroke-dashoffset="14" opacity="0.3"></circle>
-        <path d="M12 2a10 10 0 0 1 10 10" stroke-linecap="round"></path>
-      </svg>
-    </div>
-    
-    <div class="status-info">
-      <span class="status-text" id="label-status">Запись...</span>
-      <span class="status-desc" id="label-desc">Удерживайте клавишу</span>
-    </div>
-  </div>
+  <!-- Inline SVG from Overlay.svg design -->
+  <svg width="103" height="30" viewBox="0 0 103 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <g filter="url(#filter0_i_63_427)">
+      <rect width="102.2" height="29.2" rx="9.6" fill="#090909"/>
+      <g clip-path="url(#clip0_63_427)">
+        <path d="M12.2707 20.7875C10.4925 19.2829 9.39822 17.0943 9.39822 14.6322C9.39822 10.1183 13.0914 6.42505 17.6054 6.42505C22.1193 6.42505 25.8125 10.1183 25.8125 14.6322C25.8125 17.0943 24.7182 19.2829 22.94 20.7875" stroke="#FF4200" stroke-width="2.7434"/>
+        <path d="M20.3763 11.601L25.6238 24.1871H21.844L19.6927 18.2358L17.9033 13.7724C17.796 13.4776 17.6955 13.3301 17.6017 13.3301C17.5213 13.3301 17.4274 13.4776 17.3202 13.7724L15.5308 18.2358L13.3795 24.1871H9.57961L14.8472 11.601C15.1153 10.9577 15.4705 10.522 15.9128 10.2942C16.3418 10.0663 16.9047 9.95239 17.6017 9.95239C18.4193 9.95239 19.0292 10.0797 19.4313 10.3344C19.82 10.5891 20.135 11.0113 20.3763 11.601Z" fill="#FE4200"/>
+      </g>
+      <rect class="sound-bar" x="37.2" y="11.6001" width="3" height="6" rx="1.5" fill="#FE4200"/>
+      <rect class="sound-bar" x="43.2" y="11.6001" width="3" height="6" rx="1.5" fill="#FE4200"/>
+      <rect class="sound-bar" x="49.2" y="11.6001" width="3" height="6" rx="1.5" fill="#FE4200"/>
+      <rect class="sound-bar" x="55.2" y="11.6001" width="3" height="6" rx="1.5" fill="#FE4200"/>
+      <rect class="sound-bar" x="61.2" y="11.6001" width="3" height="6" rx="1.5" fill="#FE4200"/>
+      <rect class="sound-bar" x="67.2" y="11.6001" width="3" height="6" rx="1.5" fill="#FE4200"/>
+      <rect class="sound-bar" x="73.2" y="11.6001" width="3" height="6" rx="1.5" fill="#FE4200"/>
+      <rect class="sound-bar" x="79.2" y="11.6001" width="3" height="6" rx="1.5" fill="#FE4200"/>
+      <rect class="sound-bar" x="85.2" y="11.6001" width="3" height="6" rx="1.5" fill="#FE4200"/>
+      <rect class="sound-bar" x="91.2" y="11.6001" width="3" height="6" rx="1.5" fill="#FE4200"/>
+    </g>
+    <defs>
+      <filter id="filter0_i_63_427" x="0" y="0" width="102.5" height="29.5" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+        <feFlood flood-opacity="0" result="BackgroundImageFix"/>
+        <feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape"/>
+        <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+        <feOffset dx="0.3" dy="0.3"/>
+        <feGaussianBlur stdDeviation="1"/>
+        <feComposite in2="hardAlpha" operator="arithmetic" k2="-1" k3="1"/>
+        <feColorMatrix type="matrix" values="0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.4 0"/>
+        <feBlend mode="normal" in2="shape" result="effect1_innerShadow_63_427"/>
+      </filter>
+      <clipPath id="clip0_63_427">
+        <rect width="19.2" height="19.2" fill="white" transform="matrix(-1 0 0 1 27.2 5)"/>
+      </clipPath>
+    </defs>
+  </svg>
 
   <script>
     const { listen } = window.__TAURI__.event;
-    
-    const container = document.getElementById("overlay-container");
-    const iconMic = document.getElementById("icon-mic");
-    const iconSpinner = document.getElementById("icon-spinner");
-    const labelStatus = document.getElementById("label-status");
-    const labelDesc = document.getElementById("label-desc");
 
-    // Listen to recording-state updates from Tauri Rust backend
+    const bars = document.querySelectorAll(".sound-bar");
+    let currentState = "recording";
+    let animationFrameId = null;
+    let angle = 0;
+
+    // Reset all bars to default quiet state
+    function resetBars() {
+      bars.forEach(bar => {
+        bar.setAttribute("height", "6");
+        bar.setAttribute("y", "11.6001");
+      });
+    }
+
+    // Smooth loading sine-wave animation for "processing" state
+    function animateProcessing() {
+      if (currentState !== "processing") return;
+      bars.forEach((bar, index) => {
+        const h = 6 + Math.sin(angle + index * 0.8) * 8;
+        const y = 14.6 - (h / 2);
+        bar.setAttribute("height", h);
+        bar.setAttribute("y", y);
+      });
+      angle += 0.12;
+      animationFrameId = requestAnimationFrame(animateProcessing);
+    }
+
+    // Listen for recording-state updates
     listen("recording-state", (event) => {
-      const state = event.payload; // "recording" or "processing"
-      
-      if (state === "processing") {
-        container.className = "overlay-card state-processing";
-        iconMic.style.display = "none";
-        iconSpinner.style.display = "block";
-        labelStatus.textContent = "Обработка...";
-        labelDesc.textContent = "Распознавание речи";
-      } else {
-        container.className = "overlay-card state-recording";
-        iconMic.style.display = "block";
-        iconSpinner.style.display = "none";
-        labelStatus.textContent = "Запись...";
-        labelDesc.textContent = "Удерживайте клавишу";
+      currentState = event.payload; // "recording" or "processing"
+
+      if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
+        animationFrameId = null;
       }
+
+      if (currentState === "processing") {
+        angle = 0;
+        animateProcessing();
+      } else {
+        resetBars();
+      }
+    });
+
+    // Listen to real-time voice volume updates from Rust
+    listen("volume-level", (event) => {
+      if (currentState !== "recording") return;
+
+      const volume = event.payload; // Float from 0.0 to ~1.0
+      
+      bars.forEach((bar, index) => {
+        let h = 6;
+        if (volume > 0.005) {
+          // Compute height based on volume and apply distinct frequency factor per bar
+          const factor = 0.4 + Math.sin(index * 0.7) * 0.5 + Math.random() * 0.2;
+          h = 6 + (volume * 140 * factor);
+          h = Math.min(22, Math.max(6, h));
+        }
+        const y = 14.6 - (h / 2);
+        bar.setAttribute("height", h);
+        bar.setAttribute("y", y);
+      });
     });
   </script>
 </body>
