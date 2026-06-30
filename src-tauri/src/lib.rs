@@ -144,6 +144,25 @@ pub fn run() {
 
                         // 6. Show overlay window
                         if let Some(overlay) = app_handle.get_webview_window("overlay") {
+                            // Position overlay in the bottom center of the primary monitor
+                            if let Ok(Some(monitor)) = overlay.primary_monitor() {
+                                let size = monitor.size();
+                                let scale_factor = monitor.scale_factor();
+                                
+                                // Convert physical coordinates to logical coordinates
+                                let monitor_width = size.width as f64 / scale_factor;
+                                let monitor_height = size.height as f64 / scale_factor;
+                                
+                                // Match width and height from tauri.conf.json
+                                let overlay_width = 130.0;
+                                let overlay_height = 50.0;
+                                
+                                // Center horizontally, place ~60px above the bottom (just above the taskbar)
+                                let x = (monitor_width - overlay_width) / 2.0;
+                                let y = monitor_height - overlay_height - 60.0;
+                                
+                                let _ = overlay.set_position(tauri::Position::Logical(tauri::LogicalPosition::new(x, y)));
+                            }
                             let _ = overlay.show();
                         }
 

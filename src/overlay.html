@@ -127,10 +127,11 @@
       
       bars.forEach((bar, index) => {
         let h = 6;
-        if (volume > 0.005) {
+        if (volume > 0.0002) {
+          const boosted = Math.sqrt(volume);
           // Compute height based on volume and apply distinct frequency factor per bar
-          const factor = 0.4 + Math.sin(index * 0.7) * 0.5 + Math.random() * 0.2;
-          h = 6 + (volume * 140 * factor);
+          const factor = 0.3 + Math.sin(index * 0.7) * 0.4 + Math.random() * 0.3;
+          h = 6 + (boosted * 55 * factor);
           h = Math.min(22, Math.max(6, h));
         }
         const y = 14.6 - (h / 2);
