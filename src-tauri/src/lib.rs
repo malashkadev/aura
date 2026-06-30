@@ -373,8 +373,37 @@ pub fn run() {
                                         if let Some(state) = app_handle_clone.try_state::<AppState>() {
                                             let state = state.inner();
                                             if let Ok(mut typed_guard) = state.typed_so_far.lock() {
-                                                // Perform a smart diff replacement to only touch changed suffixes and avoid erasing the whole line
-                                                diff_and_type(&mut *typed_guard, trimmed);
+                                                let streaming_enabled = if let Ok(settings) = settings::load_settings(&app_handle_clone) {
+                                                    settings.streaming_enabled
+                                                } else {
+                                                    false
+                                                };
+
+                                                if streaming_enabled {
+                                                    // Perform a smart diff replacement to only touch changed suffixes and avoid erasing the whole line
+                                                    diff_and_type(&mut *typed_guard, trimmed);
+                                                } else {
+                                                    // Perform instantaneous clipboard paste for classic stable mode (v1.0 behavior)
+                                                    let original_clipboard = if let Ok(mut cb) = arboard::Clipboard::new() {
+                                                        cb.get_text().ok()
+                                                    } else {
+                                                        None
+                                                    };
+
+                                                    if let Ok(mut cb) = arboard::Clipboard::new() {
+                                                        let _ = cb.set_text(trimmed.to_string());
+                                                    }
+
+                                                    keyboard_simulator::simulate_paste();
+
+                                                    tokio::time::sleep(std::time::Duration::from_millis(150)).await;
+
+                                                    if let Some(orig) = original_clipboard {
+                                                        if let Ok(mut cb) = arboard::Clipboard::new() {
+                                                            let _ = cb.set_text(orig);
+                                                        }
+                                                    }
+                                                }
                                             }
                                         }
                                     }
