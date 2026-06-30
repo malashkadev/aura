@@ -163,16 +163,14 @@ unsafe extern "system" fn low_level_keyboard_proc(
                 } else {
                     KEY_SUPPRESSED.store(false, Ordering::SeqCst);
                 }
-            } else if is_up {
-                if KEY_SUPPRESSED.swap(false, Ordering::SeqCst) || modifier_satisfied {
-                    if SHORTCUT_ACTIVE.swap(false, Ordering::SeqCst) {
-                        if let Some(cb) = CALLBACK.get() {
-                            cb(false);
-                        }
+            } else if is_up && (KEY_SUPPRESSED.swap(false, Ordering::SeqCst) || modifier_satisfied) {
+                if SHORTCUT_ACTIVE.swap(false, Ordering::SeqCst) {
+                    if let Some(cb) = CALLBACK.get() {
+                        cb(false);
                     }
-                    if modifier_satisfied {
-                        return 1; // Suppress key event
-                    }
+                }
+                if modifier_satisfied {
+                    return 1; // Suppress key event
                 }
             }
         }

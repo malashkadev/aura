@@ -22,7 +22,7 @@ fn find_file_recursive(dir: &Path, target_name: &str) -> Option<PathBuf> {
                     if let Some(found) = find_file_recursive(&path, target_name) {
                         return Some(found);
                     }
-                } else if path.file_name().map_or(false, |name| name == target_name) {
+                } else if path.file_name().is_some_and(|name| name == target_name) {
                     return Some(path);
                 }
             }
@@ -33,16 +33,8 @@ fn find_file_recursive(dir: &Path, target_name: &str) -> Option<PathBuf> {
 
 /// Format the model filename correctly to prevent duplicates (e.g., ggml-ggml-tiny.bin)
 fn format_model_filename(model_name: &str) -> String {
-    let name_without_ggml = if model_name.starts_with("ggml-") {
-        &model_name[5..]
-    } else {
-        model_name
-    };
-    let name_without_bin = if name_without_ggml.ends_with(".bin") {
-        &name_without_ggml[..name_without_ggml.len() - 4]
-    } else {
-        name_without_ggml
-    };
+    let name_without_ggml = model_name.strip_prefix("ggml-").unwrap_or(model_name);
+    let name_without_bin = name_without_ggml.strip_suffix(".bin").unwrap_or(name_without_ggml);
     format!("ggml-{}.bin", name_without_bin)
 }
 
@@ -237,10 +229,9 @@ pub fn run_local_whisper<R: Runtime>(
         ));
     }
 
-    // 3. Execute command
     let output = Command::new(&sidecar_path)
         .current_dir(sidecar_dir)
-        .args(&[
+        .args([
             "-m",
             model_path.to_str().ok_or("Invalid model path encoding")?,
             "-f",
