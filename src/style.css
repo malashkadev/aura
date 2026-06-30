@@ -649,25 +649,25 @@ body {
 }
 
 .toggle-slider {
-  position: relative;
+  display: flex;
+  align-items: center;
   width: 40px;
   height: 20px;
   background-color: hsl(0, 0%, 14%);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-full);
+  padding: 3px;
   transition: var(--transition);
 }
 
 .toggle-slider::before {
   content: "";
-  position: absolute;
   width: 12px;
   height: 12px;
-  left: 3px;
-  top: 3px;
   background-color: var(--text-secondary);
   border-radius: 50%;
   transition: var(--transition);
+  transform: translateX(0);
 }
 
 .toggle-switch input:checked + .toggle-slider {
@@ -676,9 +676,9 @@ body {
 }
 
 .toggle-switch input:checked + .toggle-slider::before {
-  left: 23px;
   background-color: var(--accent-color);
   box-shadow: 0 0 8px hsla(var(--accent-color-rgb), 0.5);
+  transform: translateX(20px);
 }
 
 .toggle-label {
