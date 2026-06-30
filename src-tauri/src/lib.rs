@@ -120,7 +120,55 @@ fn is_silence_hallucination(text: &str) -> bool {
     false
 }
 
-// Aura v2.0.16 - Impeccable Audit Polish & Optimize
+// Aura v2.0.17 - Image and Text Clipboard Backup & About UI Updates
+
+#[derive(Clone, Debug)]
+enum ClipboardBackup {
+    Text(String),
+    Image {
+        width: usize,
+        height: usize,
+        bytes: Vec<u8>,
+    },
+    Empty,
+}
+
+fn backup_clipboard() -> ClipboardBackup {
+    if let Ok(mut cb) = arboard::Clipboard::new() {
+        if let Ok(text) = cb.get_text() {
+            return ClipboardBackup::Text(text);
+        }
+        if let Ok(img) = cb.get_image() {
+            return ClipboardBackup::Image {
+                width: img.width,
+                height: img.height,
+                bytes: img.bytes.into_owned(),
+            };
+        }
+    }
+    ClipboardBackup::Empty
+}
+
+fn restore_clipboard(backup: ClipboardBackup) {
+    if let Ok(mut cb) = arboard::Clipboard::new() {
+        match backup {
+            ClipboardBackup::Text(text) => {
+                let _ = cb.set_text(text);
+            }
+            ClipboardBackup::Image { width, height, bytes } => {
+                let img = arboard::ImageData {
+                    width,
+                    height,
+                    bytes: std::borrow::Cow::Owned(bytes),
+                };
+                let _ = cb.set_image(img);
+            }
+            ClipboardBackup::Empty => {
+                let _ = cb.clear();
+            }
+        }
+    }
+}
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -220,11 +268,7 @@ pub fn run() {
                         // Copy selected text in a background thread to avoid blocking the main audio loop
                         let app_handle_clone_copy = app_handle.clone();
                         tauri::async_runtime::spawn(async move {
-                            let original_clipboard = if let Ok(mut cb) = arboard::Clipboard::new() {
-                                cb.get_text().ok()
-                            } else {
-                                None
-                            };
+                            let original_clipboard = backup_clipboard();
 
                             keyboard_simulator::simulate_copy();
                             tokio::time::sleep(std::time::Duration::from_millis(150)).await;
@@ -244,11 +288,7 @@ pub fn run() {
                             }
 
                             // Restore original clipboard
-                            if let Some(orig) = original_clipboard {
-                                if let Ok(mut cb) = arboard::Clipboard::new() {
-                                    let _ = cb.set_text(orig);
-                                }
-                            }
+                            restore_clipboard(original_clipboard);
                         });
 
                         // Start recording to temporary WAV path
@@ -516,11 +556,7 @@ pub fn run() {
                                                 }
                                             } else {
                                                 // Perform instantaneous clipboard paste for classic stable mode (v1.0 behavior)
-                                                let original_clipboard = if let Ok(mut cb) = arboard::Clipboard::new() {
-                                                    cb.get_text().ok()
-                                                } else {
-                                                    None
-                                                };
+                                                let original_clipboard = backup_clipboard();
 
                                                 if let Ok(mut cb) = arboard::Clipboard::new() {
                                                     let _ = cb.set_text(trimmed.to_string());
@@ -530,11 +566,7 @@ pub fn run() {
 
                                                 tokio::time::sleep(std::time::Duration::from_millis(800)).await;
 
-                                                if let Some(orig) = original_clipboard {
-                                                    if let Ok(mut cb) = arboard::Clipboard::new() {
-                                                        let _ = cb.set_text(orig);
-                                                    }
-                                                }
+                                                restore_clipboard(original_clipboard);
                                             }
                                             let paste_duration = paste_start.elapsed().as_millis();
                                             eprintln!("Aura Dev Log: Paste duration = {} ms", paste_duration);
