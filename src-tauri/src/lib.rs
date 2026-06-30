@@ -150,7 +150,7 @@ pub fn run() {
             if let Some(tray_icon) = app.default_window_icon().cloned() {
                 let _tray = TrayIconBuilder::new()
                     .icon(tray_icon)
-                    .menu(menu)
+                    .menu(&menu)
                     .on_menu_event(|app, event| {
                         match event.id.as_ref() {
                             "quit" => {
@@ -159,7 +159,7 @@ pub fn run() {
                             "show" => {
                                 if let Some(window) = app.get_webview_window("main") {
                                     let _ = window.show();
-                                    let _ = window.focus();
+                                    let _ = window.set_focus();
                                 }
                             }
                             _ => {}
@@ -169,8 +169,8 @@ pub fn run() {
                         if let TrayIconEvent::Click { button: MouseButton::Left, .. } = event {
                             let app = tray.app_handle();
                             if let Some(window) = app.get_webview_window("main") {
-                                let _ = window.show();
-                                let _ = window.focus();
+                                    let _ = window.show();
+                                    let _ = window.set_focus();
                             }
                         }
                     })
