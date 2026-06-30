@@ -223,7 +223,7 @@ pub async fn transcribe_and_clean(
 
             let transcribed_text = whisper_resp.text;
 
-            if !clean {
+            if !clean || selected_text.trim().is_empty() {
                 return Ok(transcribed_text);
             }
 
@@ -319,7 +319,7 @@ pub async fn transcribe_and_clean(
 
             let transcribed_text = whisper_resp.text;
 
-            if !clean {
+            if !clean || selected_text.trim().is_empty() {
                 return Ok(transcribed_text);
             }
 
