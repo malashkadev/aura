@@ -245,8 +245,8 @@ pub fn type_backspaces(count: usize) {
 pub fn replace_text(backspace_count: usize, new_text: &str) {
     let released = release_modifiers();
     unsafe {
-        // 1. Send backspaces
-        for _ in 0..backspace_count {
+        // 1. Send backspaces with batch flushes to prevent buffer drops
+        for i in 0..backspace_count {
             let mut inputs = [std::mem::zeroed::<INPUT>(); 2];
             inputs[0].r#type = INPUT_KEYBOARD;
             inputs[0].Anonymous.ki = KEYBDINPUT {
@@ -265,10 +265,17 @@ pub fn replace_text(backspace_count: usize, new_text: &str) {
                 dwExtraInfo: 0,
             };
             SendInput(2, inputs.as_mut_ptr(), std::mem::size_of::<INPUT>() as i32);
-            std::thread::sleep(std::time::Duration::from_millis(3));
+            
+            // Every 10 backspaces, sleep 15ms to let the OS process the queue, otherwise 3ms
+            if (i + 1) % 10 == 0 {
+                std::thread::sleep(std::time::Duration::from_millis(15));
+            } else {
+                std::thread::sleep(std::time::Duration::from_millis(3));
+            }
         }
         
-        // 2. Send characters
+        // 2. Send characters with batch flushes to prevent buffer drops
+        let mut char_idx = 0;
         for ch in new_text.chars() {
             let mut buf = [0; 2];
             let utf16_chars = ch.encode_utf16(&mut buf);
@@ -291,7 +298,14 @@ pub fn replace_text(backspace_count: usize, new_text: &str) {
                     dwExtraInfo: 0,
                 };
                 SendInput(2, inputs.as_mut_ptr(), std::mem::size_of::<INPUT>() as i32);
-                std::thread::sleep(std::time::Duration::from_millis(1));
+                
+                // Every 15 chars, sleep 10ms to let the OS process the queue, otherwise 1ms
+                char_idx += 1;
+                if char_idx % 15 == 0 {
+                    std::thread::sleep(std::time::Duration::from_millis(10));
+                } else {
+                    std::thread::sleep(std::time::Duration::from_millis(1));
+                }
             }
         }
     }
