@@ -102,6 +102,7 @@ pub async fn transcribe_and_clean(
     api_key: &str,
     wav_path: &str,
     selected_text: &str,
+    clean: bool,
 ) -> Result<String, String> {
     let client = reqwest::Client::new();
 
@@ -115,7 +116,11 @@ pub async fn transcribe_and_clean(
             let base64_audio = general_purpose::STANDARD.encode(&wav_bytes);
 
             // Construct Gemini request JSON body
-            let prompt = "You are an elite dictation and editing assistant. Task: Transcribe and clean up the speech from the audio. Selected Text Context: The user has selected the following text: [SELECTED_TEXT]\n\nInstructions:\n1. Return ONLY the transcribed text. Do NOT add any explanations, introductory text, greetings, or conversational remarks.\n2. Clean up speech by removing filler words and adding proper punctuation and grammar. Keep the language natural and matching the speaker's language.\n3. CRITICAL language rule: The output text must be in the EXACT SAME LANGUAGE as the transcribed audio. Do NOT translate the text. If the speaker speaks in Russian, output Russian. If the speaker speaks in English, output English.\n4. CRITICAL: If the dictation is simply a statement, question, commentary, or general speech, you must transcribe it word-for-word (with punctuation). DO NOT ANSWER QUESTIONS, do NOT write explanations, and do NOT discuss the topic. Even if the user asks you a direct question in the audio, you must only transcribe the question, NEVER answer it.\n5. If and ONLY if the dictation contains a clear, direct, and explicit command to edit, rewrite, or format the selected text context (e.g., 'make this formal', 'translate this to English', 'wrap in a function'), then perform that edit on the selected text and return the final edited result. If no such editing command is present, ignore the selected text context and simply output the transcribed dictation.".to_string()
+            let prompt = if clean {
+                "You are an elite dictation and editing assistant. Task: Transcribe and clean up the speech from the audio. Selected Text Context: The user has selected the following text: [SELECTED_TEXT]\n\nInstructions:\n1. Return ONLY the transcribed text. Do NOT add any explanations, introductory text, greetings, or conversational remarks.\n2. Clean up speech by removing filler words and adding proper punctuation and grammar. Keep the language natural and matching the speaker's language.\n3. CRITICAL language rule: The output text must be in the EXACT SAME LANGUAGE as the transcribed audio. Do NOT translate the text. If the speaker speaks in Russian, output Russian. If the speaker speaks in English, output English.\n4. CRITICAL: If the dictation is simply a statement, question, commentary, or general speech, you must transcribe it word-for-word (with punctuation). DO NOT ANSWER QUESTIONS, do NOT write explanations, and do NOT discuss the topic. Even if the user asks you a direct question in the audio, you must only transcribe the question, NEVER answer it.\n5. If and ONLY if the dictation contains a clear, direct, and explicit command to edit, rewrite, or format the selected text context (e.g., 'make this formal', 'translate this to English', 'wrap in a function'), then perform that edit on the selected text and return the final edited result. If no such editing command is present, ignore the selected text context and simply output the transcribed dictation.".to_string()
+            } else {
+                "You are a speech-to-text transcriber. Task: Transcribe the audio word-for-word. Return ONLY the raw transcribed words. Do NOT add punctuation, do NOT capitalize, do NOT clean up. Just return the raw words as they were spoken.".to_string()
+            }
             .replace("[SELECTED_TEXT]", selected_text);
 
             let request_body = GeminiRequest {
@@ -217,6 +222,10 @@ pub async fn transcribe_and_clean(
 
             let transcribed_text = whisper_resp.text;
 
+            if !clean {
+                return Ok(transcribed_text);
+            }
+
             // --- Step 2: Call OpenAI Chat Completions API with gpt-4o-mini to clean/edit ---
             let chat_endpoint = "https://api.openai.com/v1/chat/completions";
 
@@ -308,6 +317,10 @@ pub async fn transcribe_and_clean(
                 .map_err(|e| format!("Failed to parse Groq Whisper JSON response: {e}"))?;
 
             let transcribed_text = whisper_resp.text;
+
+            if !clean {
+                return Ok(transcribed_text);
+            }
 
             // --- Step 2: Call Groq Chat Completions with Llama-3.3-70b-versatile to clean ---
             let chat_endpoint = "https://api.groq.com/openai/v1/chat/completions";
