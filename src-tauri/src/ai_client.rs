@@ -102,7 +102,7 @@ pub async fn transcribe_and_clean(
     api_key: &str,
     wav_path: &str,
     selected_text: &str,
-    language: &str,
+    _language: &str,
     clean: bool,
 ) -> Result<String, String> {
     let client = reqwest::Client::new();
