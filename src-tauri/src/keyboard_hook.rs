@@ -16,7 +16,7 @@ struct HotkeyConfig {
 
 static HOTKEY_CONFIG: Mutex<HotkeyConfig> = Mutex::new(HotkeyConfig {
     modifier_vk: 18, // VK_MENU (Alt)
-    key_vk: 0x4E,    // VK_N (N)
+    key_vk: 0x56,    // VK_V (V)
 });
 
 static CALLBACK: OnceLock<Box<dyn Fn(bool) + Send + Sync>> = OnceLock::new();

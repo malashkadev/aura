@@ -19,7 +19,7 @@ impl Default for Settings {
             api_provider: "gemini".to_string(),
             api_key: "".to_string(),
             model_name: "base".to_string(),
-            hotkey: "Alt+N".to_string(),
+            hotkey: "Alt+V".to_string(),
         }
     }
 }

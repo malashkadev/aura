@@ -468,8 +468,8 @@ body {
 }
 
 .about-icon {
-  width: 64px;
-  height: 64px;
+  width: 96px;
+  height: 96px;
   background-color: hsla(var(--accent-color-rgb), 0.06);
   border-radius: var(--radius-full);
   color: var(--accent-color);
@@ -480,8 +480,8 @@ body {
 }
 
 .about-icon svg {
-  width: 32px;
-  height: 32px;
+  width: 56px;
+  height: 56px;
 }
 
 .about-app-title {
