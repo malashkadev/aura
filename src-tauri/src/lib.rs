@@ -322,6 +322,7 @@ pub fn run() {
                         // Perform final transcription in a background task
                         let app_handle_clone = app_handle.clone();
                         tauri::async_runtime::spawn(async move {
+                            let start_time = std::time::Instant::now();
                             // Only wait if streaming was enabled to let the loop exit cleanly
                             if streaming_enabled {
                                 tokio::time::sleep(std::time::Duration::from_millis(100)).await;
@@ -360,6 +361,7 @@ pub fn run() {
                             };
 
                             eprintln!("Aura Dev Log: Calling final transcribe_and_clean...");
+                            let api_call_start = std::time::Instant::now();
                             // Perform transcription on the full audio file
                             let transcription_result = if settings.transcription_mode == "local" {
                                 whisper_runner::run_local_whisper(&app_handle_clone, &settings.model_name, &temp_path_str)
@@ -378,6 +380,8 @@ pub fn run() {
                                     true,
                                 ).await
                             };
+                            let api_call_duration = api_call_start.elapsed().as_millis();
+                            eprintln!("Aura Dev Log: API call duration = {} ms", api_call_duration);
 
                             match transcription_result {
                                 Ok(text) => {
@@ -392,6 +396,7 @@ pub fn run() {
                                                 false
                                             };
 
+                                            let paste_start = std::time::Instant::now();
                                             if streaming_enabled {
                                                 if let Ok(mut typed_guard) = state.typed_so_far.lock() {
                                                     // Perform a smart diff replacement to only touch changed suffixes and avoid erasing the whole line
@@ -419,6 +424,8 @@ pub fn run() {
                                                     }
                                                 }
                                             }
+                                            let paste_duration = paste_start.elapsed().as_millis();
+                                            eprintln!("Aura Dev Log: Paste duration = {} ms", paste_duration);
                                         }
                                     }
                                 }
@@ -426,6 +433,8 @@ pub fn run() {
                                     eprintln!("Aura Dev Log ERROR: Final transcription failed: {}", e);
                                 }
                             }
+                            let total_duration = start_time.elapsed().as_millis();
+                            eprintln!("Aura Dev Log: Total processing duration from release = {} ms", total_duration);
 
                             // Hide overlay window
                             if let Some(overlay) = app_handle_clone.get_webview_window("overlay") {
