@@ -75,39 +75,60 @@
     let animationFrameId = null;
     let angle = 0;
 
+    // Track current and target heights for smooth linear interpolation (lerp)
+    const barStates = Array.from(bars).map(() => ({
+      currentHeight: 6.0,
+      targetHeight: 6.0
+    }));
+
     // Reset all bars to default quiet state
     function resetBars() {
+      barStates.forEach(state => {
+        state.targetHeight = 6.0;
+        state.currentHeight = 6.0;
+      });
       bars.forEach(bar => {
         bar.setAttribute("height", "6");
         bar.setAttribute("y", "11.6001");
       });
     }
 
-    // Smooth loading sine-wave animation for "processing" state
-    function animateProcessing() {
-      if (currentState !== "processing") return;
-      bars.forEach((bar, index) => {
-        const h = 6 + Math.sin(angle + index * 0.8) * 8;
-        const y = 14.6 - (h / 2);
-        bar.setAttribute("height", h);
-        bar.setAttribute("y", y);
-      });
-      angle += 0.12;
-      animationFrameId = requestAnimationFrame(animateProcessing);
+    // Main animation and physics loop (60fps)
+    function updateAnimation() {
+      if (currentState === "processing") {
+        // Smooth sine wave scanning animation
+        bars.forEach((bar, index) => {
+          const h = 6 + Math.sin(angle + index * 0.8) * 8;
+          const y = 14.6 - (h / 2);
+          bar.setAttribute("height", h.toString());
+          bar.setAttribute("y", y.toString());
+        });
+        angle += 0.12;
+      } else if (currentState === "recording") {
+        // Smoothly slide currentHeight towards targetHeight
+        bars.forEach((bar, index) => {
+          const state = barStates[index];
+          // Lerp: current = current + (target - current) * factor
+          state.currentHeight += (state.targetHeight - state.currentHeight) * 0.20;
+          
+          const y = 14.6 - (state.currentHeight / 2);
+          bar.setAttribute("height", state.currentHeight.toString());
+          bar.setAttribute("y", y.toString());
+        });
+      }
+
+      animationFrameId = requestAnimationFrame(updateAnimation);
     }
+
+    // Start the animation loop
+    updateAnimation();
 
     // Listen for recording-state updates
     listen("recording-state", (event) => {
       currentState = event.payload; // "recording" or "processing"
 
-      if (animationFrameId) {
-        cancelAnimationFrame(animationFrameId);
-        animationFrameId = null;
-      }
-
       if (currentState === "processing") {
         angle = 0;
-        animateProcessing();
       } else {
         resetBars();
       }
@@ -124,18 +145,17 @@
         if (isNaN(volume)) volume = 0.0;
       }
       
-      bars.forEach((bar, index) => {
-        let h = 6;
+      barStates.forEach((state, index) => {
+        let h = 6.0;
         // Make wave react to even tiny volume fluctuations
         if (volume > 0.00005) {
           const boosted = Math.sqrt(volume); // e.g. sqrt(0.001) = 0.031
-          const factor = 0.3 + Math.sin(index * 0.7) * 0.4 + Math.random() * 0.3;
-          h = 6 + (boosted * 80.0 * factor);
-          h = Math.min(22, Math.max(6, h));
+          const factor = 0.4 + Math.sin(index * 0.7) * 0.4 + Math.random() * 0.2;
+          // Gentle scaling multiplier for natural motion
+          h = 6.0 + (boosted * 40.0 * factor);
+          h = Math.min(22.0, Math.max(6.0, h));
         }
-        const y = 14.6 - (h / 2);
-        bar.setAttribute("height", h.toString());
-        bar.setAttribute("y", y.toString());
+        state.targetHeight = h;
       });
     });
   </script>
