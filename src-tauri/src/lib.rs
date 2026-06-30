@@ -213,6 +213,40 @@ pub fn run() {
                             }
                         }
 
+                        // Copy selected text in a background thread to avoid blocking the main audio loop
+                        let app_handle_clone_copy = app_handle.clone();
+                        tauri::async_runtime::spawn(async move {
+                            let original_clipboard = if let Ok(mut cb) = arboard::Clipboard::new() {
+                                cb.get_text().ok()
+                            } else {
+                                None
+                            };
+
+                            keyboard_simulator::simulate_copy();
+                            tokio::time::sleep(std::time::Duration::from_millis(150)).await;
+
+                            let copied = if let Ok(mut cb) = arboard::Clipboard::new() {
+                                cb.get_text().unwrap_or_default()
+                            } else {
+                                String::new()
+                            };
+
+                            if let Some(state) = app_handle_clone_copy.try_state::<AppState>() {
+                                let state = state.inner();
+                                if let Ok(mut guard) = state.selected_text.lock() {
+                                    *guard = copied.clone();
+                                    eprintln!("Aura Dev Log: Captured selected text: '{}'", copied);
+                                }
+                            }
+
+                            // Restore original clipboard
+                            if let Some(orig) = original_clipboard {
+                                if let Ok(mut cb) = arboard::Clipboard::new() {
+                                    let _ = cb.set_text(orig);
+                                }
+                            }
+                        });
+
                         // Start recording to temporary WAV path
                         let temp_path = std::env::temp_dir().join("aura-temp.wav");
                         let temp_path_str = temp_path.to_string_lossy().to_string();
@@ -489,7 +523,7 @@ pub fn run() {
 
                                                 keyboard_simulator::simulate_paste();
 
-                                                tokio::time::sleep(std::time::Duration::from_millis(150)).await;
+                                                tokio::time::sleep(std::time::Duration::from_millis(800)).await;
 
                                                 if let Some(orig) = original_clipboard {
                                                     if let Ok(mut cb) = arboard::Clipboard::new() {
