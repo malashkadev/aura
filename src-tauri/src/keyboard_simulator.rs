@@ -201,6 +201,7 @@ pub fn type_string(text: &str) {
                 };
 
                 SendInput(2, inputs.as_mut_ptr(), std::mem::size_of::<INPUT>() as i32);
+                std::thread::sleep(std::time::Duration::from_millis(1));
             }
         }
     }
@@ -235,6 +236,7 @@ pub fn type_backspaces(count: usize) {
             };
 
             SendInput(2, inputs.as_mut_ptr(), std::mem::size_of::<INPUT>() as i32);
+            std::thread::sleep(std::time::Duration::from_millis(3));
         }
     }
     restore_modifiers(&released);
