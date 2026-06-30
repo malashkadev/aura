@@ -35,43 +35,30 @@ async fn download_model_command(app_handle: tauri::AppHandle, model_name: String
     whisper_runner::download_model(&app_handle, &model_name).await.map(|_| ())
 }
 
-fn get_incremental_suffix(typed_so_far: &str, new_text: &str) -> String {
-    let typed_words: Vec<&str> = typed_so_far.split_whitespace().collect();
-    let new_words: Vec<&str> = new_text.split_whitespace().collect();
+fn diff_and_type(typed_so_far: &mut String, new_text: &str) {
+    let typed_chars: Vec<char> = typed_so_far.chars().collect();
+    let new_chars: Vec<char> = new_text.chars().collect();
     
-    if typed_words.is_empty() {
-        return new_text.to_string();
-    }
-    if new_words.is_empty() {
-        return String::new();
-    }
-    
-    let norm_typed: Vec<String> = typed_words.iter().map(|w| normalize_word(w)).collect();
-    let norm_new: Vec<String> = new_words.iter().map(|w| normalize_word(w)).collect();
-    
-    // Try to find matching suffix of typed_words at the start of new_words
-    let max_match_len = std::cmp::min(norm_typed.len(), 5);
-    for len in (1..=max_match_len).rev() {
-        let suffix = &norm_typed[norm_typed.len() - len..];
-        if norm_new.len() >= len && suffix == &norm_new[..len] {
-            // Found a match! Return the remaining words from new_words
-            let remaining_words = &new_words[len..];
-            if remaining_words.is_empty() {
-                return String::new();
-            }
-            return remaining_words.join(" ");
+    let mut common_prefix_len = 0;
+    for (c1, c2) in typed_chars.iter().zip(new_chars.iter()) {
+        if c1 == c2 {
+            common_prefix_len += 1;
+        } else {
+            break;
         }
     }
     
-    // No match found, return the entire new_text
-    new_text.to_string()
-}
-
-fn normalize_word(word: &str) -> String {
-    word.chars()
-        .filter(|c| c.is_alphanumeric())
-        .collect::<String>()
-        .to_lowercase()
+    let chars_to_delete = typed_chars.len() - common_prefix_len;
+    if chars_to_delete > 0 {
+        keyboard_simulator::type_backspaces(chars_to_delete);
+    }
+    
+    let suffix: String = new_chars[common_prefix_len..].iter().collect();
+    if !suffix.is_empty() {
+        keyboard_simulator::type_string(&suffix);
+    }
+    
+    *typed_so_far = new_text.to_string();
 }
 
 fn is_silence_hallucination(text: &str) -> bool {
@@ -258,21 +245,7 @@ pub fn run() {
                                                             eprintln!("Aura Dev Log: Streaming transcription success: '{}'", trimmed);
                                                             if !trimmed.is_empty() && !is_silence_hallucination(trimmed) {
                                                                 if let Ok(mut typed_guard) = state.typed_so_far.lock() {
-                                                                    let suffix = get_incremental_suffix(&*typed_guard, trimmed);
-                                                                    eprintln!("Aura Dev Log: typed_so_far = '{}', suffix to type = '{}'", *typed_guard, suffix);
-                                                                    if !suffix.is_empty() {
-                                                                        let to_type = if typed_guard.is_empty() || typed_guard.ends_with(' ') || suffix.starts_with(' ') {
-                                                                            suffix.clone()
-                                                                        } else {
-                                                                            format!(" {}", suffix)
-                                                                        };
-                                                                        keyboard_simulator::type_string(&to_type);
-                                                                        if typed_guard.is_empty() {
-                                                                            *typed_guard = trimmed.to_string();
-                                                                        } else {
-                                                                            *typed_guard = format!("{}{}", typed_guard, to_type);
-                                                                        }
-                                                                    }
+                                                                    diff_and_type(&mut *typed_guard, trimmed);
                                                                 }
                                                             }
                                                         }
