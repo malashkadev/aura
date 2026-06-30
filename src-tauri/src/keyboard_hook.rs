@@ -162,7 +162,7 @@ unsafe extern "system" fn low_level_keyboard_proc(
             };
 
             if is_down {
-                if modifier_satisfied {
+                if modifier_satisfied || SHORTCUT_ACTIVE.load(Ordering::SeqCst) {
                     KEY_SUPPRESSED.store(true, Ordering::SeqCst);
                     if !SHORTCUT_ACTIVE.swap(true, Ordering::SeqCst) {
                         if let Some(cb) = CALLBACK.get() {
@@ -175,12 +175,13 @@ unsafe extern "system" fn low_level_keyboard_proc(
                 }
             } else if is_up {
                 let suppressed = KEY_SUPPRESSED.swap(false, Ordering::SeqCst);
-                if SHORTCUT_ACTIVE.swap(false, Ordering::SeqCst) {
+                let was_active = SHORTCUT_ACTIVE.swap(false, Ordering::SeqCst);
+                if was_active {
                     if let Some(cb) = CALLBACK.get() {
                         cb(false);
                     }
                 }
-                if suppressed || modifier_satisfied {
+                if suppressed || modifier_satisfied || was_active {
                     return 1; // Suppress key event
                 }
             }
