@@ -122,6 +122,13 @@ unsafe extern "system" fn low_level_keyboard_proc(
     // If code is less than 0, the hook procedure must pass the message to CallNextHookEx
     if code >= 0 {
         let kbd_struct = *(lparam as *const KBDLLHOOKSTRUCT);
+        
+        // Ignore simulated/injected keyboard events from SendInput to prevent self-triggering
+        let is_injected = (kbd_struct.flags & 0x10) != 0;
+        if is_injected {
+            return CallNextHookEx(0, code, wparam, lparam);
+        }
+
         let vk_code = kbd_struct.vkCode;
 
         let is_down = wparam == WM_KEYDOWN as usize || wparam == WM_SYSKEYDOWN as usize;

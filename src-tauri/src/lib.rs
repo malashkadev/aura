@@ -198,8 +198,8 @@ pub fn run() {
                         let app_handle_loop = app_handle.clone();
                         tauri::async_runtime::spawn(async move {
                             eprintln!("Aura Dev Log: Spawning background streaming loop task...");
-                            // Wait initial 1.5 seconds to gather initial audio
-                            tokio::time::sleep(std::time::Duration::from_millis(1500)).await;
+                            // Wait initial 4.0 seconds to gather initial audio to stay under Groq 20 RPM limit
+                            tokio::time::sleep(std::time::Duration::from_millis(4000)).await;
 
                             let chunk_path = std::env::temp_dir().join("aura-chunk.wav");
                             let chunk_path_str = chunk_path.to_string_lossy().to_string();
@@ -288,8 +288,8 @@ pub fn run() {
                                     }
                                 }
 
-                                // Wait another 1.5 seconds for next chunk
-                                tokio::time::sleep(std::time::Duration::from_millis(1500)).await;
+                                // Wait another 4.0 seconds for next chunk to stay under Groq 20 RPM limit
+                                tokio::time::sleep(std::time::Duration::from_millis(4000)).await;
                             }
                         });
                     } else {
