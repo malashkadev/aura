@@ -68,6 +68,20 @@
             </div>
           </div>
 
+          <div class="card">
+            <h2 class="card-title">Режим ввода текста</h2>
+            <p class="card-desc">Выберите способ отображения наговариваемого текста.</p>
+            <div class="form-group">
+              <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; color: var(--text-color); font-weight: 500;">
+                <input type="checkbox" id="checkbox-streaming" style="width: 18px; height: 18px; accent-color: var(--accent-color); cursor: pointer;" />
+                <span>Потоковый ввод в реальном времени (экспериментальный)</span>
+              </label>
+              <p style="margin-top: 8px; font-size: 13px; color: var(--text-muted); opacity: 0.8; line-height: 1.4;">
+                Если выключено: текст вставится целиком только после того, как вы отпустите клавиши (режим версии 1.0). Рекомендуется для стабильной работы с бесплатным API Groq.
+              </p>
+            </div>
+          </div>
+
           <div class="card" id="card-local-model" style="display: none;">
             <h2 class="card-title">Локальная модель Whisper</h2>
             <p class="card-desc">Выберите и скачайте подходящую модель. Более крупные модели точнее, но требуют больше ресурсов CPU и памяти.</p>

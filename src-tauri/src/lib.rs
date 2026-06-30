@@ -178,90 +178,94 @@ pub fn run() {
                         // Emit event
                         let _ = app_handle.emit("recording-state", "recording");
 
-                        // Spawn background streaming loop
-                        let app_handle_loop = app_handle.clone();
-                        tauri::async_runtime::spawn(async move {
-                            eprintln!("Aura Dev Log: Spawning background streaming loop task...");
-                            // Wait initial 4.0 seconds to gather initial audio to stay under Groq 20 RPM limit
-                            tokio::time::sleep(std::time::Duration::from_millis(4000)).await;
+                        // Spawn background streaming loop if enabled in settings
+                        if let Ok(settings) = settings::load_settings(&app_handle) {
+                            if settings.streaming_enabled {
+                                let app_handle_loop = app_handle.clone();
+                                tauri::async_runtime::spawn(async move {
+                                    eprintln!("Aura Dev Log: Spawning background streaming loop task...");
+                                    // Wait initial 4.0 seconds to gather initial audio to stay under Groq 20 RPM limit
+                                    tokio::time::sleep(std::time::Duration::from_millis(4000)).await;
 
-                            let chunk_path = std::env::temp_dir().join("aura-chunk.wav");
-                            let chunk_path_str = chunk_path.to_string_lossy().to_string();
+                                    let chunk_path = std::env::temp_dir().join("aura-chunk.wav");
+                                    let chunk_path_str = chunk_path.to_string_lossy().to_string();
 
-                            loop {
-                                let is_recording = if let Some(state) = app_handle_loop.try_state::<AppState>() {
-                                    state.is_recording.load(Ordering::Relaxed)
-                                } else {
-                                    false
-                                };
+                                    loop {
+                                        let is_recording = if let Some(state) = app_handle_loop.try_state::<AppState>() {
+                                            state.is_recording.load(Ordering::Relaxed)
+                                        } else {
+                                            false
+                                        };
 
-                                if !is_recording {
-                                    eprintln!("Aura Dev Log: is_recording is false. Exiting streaming loop.");
-                                    break;
-                                }
+                                        if !is_recording {
+                                            eprintln!("Aura Dev Log: is_recording is false. Exiting streaming loop.");
+                                            break;
+                                        }
 
-                                eprintln!("Aura Dev Log: Loop tick - reading samples...");
-                                if let Some(state) = app_handle_loop.try_state::<AppState>() {
-                                    let state = state.inner();
-                                    if let Ok((samples, sample_rate, channels)) = state.audio_recorder.get_recorded_samples() {
-                                        eprintln!("Aura Dev Log: Retrieved {} samples (rate={}, channels={})", samples.len(), sample_rate, channels);
-                                        // Ensure we have at least 0.5s of audio (8000 samples)
-                                        if samples.len() > 8000 {
-                                            let write_res = audio_recorder::process_and_write_wav(&samples, channels, sample_rate, &chunk_path_str);
-                                            eprintln!("Aura Dev Log: process_and_write_wav result = {:?}", write_res);
-                                            if write_res.is_ok() {
-                                                if let Ok(settings) = settings::load_settings(&app_handle_loop) {
-                                                    let selected_language = if let Ok(guard) = state.selected_language.lock() {
-                                                        guard.clone()
-                                                    } else {
-                                                        "ru".to_string()
-                                                    };
+                                        eprintln!("Aura Dev Log: Loop tick - reading samples...");
+                                        if let Some(state) = app_handle_loop.try_state::<AppState>() {
+                                            let state = state.inner();
+                                            if let Ok((samples, sample_rate, channels)) = state.audio_recorder.get_recorded_samples() {
+                                                eprintln!("Aura Dev Log: Retrieved {} samples (rate={}, channels={})", samples.len(), sample_rate, channels);
+                                                // Ensure we have at least 0.5s of audio (8000 samples)
+                                                if samples.len() > 8000 {
+                                                    let write_res = audio_recorder::process_and_write_wav(&samples, channels, sample_rate, &chunk_path_str);
+                                                    eprintln!("Aura Dev Log: process_and_write_wav result = {:?}", write_res);
+                                                    if write_res.is_ok() {
+                                                        if let Ok(settings) = settings::load_settings(&app_handle_loop) {
+                                                            let selected_language = if let Ok(guard) = state.selected_language.lock() {
+                                                                guard.clone()
+                                                            } else {
+                                                                "ru".to_string()
+                                                            };
 
-                                                    eprintln!("Aura Dev Log: Calling streaming transcribe_and_clean...");
-                                                    let transcription_result = if settings.transcription_mode == "local" {
-                                                        whisper_runner::run_local_whisper(&app_handle_loop, &settings.model_name, &chunk_path_str)
-                                                    } else {
-                                                        let provider = match settings.api_provider.as_str() {
-                                                            "openai" => ai_client::ApiProvider::OpenAi,
-                                                            "groq" => ai_client::ApiProvider::Groq,
-                                                            _ => ai_client::ApiProvider::Gemini,
-                                                        };
-                                                        ai_client::transcribe_and_clean(
-                                                            provider,
-                                                            &settings.api_key,
-                                                            &chunk_path_str,
-                                                            "", // No selected text during live streaming
-                                                            &selected_language,
-                                                            true,
-                                                        ).await
-                                                    };
+                                                            eprintln!("Aura Dev Log: Calling streaming transcribe_and_clean...");
+                                                            let transcription_result = if settings.transcription_mode == "local" {
+                                                                whisper_runner::run_local_whisper(&app_handle_loop, &settings.model_name, &chunk_path_str)
+                                                            } else {
+                                                                let provider = match settings.api_provider.as_str() {
+                                                                    "openai" => ai_client::ApiProvider::OpenAi,
+                                                                    "groq" => ai_client::ApiProvider::Groq,
+                                                                    _ => ai_client::ApiProvider::Gemini,
+                                                                };
+                                                                ai_client::transcribe_and_clean(
+                                                                    provider,
+                                                                    &settings.api_key,
+                                                                    &chunk_path_str,
+                                                                    "", // No selected text during live streaming
+                                                                    &selected_language,
+                                                                    true,
+                                                                ).await
+                                                            };
 
-                                                    match transcription_result {
-                                                        Ok(text) => {
-                                                            let trimmed = text.trim();
-                                                            eprintln!("Aura Dev Log: Streaming transcription success: '{}'", trimmed);
-                                                            if !trimmed.is_empty() && !is_silence_hallucination(trimmed) {
-                                                                if let Ok(mut typed_guard) = state.typed_so_far.lock() {
-                                                                    diff_and_type(&mut *typed_guard, trimmed);
+                                                            match transcription_result {
+                                                                Ok(text) => {
+                                                                    let trimmed = text.trim();
+                                                                    eprintln!("Aura Dev Log: Streaming transcription success: '{}'", trimmed);
+                                                                    if !trimmed.is_empty() && !is_silence_hallucination(trimmed) {
+                                                                        if let Ok(mut typed_guard) = state.typed_so_far.lock() {
+                                                                            diff_and_type(&mut *typed_guard, trimmed);
+                                                                        }
+                                                                    }
+                                                                }
+                                                                Err(e) => {
+                                                                    eprintln!("Aura Dev Log ERROR: Streaming transcription failed: {}", e);
                                                                 }
                                                             }
                                                         }
-                                                        Err(e) => {
-                                                            eprintln!("Aura Dev Log ERROR: Streaming transcription failed: {}", e);
-                                                        }
                                                     }
+                                                } else {
+                                                    eprintln!("Aura Dev Log: Not enough samples ({} <= 8000), skipping transcription.", samples.len());
                                                 }
                                             }
-                                        } else {
-                                            eprintln!("Aura Dev Log: Not enough samples ({} <= 8000), skipping transcription.", samples.len());
                                         }
-                                    }
-                                }
 
-                                // Wait another 4.0 seconds for next chunk to stay under Groq 20 RPM limit
-                                tokio::time::sleep(std::time::Duration::from_millis(4000)).await;
+                                        // Wait another 4.0 seconds for next chunk to stay under Groq 20 RPM limit
+                                        tokio::time::sleep(std::time::Duration::from_millis(4000)).await;
+                                    }
+                                });
                             }
-                        });
+                        }
                     } else {
                         eprintln!("Aura Dev Log: Alt+V released (is_down = false)");
                         // Check duration of hotkey press

@@ -10,6 +10,8 @@ pub struct Settings {
     pub api_key: String,
     pub model_name: String,         // "small", "base", etc.
     pub hotkey: String,             // "Alt+N"
+    #[serde(default)]
+    pub streaming_enabled: bool,    // whether to type text on-the-fly or paste on release (v1.0 mode)
 }
 
 impl Default for Settings {
@@ -20,6 +22,7 @@ impl Default for Settings {
             api_key: "".to_string(),
             model_name: "base".to_string(),
             hotkey: "Alt+V".to_string(),
+            streaming_enabled: false, // Default to false for stable v1.0 mode
         }
     }
 }
