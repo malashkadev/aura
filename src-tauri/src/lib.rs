@@ -1,3 +1,5 @@
+#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
+
 pub mod keyboard_hook;
 pub mod audio_recorder;
 pub mod ai_client;
@@ -119,7 +121,6 @@ fn is_silence_hallucination(text: &str) -> bool {
 }
 
 // Aura v2.0.14 - Visual Redesign and Stabilization
-#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
