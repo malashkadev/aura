@@ -154,8 +154,8 @@ pub fn run() {
                                 let monitor_height = size.height as f64 / scale_factor;
                                 
                                 // Match width and height from tauri.conf.json
-                                let overlay_width = 130.0;
-                                let overlay_height = 50.0;
+                                let overlay_width = 160.0;
+                                let overlay_height = 60.0;
                                 
                                 // Center horizontally, place ~95px above the bottom (just above the taskbar)
                                 let x = (monitor_width - overlay_width) / 2.0;
