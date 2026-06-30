@@ -232,7 +232,7 @@ pub fn run() {
                                                             &chunk_path_str,
                                                             "", // No selected text during live streaming
                                                             &selected_language,
-                                                            false,
+                                                            true,
                                                         ).await
                                                     };
 
