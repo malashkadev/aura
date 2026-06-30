@@ -6,12 +6,15 @@ pub mod settings;
 pub mod keyboard_simulator;
 
 use std::sync::Mutex;
+use std::sync::atomic::{AtomicBool, Ordering};
 use tauri::{Manager, Emitter};
 
 struct AppState {
     audio_recorder: audio_recorder::AudioRecorder,
     selected_text: Mutex<String>,
     press_time: Mutex<Option<std::time::Instant>>,
+    is_recording: AtomicBool,
+    typed_so_far: Mutex<String>,
 }
 
 #[tauri::command]
@@ -29,6 +32,32 @@ async fn set_settings(app_handle: tauri::AppHandle, settings: settings::Settings
 #[tauri::command]
 async fn download_model_command(app_handle: tauri::AppHandle, model_name: String) -> Result<(), String> {
     whisper_runner::download_model(&app_handle, &model_name).await.map(|_| ())
+}
+
+fn diff_and_type(typed_so_far: &mut String, new_text: &str) {
+    let typed_chars: Vec<char> = typed_so_far.chars().collect();
+    let new_chars: Vec<char> = new_text.chars().collect();
+    
+    let mut common_prefix_len = 0;
+    for (c1, c2) in typed_chars.iter().zip(new_chars.iter()) {
+        if c1 == c2 {
+            common_prefix_len += 1;
+        } else {
+            break;
+        }
+    }
+    
+    let chars_to_delete = typed_chars.len() - common_prefix_len;
+    if chars_to_delete > 0 {
+        keyboard_simulator::type_backspaces(chars_to_delete);
+    }
+    
+    let suffix: String = new_chars[common_prefix_len..].iter().collect();
+    if !suffix.is_empty() {
+        keyboard_simulator::type_string(&suffix);
+    }
+    
+    *typed_so_far = new_text.to_string();
 }
 
 fn is_silence_hallucination(text: &str) -> bool {
@@ -73,11 +102,12 @@ pub fn run() {
                 keyboard_hook::update_hotkey(&settings.hotkey);
             }
 
-            // Manage global state for audio recording and context text
             app.manage(AppState {
                 audio_recorder: audio_recorder::AudioRecorder::new(),
                 selected_text: Mutex::new(String::new()),
                 press_time: Mutex::new(None),
+                is_recording: AtomicBool::new(false),
+                typed_so_far: Mutex::new(String::new()),
             });
 
             // Start global keyboard hook
@@ -85,9 +115,14 @@ pub fn run() {
                 let app_handle = app_handle.clone();
                 tauri::async_runtime::spawn(async move {
                     if is_down {
-                        // Record press time
+                        // Clear typed so far and set is_recording to true
                         if let Some(state) = app_handle.try_state::<AppState>() {
                             let state = state.inner();
+                            if let Ok(mut guard) = state.typed_so_far.lock() {
+                                *guard = String::new();
+                            }
+                            state.is_recording.store(true, Ordering::Relaxed);
+                            
                             if let Ok(mut guard) = state.press_time.lock() {
                                 *guard = Some(std::time::Instant::now());
                             }
@@ -135,7 +170,7 @@ pub fn run() {
                         let app_handle_clone = app_handle.clone();
                         if let Some(state) = app_handle.try_state::<AppState>() {
                             let state = state.inner();
-                             if let Err(e) = state.audio_recorder.start_recording(&temp_path_str, move |vol| {
+                            if let Err(e) = state.audio_recorder.start_recording(&temp_path_str, move |vol| {
                                 let _ = app_handle_clone.emit("volume-level", vol);
                             }) {
                                 eprintln!("Failed to start recording: {}", e);
@@ -168,10 +203,79 @@ pub fn run() {
 
                         // 7. Emit event
                         let _ = app_handle.emit("recording-state", "recording");
+
+                        // 8. Spawn background streaming loop
+                        let app_handle_loop = app_handle.clone();
+                        tauri::async_runtime::spawn(async move {
+                            // Wait initial 1.5 seconds to gather initial audio
+                            tokio::time::sleep(std::time::Duration::from_millis(1500)).await;
+
+                            let chunk_path = std::env::temp_dir().join("aura-chunk.wav");
+                            let chunk_path_str = chunk_path.to_string_lossy().to_string();
+
+                            loop {
+                                let is_recording = if let Some(state) = app_handle_loop.try_state::<AppState>() {
+                                    state.is_recording.load(Ordering::Relaxed)
+                                } else {
+                                    false
+                                };
+
+                                if !is_recording {
+                                    break;
+                                }
+
+                                if let Some(state) = app_handle_loop.try_state::<AppState>() {
+                                    let state = state.inner();
+                                    if let Ok((samples, sample_rate, channels)) = state.audio_recorder.get_recorded_samples() {
+                                        // Ensure we have at least 0.5s of audio (8000 samples)
+                                        if samples.len() > 8000 {
+                                            if audio_recorder::process_and_write_wav(&samples, channels, sample_rate, &chunk_path_str).is_ok() {
+                                                if let Ok(settings) = settings::load_settings(&app_handle_loop) {
+                                                    let selected_text = if let Ok(guard) = state.selected_text.lock() {
+                                                        guard.clone()
+                                                    } else {
+                                                        String::new()
+                                                    };
+
+                                                    let transcription_result = if settings.transcription_mode == "local" {
+                                                        whisper_runner::run_local_whisper(&app_handle_loop, &settings.model_name, &chunk_path_str)
+                                                    } else {
+                                                        let provider = match settings.api_provider.as_str() {
+                                                            "openai" => ai_client::ApiProvider::OpenAi,
+                                                            "groq" => ai_client::ApiProvider::Groq,
+                                                            _ => ai_client::ApiProvider::Gemini,
+                                                        };
+                                                        ai_client::transcribe_and_clean(
+                                                            provider,
+                                                            &settings.api_key,
+                                                            &chunk_path_str,
+                                                            &selected_text,
+                                                        ).await
+                                                    };
+
+                                                    if let Ok(text) = transcription_result {
+                                                        let trimmed = text.trim();
+                                                        if !trimmed.is_empty() && !is_silence_hallucination(trimmed) {
+                                                            if let Ok(mut typed_guard) = state.typed_so_far.lock() {
+                                                                diff_and_type(&mut *typed_guard, trimmed);
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+
+                                // Wait another 1.5 seconds for next chunk
+                                tokio::time::sleep(std::time::Duration::from_millis(1500)).await;
+                            }
+                        });
                     } else {
                         // Check duration of hotkey press
                         let press_duration = if let Some(state) = app_handle.try_state::<AppState>() {
                             let state = state.inner();
+                            state.is_recording.store(false, Ordering::Relaxed);
                             if let Ok(mut guard) = state.press_time.lock() {
                                 guard.take().map(|t| t.elapsed())
                             } else {
@@ -206,9 +310,12 @@ pub fn run() {
                             }
                         }
 
-                        // 3. Perform transcription in a background task
+                        // 3. Perform final transcription in a background task
                         let app_handle_clone = app_handle.clone();
                         tauri::async_runtime::spawn(async move {
+                            // Wait a short moment to ensure background loop is stopped and doesn't conflict
+                            tokio::time::sleep(std::time::Duration::from_millis(100)).await;
+
                             let temp_path = std::env::temp_dir().join("aura-temp.wav");
                             let temp_path_str = temp_path.to_string_lossy().to_string();
 
@@ -235,7 +342,7 @@ pub fn run() {
                                 String::new()
                             };
 
-                            // Perform transcription
+                            // Perform transcription on the full audio file
                             let transcription_result = if settings.transcription_mode == "local" {
                                 whisper_runner::run_local_whisper(&app_handle_clone, &settings.model_name, &temp_path_str)
                             } else {
@@ -252,38 +359,15 @@ pub fn run() {
                                 ).await
                             };
 
-                            match transcription_result {
-                                Ok(text) => {
-                                    let trimmed = text.trim();
-                                    if !trimmed.is_empty() && !is_silence_hallucination(trimmed) {
-                                        // Save original clipboard
-                                        let original_clipboard = if let Ok(mut cb) = arboard::Clipboard::new() {
-                                            cb.get_text().ok()
-                                        } else {
-                                            None
-                                        };
-
-                                        // Set clipboard to transcription result
-                                        if let Ok(mut cb) = arboard::Clipboard::new() {
-                                            let _ = cb.set_text(trimmed.to_string());
-                                        }
-
-                                        // Paste text
-                                        keyboard_simulator::simulate_paste();
-
-                                        // Sleep 150ms to allow paste to register
-                                        tokio::time::sleep(std::time::Duration::from_millis(150)).await;
-
-                                        // Restore original clipboard
-                                        if let Some(orig) = original_clipboard {
-                                            if let Ok(mut cb) = arboard::Clipboard::new() {
-                                                let _ = cb.set_text(orig);
-                                            }
+                            if let Ok(text) = transcription_result {
+                                let trimmed = text.trim();
+                                if !trimmed.is_empty() && !is_silence_hallucination(trimmed) {
+                                    if let Some(state) = app_handle_clone.try_state::<AppState>() {
+                                        let state = state.inner();
+                                        if let Ok(mut typed_guard) = state.typed_so_far.lock() {
+                                            diff_and_type(&mut *typed_guard, trimmed);
                                         }
                                     }
-                                }
-                                Err(e) => {
-                                    eprintln!("Transcription error: {}", e);
                                 }
                             }
 
