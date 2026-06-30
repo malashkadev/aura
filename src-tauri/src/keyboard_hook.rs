@@ -6,6 +6,7 @@ use windows_sys::Win32::UI::WindowsAndMessaging::{
     TranslateMessage, UnhookWindowsHookEx, KBDLLHOOKSTRUCT, MSG,
     WH_KEYBOARD_LL, WM_KEYDOWN, WM_KEYUP, WM_SYSKEYDOWN, WM_SYSKEYUP,
 };
+use windows_sys::Win32::UI::Input::KeyboardAndMouse::GetAsyncKeyState;
 
 use std::sync::Mutex;
 
@@ -130,7 +131,7 @@ unsafe extern "system" fn low_level_keyboard_proc(
             if let Ok(guard) = HOTKEY_CONFIG.lock() {
                 (guard.modifier_vk, guard.key_vk)
             } else {
-                (18, 0x4E) // Alt+N default
+                (18, 0x56) // Alt+V default
             }
         };
 
@@ -138,10 +139,8 @@ unsafe extern "system" fn low_level_keyboard_proc(
         let is_target_key = vk_code == key_vk;
 
         if modifier_vk != 0 && is_modifier {
-            if is_down {
-                MODIFIER_PRESSED.store(true, Ordering::SeqCst);
-            } else if is_up {
-                MODIFIER_PRESSED.store(false, Ordering::SeqCst);
+            if is_up {
+                // If modifier is released, stop shortcut if active
                 if SHORTCUT_ACTIVE.swap(false, Ordering::SeqCst) {
                     if let Some(cb) = CALLBACK.get() {
                         cb(false);
@@ -149,7 +148,11 @@ unsafe extern "system" fn low_level_keyboard_proc(
                 }
             }
         } else if is_target_key {
-            let modifier_satisfied = modifier_vk == 0 || MODIFIER_PRESSED.load(Ordering::SeqCst);
+            // Check real physical state of modifier key using GetAsyncKeyState
+            let modifier_satisfied = modifier_vk == 0 || {
+                let state = GetAsyncKeyState(modifier_vk as i32);
+                (state as u16 & 0x8000) != 0
+            };
 
             if is_down {
                 if modifier_satisfied {
@@ -163,13 +166,14 @@ unsafe extern "system" fn low_level_keyboard_proc(
                 } else {
                     KEY_SUPPRESSED.store(false, Ordering::SeqCst);
                 }
-            } else if is_up && (KEY_SUPPRESSED.swap(false, Ordering::SeqCst) || modifier_satisfied) {
+            } else if is_up {
+                let suppressed = KEY_SUPPRESSED.swap(false, Ordering::SeqCst);
                 if SHORTCUT_ACTIVE.swap(false, Ordering::SeqCst) {
                     if let Some(cb) = CALLBACK.get() {
                         cb(false);
                     }
                 }
-                if modifier_satisfied {
+                if suppressed || modifier_satisfied {
                     return 1; // Suppress key event
                 }
             }

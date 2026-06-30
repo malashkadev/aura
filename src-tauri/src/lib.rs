@@ -250,6 +250,7 @@ pub fn run() {
                                                             &settings.api_key,
                                                             &chunk_path_str,
                                                             &selected_text,
+                                                            false,
                                                         ).await
                                                     };
 
@@ -356,6 +357,7 @@ pub fn run() {
                                     &settings.api_key,
                                     &temp_path_str,
                                     &selected_text,
+                                    true,
                                 ).await
                             };
 
