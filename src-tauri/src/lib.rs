@@ -396,6 +396,9 @@ pub fn run() {
 
                                                     keyboard_simulator::simulate_paste();
 
+                                                    // Drop the mutex guard before sleeping to allow it to be sent across await boundaries
+                                                    drop(typed_guard);
+
                                                     tokio::time::sleep(std::time::Duration::from_millis(150)).await;
 
                                                     if let Some(orig) = original_clipboard {
