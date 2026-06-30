@@ -379,6 +379,7 @@ pub fn run() {
                         }
                     } else {
                         eprintln!("Aura Dev Log: Alt+V released (is_down = false)");
+                        keyboard_simulator::send_dummy_key();
                         // Check duration of hotkey press
                         let press_duration = if let Some(state) = app_handle.try_state::<AppState>() {
                             let state = state.inner();

@@ -150,6 +150,29 @@ pub fn simulate_paste() {
     restore_modifiers(&released);
 }
 
+pub fn send_dummy_key() {
+    unsafe {
+        let mut inputs = [std::mem::zeroed::<INPUT>(); 2];
+        inputs[0].r#type = INPUT_KEYBOARD;
+        inputs[0].Anonymous.ki = KEYBDINPUT {
+            wVk: VK_CONTROL,
+            wScan: 0,
+            dwFlags: 0,
+            time: 0,
+            dwExtraInfo: 0,
+        };
+        inputs[1].r#type = INPUT_KEYBOARD;
+        inputs[1].Anonymous.ki = KEYBDINPUT {
+            wVk: VK_CONTROL,
+            wScan: 0,
+            dwFlags: KEYEVENTF_KEYUP,
+            time: 0,
+            dwExtraInfo: 0,
+        };
+        SendInput(2, inputs.as_mut_ptr(), std::mem::size_of::<INPUT>() as i32);
+    }
+}
+
 #[link(name = "user32")]
 extern "system" {
     pub fn GetForegroundWindow() -> isize;
