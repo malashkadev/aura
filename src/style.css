@@ -3,10 +3,10 @@
   --font-display: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 
-  --bg-color: hsl(224, 25%, 6%);
-  --surface-color: hsl(222, 18%, 10%);
-  --surface-card: hsla(220, 16%, 14%, 0.6);
-  --border-color: hsla(220, 12%, 20%, 0.5);
+  --bg-color: hsl(0, 0%, 0%);
+  --surface-color: hsl(0, 0%, 5%);
+  --surface-card: hsla(0, 0%, 8%, 0.6);
+  --border-color: hsla(0, 0%, 16%, 0.5);
   
   --text-primary: hsl(210, 20%, 98%);
   --text-secondary: hsl(218, 12%, 65%);
@@ -52,7 +52,7 @@ body {
 .glass-container {
   width: 700px;
   height: 550px;
-  background: hsla(222, 18%, 12%, 0.85);
+  background: hsla(0, 0%, 4%, 0.85);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-lg);
@@ -149,7 +149,7 @@ body {
 }
 
 .nav-tab:hover {
-  background-color: hsla(220, 12%, 18%, 0.4);
+  background-color: hsla(0, 0%, 18%, 0.4);
   color: var(--text-primary);
 }
 
@@ -244,7 +244,7 @@ body {
   padding: 14px 16px;
   border-radius: var(--radius-md);
   border: 1px solid var(--border-color);
-  background-color: hsla(220, 12%, 8%, 0.4);
+  background-color: hsla(0, 0%, 8%, 0.4);
   transition: var(--transition);
 }
 
@@ -288,7 +288,7 @@ body {
 }
 
 .custom-select {
-  background-color: hsl(220, 15%, 8%);
+  background-color: hsl(0, 0%, 8%);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-sm);
   color: var(--text-primary);
@@ -312,7 +312,7 @@ body {
 }
 
 .custom-input {
-  background-color: hsl(220, 15%, 8%);
+  background-color: hsl(0, 0%, 8%);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-sm);
   color: var(--text-primary);
@@ -364,7 +364,7 @@ body {
   background-color: var(--accent-color);
   border: none;
   border-radius: var(--radius-sm);
-  color: hsl(220, 20%, 5%);
+  color: hsl(0, 0%, 5%);
   cursor: pointer;
   font-family: var(--font-display);
   font-weight: 700;
@@ -410,7 +410,7 @@ body {
 
 .progress-bar-bg {
   height: 6px;
-  background-color: hsl(220, 12%, 18%);
+  background-color: hsl(0, 0%, 18%);
   border-radius: var(--radius-full);
   overflow: hidden;
 }
@@ -432,7 +432,7 @@ body {
 }
 
 .hotkey-label {
-  background-color: hsl(220, 15%, 8%);
+  background-color: hsl(0, 0%, 8%);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-sm);
   font-family: var(--font-display);
@@ -561,7 +561,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background-color: hsla(220, 16%, 6%, 0.4);
+  background-color: hsla(0, 0%, 6%, 0.4);
 }
 
 .footer-status {
@@ -612,7 +612,7 @@ body {
 
 .btn-save:hover {
   background-color: var(--text-primary);
-  color: hsl(220, 20%, 5%);
+  color: hsl(0, 0%, 5%);
   border-color: var(--text-primary);
 }
 
