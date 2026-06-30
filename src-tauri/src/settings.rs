@@ -4,13 +4,13 @@ use serde::{Serialize, Deserialize};
 use tauri::Manager;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(default)]
 pub struct Settings {
     pub transcription_mode: String, // "cloud" or "local"
     pub api_provider: String,       // "gemini" or "openai"
     pub api_key: String,
     pub model_name: String,         // "small", "base", etc.
     pub hotkey: String,             // "Alt+N"
-    #[serde(default)]
     pub streaming_enabled: bool,    // whether to type text on-the-fly or paste on release (v1.0 mode)
 }
 
