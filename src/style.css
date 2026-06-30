@@ -633,3 +633,116 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background-color: var(--text-muted);
 }
+
+/* Custom Toggle Switch */
+.toggle-switch {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  user-select: none;
+  margin-top: 6px;
+}
+
+.toggle-switch input {
+  display: none;
+}
+
+.toggle-slider {
+  position: relative;
+  width: 40px;
+  height: 20px;
+  background-color: hsl(0, 0%, 14%);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-full);
+  transition: var(--transition);
+}
+
+.toggle-slider::before {
+  content: "";
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  left: 3px;
+  top: 3px;
+  background-color: var(--text-secondary);
+  border-radius: 50%;
+  transition: var(--transition);
+}
+
+.toggle-switch input:checked + .toggle-slider {
+  background-color: hsla(var(--accent-color-rgb), 0.15);
+  border-color: var(--accent-color);
+}
+
+.toggle-switch input:checked + .toggle-slider::before {
+  left: 23px;
+  background-color: var(--accent-color);
+  box-shadow: 0 0 8px hsla(var(--accent-color-rgb), 0.5);
+}
+
+.toggle-label {
+  font-family: var(--font-sans);
+  font-weight: 500;
+  font-size: 0.95rem;
+  color: var(--text-primary);
+}
+
+.switch-desc {
+  margin-top: 8px;
+  font-size: 13px;
+  color: var(--text-muted);
+  opacity: 0.8;
+  line-height: 1.4;
+}
+
+/* Tactile Active States */
+.btn-primary:active,
+.btn-save:active,
+.nav-tab:active,
+.btn-toggle-visibility:active {
+  transform: scale(0.97);
+}
+
+.engine-option:active .engine-card {
+  transform: scale(0.98);
+}
+
+/* Transitions for tactile feedback scaling */
+.btn-primary,
+.btn-save,
+.nav-tab,
+.btn-toggle-visibility,
+.engine-card {
+  transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.25s, border-color 0.25s, color 0.25s;
+}
+
+/* Logo Glow & Hover Effect */
+.logo-container:hover .logo-glow {
+  display: block;
+  position: absolute;
+  width: 48px;
+  height: 48px;
+  left: -12px;
+  top: -12px;
+  background: radial-gradient(circle, hsla(var(--accent-color-rgb), 0.25) 0%, transparent 70%);
+  z-index: 0;
+  pointer-events: none;
+  animation: logoPulse 2s infinite ease-in-out;
+}
+
+@keyframes logoPulse {
+  0%, 100% { transform: scale(1); opacity: 0.8; }
+  50% { transform: scale(1.15); opacity: 1; }
+}
+
+/* Progress Bar Glow */
+.progress-bar-fill {
+  box-shadow: 0 0 12px hsla(var(--accent-color-rgb), 0.8);
+}
+
+.about-logo-svg {
+  width: 32px;
+  height: 32px;
+}
+
