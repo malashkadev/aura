@@ -195,8 +195,7 @@ pub async fn transcribe_and_clean(
 
             let form = multipart::Form::new()
                 .part("file", file_part)
-                .text("model", "whisper-1")
-                .text("language", language.to_string());
+                .text("model", "whisper-1");
 
             let whisper_response = client
                 .post(whisper_endpoint)
@@ -292,8 +291,7 @@ pub async fn transcribe_and_clean(
 
             let form = multipart::Form::new()
                 .part("file", file_part)
-                .text("model", "whisper-large-v3")
-                .text("language", language.to_string());
+                .text("model", "whisper-large-v3");
 
             let whisper_response = client
                 .post(whisper_endpoint)
