@@ -11,6 +11,7 @@ use tauri::{Manager, Emitter};
 struct AppState {
     audio_recorder: audio_recorder::AudioRecorder,
     selected_text: Mutex<String>,
+    press_time: Mutex<Option<std::time::Instant>>,
 }
 
 #[tauri::command]
@@ -46,6 +47,7 @@ pub fn run() {
             app.manage(AppState {
                 audio_recorder: audio_recorder::AudioRecorder::new(),
                 selected_text: Mutex::new(String::new()),
+                press_time: Mutex::new(None),
             });
 
             // Start global keyboard hook
@@ -53,17 +55,39 @@ pub fn run() {
                 let app_handle = app_handle.clone();
                 tauri::async_runtime::spawn(async move {
                     if is_down {
-                        // 1. Simulate Copy to capture selection
-                        keyboard_simulator::simulate_copy();
+                        // Record press time
+                        if let Some(state) = app_handle.try_state::<AppState>() {
+                            let state = state.inner();
+                            if let Ok(mut guard) = state.press_time.lock() {
+                                *guard = Some(std::time::Instant::now());
+                            }
+                        }
 
-                        // 2. Sleep 120ms to allow system clipboard update
-                        tokio::time::sleep(std::time::Duration::from_millis(120)).await;
-
-                        // 3. Read clipboard
-                        let selected_text = if let Ok(mut cb) = arboard::Clipboard::new() {
+                        // 1. Read clipboard BEFORE copy to compare later
+                        let original_clip = if let Ok(mut cb) = arboard::Clipboard::new() {
                             cb.get_text().unwrap_or_default()
                         } else {
                             String::new()
+                        };
+
+                        // 2. Simulate Copy to capture selection
+                        keyboard_simulator::simulate_copy();
+
+                        // 3. Sleep 120ms to allow system clipboard update
+                        tokio::time::sleep(std::time::Duration::from_millis(120)).await;
+
+                        // 4. Read clipboard AFTER copy
+                        let new_clip = if let Ok(mut cb) = arboard::Clipboard::new() {
+                            cb.get_text().unwrap_or_default()
+                        } else {
+                            String::new()
+                        };
+
+                        // If clipboard did not change, assume no text was selected
+                        let selected_text = if new_clip == original_clip {
+                            String::new()
+                        } else {
+                            new_clip
                         };
 
                         // Store selected text in state
@@ -74,7 +98,7 @@ pub fn run() {
                             }
                         }
 
-                        // 4. Start recording to temporary WAV path
+                        // 5. Start recording to temporary WAV path
                         let temp_path = std::env::temp_dir().join("aura-temp.wav");
                         let temp_path_str = temp_path.to_string_lossy().to_string();
 
@@ -85,14 +109,40 @@ pub fn run() {
                             }
                         }
 
-                        // 5. Show overlay window
+                        // 6. Show overlay window
                         if let Some(overlay) = app_handle.get_webview_window("overlay") {
                             let _ = overlay.show();
                         }
 
-                        // 6. Emit event
+                        // 7. Emit event
                         let _ = app_handle.emit("recording-state", "recording");
                     } else {
+                        // Check duration of hotkey press
+                        let press_duration = if let Some(state) = app_handle.try_state::<AppState>() {
+                            let state = state.inner();
+                            if let Ok(mut guard) = state.press_time.lock() {
+                                guard.take().map(|t| t.elapsed())
+                            } else {
+                                None
+                            }
+                        } else {
+                            None
+                        };
+
+                        if let Some(d) = press_duration {
+                            if d.as_millis() < 300 {
+                                // Ignore quick taps (accidental press or empty duration)
+                                if let Some(state) = app_handle.try_state::<AppState>() {
+                                    let state = state.inner();
+                                    let _ = state.audio_recorder.stop_recording();
+                                }
+                                if let Some(overlay) = app_handle.get_webview_window("overlay") {
+                                    let _ = overlay.hide();
+                                }
+                                return;
+                            }
+                        }
+
                         // 1. Emit event "processing"
                         let _ = app_handle.emit("recording-state", "processing");
 
