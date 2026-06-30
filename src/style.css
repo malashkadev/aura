@@ -678,7 +678,7 @@ body {
 .toggle-switch input:checked + .toggle-slider::before {
   background-color: var(--accent-color);
   box-shadow: 0 0 8px hsla(var(--accent-color-rgb), 0.5);
-  transform: translateX(20px);
+  transform: translateX(18px);
 }
 
 .toggle-label {
