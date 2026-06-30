@@ -82,6 +82,11 @@ document.addEventListener("DOMContentLoaded", () => {
           selectHotkey.value = settings.hotkey || "Alt+V";
         }
         
+        const checkboxStreaming = document.getElementById("checkbox-streaming");
+        if (checkboxStreaming) {
+          checkboxStreaming.checked = !!settings.streaming_enabled;
+        }
+        
         updateEngineUI();
         showStatus("Настройки загружены");
       }
@@ -96,12 +101,14 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
       showStatus("Сохранение настроек...");
       
+      const checkboxStreaming = document.getElementById("checkbox-streaming");
       const settings = {
         transcription_mode: radioLocal.checked ? "local" : "cloud",
         api_provider: selectProvider.value,
         api_key: apiKeyInput.value,
         model_name: selectModel.value,
-        hotkey: selectHotkey ? selectHotkey.value : "Alt+V"
+        hotkey: selectHotkey ? selectHotkey.value : "Alt+V",
+        streaming_enabled: checkboxStreaming ? checkboxStreaming.checked : false
       };
 
       await invoke("set_settings", { settings });
