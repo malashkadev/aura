@@ -1,7 +1,54 @@
 use windows_sys::Win32::UI::Input::KeyboardAndMouse::{
-    SendInput, INPUT, INPUT_KEYBOARD, KEYBDINPUT, KEYEVENTF_KEYUP, VK_CONTROL,
-    KEYEVENTF_UNICODE
+    SendInput, INPUT, INPUT_KEYBOARD, KEYBDINPUT, KEYEVENTF_KEYUP, KEYEVENTF_UNICODE,
+    GetAsyncKeyState, VK_MENU, VK_CONTROL, VK_SHIFT, VK_LWIN, VK_RWIN
 };
+
+fn release_modifiers() -> Vec<u16> {
+    let mut released = Vec::new();
+    unsafe {
+        let modifiers = [
+            (VK_MENU, "Alt"),
+            (VK_CONTROL, "Ctrl"),
+            (VK_SHIFT, "Shift"),
+            (VK_LWIN, "LWin"),
+            (VK_RWIN, "RWin"),
+        ];
+        
+        for &(vk, _) in &modifiers {
+            if (GetAsyncKeyState(vk as i32) as u16 & 0x8000) != 0 {
+                let mut input = std::mem::zeroed::<INPUT>();
+                input.r#type = INPUT_KEYBOARD;
+                input.Anonymous.ki = KEYBDINPUT {
+                    wVk: vk,
+                    wScan: 0,
+                    dwFlags: KEYEVENTF_KEYUP,
+                    time: 0,
+                    dwExtraInfo: 0,
+                };
+                SendInput(1, &input, std::mem::size_of::<INPUT>() as i32);
+                released.push(vk);
+            }
+        }
+    }
+    released
+}
+
+fn restore_modifiers(released: &[u16]) {
+    unsafe {
+        for &vk in released {
+            let mut input = std::mem::zeroed::<INPUT>();
+            input.r#type = INPUT_KEYBOARD;
+            input.Anonymous.ki = KEYBDINPUT {
+                wVk: vk,
+                wScan: 0,
+                dwFlags: 0, // Key down
+                time: 0,
+                dwExtraInfo: 0,
+            };
+            SendInput(1, &input, std::mem::size_of::<INPUT>() as i32);
+        }
+    }
+}
 
 pub fn simulate_copy() {
     unsafe {
@@ -125,6 +172,7 @@ pub fn get_active_layout_language() -> String {
 
 /// Simulated typing of a UTF-8 string using Win32 KEYEVENTF_UNICODE
 pub fn type_string(text: &str) {
+    let released = release_modifiers();
     unsafe {
         for ch in text.chars() {
             let mut buf = [0; 2];
@@ -156,10 +204,12 @@ pub fn type_string(text: &str) {
             }
         }
     }
+    restore_modifiers(&released);
 }
 
 /// Simulated typing of backspaces to delete text
 pub fn type_backspaces(count: usize) {
+    let released = release_modifiers();
     unsafe {
         for _ in 0..count {
             let mut inputs = [std::mem::zeroed::<INPUT>(); 2];
@@ -187,5 +237,6 @@ pub fn type_backspaces(count: usize) {
             SendInput(2, inputs.as_mut_ptr(), std::mem::size_of::<INPUT>() as i32);
         }
     }
+    restore_modifiers(&released);
 }
 
