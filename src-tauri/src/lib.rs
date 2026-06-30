@@ -31,6 +31,36 @@ async fn download_model_command(app_handle: tauri::AppHandle, model_name: String
     whisper_runner::download_model(&app_handle, &model_name).await.map(|_| ())
 }
 
+fn is_silence_hallucination(text: &str) -> bool {
+    let t = text.trim().to_lowercase();
+    if t.is_empty() {
+        return true;
+    }
+    let markers = [
+        "no audio to transcribe",
+        "no speech",
+        "no audio detected",
+        "no speech detected",
+        "there is no audio",
+        "thank you for watching",
+        "thanks for watching",
+        "subtitles by",
+        "amara.org",
+        "подпишитесь",
+        "спасибо за просмотр",
+        "просмотр",
+    ];
+    for marker in &markers {
+        if t.contains(marker) {
+            return true;
+        }
+    }
+    if t.chars().all(|c| c.is_ascii_punctuation() || c.is_whitespace()) {
+        return true;
+    }
+    false
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -202,7 +232,8 @@ pub fn run() {
 
                             match transcription_result {
                                 Ok(text) => {
-                                    if !text.is_empty() {
+                                    let trimmed = text.trim();
+                                    if !trimmed.is_empty() && !is_silence_hallucination(trimmed) {
                                         // Save original clipboard
                                         let original_clipboard = if let Ok(mut cb) = arboard::Clipboard::new() {
                                             cb.get_text().ok()
@@ -212,7 +243,7 @@ pub fn run() {
 
                                         // Set clipboard to transcription result
                                         if let Ok(mut cb) = arboard::Clipboard::new() {
-                                            let _ = cb.set_text(text);
+                                            let _ = cb.set_text(trimmed.to_string());
                                         }
 
                                         // Paste text
