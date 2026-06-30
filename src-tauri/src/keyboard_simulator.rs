@@ -1,5 +1,6 @@
 use windows_sys::Win32::UI::Input::KeyboardAndMouse::{
-    SendInput, INPUT, INPUT_KEYBOARD, KEYBDINPUT, KEYEVENTF_KEYUP, VK_CONTROL
+    SendInput, INPUT, INPUT_KEYBOARD, KEYBDINPUT, KEYEVENTF_KEYUP, VK_CONTROL,
+    KEYEVENTF_UNICODE
 };
 
 pub fn simulate_copy() {
@@ -118,6 +119,72 @@ pub fn get_active_layout_language() -> String {
             0x0419 => "ru".to_string(), // Russian
             0x0409 | 0x0809 | 0x0c09 | 0x1009 | 0x1409 | 0x1809 | 0x1c09 | 0x2009 | 0x2409 | 0x2809 | 0x2c09 | 0x3009 => "en".to_string(), // English variants
             _ => "ru".to_string(), // Default fallback
+        }
+    }
+}
+
+/// Simulated typing of a UTF-8 string using Win32 KEYEVENTF_UNICODE
+pub fn type_string(text: &str) {
+    unsafe {
+        for ch in text.chars() {
+            let mut buf = [0; 2];
+            let utf16_chars = ch.encode_utf16(&mut buf);
+            for &mut val in utf16_chars {
+                let mut inputs = [std::mem::zeroed::<INPUT>(); 2];
+                
+                // Key down
+                inputs[0].r#type = INPUT_KEYBOARD;
+                inputs[0].Anonymous.ki = KEYBDINPUT {
+                    wVk: 0,
+                    wScan: val,
+                    dwFlags: KEYEVENTF_UNICODE,
+                    time: 0,
+                    dwExtraInfo: 0,
+                };
+
+                // Key up
+                inputs[1].r#type = INPUT_KEYBOARD;
+                inputs[1].Anonymous.ki = KEYBDINPUT {
+                    wVk: 0,
+                    wScan: val,
+                    dwFlags: KEYEVENTF_UNICODE | KEYEVENTF_KEYUP,
+                    time: 0,
+                    dwExtraInfo: 0,
+                };
+
+                SendInput(2, inputs.as_mut_ptr(), std::mem::size_of::<INPUT>() as i32);
+            }
+        }
+    }
+}
+
+/// Simulated typing of backspaces to delete text
+pub fn type_backspaces(count: usize) {
+    unsafe {
+        for _ in 0..count {
+            let mut inputs = [std::mem::zeroed::<INPUT>(); 2];
+            
+            // Key down BACKSPACE
+            inputs[0].r#type = INPUT_KEYBOARD;
+            inputs[0].Anonymous.ki = KEYBDINPUT {
+                wVk: 0x08, // VK_BACK
+                wScan: 0,
+                dwFlags: 0,
+                time: 0,
+                dwExtraInfo: 0,
+            };
+
+            // Key up BACKSPACE
+            inputs[1].r#type = INPUT_KEYBOARD;
+            inputs[1].Anonymous.ki = KEYBDINPUT {
+                wVk: 0x08,
+                wScan: 0,
+                dwFlags: KEYEVENTF_KEYUP,
+                time: 0,
+                dwExtraInfo: 0,
+            };
+
+            SendInput(2, inputs.as_mut_ptr(), std::mem::size_of::<INPUT>() as i32);
         }
     }
 }

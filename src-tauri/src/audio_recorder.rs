@@ -151,6 +151,17 @@ impl AudioRecorder {
             &active_recording.output_path,
         )
     }
+
+    /// Exposes a copy of currently recorded samples, sample rate, and channel count.
+    pub fn get_recorded_samples(&self) -> Result<(Vec<f32>, u32, u16), String> {
+        let state_guard = self.state.lock().map_err(|e| e.to_string())?;
+        if let Some(ref active) = *state_guard {
+            let samples = active.raw_samples.lock().map_err(|e| e.to_string())?.clone();
+            Ok((samples, active.sample_rate, active.channels))
+        } else {
+            Err("Not recording".to_string())
+        }
+    }
 }
 
 impl Default for AudioRecorder {
@@ -160,7 +171,7 @@ impl Default for AudioRecorder {
 }
 
 /// Downmixes raw samples to mono, resamples to 16kHz, converts to 16-bit PCM, and writes to a WAV file.
-fn process_and_write_wav(
+pub fn process_and_write_wav(
     raw_samples: &[f32],
     channels: u16,
     input_sample_rate: u32,
