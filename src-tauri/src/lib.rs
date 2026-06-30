@@ -49,13 +49,10 @@ fn diff_and_type(typed_so_far: &mut String, new_text: &str) {
     }
     
     let chars_to_delete = typed_chars.len() - common_prefix_len;
-    if chars_to_delete > 0 {
-        keyboard_simulator::type_backspaces(chars_to_delete);
-    }
-    
     let suffix: String = new_chars[common_prefix_len..].iter().collect();
-    if !suffix.is_empty() {
-        keyboard_simulator::type_string(&suffix);
+    
+    if chars_to_delete > 0 || !suffix.is_empty() {
+        keyboard_simulator::replace_text(chars_to_delete, &suffix);
     }
     
     *typed_so_far = new_text.to_string();
@@ -372,14 +369,10 @@ pub fn run() {
                                         if let Some(state) = app_handle_clone.try_state::<AppState>() {
                                             let state = state.inner();
                                             if let Ok(mut typed_guard) = state.typed_so_far.lock() {
-                                                // Delete the temporary text typed during the live streaming phase
+                                                // Replace temporary text typed during streaming phase with final formatted text
                                                 let chars_to_delete = typed_guard.chars().count();
-                                                eprintln!("Aura Dev Log: Deleting {} temporary chars, then typing final formatted text.", chars_to_delete);
-                                                if chars_to_delete > 0 {
-                                                    keyboard_simulator::type_backspaces(chars_to_delete);
-                                                }
-                                                // Type the final cleaned/formatted text under the cursor
-                                                keyboard_simulator::type_string(trimmed);
+                                                eprintln!("Aura Dev Log: Replacing {} temporary chars with final formatted text.", chars_to_delete);
+                                                keyboard_simulator::replace_text(chars_to_delete, trimmed);
                                                 *typed_guard = trimmed.to_string();
                                             }
                                         }
