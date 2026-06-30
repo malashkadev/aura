@@ -10,7 +10,7 @@
   
   --text-primary: hsl(210, 20%, 98%);
   --text-secondary: hsl(218, 12%, 65%);
-  --text-muted: hsl(218, 10%, 45%);
+  --text-muted: hsl(218, 12%, 60%);
 
   --accent-color: hsl(16, 100%, 50%);
   --accent-color-rgb: 255, 66, 0;
@@ -26,7 +26,8 @@
   --radius-lg: 20px;
   --radius-full: 9999px;
   
-  --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --transition: background-color 0.25s var(--ease-out), border-color 0.25s var(--ease-out), transform 0.25s var(--ease-out), box-shadow 0.25s var(--ease-out), color 0.25s var(--ease-out), opacity 0.25s var(--ease-out);
 }
 
 * {
@@ -692,8 +693,16 @@ body {
   margin-top: 8px;
   font-size: 13px;
   color: var(--text-muted);
-  opacity: 0.8;
   line-height: 1.4;
+}
+
+/* Keyboard Focus Indicators */
+.btn-primary:focus-visible,
+.btn-save:focus-visible,
+.custom-select:focus-visible,
+.custom-input:focus-visible {
+  outline: 2px solid var(--accent-color);
+  outline-offset: 2px;
 }
 
 /* Tactile Active States */

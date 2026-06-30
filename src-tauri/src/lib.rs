@@ -120,7 +120,7 @@ fn is_silence_hallucination(text: &str) -> bool {
     false
 }
 
-// Aura v2.0.15 - Flex-shrink Toggle Switch Fix
+// Aura v2.0.16 - Impeccable Audit Polish & Optimize
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
