@@ -8,6 +8,8 @@ pub mod keyboard_simulator;
 use std::sync::Mutex;
 use std::sync::atomic::{AtomicBool, Ordering};
 use tauri::{Manager, Emitter};
+use tauri::menu::{Menu, MenuItem};
+use tauri::tray::{TrayIconBuilder, TrayIconEvent, MouseButton};
 
 struct AppState {
     audio_recorder: audio_recorder::AudioRecorder,
@@ -33,6 +35,34 @@ async fn set_settings(app_handle: tauri::AppHandle, settings: settings::Settings
 #[tauri::command]
 async fn download_model_command(app_handle: tauri::AppHandle, model_name: String) -> Result<(), String> {
     whisper_runner::download_model(&app_handle, &model_name).await.map(|_| ())
+}
+
+#[tauri::command]
+async fn get_downloaded_models(app_handle: tauri::AppHandle) -> Result<Vec<String>, String> {
+    let app_local_data = app_handle
+        .path()
+        .app_local_data_dir()
+        .map_err(|e| format!("Failed to get app local data dir: {}", e))?;
+    let models_dir = app_local_data.join("models");
+    
+    let mut downloaded = Vec::new();
+    if models_dir.exists() {
+        if let Ok(entries) = std::fs::read_dir(models_dir) {
+            for entry in entries.flatten() {
+                let path = entry.path();
+                if path.is_file() {
+                    if let Some(filename) = path.file_name().and_then(|f| f.to_str()) {
+                        if filename.starts_with("ggml-") && filename.ends_with(".bin") {
+                            // Extract model name between "ggml-" and ".bin"
+                            let name = &filename[5..filename.len() - 4];
+                            downloaded.push(name.to_string());
+                        }
+                    }
+                }
+            }
+        }
+    }
+    Ok(downloaded)
 }
 
 fn diff_and_type(typed_so_far: &mut String, new_text: &str) {
@@ -98,6 +128,53 @@ pub fn run() {
             // Load settings and apply configured hotkey on startup
             if let Ok(settings) = settings::load_settings(&app_handle) {
                 keyboard_hook::update_hotkey(&settings.hotkey);
+            }
+
+            // 1. Intercept CloseRequested on main window to hide it instead of closing the app
+            if let Some(main_window) = app.get_webview_window("main") {
+                let main_window_clone = main_window.clone();
+                main_window.on_window_event(move |event| {
+                    if let tauri::WindowEvent::CloseRequested { api, .. } = event {
+                        api.prevent_close();
+                        let _ = main_window_clone.hide();
+                    }
+                });
+            }
+
+            // 2. Build system tray menu
+            let quit_i = MenuItem::with_id(app, "quit", "Выход", true, None::<&str>)?;
+            let show_i = MenuItem::with_id(app, "show", "Открыть настройки", true, None::<&str>)?;
+            let menu = Menu::with_items(app, &[&show_i, &quit_i])?;
+
+            // 3. Build tray icon
+            if let Some(tray_icon) = app.default_window_icon().cloned() {
+                let _tray = TrayIconBuilder::new()
+                    .icon(tray_icon)
+                    .menu(menu)
+                    .on_menu_event(|app, event| {
+                        match event.id.as_ref() {
+                            "quit" => {
+                                app.exit(0);
+                            }
+                            "show" => {
+                                if let Some(window) = app.get_webview_window("main") {
+                                    let _ = window.show();
+                                    let _ = window.focus();
+                                }
+                            }
+                            _ => {}
+                        }
+                    })
+                    .on_tray_icon_event(|tray, event| {
+                        if let TrayIconEvent::Click { button: MouseButton::Left, .. } = event {
+                            let app = tray.app_handle();
+                            if let Some(window) = app.get_webview_window("main") {
+                                let _ = window.show();
+                                let _ = window.focus();
+                            }
+                        }
+                    })
+                    .build(app)?;
             }
 
             app.manage(AppState {
@@ -449,7 +526,8 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             get_settings,
             set_settings,
-            download_model_command
+            download_model_command,
+            get_downloaded_models
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

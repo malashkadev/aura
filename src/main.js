@@ -88,11 +88,36 @@ document.addEventListener("DOMContentLoaded", () => {
         }
         
         updateEngineUI();
+        await refreshDownloadedModels();
         showStatus("Настройки загружены");
       }
     } catch (err) {
       console.error(err);
       showStatus(`Ошибка загрузки настроек: ${err}`, true);
+    }
+  }
+
+  // Check which models are downloaded and update dropdown list options
+  async function refreshDownloadedModels() {
+    try {
+      const downloaded = await invoke("get_downloaded_models");
+      const modelOptions = selectModel.querySelectorAll("option");
+      modelOptions.forEach(opt => {
+        const val = opt.value;
+        let baseText = opt.textContent;
+        // Clean up any previously appended checkmarks or labels
+        if (baseText.endsWith(" ✓")) {
+          baseText = baseText.substring(0, baseText.length - 2);
+        }
+        
+        if (downloaded.includes(val)) {
+          opt.textContent = `${baseText} ✓`;
+        } else {
+          opt.textContent = baseText;
+        }
+      });
+    } catch (err) {
+      console.error("Failed to check downloaded models", err);
     }
   }
 
@@ -157,6 +182,7 @@ document.addEventListener("DOMContentLoaded", () => {
       progressStatus.textContent = `Модель '${payload.model}' готова`;
       showStatus(`Модель '${payload.model}' скачана!`);
       btnDownloadModel.disabled = false;
+      refreshDownloadedModels();
       setTimeout(() => {
         progressContainer.style.display = "none";
       }, 4000);
