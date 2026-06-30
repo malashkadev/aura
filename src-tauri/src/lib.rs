@@ -390,11 +390,7 @@ pub fn run() {
                             false
                         };
 
-                        if !streaming_enabled {
-                            if let Some(overlay) = app_handle.get_webview_window("overlay") {
-                                let _ = overlay.hide();
-                            }
-                        }
+
 
                         // Perform final transcription in a background task
                         let app_handle_clone = app_handle.clone();
