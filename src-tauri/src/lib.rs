@@ -15,6 +15,7 @@ struct AppState {
     press_time: Mutex<Option<std::time::Instant>>,
     is_recording: AtomicBool,
     typed_so_far: Mutex<String>,
+    selected_language: Mutex<String>,
 }
 
 #[tauri::command]
@@ -34,30 +35,43 @@ async fn download_model_command(app_handle: tauri::AppHandle, model_name: String
     whisper_runner::download_model(&app_handle, &model_name).await.map(|_| ())
 }
 
-fn diff_and_type(typed_so_far: &mut String, new_text: &str) {
-    let typed_chars: Vec<char> = typed_so_far.chars().collect();
-    let new_chars: Vec<char> = new_text.chars().collect();
+fn get_incremental_suffix(typed_so_far: &str, new_text: &str) -> String {
+    let typed_words: Vec<&str> = typed_so_far.split_whitespace().collect();
+    let new_words: Vec<&str> = new_text.split_whitespace().collect();
     
-    let mut common_prefix_len = 0;
-    for (c1, c2) in typed_chars.iter().zip(new_chars.iter()) {
-        if c1 == c2 {
-            common_prefix_len += 1;
-        } else {
-            break;
+    if typed_words.is_empty() {
+        return new_text.to_string();
+    }
+    if new_words.is_empty() {
+        return String::new();
+    }
+    
+    let norm_typed: Vec<String> = typed_words.iter().map(|w| normalize_word(w)).collect();
+    let norm_new: Vec<String> = new_words.iter().map(|w| normalize_word(w)).collect();
+    
+    // Try to find matching suffix of typed_words at the start of new_words
+    let max_match_len = std::cmp::min(norm_typed.len(), 5);
+    for len in (1..=max_match_len).rev() {
+        let suffix = &norm_typed[norm_typed.len() - len..];
+        if norm_new.len() >= len && suffix == &norm_new[..len] {
+            // Found a match! Return the remaining words from new_words
+            let remaining_words = &new_words[len..];
+            if remaining_words.is_empty() {
+                return String::new();
+            }
+            return remaining_words.join(" ");
         }
     }
     
-    let chars_to_delete = typed_chars.len() - common_prefix_len;
-    if chars_to_delete > 0 {
-        keyboard_simulator::type_backspaces(chars_to_delete);
-    }
-    
-    let suffix: String = new_chars[common_prefix_len..].iter().collect();
-    if !suffix.is_empty() {
-        keyboard_simulator::type_string(&suffix);
-    }
-    
-    *typed_so_far = new_text.to_string();
+    // No match found, return the entire new_text
+    new_text.to_string()
+}
+
+fn normalize_word(word: &str) -> String {
+    word.chars()
+        .filter(|c| c.is_alphanumeric())
+        .collect::<String>()
+        .to_lowercase()
 }
 
 fn is_silence_hallucination(text: &str) -> bool {
@@ -108,6 +122,7 @@ pub fn run() {
                 press_time: Mutex::new(None),
                 is_recording: AtomicBool::new(false),
                 typed_so_far: Mutex::new(String::new()),
+                selected_language: Mutex::new(String::new()),
             });
 
             // Start global keyboard hook
@@ -115,9 +130,16 @@ pub fn run() {
                 let app_handle = app_handle.clone();
                 tauri::async_runtime::spawn(async move {
                     if is_down {
-                        // Clear typed so far and set is_recording to true
+                        // Clear typed so far, detect active language, and set is_recording to true
                         if let Some(state) = app_handle.try_state::<AppState>() {
                             let state = state.inner();
+                            
+                            // Detect active keyboard language at the moment of press
+                            let lang = keyboard_simulator::get_active_layout_language();
+                            if let Ok(mut guard) = state.selected_language.lock() {
+                                *guard = lang;
+                            }
+
                             if let Ok(mut guard) = state.typed_so_far.lock() {
                                 *guard = String::new();
                             }
@@ -128,42 +150,7 @@ pub fn run() {
                             }
                         }
 
-                        // 1. Read clipboard BEFORE copy to compare later
-                        let original_clip = if let Ok(mut cb) = arboard::Clipboard::new() {
-                            cb.get_text().unwrap_or_default()
-                        } else {
-                            String::new()
-                        };
-
-                        // 2. Simulate Copy to capture selection
-                        keyboard_simulator::simulate_copy();
-
-                        // 3. Sleep 120ms to allow system clipboard update
-                        tokio::time::sleep(std::time::Duration::from_millis(120)).await;
-
-                        // 4. Read clipboard AFTER copy
-                        let new_clip = if let Ok(mut cb) = arboard::Clipboard::new() {
-                            cb.get_text().unwrap_or_default()
-                        } else {
-                            String::new()
-                        };
-
-                        // If clipboard did not change, assume no text was selected
-                        let selected_text = if new_clip == original_clip {
-                            String::new()
-                        } else {
-                            new_clip
-                        };
-
-                        // Store selected text in state
-                        if let Some(state) = app_handle.try_state::<AppState>() {
-                            let state = state.inner();
-                            if let Ok(mut guard) = state.selected_text.lock() {
-                                *guard = selected_text;
-                            }
-                        }
-
-                        // 5. Start recording to temporary WAV path
+                        // Start recording to temporary WAV path
                         let temp_path = std::env::temp_dir().join("aura-temp.wav");
                         let temp_path_str = temp_path.to_string_lossy().to_string();
 
@@ -177,7 +164,7 @@ pub fn run() {
                             }
                         }
 
-                        // 6. Show overlay window
+                        // Show overlay window
                         if let Some(overlay) = app_handle.get_webview_window("overlay") {
                             // Position overlay in the bottom center of the primary monitor
                             if let Ok(Some(monitor)) = overlay.primary_monitor() {
@@ -201,10 +188,10 @@ pub fn run() {
                             let _ = overlay.show();
                         }
 
-                        // 7. Emit event
+                        // Emit event
                         let _ = app_handle.emit("recording-state", "recording");
 
-                        // 8. Spawn background streaming loop
+                        // Spawn background streaming loop
                         let app_handle_loop = app_handle.clone();
                         tauri::async_runtime::spawn(async move {
                             // Wait initial 1.5 seconds to gather initial audio
@@ -231,10 +218,10 @@ pub fn run() {
                                         if samples.len() > 8000 {
                                             if audio_recorder::process_and_write_wav(&samples, channels, sample_rate, &chunk_path_str).is_ok() {
                                                 if let Ok(settings) = settings::load_settings(&app_handle_loop) {
-                                                    let selected_text = if let Ok(guard) = state.selected_text.lock() {
+                                                    let selected_language = if let Ok(guard) = state.selected_language.lock() {
                                                         guard.clone()
                                                     } else {
-                                                        String::new()
+                                                        "ru".to_string()
                                                     };
 
                                                     let transcription_result = if settings.transcription_mode == "local" {
@@ -249,7 +236,8 @@ pub fn run() {
                                                             provider,
                                                             &settings.api_key,
                                                             &chunk_path_str,
-                                                            &selected_text,
+                                                            "", // No selected text during live streaming
+                                                            &selected_language,
                                                             false,
                                                         ).await
                                                     };
@@ -258,7 +246,20 @@ pub fn run() {
                                                         let trimmed = text.trim();
                                                         if !trimmed.is_empty() && !is_silence_hallucination(trimmed) {
                                                             if let Ok(mut typed_guard) = state.typed_so_far.lock() {
-                                                                diff_and_type(&mut *typed_guard, trimmed);
+                                                                let suffix = get_incremental_suffix(&*typed_guard, trimmed);
+                                                                if !suffix.is_empty() {
+                                                                    let to_type = if typed_guard.is_empty() || typed_guard.ends_with(' ') || suffix.starts_with(' ') {
+                                                                        suffix.clone()
+                                                                    } else {
+                                                                        format!(" {}", suffix)
+                                                                    };
+                                                                    keyboard_simulator::type_string(&to_type);
+                                                                    if typed_guard.is_empty() {
+                                                                        *typed_guard = trimmed.to_string();
+                                                                    } else {
+                                                                        *typed_guard = format!("{}{}", typed_guard, to_type);
+                                                                    }
+                                                                }
                                                             }
                                                         }
                                                     }
@@ -300,10 +301,10 @@ pub fn run() {
                             }
                         }
 
-                        // 1. Emit event "processing"
+                        // Emit event "processing"
                         let _ = app_handle.emit("recording-state", "processing");
 
-                        // 2. Stop recording
+                        // Stop recording
                         if let Some(state) = app_handle.try_state::<AppState>() {
                             let state = state.inner();
                             if let Err(e) = state.audio_recorder.stop_recording() {
@@ -311,7 +312,7 @@ pub fn run() {
                             }
                         }
 
-                        // 3. Perform final transcription in a background task
+                        // Perform final transcription in a background task
                         let app_handle_clone = app_handle.clone();
                         tauri::async_runtime::spawn(async move {
                             // Wait a short moment to ensure background loop is stopped and doesn't conflict
@@ -332,15 +333,21 @@ pub fn run() {
                                 }
                             };
 
-                            let selected_text = if let Some(state) = app_handle_clone.try_state::<AppState>() {
+                            let (selected_language, selected_text) = if let Some(state) = app_handle_clone.try_state::<AppState>() {
                                 let state = state.inner();
-                                if let Ok(guard) = state.selected_text.lock() {
+                                let lang = if let Ok(guard) = state.selected_language.lock() {
+                                    guard.clone()
+                                } else {
+                                    "ru".to_string()
+                                };
+                                let text = if let Ok(guard) = state.selected_text.lock() {
                                     guard.clone()
                                 } else {
                                     String::new()
-                                }
+                                };
+                                (lang, text)
                             } else {
-                                String::new()
+                                ("ru".to_string(), String::new())
                             };
 
                             // Perform transcription on the full audio file
@@ -357,6 +364,7 @@ pub fn run() {
                                     &settings.api_key,
                                     &temp_path_str,
                                     &selected_text,
+                                    &selected_language,
                                     true,
                                 ).await
                             };
@@ -367,7 +375,14 @@ pub fn run() {
                                     if let Some(state) = app_handle_clone.try_state::<AppState>() {
                                         let state = state.inner();
                                         if let Ok(mut typed_guard) = state.typed_so_far.lock() {
-                                            diff_and_type(&mut *typed_guard, trimmed);
+                                            // Delete the temporary text typed during the live streaming phase
+                                            let chars_to_delete = typed_guard.chars().count();
+                                            if chars_to_delete > 0 {
+                                                keyboard_simulator::type_backspaces(chars_to_delete);
+                                            }
+                                            // Type the final cleaned/formatted text under the cursor
+                                            keyboard_simulator::type_string(trimmed);
+                                            *typed_guard = trimmed.to_string();
                                         }
                                     }
                                 }
