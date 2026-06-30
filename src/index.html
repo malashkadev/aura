@@ -71,15 +71,14 @@
           <div class="card">
             <h2 class="card-title">Режим ввода текста</h2>
             <p class="card-desc">Выберите способ отображения наговариваемого текста.</p>
-            <div class="form-group">
-              <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; color: var(--text-color); font-weight: 500;">
-                <input type="checkbox" id="checkbox-streaming" style="width: 18px; height: 18px; accent-color: var(--accent-color); cursor: pointer;" />
-                <span>Потоковый ввод в реальном времени (экспериментальный)</span>
+              <label class="toggle-switch">
+                <input type="checkbox" id="checkbox-streaming" />
+                <span class="toggle-slider"></span>
+                <span class="toggle-label">Потоковый ввод в реальном времени (экспериментальный)</span>
               </label>
-              <p style="margin-top: 8px; font-size: 13px; color: var(--text-muted); opacity: 0.8; line-height: 1.4;">
+              <p class="switch-desc">
                 Если выключено: текст вставится целиком только после того, как вы отпустите клавиши (режим версии 1.0). Рекомендуется для стабильной работы с бесплатным API Groq.
               </p>
-            </div>
           </div>
 
           <div class="card" id="card-local-model" style="display: none;">
@@ -163,7 +162,7 @@
         <section class="tab-panel" id="panel-about" aria-labelledby="tab-btn-about" style="display: none;">
           <div class="card about-card">
             <div class="about-icon">
-              <svg viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg" style="width: 32px; height: 32px;">
+              <svg class="about-logo-svg" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M398.114 421C445.533 380.876 474.714 322.514 474.714 256.857C474.714 136.486 376.229 38 255.857 38C135.486 38 37 136.486 37 256.857C37 322.514 66.1809 380.876 113.6 421" stroke="currentColor" stroke-width="73.1573"/>
                 <path d="M181.963 176.024L42.0293 511.651H142.825L200.192 352.952L247.909 233.927C250.769 226.064 253.45 222.132 255.952 222.132C258.096 222.132 260.598 226.064 263.458 233.927L311.175 352.952L368.542 511.651H469.874L329.404 176.024C322.255 158.867 312.783 147.25 300.988 141.174C289.55 135.098 274.538 132.06 255.952 132.06C234.148 132.06 217.885 135.455 207.162 142.246C196.797 149.038 188.397 160.297 181.963 176.024Z" fill="currentColor"/>
               </svg>
