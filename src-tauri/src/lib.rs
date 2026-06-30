@@ -369,11 +369,8 @@ pub fn run() {
                                         if let Some(state) = app_handle_clone.try_state::<AppState>() {
                                             let state = state.inner();
                                             if let Ok(mut typed_guard) = state.typed_so_far.lock() {
-                                                // Replace temporary text typed during streaming phase with final formatted text
-                                                let chars_to_delete = typed_guard.chars().count();
-                                                eprintln!("Aura Dev Log: Replacing {} temporary chars with final formatted text.", chars_to_delete);
-                                                keyboard_simulator::replace_text(chars_to_delete, trimmed);
-                                                *typed_guard = trimmed.to_string();
+                                                // Perform a smart diff replacement to only touch changed suffixes and avoid erasing the whole line
+                                                diff_and_type(&mut *typed_guard, trimmed);
                                             }
                                         }
                                     }
