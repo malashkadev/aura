@@ -102,6 +102,7 @@ pub async fn transcribe_and_clean(
     api_key: &str,
     wav_path: &str,
     selected_text: &str,
+    language: &str,
     clean: bool,
 ) -> Result<String, String> {
     let client = reqwest::Client::new();
@@ -194,7 +195,8 @@ pub async fn transcribe_and_clean(
 
             let form = multipart::Form::new()
                 .part("file", file_part)
-                .text("model", "whisper-1");
+                .text("model", "whisper-1")
+                .text("language", language.to_string());
 
             let whisper_response = client
                 .post(whisper_endpoint)
@@ -290,7 +292,8 @@ pub async fn transcribe_and_clean(
 
             let form = multipart::Form::new()
                 .part("file", file_part)
-                .text("model", "whisper-large-v3");
+                .text("model", "whisper-large-v3")
+                .text("language", language.to_string());
 
             let whisper_response = client
                 .post(whisper_endpoint)
