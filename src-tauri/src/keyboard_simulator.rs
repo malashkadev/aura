@@ -51,6 +51,7 @@ fn restore_modifiers(released: &[u16]) {
 }
 
 pub fn simulate_copy() {
+    let released = release_modifiers();
     unsafe {
         let mut inputs = [std::mem::zeroed::<INPUT>(); 4];
         
@@ -96,9 +97,11 @@ pub fn simulate_copy() {
 
         SendInput(4, inputs.as_mut_ptr(), std::mem::size_of::<INPUT>() as i32);
     }
+    restore_modifiers(&released);
 }
 
 pub fn simulate_paste() {
+    let released = release_modifiers();
     unsafe {
         let mut inputs = [std::mem::zeroed::<INPUT>(); 4];
         
@@ -144,6 +147,7 @@ pub fn simulate_paste() {
 
         SendInput(4, inputs.as_mut_ptr(), std::mem::size_of::<INPUT>() as i32);
     }
+    restore_modifiers(&released);
 }
 
 #[link(name = "user32")]
