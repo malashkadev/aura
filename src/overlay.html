@@ -26,8 +26,6 @@
       width: 103px;
       height: 30px;
       display: block;
-      /* Add subtle orange drop-shadow for premium look on dark wallpapers */
-      filter: drop-shadow(0 2px 8px rgba(255, 66, 0, 0.2));
     }
 
     /* Target the bars for smooth transition */
@@ -123,20 +121,25 @@
     listen("volume-level", (event) => {
       if (currentState !== "recording") return;
 
-      const volume = event.payload; // Float from 0.0 to ~1.0
+      // Extract raw volume value safely
+      let volume = 0.0;
+      if (event.payload !== null && event.payload !== undefined) {
+        volume = typeof event.payload === "number" ? event.payload : parseFloat(event.payload);
+        if (isNaN(volume)) volume = 0.0;
+      }
       
       bars.forEach((bar, index) => {
         let h = 6;
-        if (volume > 0.0002) {
-          const boosted = Math.sqrt(volume);
-          // Compute height based on volume and apply distinct frequency factor per bar
+        // Make wave react to even tiny volume fluctuations
+        if (volume > 0.00005) {
+          const boosted = Math.sqrt(volume); // e.g. sqrt(0.001) = 0.031
           const factor = 0.3 + Math.sin(index * 0.7) * 0.4 + Math.random() * 0.3;
-          h = 6 + (boosted * 55 * factor);
+          h = 6 + (boosted * 80.0 * factor);
           h = Math.min(22, Math.max(6, h));
         }
         const y = 14.6 - (h / 2);
-        bar.setAttribute("height", h);
-        bar.setAttribute("y", y);
+        bar.setAttribute("height", h.toString());
+        bar.setAttribute("y", y.toString());
       });
     });
   </script>

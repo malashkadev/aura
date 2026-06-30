@@ -157,9 +157,9 @@ pub fn run() {
                                 let overlay_width = 130.0;
                                 let overlay_height = 50.0;
                                 
-                                // Center horizontally, place ~60px above the bottom (just above the taskbar)
+                                // Center horizontally, place ~95px above the bottom (just above the taskbar)
                                 let x = (monitor_width - overlay_width) / 2.0;
-                                let y = monitor_height - overlay_height - 60.0;
+                                let y = monitor_height - overlay_height - 95.0;
                                 
                                 let _ = overlay.set_position(tauri::Position::Logical(tauri::LogicalPosition::new(x, y)));
                             }
