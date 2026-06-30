@@ -307,11 +307,25 @@ pub fn run() {
                             eprintln!("Aura Dev Log: stop_recording result = {:?}", stop_res);
                         }
 
+                        let streaming_enabled = if let Ok(settings) = settings::load_settings(&app_handle) {
+                            settings.streaming_enabled
+                        } else {
+                            false
+                        };
+
+                        if !streaming_enabled {
+                            if let Some(overlay) = app_handle.get_webview_window("overlay") {
+                                let _ = overlay.hide();
+                            }
+                        }
+
                         // Perform final transcription in a background task
                         let app_handle_clone = app_handle.clone();
                         tauri::async_runtime::spawn(async move {
-                            // Wait a short moment to ensure background loop is stopped and doesn't conflict
-                            tokio::time::sleep(std::time::Duration::from_millis(100)).await;
+                            // Only wait if streaming was enabled to let the loop exit cleanly
+                            if streaming_enabled {
+                                tokio::time::sleep(std::time::Duration::from_millis(100)).await;
+                            }
 
                             let temp_path = std::env::temp_dir().join("aura-temp.wav");
                             let temp_path_str = temp_path.to_string_lossy().to_string();
