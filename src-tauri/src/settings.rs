@@ -20,6 +20,8 @@ pub struct Settings {
     pub dictionary: String,         // comma-separated custom terms passed to the recognizer as hints
     pub voice_punctuation: bool,    // convert spoken commands ("запятая", "новая строка") to punctuation
     pub autostart: bool,            // launch the app on Windows startup
+    pub overlay_sounds: bool,
+    pub overlay_sound_theme: String,
 }
 
 impl Default for Settings {
@@ -39,6 +41,8 @@ impl Default for Settings {
             dictionary: "".to_string(),
             voice_punctuation: false,
             autostart: false,
+            overlay_sounds: true,
+            overlay_sound_theme: "zen".to_string(),
         }
     }
 }
@@ -123,6 +127,8 @@ mod tests {
         assert_eq!(settings.api_key_groq, "");
         assert_eq!(settings.transcription_mode, "cloud");
         assert_eq!(settings.api_provider, "gemini");
+        assert_eq!(settings.overlay_sounds, true);
+        assert_eq!(settings.overlay_sound_theme, "zen");
     }
 
     #[test]
