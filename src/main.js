@@ -75,7 +75,22 @@ const i18nDict = {
     status_error: "Ошибка: ",
     model_status_ready: "Готова",
     model_action_download: "Скачать",
-    model_action_delete: "Удалить"
+    model_action_delete: "Удалить",
+    api_get_key_pattern: "Получить ключ на {name}",
+    status_loaded: "Настройки загружены",
+    status_load_error: "Ошибка загрузки настроек: ",
+    status_save_error: "Ошибка сохранения настроек: ",
+    model_downloading_pattern: "Запуск скачивания для модели '{model}'...",
+    model_download_error_pattern: "Ошибка скачивания: {err}",
+    delete_model_title: "Удаление модели",
+    delete_model_confirm_pattern: "Вы действительно хотите удалить локальную модель '{model}'?",
+    delete_model_btn: "Удалить",
+    model_deleting_pattern: "Удаление модели '{model}'...",
+    model_deleted_success: "Модель успешно удалена",
+    model_delete_error_pattern: "Ошибка удаления: {err}",
+    model_downloaded_success_pattern: "Модель '{model}' скачана!",
+    confirm_clear_history_title: "Очистить историю",
+    confirm_clear_history_msg: "Вы действительно хотите очистить всю историю транскрипций?"
   },
   en: {
     title_settings: "Settings",
@@ -149,7 +164,22 @@ const i18nDict = {
     status_error: "Error: ",
     model_status_ready: "Ready",
     model_action_download: "Download",
-    model_action_delete: "Delete"
+    model_action_delete: "Delete",
+    api_get_key_pattern: "Get key on {name}",
+    status_loaded: "Settings loaded",
+    status_load_error: "Failed to load settings: ",
+    status_save_error: "Failed to save settings: ",
+    model_downloading_pattern: "Starting download for model '{model}'...",
+    model_download_error_pattern: "Download error: {err}",
+    delete_model_title: "Delete model",
+    delete_model_confirm_pattern: "Are you sure you want to delete the local model '{model}'?",
+    delete_model_btn: "Delete",
+    model_deleting_pattern: "Deleting model '{model}'...",
+    model_deleted_success: "Model deleted successfully",
+    model_delete_error_pattern: "Delete error: {err}",
+    model_downloaded_success_pattern: "Model '{model}' downloaded!",
+    confirm_clear_history_title: "Clear history",
+    confirm_clear_history_msg: "Are you sure you want to clear all transcription history?"
   },
   de: {
     title_settings: "Einstellungen",
@@ -223,7 +253,22 @@ const i18nDict = {
     status_error: "Fehler: ",
     model_status_ready: "Bereit",
     model_action_download: "Herunterladen",
-    model_action_delete: "Löschen"
+    model_action_delete: "Löschen",
+    api_get_key_pattern: "Schlüssel erhalten auf {name}",
+    status_loaded: "Einstellungen geladen",
+    status_load_error: "Fehler beim Laden der Einstellungen: ",
+    status_save_error: "Fehler beim Speichern der Einstellungen: ",
+    model_downloading_pattern: "Download für Modell '{model}' wird gestartet...",
+    model_download_error_pattern: "Download-Fehler: {err}",
+    delete_model_title: "Modell löschen",
+    delete_model_confirm_pattern: "Möchten Sie das lokale Modell '{model}' wirklich löschen?",
+    delete_model_btn: "Löschen",
+    model_deleting_pattern: "Modell '{model}' wird gelöscht...",
+    model_deleted_success: "Modell erfolgreich gelöscht",
+    model_delete_error_pattern: "Fehler beim Löschen: {err}",
+    model_downloaded_success_pattern: "Modell '{model}' heruntergeladen!",
+    confirm_clear_history_title: "Verlauf löschen",
+    confirm_clear_history_msg: "Möchten Sie den gesamten Transkriptionsverlauf wirklich löschen?"
   },
   es: {
     title_settings: "Ajustes",
@@ -297,7 +342,22 @@ const i18nDict = {
     status_error: "Error: ",
     model_status_ready: "Listo",
     model_action_download: "Descargar",
-    model_action_delete: "Eliminar"
+    model_action_delete: "Eliminar",
+    api_get_key_pattern: "Obtener clave en {name}",
+    status_loaded: "Ajustes cargados",
+    status_load_error: "Error al cargar los ajustes: ",
+    status_save_error: "Error al guardar los ajustes: ",
+    model_downloading_pattern: "Iniciando descarga para el modelo '{model}'...",
+    model_download_error_pattern: "Error de descarga: {err}",
+    delete_model_title: "Eliminar modelo",
+    delete_model_confirm_pattern: "¿Está seguro de que desea eliminar el modelo local '{model}'?",
+    delete_model_btn: "Eliminar",
+    model_deleting_pattern: "Eliminando modelo '{model}'...",
+    model_deleted_success: "Modelo eliminado correctamente",
+    model_delete_error_pattern: "Error al eliminar: {err}",
+    model_downloaded_success_pattern: "¡Modelo '{model}' descargado!",
+    confirm_clear_history_title: "Limpiar historial",
+    confirm_clear_history_msg: "¿Está seguro de que desea limpiar todo el historial de transcripciones?"
   },
   fr: {
     title_settings: "Paramètres",
@@ -371,7 +431,22 @@ const i18nDict = {
     status_error: "Erreur: ",
     model_status_ready: "Prêt",
     model_action_download: "Télécharger",
-    model_action_delete: "Supprimer"
+    model_action_delete: "Supprimer",
+    api_get_key_pattern: "Obtenir la clé sur {name}",
+    status_loaded: "Paramètres chargés",
+    status_load_error: "Échec du chargement des paramètres : ",
+    status_save_error: "Échec de l'enregistrement des paramètres : ",
+    model_downloading_pattern: "Démarrage du téléchargement pour le modèle '{model}'...",
+    model_download_error_pattern: "Erreur de téléchargement: {err}",
+    delete_model_title: "Supprimer le modèle",
+    delete_model_confirm_pattern: "Voulez-vous vraiment supprimer le modèle local '{model}' ?",
+    delete_model_btn: "Supprimer",
+    model_deleting_pattern: "Suppression du modèle '{model}'...",
+    model_deleted_success: "Modèle supprimé avec succès",
+    model_delete_error_pattern: "Erreur de suppression: {err}",
+    model_downloaded_success_pattern: "Modèle '{model}' téléchargé !",
+    confirm_clear_history_title: "Effacer l'historique",
+    confirm_clear_history_msg: "Voulez-vous vraiment effacer tout l'historique des transcriptions ?"
   },
   it: {
     title_settings: "Impostazioni",
@@ -445,7 +520,22 @@ const i18nDict = {
     status_error: "Errore: ",
     model_status_ready: "Pronto",
     model_action_download: "Scarica",
-    model_action_delete: "Elimina"
+    model_action_delete: "Elimina",
+    api_get_key_pattern: "Ottieni la chiave su {name}",
+    status_loaded: "Impostazioni caricate",
+    status_load_error: "Impossibile caricare le impostazioni: ",
+    status_save_error: "Impossibile salvare le impostazioni: ",
+    model_downloading_pattern: "Avvio del download per il modello '{model}'...",
+    model_download_error_pattern: "Errore di download: {err}",
+    delete_model_title: "Elimina modello",
+    delete_model_confirm_pattern: "Sei sicuro di voler eliminare il modello locale '{model}'?",
+    delete_model_btn: "Elimina",
+    model_deleting_pattern: "Eliminazione del modello '{model}'...",
+    model_deleted_success: "Modello eliminato con successo",
+    model_delete_error_pattern: "Errore di eliminazione: {err}",
+    model_downloaded_success_pattern: "Modello '{model}' scaricato!",
+    confirm_clear_history_title: "Cancella cronologia",
+    confirm_clear_history_msg: "Sei sicuro di voler cancellare tutta la cronologia delle trascrizioni?"
   },
   zh: {
     title_settings: "设置",
@@ -519,7 +609,22 @@ const i18nDict = {
     status_error: "发生错误: ",
     model_status_ready: "就绪",
     model_action_download: "下载",
-    model_action_delete: "删除"
+    model_action_delete: "删除",
+    api_get_key_pattern: "在 {name} 获取密钥",
+    status_loaded: "设置已加载",
+    status_load_error: "加载设置失败: ",
+    status_save_error: "保存设置失败: ",
+    model_downloading_pattern: "正在启动模型 '{model}' 的下载...",
+    model_download_error_pattern: "下载错误: {err}",
+    delete_model_title: "删除模型",
+    delete_model_confirm_pattern: "您确定要删除本地模型 '{model}' 吗？",
+    delete_model_btn: "删除",
+    model_deleting_pattern: "正在删除模型 '{model}'...",
+    model_deleted_success: "模型删除成功",
+    model_delete_error_pattern: "删除错误: {err}",
+    model_downloaded_success_pattern: "模型 '{model}' 已下载！",
+    confirm_clear_history_title: "清空历史",
+    confirm_clear_history_msg: "您确定要清空所有听写历史记录吗？"
   },
   pt: {
     title_settings: "Configurações",
@@ -593,7 +698,22 @@ const i18nDict = {
     status_error: "Erro: ",
     model_status_ready: "Pronto",
     model_action_download: "Baixar",
-    model_action_delete: "Excluir"
+    model_action_delete: "Excluir",
+    api_get_key_pattern: "Obter chave em {name}",
+    status_loaded: "Configurações carregadas",
+    status_load_error: "Falha ao carregar configurações: ",
+    status_save_error: "Falha ao salvar configurações: ",
+    model_downloading_pattern: "Iniciando download para o modelo '{model}'...",
+    model_download_error_pattern: "Erro de download: {err}",
+    delete_model_title: "Excluir modelo",
+    delete_model_confirm_pattern: "Tem certeza de que deseja excluir o modelo local '{model}'?",
+    delete_model_btn: "Excluir",
+    model_deleting_pattern: "Excluindo modelo '{model}'...",
+    model_deleted_success: "Modelo excluído com sucesso",
+    model_delete_error_pattern: "Erro ao excluir: {err}",
+    model_downloaded_success_pattern: "Modelo '{model}' baixado!",
+    confirm_clear_history_title: "Limpar histórico",
+    confirm_clear_history_msg: "Tem certeza de que deseja limpar todo o histórico de transcrições?"
   },
   tr: {
     title_settings: "Ayarlar",
@@ -667,11 +787,35 @@ const i18nDict = {
     status_error: "Fehler: ",
     model_status_ready: "Hazır",
     model_action_download: "İndir",
-    model_action_delete: "Sil"
+    model_action_delete: "Sil",
+    api_get_key_pattern: "{name} üzerinden anahtar al",
+    status_loaded: "Ayarlar yüklendi",
+    status_load_error: "Ayarlar yüklenemedi: ",
+    status_save_error: "Ayarlar kaydedilemedi: ",
+    model_downloading_pattern: "'{model}' modeli için indirme başlatılıyor...",
+    model_download_error_pattern: "İndirme hatası: {err}",
+    delete_model_title: "Modeli sil",
+    delete_model_confirm_pattern: "Yerel '{model}' modelini silmek istediğinizden emin misiniz?",
+    delete_model_btn: "Sil",
+    model_deleting_pattern: "'{model}' modeli siliniyor...",
+    model_deleted_success: "Model başarıyla silindi",
+    model_delete_error_pattern: "Silme hatası: {err}",
+    model_downloaded_success_pattern: "'{model}' modeli indirildi!",
+    confirm_clear_history_title: "Geçmişi Temizle",
+    confirm_clear_history_msg: "Tüm transkripsiyon geçmişini temizlemek istediğinizden emin misiniz?"
   }
 };
 
 let currentLanguage = "ru";
+
+function getTranslation(key, params = {}) {
+  const dict = i18nDict[currentLanguage] || i18nDict.ru;
+  let template = dict[key] || i18nDict.ru[key] || key;
+  for (const [k, v] of Object.entries(params)) {
+    template = template.replaceAll(`{${k}}`, v);
+  }
+  return template;
+}
 
 document.addEventListener("DOMContentLoaded", () => {
   // Navigation Tabs
@@ -691,6 +835,11 @@ document.addEventListener("DOMContentLoaded", () => {
       const targetPanel = document.getElementById(`panel-${tab.dataset.tab}`);
       if (targetPanel) {
         targetPanel.style.display = "flex";
+      }
+
+      // If clicking history tab, reload history entries
+      if (tab.dataset.tab === "history") {
+        loadHistoryList();
       }
     });
   });
@@ -736,17 +885,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const info = providerLinks[prov] || providerLinks.gemini;
     if (linkGetKey) {
       linkGetKey.href = info.url;
-      const lang = typeof currentLanguage !== 'undefined' ? currentLanguage : 'ru';
-      let text = `Получить ключ на ${info.name}`;
-      if (lang === "en") text = `Get key on ${info.name}`;
-      else if (lang === "de") text = `Schlüssel erhalten auf ${info.name}`;
-      else if (lang === "es") text = `Obtener clave en ${info.name}`;
-      else if (lang === "fr") text = `Obtenir la clé sur ${info.name}`;
-      else if (lang === "it") text = `Ottieni la chiave su ${info.name}`;
-      else if (lang === "zh") text = `在 ${info.name} 获取密钥`;
-      else if (lang === "pt") text = `Obter chave em ${info.name}`;
-      else if (lang === "tr") text = `${info.name} üzerinden anahtar al`;
-      linkGetKey.textContent = text;
+      linkGetKey.textContent = getTranslation("api_get_key_pattern", { name: info.name });
     }
   }
 
@@ -797,10 +936,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function bindSettingsChangeListeners() {
     const checkboxStreaming = document.getElementById("checkbox-streaming");
+    const selectUiLang = document.getElementById("select-ui-lang");
     const inputs = [
       radioCloud, radioLocal, selectProvider, apiKeyInput, selectHotkey,
       selectLanguage, textareaDictionary, checkboxToggle, checkboxPunctuation,
-      checkboxAutostart, checkboxStreaming, checkboxSounds, selectSoundTheme
+      checkboxAutostart, checkboxStreaming, checkboxSounds, selectSoundTheme,
+      selectUiLang
     ];
     inputs.forEach(input => {
       if (input) {
@@ -901,31 +1042,13 @@ document.addEventListener("DOMContentLoaded", () => {
         isSettingsLoaded = true;
         settingsModified = false;
         
-        let loadedText = "Настройки загружены";
-        if (currentLanguage === "en") loadedText = "Settings loaded";
-        else if (currentLanguage === "de") loadedText = "Einstellungen geladen";
-        else if (currentLanguage === "es") loadedText = "Ajustes cargados";
-        else if (currentLanguage === "fr") loadedText = "Paramètres chargés";
-        else if (currentLanguage === "it") loadedText = "Impostazioni caricate";
-        else if (currentLanguage === "zh") loadedText = "设置已加载";
-        else if (currentLanguage === "pt") loadedText = "Configurações carregadas";
-        else if (currentLanguage === "tr") loadedText = "Ayarlar yüklendi";
-        showStatus(loadedText);
+        showStatus(getTranslation("status_loaded"));
         
         bindSettingsChangeListeners();
       }
     } catch (err) {
       console.error(err);
-      let loadErrorPrefix = "Ошибка загрузки настроек: ";
-      if (currentLanguage === "en") loadErrorPrefix = "Failed to load settings: ";
-      else if (currentLanguage === "de") loadErrorPrefix = "Fehler beim Laden der Einstellungen: ";
-      else if (currentLanguage === "es") loadErrorPrefix = "Error al cargar los ajustes: ";
-      else if (currentLanguage === "fr") loadErrorPrefix = "Échec du chargement des paramètres : ";
-      else if (currentLanguage === "it") loadErrorPrefix = "Impossibile caricare le impostazioni: ";
-      else if (currentLanguage === "zh") loadErrorPrefix = "加载设置失败: ";
-      else if (currentLanguage === "pt") loadErrorPrefix = "Falha ao carregar configurações: ";
-      else if (currentLanguage === "tr") loadErrorPrefix = "Ayarlar yüklenemedi: ";
-      showStatus(`${loadErrorPrefix}${err}`, true);
+      showStatus(`${getTranslation("status_load_error")}${err}`, true);
     }
   }
 
@@ -1006,31 +1129,13 @@ document.addEventListener("DOMContentLoaded", () => {
       }, 3000);
     } catch (err) {
       console.error(err);
-      let saveErrorPrefix = "Ошибка сохранения настроек: ";
-      if (currentLanguage === "en") saveErrorPrefix = "Failed to save settings: ";
-      else if (currentLanguage === "de") saveErrorPrefix = "Fehler beim Speichern der Einstellungen: ";
-      else if (currentLanguage === "es") saveErrorPrefix = "Error al guardar los ajustes: ";
-      else if (currentLanguage === "fr") saveErrorPrefix = "Échec de l'enregistrement des paramètres : ";
-      else if (currentLanguage === "it") saveErrorPrefix = "Impossibile salvare le impostazioni: ";
-      else if (currentLanguage === "zh") saveErrorPrefix = "保存设置失败: ";
-      else if (currentLanguage === "pt") saveErrorPrefix = "Falha ao salvar configurações: ";
-      else if (currentLanguage === "tr") saveErrorPrefix = "Ayarlar kaydedilemedi: ";
-      showStatus(`${saveErrorPrefix}${err}`, true);
+      showStatus(`${getTranslation("status_save_error")}${err}`, true);
     }
   }
 
   async function downloadModelCard(model) {
     try {
-      let text = `Запуск скачивания для модели '${model}'...`;
-      if (currentLanguage === "en") text = `Starting download for model '${model}'...`;
-      else if (currentLanguage === "de") text = `Download für Modell '${model}' wird gestartet...`;
-      else if (currentLanguage === "es") text = `Iniciando descarga para el modelo '${model}'...`;
-      else if (currentLanguage === "fr") text = `Démarrage du téléchargement pour le modèle '${model}'...`;
-      else if (currentLanguage === "it") text = `Avvio del download per il modello '${model}'...`;
-      else if (currentLanguage === "zh") text = `正在启动模型 '${model}' 的下载...`;
-      else if (currentLanguage === "pt") text = `Iniciando download para o modelo '${model}'...`;
-      else if (currentLanguage === "tr") text = `'${model}' modeli için indirme başlatılıyor...`;
-      showStatus(text);
+      showStatus(getTranslation("model_downloading_pattern", { model }));
       const actionEl = document.getElementById(`action-${model}`);
       const progressEl = document.getElementById(`progress-${model}`);
       const fillEl = document.getElementById(`fill-${model}`);
@@ -1045,67 +1150,16 @@ document.addEventListener("DOMContentLoaded", () => {
       await invoke("download_model_command", { modelName: model });
     } catch (err) {
       console.error(err);
-      let text = `Ошибка скачивания: ${err}`;
-      if (currentLanguage === "en") text = `Download error: ${err}`;
-      else if (currentLanguage === "de") text = `Download-Fehler: ${err}`;
-      else if (currentLanguage === "es") text = `Error de descarga: ${err}`;
-      else if (currentLanguage === "fr") text = `Erreur de téléchargement: ${err}`;
-      else if (currentLanguage === "it") text = `Errore di download: ${err}`;
-      else if (currentLanguage === "zh") text = `下载错误: ${err}`;
-      else if (currentLanguage === "pt") text = `Erro de download: ${err}`;
-      else if (currentLanguage === "tr") text = `İndirme hatası: ${err}`;
-      showStatus(text, true);
+      showStatus(getTranslation("model_download_error_pattern", { err }), true);
       refreshDownloadedModels();
     }
   }
 
   async function deleteModelCard(model) {
-    let confirmTitle = "Удаление модели";
-    let confirmMsg = `Вы действительно хотите удалить локальную модель '${model}'?`;
-    let confirmBtn = "Удалить";
-    let cancelBtn = "Отмена";
-    
-    if (currentLanguage === "en") {
-      confirmTitle = "Delete model";
-      confirmMsg = `Are you sure you want to delete the local model '${model}'?`;
-      confirmBtn = "Delete";
-      cancelBtn = "Cancel";
-    } else if (currentLanguage === "de") {
-      confirmTitle = "Modell löschen";
-      confirmMsg = `Möchten Sie das lokale Modell '${model}' wirklich löschen?`;
-      confirmBtn = "Löschen";
-      cancelBtn = "Abbrechen";
-    } else if (currentLanguage === "es") {
-      confirmTitle = "Eliminar modelo";
-      confirmMsg = `¿Está seguro de que desea eliminar el modelo local '${model}'?`;
-      confirmBtn = "Eliminar";
-      cancelBtn = "Cancelar";
-    } else if (currentLanguage === "fr") {
-      confirmTitle = "Supprimer le modèle";
-      confirmMsg = `Voulez-vous vraiment supprimer le modèle local '${model}' ?`;
-      confirmBtn = "Supprimer";
-      cancelBtn = "Annuler";
-    } else if (currentLanguage === "it") {
-      confirmTitle = "Elimina modello";
-      confirmMsg = `Sei sicuro di voler eliminare il modello locale '${model}'?`;
-      confirmBtn = "Elimina";
-      cancelBtn = "Annulla";
-    } else if (currentLanguage === "zh") {
-      confirmTitle = "删除模型";
-      confirmMsg = `您确定要删除本地模型 '${model}' 吗？`;
-      confirmBtn = "删除";
-      cancelBtn = "取消";
-    } else if (currentLanguage === "pt") {
-      confirmTitle = "Excluir modelo";
-      confirmMsg = `Tem certeza de que deseja excluir o modelo local '${model}'?`;
-      confirmBtn = "Excluir";
-      cancelBtn = "Cancelar";
-    } else if (currentLanguage === "tr") {
-      confirmTitle = "Modeli sil";
-      confirmMsg = `Yerel '${model}' modelini silmek istediğinizden emin misiniz?`;
-      confirmBtn = "Sil";
-      cancelBtn = "İptal";
-    }
+    const confirmTitle = getTranslation("delete_model_title");
+    const confirmMsg = getTranslation("delete_model_confirm_pattern", { model });
+    const confirmBtn = getTranslation("delete_model_btn");
+    const cancelBtn = getTranslation("confirm_cancel");
 
     const confirmed = await showConfirm(
       confirmTitle,
@@ -1117,41 +1171,14 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
     try {
-      let text = `Удаление модели '${model}'...`;
-      if (currentLanguage === "en") text = `Deleting model '${model}'...`;
-      else if (currentLanguage === "de") text = `Modell '${model}' wird gelöscht...`;
-      else if (currentLanguage === "es") text = `Eliminando modelo '${model}'...`;
-      else if (currentLanguage === "fr") text = `Suppression du modèle '${model}'...`;
-      else if (currentLanguage === "it") text = `Eliminazione del modello '${model}'...`;
-      else if (currentLanguage === "zh") text = `正在删除模型 '${model}'...`;
-      else if (currentLanguage === "pt") text = `Excluindo modelo '${model}'...`;
-      else if (currentLanguage === "tr") text = `'${model}' modeli siliniyor...`;
-      showStatus(text);
+      showStatus(getTranslation("model_deleting_pattern", { model }));
       await invoke("delete_model_command", { modelName: model });
       
-      let successText = "Модель успешно удалена";
-      if (currentLanguage === "en") successText = "Model deleted successfully";
-      else if (currentLanguage === "de") successText = "Modell erfolgreich gelöscht";
-      else if (currentLanguage === "es") successText = "Modelo eliminado correctamente";
-      else if (currentLanguage === "fr") successText = "Modèle supprimé avec succès";
-      else if (currentLanguage === "it") successText = "Modello eliminato con successo";
-      else if (currentLanguage === "zh") successText = "模型删除成功";
-      else if (currentLanguage === "pt") successText = "Modelo excluído com sucesso";
-      else if (currentLanguage === "tr") successText = "Model başarıyla silindi";
-      showStatus(successText);
+      showStatus(getTranslation("model_deleted_success"));
       await refreshDownloadedModels();
     } catch (err) {
       console.error(err);
-      let errorText = `Ошибка удаления: ${err}`;
-      if (currentLanguage === "en") errorText = `Delete error: ${err}`;
-      else if (currentLanguage === "de") errorText = `Fehler beim Löschen: ${err}`;
-      else if (currentLanguage === "es") errorText = `Error al eliminar: ${err}`;
-      else if (currentLanguage === "fr") errorText = `Erreur de suppression: ${err}`;
-      else if (currentLanguage === "it") errorText = `Errore di eliminazione: ${err}`;
-      else if (currentLanguage === "zh") errorText = `删除错误: ${err}`;
-      else if (currentLanguage === "pt") errorText = `Erro ao excluir: ${err}`;
-      else if (currentLanguage === "tr") errorText = `Silme hatası: ${err}`;
-      showStatus(errorText, true);
+      showStatus(getTranslation("model_delete_error_pattern", { err }), true);
     }
   }
 
@@ -1174,16 +1201,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     if (payload.done) {
-      let text = `Модель '${model}' скачана!`;
-      if (currentLanguage === "en") text = `Model '${model}' downloaded!`;
-      else if (currentLanguage === "de") text = `Modell '${model}' heruntergeladen!`;
-      else if (currentLanguage === "es") text = `¡Modelo '${model}' descargado!`;
-      else if (currentLanguage === "fr") text = `Modèle '${model}' téléchargé !`;
-      else if (currentLanguage === "it") text = `Modello '${model}' scaricato!`;
-      else if (currentLanguage === "zh") text = `模型 '${model}' 已下载！`;
-      else if (currentLanguage === "pt") text = `Modelo '${model}' baixado!`;
-      else if (currentLanguage === "tr") text = `'${model}' modeli indirildi!`;
-      showStatus(text);
+      showStatus(getTranslation("model_downloaded_success_pattern", { model }));
       if (progressEl) progressEl.style.display = "none";
       if (actionEl) actionEl.style.display = "flex";
       refreshDownloadedModels();
@@ -1319,23 +1337,132 @@ document.addEventListener("DOMContentLoaded", () => {
     if (settingsModified) {
       showStatus(dict.status_modified, false, true);
     }
+    
+    // Reload history list if the active panel is panel-history
+    const historyTab = document.getElementById("tab-btn-history");
+    if (historyTab && historyTab.classList.contains("active")) {
+      loadHistoryList();
+    }
+  }
+
+  // --- History List & Clear Interactions ---
+  const historyContainer = document.getElementById("history-items-container");
+  const btnClearHistory = document.getElementById("btn-clear-history");
+
+  async function loadHistoryList() {
+    if (!historyContainer) return;
+    try {
+      const history = await invoke("get_history");
+      const dict = i18nDict[currentLanguage] || i18nDict.ru;
+      
+      if (!history || history.length === 0) {
+        historyContainer.innerHTML = `<div class="history-empty-state" id="history-empty-text" data-i18n="history_empty">${dict.history_empty}</div>`;
+        return;
+      }
+
+      historyContainer.innerHTML = "";
+      history.forEach(entry => {
+        const date = new Date(entry.timestamp_ms);
+        const timeStr = date.toLocaleTimeString(currentLanguage, { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        const dateStr = date.toLocaleDateString(currentLanguage, { month: 'short', day: 'numeric' });
+        const displayTime = `${dateStr}, ${timeStr}`;
+
+        const itemEl = document.createElement("div");
+        itemEl.className = "history-item";
+        
+        itemEl.innerHTML = `
+          <div class="history-item-body">
+            <div class="history-item-meta">
+              <span class="history-item-time">${displayTime}</span>
+              <span class="history-item-badge">${entry.mode === 'local' ? 'Local' : 'Cloud'}</span>
+            </div>
+            <div class="history-item-text">${escapeHtml(entry.text)}</div>
+          </div>
+          <button type="button" class="btn-copy-history" title="Copy to clipboard">
+            <svg class="copy-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+            </svg>
+            <svg class="check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none; color: var(--accent-color);">
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+          </button>
+        `;
+
+        // Bind copy event
+        const btnCopy = itemEl.querySelector(".btn-copy-history");
+        const copyIcon = itemEl.querySelector(".copy-icon");
+        const checkIcon = itemEl.querySelector(".check-icon");
+
+        btnCopy.addEventListener("click", async () => {
+          try {
+            await invoke("copy_to_clipboard", { text: entry.text });
+            
+            // Hide copy icon, show checkmark SVG
+            copyIcon.style.display = "none";
+            checkIcon.style.display = "block";
+            
+            setTimeout(() => {
+              checkIcon.style.display = "none";
+              copyIcon.style.display = "block";
+            }, 1500);
+          } catch (err) {
+            console.error("Failed to copy", err);
+          }
+        });
+
+        historyContainer.appendChild(itemEl);
+      });
+    } catch (err) {
+      console.error("Failed to load history", err);
+    }
+  }
+
+  function escapeHtml(text) {
+    return text
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  }
+
+  if (btnClearHistory) {
+    btnClearHistory.addEventListener("click", async () => {
+      const dict = i18nDict[currentLanguage] || i18nDict.ru;
+      const confirmed = await showConfirm(
+        dict.confirm_clear_history_title,
+        dict.confirm_clear_history_msg,
+        dict.confirm_ok,
+        dict.confirm_cancel
+      );
+      if (confirmed) {
+        try {
+          await invoke("clear_history");
+          loadHistoryList();
+        } catch (err) {
+          console.error("Failed to clear history", err);
+        }
+      }
+    });
   }
 
   // UI Language Selector Setup
   const selectUiLang = document.getElementById("select-ui-lang");
+  const savedUiLang = localStorage.getItem("aura_ui_lang") || localStorage.getItem("ui-language") || "ru";
   if (selectUiLang) {
-    const savedUiLang = localStorage.getItem("ui-language") || "ru";
     selectUiLang.value = savedUiLang;
     
     selectUiLang.addEventListener("change", (e) => {
       const selectedLang = e.target.value;
+      localStorage.setItem("aura_ui_lang", selectedLang);
       localStorage.setItem("ui-language", selectedLang);
       applyLanguage(selectedLang);
     });
-    
-    // Apply initial language choice
-    applyLanguage(savedUiLang);
   }
+  
+  // Apply initial language choice outside the if block so translations initialize even if #select-ui-lang is missing
+  applyLanguage(savedUiLang);
 
   // Initialize
   loadSettings();
