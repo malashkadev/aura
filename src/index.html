@@ -100,7 +100,7 @@
         <!-- 2. SPEECH PANEL -->
         <section class="tab-panel" id="panel-speech" aria-labelledby="tab-btn-speech" style="display: none;">
           <div class="card">
-            <h2 class="card-title" data-i18n="engine_title">Движок распознавания</h2>
+            <h2 class="card-title" data-i18n="engine_title">Способ распознавания</h2>
             <p class="card-desc" data-i18n="engine_desc">Выберите между облачной обработкой высокого качества или полностью автономным локальным распознаванием речи.</p>
             
             <div class="engine-toggle-group">
@@ -108,14 +108,14 @@
                 <input type="radio" name="transcription_mode" value="cloud" checked id="radio-cloud" />
                 <span class="engine-card">
                   <span class="engine-name" data-i18n="engine_cloud">Облачный ИИ</span>
-                  <span class="engine-meta">Gemini / OpenAI / Groq (API-key)</span>
+                  <span class="engine-meta" data-i18n="engine_cloud_meta">Gemini / OpenAI / Groq (требуется API-ключ)</span>
                 </span>
               </label>
               <label class="engine-option" id="label-local">
                 <input type="radio" name="transcription_mode" value="local" id="radio-local" />
                 <span class="engine-card">
                   <span class="engine-name" data-i18n="engine_local">Локальный ИИ</span>
-                  <span class="engine-meta">Whisper.cpp (100% offline)</span>
+                  <span class="engine-meta" data-i18n="engine_local_meta">Whisper.cpp (100% оффлайн и приватно)</span>
                 </span>
               </label>
             </div>
@@ -188,7 +188,7 @@
                   <div class="model-card-main">
                     <div class="model-card-info">
                       <span class="model-name">Tiny</span>
-                      <span class="model-meta">~75 MB</span>
+                      <span class="model-meta" data-i18n="model_meta_tiny">~75 МБ — сверхбыстрая</span>
                     </div>
                     <div class="model-card-action" id="action-tiny"></div>
                   </div>
@@ -202,7 +202,7 @@
                   <div class="model-card-main">
                     <div class="model-card-info">
                       <span class="model-name">Base</span>
-                      <span class="model-meta">~145 MB</span>
+                      <span class="model-meta" data-i18n="model_meta_base">~145 МБ — рекомендуемая</span>
                     </div>
                     <div class="model-card-action" id="action-base"></div>
                   </div>
@@ -216,7 +216,7 @@
                   <div class="model-card-main">
                     <div class="model-card-info">
                       <span class="model-name">Small</span>
-                      <span class="model-meta">~465 MB</span>
+                      <span class="model-meta" data-i18n="model_meta_small">~465 МБ — точная для русского</span>
                     </div>
                     <div class="model-card-action" id="action-small"></div>
                   </div>
@@ -230,7 +230,7 @@
                   <div class="model-card-main">
                     <div class="model-card-info">
                       <span class="model-name">Medium</span>
-                      <span class="model-meta">~1.5 GB</span>
+                      <span class="model-meta" data-i18n="model_meta_medium">~1.5 ГБ — продвинутая</span>
                     </div>
                     <div class="model-card-action" id="action-medium"></div>
                   </div>
