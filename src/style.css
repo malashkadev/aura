@@ -752,6 +752,7 @@ body {
   border: 1px solid var(--border-color);
   border-radius: var(--radius-full);
   transition: background-color 0.2s ease-out, border-color 0.2s ease-out;
+  flex-shrink: 0;
 }
 
 .toggle-switch:hover .toggle-track {
