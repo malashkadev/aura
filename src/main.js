@@ -40,19 +40,16 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // Engine change (Cloud vs Local) toggling card visibility
+  // Engine change (Cloud vs Local) toggling Whisper card visibility
   const radioCloud = document.getElementById("radio-cloud");
   const radioLocal = document.getElementById("radio-local");
   const localModelCard = document.getElementById("card-local-model");
-  const cloudModelCard = document.getElementById("card-cloud-api");
 
   function updateEngineUI() {
     if (radioLocal.checked) {
       localModelCard.style.display = "flex";
-      cloudModelCard.style.display = "none";
     } else {
       localModelCard.style.display = "none";
-      cloudModelCard.style.display = "flex";
     }
   }
 
@@ -97,6 +94,32 @@ document.addEventListener("DOMContentLoaded", () => {
   const footerStatusText = document.getElementById("footer-status-text");
 
   let selectedModelName = "base";
+
+  let settingsModified = false;
+  let isSettingsLoaded = false;
+
+  function markSettingsModified() {
+    if (!isSettingsLoaded) return;
+    if (!settingsModified) {
+      settingsModified = true;
+      showStatus("Настройки изменены (не сохранены)", false, true);
+    }
+  }
+
+  function bindSettingsChangeListeners() {
+    const checkboxStreaming = document.getElementById("checkbox-streaming");
+    const inputs = [
+      radioCloud, radioLocal, selectProvider, apiKeyInput, selectHotkey,
+      selectLanguage, textareaDictionary, checkboxToggle, checkboxPunctuation,
+      checkboxAutostart, checkboxStreaming
+    ];
+    inputs.forEach(input => {
+      if (input) {
+        input.addEventListener("change", markSettingsModified);
+        input.addEventListener("input", markSettingsModified);
+      }
+    });
+  }
   const modelCards = document.querySelectorAll(".model-card");
 
   modelCards.forEach(card => {
@@ -117,7 +140,10 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   function selectModelCard(model) {
-    selectedModelName = model;
+    if (selectedModelName !== model) {
+      selectedModelName = model;
+      markSettingsModified();
+    }
     modelCards.forEach(c => {
       const isCurrent = c.dataset.model === model;
       c.classList.toggle("active", isCurrent);
@@ -173,7 +199,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
         updateEngineUI();
         await refreshDownloadedModels();
+        
+        isSettingsLoaded = true;
+        settingsModified = false;
         showStatus("Настройки загружены");
+        bindSettingsChangeListeners();
       }
     } catch (err) {
       console.error(err);
@@ -242,11 +272,14 @@ document.addEventListener("DOMContentLoaded", () => {
       };
 
       await invoke("set_settings", { settings });
+      settingsModified = false;
       showStatus("Настройки успешно сохранены!");
       
       // Temporary success animation in footer status
       setTimeout(() => {
-        showStatus("Готово");
+        if (!settingsModified) {
+          showStatus("Готово");
+        }
       }, 3000);
     } catch (err) {
       console.error(err);
@@ -407,12 +440,22 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // Helpers
-  function showStatus(msg, isError = false) {
+  function showStatus(msg, isError = false, isModified = false) {
     footerStatusText.textContent = msg;
-    if (isError) {
-      footerStatusText.style.color = "hsl(0, 85%, 65%)";
-    } else {
-      footerStatusText.style.color = "";
+    const footerStatus = footerStatusText.closest(".footer-status");
+    
+    if (footerStatus) {
+      footerStatus.classList.remove("modified", "error", "success");
+      if (isError) {
+        footerStatus.classList.add("error");
+        footerStatusText.style.color = "hsl(0, 85%, 65%)";
+      } else if (isModified) {
+        footerStatus.classList.add("modified");
+        footerStatusText.style.color = "hsl(40, 95%, 55%)";
+      } else {
+        footerStatus.classList.add("success");
+        footerStatusText.style.color = "";
+      }
     }
   }
 
