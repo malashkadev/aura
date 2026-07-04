@@ -2,6 +2,677 @@
 const { invoke } = window.__TAURI__.core;
 const { listen } = window.__TAURI__.event;
 
+const i18nDict = {
+  ru: {
+    title_settings: "Настройки",
+    tab_general: "Основные",
+    tab_speech: "Голос",
+    tab_hotkeys: "Управление",
+    tab_apikeys: "API-ключи",
+    tab_history: "История",
+    tab_about: "О программе",
+    general_autostart_title: "Автозапуск Aura",
+    general_autostart_desc: "Запускать приложение автоматически при входе в операционную систему Windows.",
+    general_autostart_checkbox: "Запускать Aura при старте системы",
+    engine_title: "Движок распознавания",
+    engine_desc: "Выберите между облачной обработкой высокого качества или полностью автономным локальным распознаванием речи.",
+    engine_cloud: "Облачный ИИ",
+    engine_local: "Локальный ИИ",
+    lang_bias_title: "Язык распознавания",
+    lang_bias_desc: "Выберите принудительный язык ввода или включите автоопределение.",
+    lang_bias_label: "Выберите язык",
+    lang_opt_auto: "Автоопределение (по умолчанию)",
+    lang_opt_layout: "По раскладке клавиатуры",
+    streaming_title: "Режим ввода текста",
+    streaming_desc: "Выберите способ отображения наговариваемого текста.",
+    streaming_checkbox: "Потоковый ввод в реальном времени (экспериментальный)",
+    streaming_subdesc: "Если выключено: текст вставится целиком только после того, как вы отпустите клавиши.",
+    punct_title: "Интеллектуальная пунктуация",
+    punct_desc: "Преобразовывать голосовые команды (\"запятая\", \"точка с запятой\") в знаки препинания.",
+    punct_checkbox: "Включить обработку голосовой пунктуации",
+    vocab_title: "Пользовательский словарь",
+    vocab_desc: "Внесите термины, имена или брендовые названия через запятую, чтобы улучшить их распознавание.",
+    vocab_placeholder: "Например: Аура, коммит, репозиторий...",
+    local_model_title: "Локальная модель Whisper",
+    local_model_desc: "Скачайте модель для оффлайн-работы. Более крупные модели точнее, но требуют больше памяти.",
+    local_model_label: "Размер модели",
+    hotkey_title: "Глобальная горячая клавиша",
+    hotkey_desc: "Зажмите выбранную комбинацию для начала записи, отпустите для распознавания.",
+    hotkey_label: "Комбинация",
+    hotkey_toggle_mode: "Режим переключателя (короткое нажатие)",
+    hotkey_toggle_mode_desc: "Короткое нажатие начинает запись без удержания клавиши. Повторный клик останавливает запись.",
+    sound_title: "Звуковое сопровождение",
+    sound_desc: "Звуковые эффекты оверлея при записи.",
+    sound_enable: "Включить звуки оверлея",
+    sound_theme_label: "Звуковая тема",
+    sound_theme_zen: "Дзен (Поющие чаши)",
+    sound_theme_rhodes: "Rhodes (Джаз-электропианино)",
+    sound_theme_scifi: "Sci-Fi (Космический)",
+    sound_theme_classic: "Колокольчик (Классический)",
+    api_title: "Авторизация API-ключей",
+    api_desc: "Укажите ваши API-ключи для авторизации в облачных сервисах Gemini, OpenAI или Groq.",
+    api_provider: "Провайдер API",
+    api_key: "API-ключ",
+    api_key_placeholder: "Введите ваш API-ключ...",
+    api_get_key: "Получить ключ API",
+    history_title: "История транскрипций",
+    history_clear: "Очистить историю",
+    history_desc: "Последние надиктованные фразы хранятся локально.",
+    history_empty: "История пуста. Ваши надиктованные тексты будут отображаться здесь.",
+    about_app_title: "Голосовой ввод Aura",
+    about_version: "v1.0",
+    about_description: "Aura — высокоскоростной инструмент глобального голосового ввода для Windows. Программа позволяет мгновенно вводить надиктованный текст в любое активное окно с автоматической расстановкой пунктуации, удалением слов-паразитов и интеллектуальным редактированием «на лету» с использованием передовых локальных и облачных нейросетевых моделей.",
+    status_ready: "Готово",
+    btn_save: "Сохранить настройки",
+    confirm_title: "Подтверждение",
+    confirm_message: "Вы действительно хотите выполнить это действие?",
+    confirm_cancel: "Отмена",
+    confirm_ok: "Подтвердить",
+    status_loading: "Загрузка настроек...",
+    status_modified: "Настройки изменены (не сохранены)",
+    status_saving: "Сохранение настроек...",
+    status_saved: "Настройки успешно сохранены!",
+    status_error: "Ошибка: ",
+    model_status_ready: "Готова",
+    model_action_download: "Скачать",
+    model_action_delete: "Удалить"
+  },
+  en: {
+    title_settings: "Settings",
+    tab_general: "General",
+    tab_speech: "Speech",
+    tab_hotkeys: "Hotkeys",
+    tab_apikeys: "API Keys",
+    tab_history: "History",
+    tab_about: "About",
+    general_autostart_title: "Aura Autostart",
+    general_autostart_desc: "Launch the app automatically when starting Windows.",
+    general_autostart_checkbox: "Start Aura at system boot",
+    engine_title: "Recognition Engine",
+    engine_desc: "Choose between high-quality cloud transcription or fully local speech recognition.",
+    engine_cloud: "Cloud AI",
+    engine_local: "Local AI",
+    lang_bias_title: "Speech Language",
+    lang_bias_desc: "Forcibly set transcription language or use automatic detection.",
+    lang_bias_label: "Select Language",
+    lang_opt_auto: "Auto-detect (default)",
+    lang_opt_layout: "Follow Keyboard Layout",
+    streaming_title: "Text Streaming",
+    streaming_desc: "Choose how transcribed text is displayed.",
+    streaming_checkbox: "Real-time streaming typing (experimental)",
+    streaming_subdesc: "If disabled: text is typed as a whole only when you release hotkeys.",
+    punct_title: "Smart Punctuation",
+    punct_desc: "Convert spoken punctuation commands (like \"comma\", \"period\") into punctuation.",
+    punct_checkbox: "Enable spoken punctuation processing",
+    vocab_title: "Custom Vocabulary",
+    vocab_desc: "Add specific terms, names, or jargon separated by commas to improve recognition.",
+    vocab_placeholder: "e.g. Aura, commit, repository...",
+    local_model_title: "Local Whisper Model",
+    local_model_desc: "Download a model for offline use. Larger models are more accurate but consume more memory.",
+    local_model_label: "Model Size",
+    hotkey_title: "Global Hotkey",
+    hotkey_desc: "Hold down the selected hotkey to record, release to transcribe.",
+    hotkey_label: "Combination",
+    hotkey_toggle_mode: "Toggle mode (short tap)",
+    hotkey_toggle_mode_desc: "Short tap starts/stops recording without holding key down.",
+    sound_title: "Overlay Audio Feedback",
+    sound_desc: "Audio sound effects when recording states change.",
+    sound_enable: "Enable overlay sounds",
+    sound_theme_label: "Sound Theme",
+    sound_theme_zen: "Zen (Singing Bowls)",
+    sound_theme_rhodes: "Rhodes (Jazz Electric Piano)",
+    sound_theme_scifi: "Sci-Fi (Space/Synth)",
+    sound_theme_classic: "Bell (Classic)",
+    api_title: "API Keys Authorization",
+    api_desc: "Provide API keys for Gemini, OpenAI, or Groq cloud services.",
+    api_provider: "API Provider",
+    api_key: "API Key",
+    api_key_placeholder: "Enter your API key...",
+    api_get_key: "Get API Key",
+    history_title: "Transcription History",
+    history_clear: "Clear History",
+    history_desc: "Your latest transcribed phrases are cached locally.",
+    history_empty: "History is empty. Dictated text fragments will appear here.",
+    about_app_title: "Aura Voice Input",
+    about_version: "v1.0",
+    about_description: "Aura is a high-speed global dictation tool for Windows. It enables instant speech-to-text input into any active window with automatic punctuation, filler word removal, and smart editing on-the-fly, powered by state-of-the-art local and cloud-based AI models.",
+    status_ready: "Ready",
+    btn_save: "Save Settings",
+    confirm_title: "Confirmation",
+    confirm_message: "Are you sure you want to perform this action?",
+    confirm_cancel: "Cancel",
+    confirm_ok: "Confirm",
+    status_loading: "Loading settings...",
+    status_modified: "Settings changed (unsaved)",
+    status_saving: "Saving settings...",
+    status_saved: "Settings saved successfully!",
+    status_error: "Error: ",
+    model_status_ready: "Ready",
+    model_action_download: "Download",
+    model_action_delete: "Delete"
+  },
+  de: {
+    title_settings: "Einstellungen",
+    tab_general: "Allgemein",
+    tab_speech: "Diktat",
+    tab_hotkeys: "Tastenkombinationen",
+    tab_apikeys: "API-Schlüssel",
+    tab_history: "Verlauf",
+    tab_about: "Über Aura",
+    general_autostart_title: "Aura Autostart",
+    general_autostart_desc: "Startet die App automatisch beim Anmelden in Windows.",
+    general_autostart_checkbox: "Aura beim Systemstart starten",
+    engine_title: "Diktat-Engine",
+    engine_desc: "Wählen Sie zwischen Cloud-Transkription oder vollständig lokaler Spracherkennung.",
+    engine_cloud: "Cloud-KI",
+    engine_local: "Lokale KI",
+    lang_bias_title: "Sprache",
+    lang_bias_desc: "Wählen Sie eine feste Sprache für das Diktat oder aktivieren Sie die Auto-Erkennung.",
+    lang_bias_label: "Sprache auswählen",
+    lang_opt_auto: "Auto-Erkennung (Standard)",
+    lang_opt_layout: "Tastaturlayout folgen",
+    streaming_title: "Text-Streaming",
+    streaming_desc: "Wählen Sie, wie die Transkription eingegeben wird.",
+    streaming_checkbox: "Echtzeit-Streaming-Eingabe (experimentell)",
+    streaming_subdesc: "Wenn deaktiviert: Text wird als Ganzes eingefügt, wenn die Taste losgelassen wird.",
+    punct_title: "Intelligente Interpunktion",
+    punct_desc: "Gesprochene Satzzeichen (z. B. \"Komma\", \"Punkt\") in Interpunktion umwandeln.",
+    punct_checkbox: "Verarbeitung gesprochener Satzzeichen aktivieren",
+    vocab_title: "Eigenes Wörterbuch",
+    vocab_desc: "Tragen Sie Begriffe, Namen oder Fachbegriffe durch Komma getrennt ein, um die Erkennung zu verbessern.",
+    vocab_placeholder: "z.B. Aura, Commit, Repository...",
+    local_model_title: "Lokales Whisper-Modell",
+    local_model_desc: "Laden Sie ein Modell für den Offline-Betrieb herunter. Größere Modelle sind genauer, benötigen jedoch mehr Speicher.",
+    local_model_label: "Modellgröße",
+    hotkey_title: "Globale Taste",
+    hotkey_desc: "Tastenkombination gedrückt halten, um aufzunehmen, loslassen zur Transkription.",
+    hotkey_label: "Kombination",
+    hotkey_toggle_mode: "Umschaltmodus (kurzes Tippen)",
+    hotkey_toggle_mode_desc: "Kurzes Antippen startet/stoppt Aufnahme ohne Halten.",
+    sound_title: "Audio-Rückmeldung",
+    sound_desc: "Soundeffekte des Overlays während der Aufnahme.",
+    sound_enable: "Overlay-Sounds aktivieren",
+    sound_theme_label: "Sound-Theme",
+    sound_theme_zen: "Zen (Klangschalen)",
+    sound_theme_rhodes: "Rhodes (Jazz Electric Piano)",
+    sound_theme_scifi: "Sci-Fi (Weltraum)",
+    sound_theme_classic: "Glocke (Klassisch)",
+    api_title: "API-Schlüssel Autorisierung",
+    api_desc: "Geben Sie Ihre API-Schlüssel für Gemini, OpenAI oder Groq Cloud-Dienste ein.",
+    api_provider: "API-Provider",
+    api_key: "API-Schlüssel",
+    api_key_placeholder: "Geben Sie Ihren API-Schlüssel ein...",
+    api_get_key: "API-Schlüssel erhalten",
+    history_title: "Diktatverlauf",
+    history_clear: "Verlauf löschen",
+    history_desc: "Die letzten aufgezeichneten Sätze werden lokal gespeichert.",
+    history_empty: "Der Verlauf ist leer. Transkribierte Texte werden hier angezeigt.",
+    about_app_title: "Aura Spracheingabe",
+    about_version: "v1.0",
+    about_description: "Aura ist ein extrem schnelles globales Spracheingabe-Tool für Windows. Die Anwendung ermöglicht die sofortige Texteingabe per Sprache in jedes aktive Fenster – mit automatischer Zeichensetzung, der Entfernung von Füllwörtern und intelligenter Live-Bearbeitung über moderne lokale und Cloud-Modelle.",
+    status_ready: "Bereit",
+    btn_save: "Einstellungen speichern",
+    confirm_title: "Bestätigung",
+    confirm_message: "Sind Sie sicher, dass Sie diese Aktion ausführen möchten?",
+    confirm_cancel: "Abbrechen",
+    confirm_ok: "Bestätigen",
+    status_loading: "Einstellungen werden geladen...",
+    status_modified: "Einstellungen geändert (ungespeichert)",
+    status_saving: "Einstellungen werden gespeichert...",
+    status_saved: "Einstellungen erfolgreich gespeichert!",
+    status_error: "Fehler: ",
+    model_status_ready: "Bereit",
+    model_action_download: "Herunterladen",
+    model_action_delete: "Löschen"
+  },
+  es: {
+    title_settings: "Ajustes",
+    tab_general: "General",
+    tab_speech: "Voz",
+    tab_hotkeys: "Accesos rápidos",
+    tab_apikeys: "Claves API",
+    tab_history: "Historial",
+    tab_about: "Acerca de",
+    general_autostart_title: "Inicio automático",
+    general_autostart_desc: "Iniciar la aplicación de forma automática al arrancar Windows.",
+    general_autostart_checkbox: "Iniciar Aura con el sistema",
+    engine_title: "Motor de transcripción",
+    engine_desc: "Seleccione entre el procesamiento en la nube de alta calidad o el reconocimiento local totalmente autónomo.",
+    engine_cloud: "IA en la nube",
+    engine_local: "IA local",
+    lang_bias_title: "Idioma de dictado",
+    lang_bias_desc: "Forzar un idioma específico para la transcripción o usar detección automática.",
+    lang_bias_label: "Seleccionar idioma",
+    lang_opt_auto: "Autodetectar (por defecto)",
+    lang_opt_layout: "Según teclado activo",
+    streaming_title: "Escritura fluida",
+    streaming_desc: "Seleccione el método para mostrar el texto transcrito.",
+    streaming_checkbox: "Escritura en tiempo real (experimental)",
+    streaming_subdesc: "Si está desactivado: el texto se inserta completo tras soltar el atajo.",
+    punct_title: "Puntuación inteligente",
+    punct_desc: "Convertir comandos de voz (ej. \"coma\", \"punto\") en signos gráficos.",
+    punct_checkbox: "Activar procesamiento de puntuación por voz",
+    vocab_title: "Vocabulario personalizado",
+    vocab_desc: "Añada términos específicos, nombres o siglas separados por comas para mejorar el dictado.",
+    vocab_placeholder: "ej. Aura, commit, repositorio...",
+    local_model_title: "Modelo Whisper local",
+    local_model_desc: "Descargue un modelo para usar sin conexión. Los modelos grandes son más precisos pero usan más memoria.",
+    local_model_label: "Tamaño del modelo",
+    hotkey_title: "Acceso rápido global",
+    hotkey_desc: "Mantenga presionadas las teclas seleccionadas para grabar, suéltelas para transcribir.",
+    hotkey_label: "Combinación",
+    hotkey_toggle_mode: "Modo alternar (pulsación corta)",
+    hotkey_toggle_mode_desc: "Una pulsación corta inicia/detiene la grabación sin mantener la tecla.",
+    sound_title: "Efectos de audio",
+    sound_desc: "Efectos sonoros del overlay al grabar.",
+    sound_enable: "Activar sonidos del overlay",
+    sound_theme_label: "Tema sonoro",
+    sound_theme_zen: "Zen (Cuencos tibetanos)",
+    sound_theme_rhodes: "Rhodes (Piano eléctrico)",
+    sound_theme_scifi: "Sci-Fi (Futurista)",
+    sound_theme_classic: "Campana (Clásico)",
+    api_title: "Autorización de claves API",
+    api_desc: "Introduzca sus claves API para los servicios en la nube de Gemini, OpenAI o Groq.",
+    api_provider: "Proveedor de API",
+    api_key: "Clave API",
+    api_key_placeholder: "Introduzca su clave API...",
+    api_get_key: "Obtener clave API",
+    history_title: "Historial de transcripción",
+    history_clear: "Limpiar historial",
+    history_desc: "Las últimas frases dictadas se guardan de forma local.",
+    history_empty: "El historial está vacío. Los textos dictados se mostrarán aquí.",
+    about_app_title: "Dictado por voz Aura",
+    about_version: "v1.0",
+    about_description: "Aura es una herramienta de dictado por voz ultrarrápida para Windows. Permite la inserción inmediata de voz a texto en cualquier ventana activa, con puntuación automática, eliminación de muletillas y edición inteligente mediante modelos locales y en la nube.",
+    status_ready: "Listo",
+    btn_save: "Guardar ajustes",
+    confirm_title: "Confirmación",
+    confirm_message: "¿Está seguro de realizar esta acción?",
+    confirm_cancel: "Cancelar",
+    confirm_ok: "Confirmar",
+    status_loading: "Cargando ajustes...",
+    status_modified: "Ajustes modificados (sin guardar)",
+    status_saving: "Guardando ajustes...",
+    status_saved: "¡Ajustes guardados correctamente!",
+    status_error: "Error: ",
+    model_status_ready: "Listo",
+    model_action_download: "Descargar",
+    model_action_delete: "Eliminar"
+  },
+  fr: {
+    title_settings: "Paramètres",
+    tab_general: "Général",
+    tab_speech: "Dictée",
+    tab_hotkeys: "Raccourcis",
+    tab_apikeys: "Clés API",
+    tab_history: "Historique",
+    tab_about: "À propos",
+    general_autostart_title: "Lancement automatique",
+    general_autostart_desc: "Lancer l'application automatiquement au démarrage de Windows.",
+    general_autostart_checkbox: "Démarrer Aura avec Windows",
+    engine_title: "Moteur de reconnaissance",
+    engine_desc: "Choisissez entre un traitement cloud de haute qualité ou une reconnaissance locale 100% hors ligne.",
+    engine_cloud: "IA Cloud",
+    engine_local: "IA Locale",
+    lang_bias_title: "Langue de dictée",
+    lang_bias_desc: "Forcer une langue spécifique pour la dictée ou utiliser la détection automatique.",
+    lang_bias_label: "Sélectionner la langue",
+    lang_opt_auto: "Détection automatique",
+    lang_opt_layout: "Selon le clavier actif",
+    streaming_title: "Saisie en continu",
+    streaming_desc: "Sélectionnez le mode d'affichage du texte transcrit.",
+    streaming_checkbox: "Affichage du texte en temps réel (expérimental)",
+    streaming_subdesc: "Si désactivé: le texte est inséré en une fois lorsque vous relâchez le raccourci.",
+    punct_title: "Ponctuation intelligente",
+    punct_desc: "Convertir les commandes vocales (ex. \"virgule\", \"point\") en signes de ponctuation.",
+    punct_checkbox: "Activer le traitement de la ponctuation dictée",
+    vocab_title: "Vocabulaire personnalisé",
+    vocab_desc: "Ajoutez des termes spécifiques, noms propres ou sigles séparés par des virgules pour améliorer la dictée.",
+    vocab_placeholder: "ex. Aura, commit, dépôt...",
+    local_model_title: "Modèle Whisper local",
+    local_model_desc: "Téléchargez un modèle pour une utilisation hors ligne. Les modèles volumineux sont plus précis mais consomment plus de mémoire.",
+    local_model_label: "Taille du modèle",
+    hotkey_title: "Raccourci global",
+    hotkey_desc: "Maintenez le raccourci pour enregistrer, relâchez pour transcrire.",
+    hotkey_label: "Combinaison",
+    hotkey_toggle_mode: "Mode alterné (appui court)",
+    hotkey_toggle_mode_desc: "Un appui court démarre/arrête l'enregistrement sans maintenir la touche.",
+    sound_title: "Retours audio",
+    sound_desc: "Effets sonores de l'overlay lors de l'enregistrement.",
+    sound_enable: "Activer les sons de l'overlay",
+    sound_theme_label: "Thème sonore",
+    sound_theme_zen: "Zen (Bols chantants)",
+    sound_theme_rhodes: "Rhodes (Piano électrique)",
+    sound_theme_scifi: "Sci-Fi (Spatiale)",
+    sound_theme_classic: "Cloche (Classique)",
+    api_title: "Clés d'API",
+    api_desc: "Saisissez vos clés d'API pour les services Gemini, OpenAI ou Groq.",
+    api_provider: "Fournisseur d'API",
+    api_key: "Clé d'API",
+    api_key_placeholder: "Saisissez votre clé d'API...",
+    api_get_key: "Obtenir une clé d'API",
+    history_title: "Historique de dictée",
+    history_clear: "Effacer l'historique",
+    history_desc: "Les dernières phrases dictées sont enregistrées localement.",
+    history_empty: "Historique vide. Vos textes transcrits s'afficheront ici.",
+    about_app_title: "Dictée vocale Aura",
+    about_version: "v1.0",
+    about_description: "Aura est un client de dictée vocale ultrarapide pour Windows. Il insère instantanément la parole transcrite dans n'importe quelle fenêtre active, avec ponctuation automatique, suppression des mots de remplissage et édition intelligente par IA locale ou cloud.",
+    status_ready: "Prêt",
+    btn_save: "Enregistrer",
+    confirm_title: "Confirmation",
+    confirm_message: "Voulez-vous vraiment effectuer cette action?",
+    confirm_cancel: "Annuler",
+    confirm_ok: "Confirmer",
+    status_loading: "Chargement...",
+    status_modified: "Modifications non enregistrées",
+    status_saving: "Enregistrement...",
+    status_saved: "Paramètres enregistrés !",
+    status_error: "Erreur: ",
+    model_status_ready: "Prêt",
+    model_action_download: "Télécharger",
+    model_action_delete: "Supprimer"
+  },
+  it: {
+    title_settings: "Impostazioni",
+    tab_general: "Generale",
+    tab_speech: "Dettatura",
+    tab_hotkeys: "Scorciatoie",
+    tab_apikeys: "Chiavi API",
+    tab_history: "Cronologia",
+    tab_about: "Informazioni",
+    general_autostart_title: "Avvio automatico",
+    general_autostart_desc: "Avvia l'app automaticamente all'accesso di Windows.",
+    general_autostart_checkbox: "Avvia Aura con il sistema",
+    engine_title: "Motore di dettatura",
+    engine_desc: "Scegli tra l'elaborazione cloud di alta qualità o il riconoscimento locale offline.",
+    engine_cloud: "IA Cloud",
+    engine_local: "IA Locale",
+    lang_bias_title: "Lingua dettatura",
+    lang_bias_desc: "Imposta una lingua fissa per la transrizione o usa il rilevamento automatico.",
+    lang_bias_label: "Seleziona lingua",
+    lang_opt_auto: "Rilevamento automatico",
+    lang_opt_layout: "In base alla tastiera",
+    streaming_title: "Dattilografia a scorrimento",
+    streaming_desc: "Seleziona come visualizzare il testo trascritto.",
+    streaming_checkbox: "Inserimento del testo in tempo reale (sperimentale)",
+    streaming_subdesc: "Se disattivato: il testo viene inserito interamente solo quando rilasci la scorciatoia.",
+    punct_title: "Punteggiatura intelligente",
+    punct_desc: "Converte i comandi vocali (es. \"virgola\", \"punto\") in simboli grafici.",
+    punct_checkbox: "Attiva elaborazione della punteggiatura vocale",
+    vocab_title: "Vocabolario personalizzato",
+    vocab_desc: "Aggiungi parole specifiche, nomi o acronimi separati da virgole per migliorare la precisione.",
+    vocab_placeholder: "es. Aura, commit, repository...",
+    local_model_title: "Modello Whisper locale",
+    local_model_desc: "Scarica un modello per l'uso offline. I modelli più grandi sono più precisi ma richiedono più memoria.",
+    local_model_label: "Dimensione modello",
+    hotkey_title: "Tasto di scelta rapida",
+    hotkey_desc: "Tieni premuto il tasto per registrare, rilascelo per trascrivere.",
+    hotkey_label: "Scorciatoia",
+    hotkey_toggle_mode: "Modalità alternata (tocco breve)",
+    hotkey_toggle_mode_desc: "Un tocco breve avvia/ferma la registrazione senza tenere premuto.",
+    sound_title: "Feedback sonori",
+    sound_desc: "Effetti acustici dell'overlay durante la registrazione.",
+    sound_enable: "Attiva i suoni dell'overlay",
+    sound_theme_label: "Tema sonoro",
+    sound_theme_zen: "Zen (Campane tibetane)",
+    sound_theme_rhodes: "Rhodes (Piano elettrico)",
+    sound_theme_scifi: "Sci-Fi (Spaziale)",
+    sound_theme_classic: "Campanella (Classico)",
+    api_title: "Autorizzazione chiavi API",
+    api_desc: "Inserisci le tue chiavi API per Gemini, OpenAI o Groq.",
+    api_provider: "Provider API",
+    api_key: "Chiave API",
+    api_key_placeholder: "Inserisci la tua chiave API...",
+    api_get_key: "Ottieni chiave API",
+    history_title: "Cronologia dettati",
+    history_clear: "Cancella cronologia",
+    history_desc: "Le ultime frasi dettate vengono salvate in locale.",
+    history_empty: "La cronologia è vuota. I testi dettati appariranno qui.",
+    about_app_title: "Dettatura vocale Aura",
+    about_version: "v1.0",
+    about_description: "Aura è uno strumento velocissimo per l'immissione di testo tramite voce in Windows. Inserisce istantaneamente la dettatura in qualsiasi finestra attiva con punteggiatura automatica, rimozione delle parole di riempimento ed editing tramite IA locale o cloud.",
+    status_ready: "Pronto",
+    btn_save: "Salva impostazioni",
+    confirm_title: "Conferma",
+    confirm_message: "Sei sicuro di voler procedere?",
+    confirm_cancel: "Annulla",
+    confirm_ok: "Conferma",
+    status_loading: "Caricamento...",
+    status_modified: "Impostazioni modificate (non salvate)",
+    status_saving: "Salvataggio...",
+    status_saved: "Impostazioni salvate con successo!",
+    status_error: "Errore: ",
+    model_status_ready: "Pronto",
+    model_action_download: "Scarica",
+    model_action_delete: "Elimina"
+  },
+  zh: {
+    title_settings: "设置",
+    tab_general: "常规",
+    tab_speech: "语音",
+    tab_hotkeys: "快捷键",
+    tab_apikeys: "API密钥",
+    tab_history: "历史记录",
+    tab_about: "关于我们",
+    general_autostart_title: "自启动设置",
+    general_autostart_desc: "在Windows启动时自动运行此应用程序。",
+    general_autostart_checkbox: "系统启动时运行 Aura",
+    engine_title: "识别引擎",
+    engine_desc: "选择高品质云端识别，或完全离线的本地语音识别。",
+    engine_cloud: "云端智能 AI",
+    engine_local: "本地 AI (离线)",
+    lang_bias_title: "识别语言",
+    lang_bias_desc: "强制设定特定的听写语言，或使用自动检测。",
+    lang_bias_label: "选择语言",
+    lang_opt_auto: "自动检测 (默认)",
+    lang_opt_layout: "遵循当前键盘布局",
+    streaming_title: "输入模式",
+    streaming_desc: "选择转换后文本的录入方式。",
+    streaming_checkbox: "实时流式文本录入 (实验性)",
+    streaming_subdesc: "如果关闭: 只有松开按键后，文字才会一次性录入。",
+    punct_title: "智能标点符号",
+    punct_desc: "将语音指令(如“逗号”、“句号”)转换为对应的标点符号。",
+    punct_checkbox: "开启语音标点转换处理",
+    vocab_title: "自定义词典",
+    vocab_desc: "以逗号分隔输入专用术语、人名或品牌，以便提高识别精度。",
+    vocab_placeholder: "例如：Aura, commit, 仓库...",
+    local_model_title: "本地 Whisper 模型",
+    local_model_desc: "下载模型以支持离线识别。越大的模型越精准，但会占用更多内存。",
+    local_model_label: "模型大小",
+    hotkey_title: "全局快捷键",
+    hotkey_desc: "按住选择的组合键开始录音，松开即可完成转文字并录入。",
+    hotkey_label: "组合按键",
+    hotkey_toggle_mode: "触发模式 (短按切换)",
+    hotkey_toggle_mode_desc: "短按启动/停止录音，无需一直按住按键。",
+    sound_title: "声音反馈",
+    sound_desc: "录音状态切换时播放提示音。",
+    sound_enable: "启用悬浮条声音反馈",
+    sound_theme_label: "声音主题",
+    sound_theme_zen: "禅宗 (颂钵音)",
+    sound_theme_rhodes: "Rhodes (爵士电钢琴)",
+    sound_theme_scifi: "科幻 (太空合成器)",
+    sound_theme_classic: "铃声 (经典八音盒)",
+    api_title: "API 密钥授权",
+    api_desc: "输入您在 Gemini、OpenAI 或 Groq 云端服务的 API 密钥。",
+    api_provider: "API 供应商",
+    api_key: "API 密钥",
+    api_key_placeholder: "在此输入您的 API 密钥...",
+    api_get_key: "获取 API 密钥",
+    history_title: "听写历史记录",
+    history_clear: "清空历史",
+    history_desc: "您最近转换出的文字将缓存在本地。",
+    history_empty: "历史记录为空。您听写的文字会显示在这里。",
+    about_app_title: "Aura 智能语音输入",
+    about_version: "v1.0",
+    about_description: "Aura 是一款适用于 Windows 的极速全局语音输入工具。按住快捷键即可录音并说话，松开后即可通过先进的本地或云端 AI 模型自动纠错、添加标点符号，并直接录入当前光标所在的任何应用窗口中。",
+    status_ready: "就绪",
+    btn_save: "保存设置",
+    confirm_title: "确认",
+    confirm_message: "您确定要执行此操作吗？",
+    confirm_cancel: "取消",
+    confirm_ok: "确认",
+    status_loading: "正在加载设置...",
+    status_modified: "设置已更改 (未保存)",
+    status_saving: "正在保存设置...",
+    status_saved: "设置保存成功！",
+    status_error: "发生错误: ",
+    model_status_ready: "就绪",
+    model_action_download: "下载",
+    model_action_delete: "删除"
+  },
+  pt: {
+    title_settings: "Configurações",
+    tab_general: "Geral",
+    tab_speech: "Voz",
+    tab_hotkeys: "Teclas de atalho",
+    tab_apikeys: "Chaves API",
+    tab_history: "Histórico",
+    tab_about: "Sobre",
+    general_autostart_title: "Inicialização",
+    general_autostart_desc: "Iniciar o aplicativo automaticamente com o Windows.",
+    general_autostart_checkbox: "Iniciar o Aura com o Windows",
+    engine_title: "Mecanismo de voz",
+    engine_desc: "Escolha entre processamento na nuvem de alta qualidade ou reconhecimento de voz local 100% offline.",
+    engine_cloud: "IA na Nuvem",
+    engine_local: "IA Local",
+    lang_bias_title: "Idioma do Diktat",
+    lang_bias_desc: "Forçar um idioma específico para a transcrição ou usar detecção automática.",
+    lang_bias_label: "Selecionar idioma",
+    lang_opt_auto: "Auto-detectar (padrão)",
+    lang_opt_layout: "Seguir o teclado ativo",
+    streaming_title: "Fluxo de texto",
+    streaming_desc: "Escolha o método para exibir o texto transcrito.",
+    streaming_checkbox: "Escrita em tempo real (experimental)",
+    streaming_subdesc: "Se desativado: o texto é colado inteiro apenas ao soltar o atalho.",
+    punct_title: "Pontuação inteligente",
+    punct_desc: "Converter comandos de voz (ex. \"vírgula\", \"ponto\") em pontuação correspondente.",
+    punct_checkbox: "Habilitar processamento de pontuação por voz",
+    vocab_title: "Dicionário personalizado",
+    vocab_desc: "Adicione termos específicos, nomes ou siglas separados por vírgula para melhorar o reconhecimento.",
+    vocab_placeholder: "ex. Aura, commit, repositório...",
+    local_model_title: "Modelo Whisper local",
+    local_model_desc: "Baixe um modelo para uso offline. Modelos maiores são mais precisos mas usam mais memória.",
+    local_model_label: "Tamanho do modelo",
+    hotkey_title: "Teclas globais",
+    hotkey_desc: "Segure o atalho para gravar, solte para transcrever.",
+    hotkey_label: "Combinação",
+    hotkey_toggle_mode: "Modo alternar (toque rápido)",
+    hotkey_toggle_mode_desc: "Um toque rápido inicia/para a gravação sem segurar o botão.",
+    sound_title: "Feedback sonoro",
+    sound_desc: "Efeitos sonoros do overlay ao gravar.",
+    sound_enable: "Habilitar sons do overlay",
+    sound_theme_label: "Tema sonoro",
+    sound_theme_zen: "Zen (Tigelas cantantes)",
+    sound_theme_rhodes: "Rhodes (Piano elétrico)",
+    sound_theme_scifi: "Sci-Fi (Sintetizador espacial)",
+    sound_theme_classic: "Sino (Clássico)",
+    api_title: "Autorização de chaves API",
+    api_desc: "Insira suas chaves API para os serviços Gemini, OpenAI ou Groq.",
+    api_provider: "Provedor de API",
+    api_key: "Chave API",
+    api_key_placeholder: "Insira sua chave API...",
+    api_get_key: "Obter chave API",
+    history_title: "Histórico de transcrição",
+    history_clear: "Limpar histórico",
+    history_desc: "As últimas frases ditadas são armazenadas localmente.",
+    history_empty: "O histórico está vazio. Seus textos ditados aparecerão aqui.",
+    about_app_title: "Ditado de voz Aura",
+    about_version: "v1.0",
+    about_description: "O Aura é um aplicativo de voz rápida para Windows. Ele insere instantaneamente a voz transcrita em qualquer janela ativa com pontuação automática, remoção de redundâncias e edição inteligente por IA local ou em nuvem.",
+    status_ready: "Pronto",
+    btn_save: "Salvar configurações",
+    confirm_title: "Confirmação",
+    confirm_message: "Tem certeza de que deseja executar esta ação?",
+    confirm_cancel: "Cancelar",
+    confirm_ok: "Confirmar",
+    status_loading: "Carregando...",
+    status_modified: "Configurações alteradas (não salvas)",
+    status_saving: "Salvando...",
+    status_saved: "Configurações salvas com sucesso!",
+    status_error: "Erro: ",
+    model_status_ready: "Pronto",
+    model_action_download: "Baixar",
+    model_action_delete: "Excluir"
+  },
+  tr: {
+    title_settings: "Ayarlar",
+    tab_general: "Genel",
+    tab_speech: "Ses",
+    tab_hotkeys: "Kısayollar",
+    tab_apikeys: "API Anahtarları",
+    tab_history: "Geçmiş",
+    tab_about: "Hakkında",
+    general_autostart_title: "Başlangıçta Çalıştır",
+    general_autostart_desc: "Windows açıldığında uygulamayı otomatik olarak başlat.",
+    general_autostart_checkbox: "Aura'yı sistem açılışında başlat",
+    engine_title: "Tanımlama Motoru",
+    engine_desc: "Yüksek kaliteli bulut işleme veya tamamen çevrimdışı yerel konuşma tanıma arasında seçim yapın.",
+    engine_cloud: "Bulut Yapay Zekası",
+    engine_local: "Yerel Yapay Zeka",
+    lang_bias_title: "Yazım Dili",
+    lang_bias_desc: "Transkripsiyon için belirli bir dili zorlayın veya otomatik algılamayı kullanın.",
+    lang_bias_label: "Dil Seçin",
+    lang_opt_auto: "Otomatik Algıla (varsayılan)",
+    lang_opt_layout: "Klavye Düzenine Göre",
+    streaming_title: "Yazım Modu",
+    streaming_desc: "Transkripsiyonu ekleme yöntemini seçin.",
+    streaming_checkbox: "Gerçek zamanlı akışlı metin girişi (deneysel)",
+    streaming_subdesc: "Kapatılırsa: metin sadece tuşu bıraktığınızda bir bütün olarak eklenir.",
+    punct_title: "Akıllı Noktalama",
+    punct_desc: "Konuşulan noktalama komutlarını (\"virgül\", \"nokta\") simgelere dönüştür.",
+    punct_checkbox: "Sesli noktalama işaretlerini işlemeyi etkinleştir",
+    vocab_title: "Özel Sözlük",
+    vocab_desc: "Algılama kalitesini artırmak için özel terimleri, isimleri virgülle ayırarak girin.",
+    vocab_placeholder: "örn. Aura, commit, depo...",
+    local_model_title: "Yerel Whisper Modülü",
+    local_model_desc: "Çevrimdışı kullanım için bir model indirin. Daha büyük modeller daha doğrudur ancak daha fazla bellek kullanır.",
+    local_model_label: "Model Boyutu",
+    hotkey_title: "Global Kısayol",
+    hotkey_desc: "Kayda başlamak için seçilen kombinasyonu basılı tutun, transkripsiyon için bırakın.",
+    hotkey_label: "Kombinasyon",
+    hotkey_toggle_mode: "Geçiş modu (kısa basma)",
+    hotkey_toggle_mode_desc: "Kısa bir basış, basılı tutmadan kaydı başlatır veya durdurur.",
+    sound_title: "Ses Geri Bildirimi",
+    sound_desc: "Kayıt durumları değiştiğinde çalınacak ses efektleri.",
+    sound_enable: "Overlay seslerini etkinleştir",
+    sound_theme_label: "Ses Teması",
+    sound_theme_zen: "Zen (Nepal Çanakları)",
+    sound_theme_rhodes: "Rhodes (Caz Elektro Piyano)",
+    sound_theme_scifi: "Sci-Fi (Uzay Sentezleyici)",
+    sound_theme_classic: "Zil (Klasik)",
+    api_title: "API Anahtarları Yetkilendirme",
+    api_desc: "Gemini, OpenAI veya Groq bulut hizmetleri için API anahtarlarınızı girin.",
+    api_provider: "API Sağlayıcısı",
+    api_key: "API Anahtarı",
+    api_key_placeholder: "API anahtarınızı buraya girin...",
+    api_get_key: "API Anahtarı Al",
+    history_title: "Yazım Geçmişi",
+    history_clear: "Geçmişi Temizle",
+    history_desc: "Son sesli yazımlarınız yerel olarak saklanır.",
+    history_empty: "Geçmiş boş. Yazdığınız metinler burada görünecektir.",
+    about_app_title: "Aura Sesli Giriş",
+    about_version: "v1.0",
+    about_description: "Aura, Windows için son derece hızlı bir genel sesli giriş aracıdır. Kısayol tuşunu basılı tutarak konuşun; bırakıldığında gelişmiş yerel veya bulut AI modelleriyle otomatik imla düzeltmeleri yapılarak etkin pencereye doğrudan yazılır.",
+    status_ready: "Hazır",
+    btn_save: "Ayarları Kaydet",
+    confirm_title: "Onay",
+    confirm_message: "Bu işlemi gerçekleştirmek istediğinizden emin misiniz?",
+    confirm_cancel: "İptal",
+    confirm_ok: "Onayla",
+    status_loading: "Ayarlar yükleniyor...",
+    status_modified: "Ayarlar değiştirildi (kaydedilmedi)",
+    status_saving: "Ayarlar kaydediliyor...",
+    status_saved: "Ayarlar başarıyla kaydedildi!",
+    status_error: "Fehler: ",
+    model_status_ready: "Hazır",
+    model_action_download: "İndir",
+    model_action_delete: "Sil"
+  }
+};
+
+let currentLanguage = "ru";
+
 document.addEventListener("DOMContentLoaded", () => {
   // Navigation Tabs
   const tabs = document.querySelectorAll(".nav-tab");
@@ -61,11 +732,21 @@ document.addEventListener("DOMContentLoaded", () => {
     groq: { url: "https://console.groq.com/keys", name: "Groq Console" }
   };
   function updateApiKeyLink() {
-    const prov = selectProvider.value;
+    const prov = selectProvider ? selectProvider.value : "gemini";
     const info = providerLinks[prov] || providerLinks.gemini;
     if (linkGetKey) {
       linkGetKey.href = info.url;
-      linkGetKey.textContent = `Получить ключ на ${info.name}`;
+      const lang = typeof currentLanguage !== 'undefined' ? currentLanguage : 'ru';
+      let text = `Получить ключ на ${info.name}`;
+      if (lang === "en") text = `Get key on ${info.name}`;
+      else if (lang === "de") text = `Schlüssel erhalten auf ${info.name}`;
+      else if (lang === "es") text = `Obtener clave en ${info.name}`;
+      else if (lang === "fr") text = `Obtenir la clé sur ${info.name}`;
+      else if (lang === "it") text = `Ottieni la chiave su ${info.name}`;
+      else if (lang === "zh") text = `在 ${info.name} 获取密钥`;
+      else if (lang === "pt") text = `Obter chave em ${info.name}`;
+      else if (lang === "tr") text = `${info.name} üzerinden anahtar al`;
+      linkGetKey.textContent = text;
     }
   }
 
@@ -162,7 +843,8 @@ document.addEventListener("DOMContentLoaded", () => {
   // Load Settings from Backend
   async function loadSettings() {
     try {
-      showStatus("Загрузка настроек...");
+      const dict = i18nDict[currentLanguage] || i18nDict.ru;
+      showStatus(dict.status_loading || "Загрузка настроек...");
       const settings = await invoke("get_settings");
       
       if (settings) {
@@ -199,12 +881,12 @@ document.addEventListener("DOMContentLoaded", () => {
         if (checkboxAutostart) {
           checkboxAutostart.checked = !!settings.autostart;
         }
-
+ 
         const checkboxStreaming = document.getElementById("checkbox-streaming");
         if (checkboxStreaming) {
           checkboxStreaming.checked = !!settings.streaming_enabled;
         }
-
+ 
         if (checkboxSounds) {
           checkboxSounds.checked = settings.overlay_sounds !== false;
         }
@@ -212,24 +894,45 @@ document.addEventListener("DOMContentLoaded", () => {
           selectSoundTheme.value = settings.overlay_sound_theme || "zen";
         }
         updateSoundUI();
-
+ 
         updateEngineUI();
         await refreshDownloadedModels();
         
         isSettingsLoaded = true;
         settingsModified = false;
-        showStatus("Настройки загружены");
+        
+        let loadedText = "Настройки загружены";
+        if (currentLanguage === "en") loadedText = "Settings loaded";
+        else if (currentLanguage === "de") loadedText = "Einstellungen geladen";
+        else if (currentLanguage === "es") loadedText = "Ajustes cargados";
+        else if (currentLanguage === "fr") loadedText = "Paramètres chargés";
+        else if (currentLanguage === "it") loadedText = "Impostazioni caricate";
+        else if (currentLanguage === "zh") loadedText = "设置已加载";
+        else if (currentLanguage === "pt") loadedText = "Configurações carregadas";
+        else if (currentLanguage === "tr") loadedText = "Ayarlar yüklendi";
+        showStatus(loadedText);
+        
         bindSettingsChangeListeners();
       }
     } catch (err) {
       console.error(err);
-      showStatus(`Ошибка загрузки настроек: ${err}`, true);
+      let loadErrorPrefix = "Ошибка загрузки настроек: ";
+      if (currentLanguage === "en") loadErrorPrefix = "Failed to load settings: ";
+      else if (currentLanguage === "de") loadErrorPrefix = "Fehler beim Laden der Einstellungen: ";
+      else if (currentLanguage === "es") loadErrorPrefix = "Error al cargar los ajustes: ";
+      else if (currentLanguage === "fr") loadErrorPrefix = "Échec du chargement des paramètres : ";
+      else if (currentLanguage === "it") loadErrorPrefix = "Impossibile caricare le impostazioni: ";
+      else if (currentLanguage === "zh") loadErrorPrefix = "加载设置失败: ";
+      else if (currentLanguage === "pt") loadErrorPrefix = "Falha ao carregar configurações: ";
+      else if (currentLanguage === "tr") loadErrorPrefix = "Ayarlar yüklenemedi: ";
+      showStatus(`${loadErrorPrefix}${err}`, true);
     }
   }
 
   async function refreshDownloadedModels() {
     try {
       const downloaded = await invoke("get_downloaded_models");
+      const dict = i18nDict[currentLanguage] || i18nDict.ru;
       modelCards.forEach(card => {
         const model = card.dataset.model;
         const isDownloaded = downloaded.includes(model);
@@ -237,8 +940,8 @@ document.addEventListener("DOMContentLoaded", () => {
         
         if (isDownloaded) {
           actionEl.innerHTML = `
-            <span class="status-ready">Готова</span>
-            <button type="button" class="btn-delete-card-model" title="Удалить модель" data-model="${model}">
+            <span class="status-ready">${dict.model_status_ready || "Готова"}</span>
+            <button type="button" class="btn-delete-card-model" title="${dict.model_action_delete || "Удалить"}" data-model="${model}">
               <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
             </button>
           `;
@@ -248,7 +951,7 @@ document.addEventListener("DOMContentLoaded", () => {
           actionEl.innerHTML = `
             <button type="button" class="btn-download-card-model" data-model="${model}">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="btn-icon"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-              Скачать
+              ${dict.model_action_download || "Скачать"}
             </button>
           `;
           // Bind click to the download button
@@ -263,7 +966,8 @@ document.addEventListener("DOMContentLoaded", () => {
   // Save Settings to Backend
   async function saveSettings() {
     try {
-      showStatus("Сохранение настроек...");
+      const dict = i18nDict[currentLanguage] || i18nDict.ru;
+      showStatus(dict.status_saving || "Сохранение настроек...");
       
       const checkboxStreaming = document.getElementById("checkbox-streaming");
       
@@ -291,23 +995,42 @@ document.addEventListener("DOMContentLoaded", () => {
 
       await invoke("set_settings", { settings });
       settingsModified = false;
-      showStatus("Настройки успешно сохранены!");
+      showStatus(dict.status_saved || "Настройки успешно сохранены!");
       
       // Temporary success animation in footer status
       setTimeout(() => {
         if (!settingsModified) {
-          showStatus("Готово");
+          const currentDict = i18nDict[currentLanguage] || i18nDict.ru;
+          showStatus(currentDict.status_ready || "Готово");
         }
       }, 3000);
     } catch (err) {
       console.error(err);
-      showStatus(`Ошибка сохранения настроек: ${err}`, true);
+      let saveErrorPrefix = "Ошибка сохранения настроек: ";
+      if (currentLanguage === "en") saveErrorPrefix = "Failed to save settings: ";
+      else if (currentLanguage === "de") saveErrorPrefix = "Fehler beim Speichern der Einstellungen: ";
+      else if (currentLanguage === "es") saveErrorPrefix = "Error al guardar los ajustes: ";
+      else if (currentLanguage === "fr") saveErrorPrefix = "Échec de l'enregistrement des paramètres : ";
+      else if (currentLanguage === "it") saveErrorPrefix = "Impossibile salvare le impostazioni: ";
+      else if (currentLanguage === "zh") saveErrorPrefix = "保存设置失败: ";
+      else if (currentLanguage === "pt") saveErrorPrefix = "Falha ao salvar configurações: ";
+      else if (currentLanguage === "tr") saveErrorPrefix = "Ayarlar kaydedilemedi: ";
+      showStatus(`${saveErrorPrefix}${err}`, true);
     }
   }
 
   async function downloadModelCard(model) {
     try {
-      showStatus(`Запуск скачивания для модели '${model}'...`);
+      let text = `Запуск скачивания для модели '${model}'...`;
+      if (currentLanguage === "en") text = `Starting download for model '${model}'...`;
+      else if (currentLanguage === "de") text = `Download für Modell '${model}' wird gestartet...`;
+      else if (currentLanguage === "es") text = `Iniciando descarga para el modelo '${model}'...`;
+      else if (currentLanguage === "fr") text = `Démarrage du téléchargement pour le modèle '${model}'...`;
+      else if (currentLanguage === "it") text = `Avvio del download per il modello '${model}'...`;
+      else if (currentLanguage === "zh") text = `正在启动模型 '${model}' 的下载...`;
+      else if (currentLanguage === "pt") text = `Iniciando download para o modelo '${model}'...`;
+      else if (currentLanguage === "tr") text = `'${model}' modeli için indirme başlatılıyor...`;
+      showStatus(text);
       const actionEl = document.getElementById(`action-${model}`);
       const progressEl = document.getElementById(`progress-${model}`);
       const fillEl = document.getElementById(`fill-${model}`);
@@ -322,29 +1045,113 @@ document.addEventListener("DOMContentLoaded", () => {
       await invoke("download_model_command", { modelName: model });
     } catch (err) {
       console.error(err);
-      showStatus(`Ошибка скачивания: ${err}`, true);
+      let text = `Ошибка скачивания: ${err}`;
+      if (currentLanguage === "en") text = `Download error: ${err}`;
+      else if (currentLanguage === "de") text = `Download-Fehler: ${err}`;
+      else if (currentLanguage === "es") text = `Error de descarga: ${err}`;
+      else if (currentLanguage === "fr") text = `Erreur de téléchargement: ${err}`;
+      else if (currentLanguage === "it") text = `Errore di download: ${err}`;
+      else if (currentLanguage === "zh") text = `下载错误: ${err}`;
+      else if (currentLanguage === "pt") text = `Erro de download: ${err}`;
+      else if (currentLanguage === "tr") text = `İndirme hatası: ${err}`;
+      showStatus(text, true);
       refreshDownloadedModels();
     }
   }
 
   async function deleteModelCard(model) {
+    let confirmTitle = "Удаление модели";
+    let confirmMsg = `Вы действительно хотите удалить локальную модель '${model}'?`;
+    let confirmBtn = "Удалить";
+    let cancelBtn = "Отмена";
+    
+    if (currentLanguage === "en") {
+      confirmTitle = "Delete model";
+      confirmMsg = `Are you sure you want to delete the local model '${model}'?`;
+      confirmBtn = "Delete";
+      cancelBtn = "Cancel";
+    } else if (currentLanguage === "de") {
+      confirmTitle = "Modell löschen";
+      confirmMsg = `Möchten Sie das lokale Modell '${model}' wirklich löschen?`;
+      confirmBtn = "Löschen";
+      cancelBtn = "Abbrechen";
+    } else if (currentLanguage === "es") {
+      confirmTitle = "Eliminar modelo";
+      confirmMsg = `¿Está seguro de que desea eliminar el modelo local '${model}'?`;
+      confirmBtn = "Eliminar";
+      cancelBtn = "Cancelar";
+    } else if (currentLanguage === "fr") {
+      confirmTitle = "Supprimer le modèle";
+      confirmMsg = `Voulez-vous vraiment supprimer le modèle local '${model}' ?`;
+      confirmBtn = "Supprimer";
+      cancelBtn = "Annuler";
+    } else if (currentLanguage === "it") {
+      confirmTitle = "Elimina modello";
+      confirmMsg = `Sei sicuro di voler eliminare il modello locale '${model}'?`;
+      confirmBtn = "Elimina";
+      cancelBtn = "Annulla";
+    } else if (currentLanguage === "zh") {
+      confirmTitle = "删除模型";
+      confirmMsg = `您确定要删除本地模型 '${model}' 吗？`;
+      confirmBtn = "删除";
+      cancelBtn = "取消";
+    } else if (currentLanguage === "pt") {
+      confirmTitle = "Excluir modelo";
+      confirmMsg = `Tem certeza de que deseja excluir o modelo local '${model}'?`;
+      confirmBtn = "Excluir";
+      cancelBtn = "Cancelar";
+    } else if (currentLanguage === "tr") {
+      confirmTitle = "Modeli sil";
+      confirmMsg = `Yerel '${model}' modelini silmek istediğinizden emin misiniz?`;
+      confirmBtn = "Sil";
+      cancelBtn = "İptal";
+    }
+
     const confirmed = await showConfirm(
-      "Удаление модели",
-      `Вы действительно хотите удалить локальную модель '${model}'?`,
-      "Удалить",
-      "Отмена"
+      confirmTitle,
+      confirmMsg,
+      confirmBtn,
+      cancelBtn
     );
     if (!confirmed) {
       return;
     }
     try {
-      showStatus(`Удаление модели '${model}'...`);
+      let text = `Удаление модели '${model}'...`;
+      if (currentLanguage === "en") text = `Deleting model '${model}'...`;
+      else if (currentLanguage === "de") text = `Modell '${model}' wird gelöscht...`;
+      else if (currentLanguage === "es") text = `Eliminando modelo '${model}'...`;
+      else if (currentLanguage === "fr") text = `Suppression du modèle '${model}'...`;
+      else if (currentLanguage === "it") text = `Eliminazione del modello '${model}'...`;
+      else if (currentLanguage === "zh") text = `正在删除模型 '${model}'...`;
+      else if (currentLanguage === "pt") text = `Excluindo modelo '${model}'...`;
+      else if (currentLanguage === "tr") text = `'${model}' modeli siliniyor...`;
+      showStatus(text);
       await invoke("delete_model_command", { modelName: model });
-      showStatus("Модель успешно удалена");
+      
+      let successText = "Модель успешно удалена";
+      if (currentLanguage === "en") successText = "Model deleted successfully";
+      else if (currentLanguage === "de") successText = "Modell erfolgreich gelöscht";
+      else if (currentLanguage === "es") successText = "Modelo eliminado correctamente";
+      else if (currentLanguage === "fr") successText = "Modèle supprimé avec succès";
+      else if (currentLanguage === "it") successText = "Modello eliminato con successo";
+      else if (currentLanguage === "zh") successText = "模型删除成功";
+      else if (currentLanguage === "pt") successText = "Modelo excluído com sucesso";
+      else if (currentLanguage === "tr") successText = "Model başarıyla silindi";
+      showStatus(successText);
       await refreshDownloadedModels();
     } catch (err) {
       console.error(err);
-      showStatus(`Ошибка удаления: ${err}`, true);
+      let errorText = `Ошибка удаления: ${err}`;
+      if (currentLanguage === "en") errorText = `Delete error: ${err}`;
+      else if (currentLanguage === "de") errorText = `Fehler beim Löschen: ${err}`;
+      else if (currentLanguage === "es") errorText = `Error al eliminar: ${err}`;
+      else if (currentLanguage === "fr") errorText = `Erreur de suppression: ${err}`;
+      else if (currentLanguage === "it") errorText = `Errore di eliminazione: ${err}`;
+      else if (currentLanguage === "zh") errorText = `删除错误: ${err}`;
+      else if (currentLanguage === "pt") errorText = `Erro ao excluir: ${err}`;
+      else if (currentLanguage === "tr") errorText = `Silme hatası: ${err}`;
+      showStatus(errorText, true);
     }
   }
 
@@ -367,7 +1174,16 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     if (payload.done) {
-      showStatus(`Модель '${model}' скачана!`);
+      let text = `Модель '${model}' скачана!`;
+      if (currentLanguage === "en") text = `Model '${model}' downloaded!`;
+      else if (currentLanguage === "de") text = `Modell '${model}' heruntergeladen!`;
+      else if (currentLanguage === "es") text = `¡Modelo '${model}' descargado!`;
+      else if (currentLanguage === "fr") text = `Modèle '${model}' téléchargé !`;
+      else if (currentLanguage === "it") text = `Modello '${model}' scaricato!`;
+      else if (currentLanguage === "zh") text = `模型 '${model}' 已下载！`;
+      else if (currentLanguage === "pt") text = `Modelo '${model}' baixado!`;
+      else if (currentLanguage === "tr") text = `'${model}' modeli indirildi!`;
+      showStatus(text);
       if (progressEl) progressEl.style.display = "none";
       if (actionEl) actionEl.style.display = "flex";
       refreshDownloadedModels();
@@ -467,6 +1283,58 @@ document.addEventListener("DOMContentLoaded", () => {
         invoke("start_dragging_command");
       }
     });
+  }
+
+  // Translations Helper
+  function applyLanguage(lang) {
+    currentLanguage = lang;
+    const dict = i18nDict[lang] || i18nDict.ru;
+    
+    // Update data-i18n elements
+    const elements = document.querySelectorAll("[data-i18n]");
+    elements.forEach(el => {
+      const key = el.getAttribute("data-i18n");
+      if (dict[key]) {
+        el.textContent = dict[key];
+      }
+    });
+    
+    // Update inputs and placeholders
+    const apiInput = document.getElementById("input-api-key");
+    if (apiInput) {
+      apiInput.placeholder = dict.api_key_placeholder || "";
+    }
+    const dictionaryTextarea = document.getElementById("textarea-dictionary");
+    if (dictionaryTextarea) {
+      dictionaryTextarea.placeholder = dict.vocab_placeholder || "";
+    }
+    
+    // Update dynamic link text
+    updateApiKeyLink();
+    
+    // Refresh model cards status/actions
+    refreshDownloadedModels();
+    
+    // If settings modified status is showing, update it
+    if (settingsModified) {
+      showStatus(dict.status_modified, false, true);
+    }
+  }
+
+  // UI Language Selector Setup
+  const selectUiLang = document.getElementById("select-ui-lang");
+  if (selectUiLang) {
+    const savedUiLang = localStorage.getItem("ui-language") || "ru";
+    selectUiLang.value = savedUiLang;
+    
+    selectUiLang.addEventListener("change", (e) => {
+      const selectedLang = e.target.value;
+      localStorage.setItem("ui-language", selectedLang);
+      applyLanguage(selectedLang);
+    });
+    
+    // Apply initial language choice
+    applyLanguage(savedUiLang);
   }
 
   // Initialize
