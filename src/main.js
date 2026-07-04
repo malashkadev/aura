@@ -96,7 +96,9 @@ const i18nDict = {
     model_delete_error_pattern: "Ошибка удаления: {err}",
     model_downloaded_success_pattern: "Модель '{model}' скачана!",
     confirm_clear_history_title: "Очистить историю",
-    confirm_clear_history_msg: "Вы действительно хотите очистить всю историю транскрипций?"
+    confirm_clear_history_msg: "Вы действительно хотите очистить всю историю транскрипций?",
+    general_ui_lang_title: "Язык интерфейса",
+    general_ui_lang_desc: "Выберите язык для отображения настроек и уведомлений приложения."
   },
   en: {
     title_settings: "Settings",
@@ -191,7 +193,9 @@ const i18nDict = {
     model_delete_error_pattern: "Delete error: {err}",
     model_downloaded_success_pattern: "Model '{model}' downloaded!",
     confirm_clear_history_title: "Clear history",
-    confirm_clear_history_msg: "Are you sure you want to clear all transcription history?"
+    confirm_clear_history_msg: "Are you sure you want to clear all transcription history?",
+    general_ui_lang_title: "Interface Language",
+    general_ui_lang_desc: "Select the language for settings and application notifications."
   },
   de: {
     title_settings: "Einstellungen",
@@ -286,7 +290,9 @@ const i18nDict = {
     model_delete_error_pattern: "Fehler beim Löschen: {err}",
     model_downloaded_success_pattern: "Modell '{model}' heruntergeladen!",
     confirm_clear_history_title: "Verlauf löschen",
-    confirm_clear_history_msg: "Möchten Sie den gesamten Transkriptionsverlauf wirklich löschen?"
+    confirm_clear_history_msg: "Möchten Sie den gesamten Transkriptionsverlauf wirklich löschen?",
+    general_ui_lang_title: "Sprache der Benutzeroberfläche",
+    general_ui_lang_desc: "Wählen Sie die Sprache für Einstellungen und Benachrichtigungen."
   },
   es: {
     title_settings: "Ajustes",
@@ -381,7 +387,9 @@ const i18nDict = {
     model_delete_error_pattern: "Error al eliminar: {err}",
     model_downloaded_success_pattern: "¡Modelo '{model}' descargado!",
     confirm_clear_history_title: "Limpiar historial",
-    confirm_clear_history_msg: "¿Está seguro de que desea limpiar todo el historial de transcripciones?"
+    confirm_clear_history_msg: "¿Está seguro de que desea limpiar todo el historial de transcripciones?",
+    general_ui_lang_title: "Idioma de la interfaz",
+    general_ui_lang_desc: "Seleccione el idioma para los ajustes y las notificaciones."
   },
   fr: {
     title_settings: "Paramètres",
@@ -476,7 +484,9 @@ const i18nDict = {
     model_delete_error_pattern: "Erreur de suppression: {err}",
     model_downloaded_success_pattern: "Modèle '{model}' téléchargé !",
     confirm_clear_history_title: "Effacer l'historique",
-    confirm_clear_history_msg: "Voulez-vous vraiment effacer tout l'historique des transcriptions ?"
+    confirm_clear_history_msg: "Voulez-vous vraiment effacer tout l'historique des transcriptions ?",
+    general_ui_lang_title: "Langue de l'interface",
+    general_ui_lang_desc: "Sélectionnez la langue pour les paramètres et les notifications de l'application."
   },
   it: {
     title_settings: "Impostazioni",
@@ -571,7 +581,9 @@ const i18nDict = {
     model_delete_error_pattern: "Errore di eliminazione: {err}",
     model_downloaded_success_pattern: "Modello '{model}' scaricato!",
     confirm_clear_history_title: "Cancella cronologia",
-    confirm_clear_history_msg: "Sei sicuro di voler cancellare tutta la cronologia delle trascrizioni?"
+    confirm_clear_history_msg: "Sei sicuro di voler cancellare tutta la cronologia delle trascrizioni?",
+    general_ui_lang_title: "Lingua dell'interfaccia",
+    general_ui_lang_desc: "Seleziona la lingua per le impostazioni e le notifiche dell'applicazione."
   },
   zh: {
     title_settings: "设置",
@@ -666,7 +678,9 @@ const i18nDict = {
     model_delete_error_pattern: "删除错误: {err}",
     model_downloaded_success_pattern: "模型 '{model}' 已下载！",
     confirm_clear_history_title: "清空历史",
-    confirm_clear_history_msg: "您确定要清空所有听写历史记录吗？"
+    confirm_clear_history_msg: "您确定要清空所有听写历史记录吗？",
+    general_ui_lang_title: "界面语言",
+    general_ui_lang_desc: "选择设置和应用程序通知的语言。"
   },
   pt: {
     title_settings: "Configurações",
@@ -761,7 +775,9 @@ const i18nDict = {
     model_delete_error_pattern: "Erro ao excluir: {err}",
     model_downloaded_success_pattern: "Modelo '{model}' baixado!",
     confirm_clear_history_title: "Limpar histórico",
-    confirm_clear_history_msg: "Tem certeza de que deseja limpar todo o histórico de transcrições?"
+    confirm_clear_history_msg: "Tem certeza de que deseja limpar todo o histórico de transcrições?",
+    general_ui_lang_title: "Idioma da interface",
+    general_ui_lang_desc: "Selecione o idioma para as configurações e notificações do aplicativo."
   },
   tr: {
     title_settings: "Ayarlar",
@@ -856,7 +872,9 @@ const i18nDict = {
     model_delete_error_pattern: "Silme hatası: {err}",
     model_downloaded_success_pattern: "'{model}' modeli indirildi!",
     confirm_clear_history_title: "Geçmişi Temizle",
-    confirm_clear_history_msg: "Tüm transkripsiyon geçmişini temizlemek istediğinizden emin misiniz?"
+    confirm_clear_history_msg: "Tüm transkripsiyon geçmişini temizlemek istediğinizden emin misiniz?",
+    general_ui_lang_title: "Arayüz Dili",
+    general_ui_lang_desc: "Ayarlar ve uygulama bildirimleri için dili seçin."
   }
 };
 
@@ -1368,6 +1386,11 @@ document.addEventListener("DOMContentLoaded", () => {
         el.textContent = dict[key];
       }
     });
+
+    const selectUiLang = document.getElementById("select-ui-lang");
+    if (selectUiLang) {
+      selectUiLang.ariaLabel = dict.general_ui_lang_title || "UI Language";
+    }
     
     // Update inputs and placeholders
     const apiInput = document.getElementById("input-api-key");
