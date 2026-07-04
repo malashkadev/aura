@@ -69,24 +69,206 @@ function playBowl(freq, duration, gainStart = 0.08) {
   });
 }
 
-function playStartSound() {
-  // Deep meditation bowl strike: F3 (174.61Hz) with a 1.2s decay
-  playBowl(174.61, 1.2, 0.08);
+function playRhodes(freq, duration, gainStart = 0.08) {
+  initAudioCtx();
+  if (audioCtx.state === "suspended") {
+    audioCtx.resume();
+  }
+  const now = audioCtx.currentTime;
+  const osc1 = audioCtx.createOscillator();
+  const osc2 = audioCtx.createOscillator();
+  const gain1 = audioCtx.createGain();
+  const gain2 = audioCtx.createGain();
+
+  osc1.type = "triangle";
+  osc1.frequency.setValueAtTime(freq, now);
+
+  osc2.type = "sine";
+  osc2.frequency.setValueAtTime(freq, now);
+
+  const attack = 0.010;
+  gain1.gain.setValueAtTime(0.0001, now);
+  gain1.gain.linearRampToValueAtTime(gainStart * 0.4, now + attack);
+  gain1.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+  gain2.gain.setValueAtTime(0.0001, now);
+  gain2.gain.linearRampToValueAtTime(gainStart * 0.7, now + attack);
+  gain2.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+  osc1.connect(gain1);
+  gain1.connect(audioCtx.destination);
+  osc2.connect(gain2);
+  gain2.connect(audioCtx.destination);
+
+  osc1.start(now);
+  osc1.stop(now + duration + 0.1);
+  osc2.start(now);
+  osc2.stop(now + duration + 0.1);
 }
 
-function playSuccessSound() {
-  // Consonant pair of resonant singing bowls: F3 (174.61Hz) and C4 (261.63Hz) struck together.
-  // Staggered slightly like a soft mallet sweep.
-  playBowl(174.61, 1.8, 0.07);
-  setTimeout(() => {
-    playBowl(261.63, 1.8, 0.06);
-  }, 60);
+function playSciFi(freqStart, freqEnd, duration, gainStart = 0.06) {
+  initAudioCtx();
+  if (audioCtx.state === "suspended") {
+    audioCtx.resume();
+  }
+  const now = audioCtx.currentTime;
+  const osc1 = audioCtx.createOscillator();
+  const osc2 = audioCtx.createOscillator();
+  const gainNode = audioCtx.createGain();
+
+  osc1.type = "sine";
+  osc1.frequency.setValueAtTime(freqStart, now);
+  osc1.frequency.exponentialRampToValueAtTime(freqEnd, now + duration);
+
+  osc2.type = "sine";
+  osc2.frequency.setValueAtTime(freqStart + 3.0, now);
+  osc2.frequency.exponentialRampToValueAtTime(freqEnd + 3.0, now + duration);
+
+  const attack = 0.012;
+  gainNode.gain.setValueAtTime(0.0001, now);
+  gainNode.gain.linearRampToValueAtTime(gainStart, now + attack);
+  gainNode.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+  osc1.connect(gainNode);
+  osc2.connect(gainNode);
+  gainNode.connect(audioCtx.destination);
+
+  osc1.start(now);
+  osc1.stop(now + duration + 0.1);
+  osc2.start(now);
+  osc2.stop(now + duration + 0.1);
 }
 
-function playErrorSound() {
-  // A soft, damped, shorter single bowl sound
-  playBowl(174.61, 0.45, 0.07);
+function playBell(freq, duration, gainStart = 0.07) {
+  initAudioCtx();
+  if (audioCtx.state === "suspended") {
+    audioCtx.resume();
+  }
+  const now = audioCtx.currentTime;
+  const osc1 = audioCtx.createOscillator();
+  const osc2 = audioCtx.createOscillator();
+  const osc3 = audioCtx.createOscillator();
+  const gain1 = audioCtx.createGain();
+  const gain2 = audioCtx.createGain();
+  const gain3 = audioCtx.createGain();
+
+  osc1.type = "sine";
+  osc1.frequency.setValueAtTime(freq, now);
+  osc2.type = "sine";
+  osc2.frequency.setValueAtTime(freq * 2.0, now);
+  osc3.type = "sine";
+  osc3.frequency.setValueAtTime(freq * 3.0, now);
+
+  const attack = 0.006;
+  gain1.gain.setValueAtTime(0.0001, now);
+  gain1.gain.linearRampToValueAtTime(gainStart, now + attack);
+  gain1.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+  gain2.gain.setValueAtTime(0.0001, now);
+  gain2.gain.linearRampToValueAtTime(gainStart * 0.45, now + attack);
+  gain2.gain.exponentialRampToValueAtTime(0.0001, now + duration * 0.7);
+
+  gain3.gain.setValueAtTime(0.0001, now);
+  gain3.gain.linearRampToValueAtTime(gainStart * 0.25, now + attack);
+  gain3.gain.exponentialRampToValueAtTime(0.0001, now + duration * 0.4);
+
+  osc1.connect(gain1);
+  gain1.connect(audioCtx.destination);
+  osc2.connect(gain2);
+  gain2.connect(audioCtx.destination);
+  osc3.connect(gain3);
+  gain3.connect(audioCtx.destination);
+
+  osc1.start(now);
+  osc1.stop(now + duration + 0.1);
+  osc2.start(now);
+  osc2.stop(now + duration + 0.1);
+  osc3.start(now);
+  osc3.stop(now + duration + 0.1);
 }
+
+let soundsEnabled = true;
+let soundTheme = "zen";
+
+async function updateActiveThemeSettings() {
+  try {
+    const settings = await window.__TAURI__.core.invoke("get_settings");
+    soundsEnabled = settings.overlay_sounds !== false;
+    soundTheme = settings.overlay_sound_theme || "zen";
+  } catch (e) {
+    console.error("Failed to query settings in overlay", e);
+  }
+}
+
+function playThemeStart() {
+  if (!soundsEnabled) return;
+  if (soundTheme === "rhodes") {
+    playRhodes(440.00, 0.65, 0.07);
+    setTimeout(() => { playRhodes(554.37, 0.80, 0.07); }, 90);
+  } else if (soundTheme === "scifi") {
+    playSciFi(440.00, 880.00, 0.22, 0.055);
+  } else if (soundTheme === "classic") {
+    playBell(440.00, 0.45, 0.06);
+    setTimeout(() => { playBell(659.25, 0.60, 0.06); }, 90);
+  } else {
+    // Default: zen
+    playBowl(174.61, 1.2, 0.08);
+  }
+}
+
+function playThemeSuccess() {
+  if (!soundsEnabled) return;
+  if (soundTheme === "rhodes") {
+    playRhodes(220.00, 0.45, 0.06);
+    setTimeout(() => {
+      playRhodes(329.63, 0.45, 0.06);
+      setTimeout(() => {
+        playRhodes(440.00, 0.45, 0.06);
+        setTimeout(() => {
+          playRhodes(554.37, 0.45, 0.06);
+          setTimeout(() => {
+            playRhodes(659.25, 0.85, 0.06);
+          }, 70);
+        }, 70);
+      }, 70);
+    }, 70);
+  } else if (soundTheme === "scifi") {
+    playSciFi(523.25, 1046.50, 0.18, 0.05);
+    setTimeout(() => { playSciFi(783.99, 1567.98, 0.18, 0.045); }, 65);
+  } else if (soundTheme === "classic") {
+    playBell(440.00, 0.35, 0.05);
+    setTimeout(() => {
+      playBell(554.37, 0.35, 0.05);
+      setTimeout(() => {
+        playBell(659.25, 0.45, 0.05);
+        setTimeout(() => {
+          playBell(880.00, 0.75, 0.05);
+        }, 70);
+      }, 70);
+    }, 70);
+  } else {
+    // Default: zen
+    playBowl(174.61, 1.8, 0.07);
+    setTimeout(() => { playBowl(261.63, 1.8, 0.06); }, 60);
+  }
+}
+
+function playThemeError() {
+  if (!soundsEnabled) return;
+  if (soundTheme === "rhodes") {
+    playRhodes(554.37, 0.35, 0.07);
+    setTimeout(() => { playRhodes(440.00, 0.55, 0.07); }, 120);
+  } else if (soundTheme === "scifi") {
+    playSciFi(587.33, 293.66, 0.28, 0.06);
+  } else if (soundTheme === "classic") {
+    playBell(659.25, 0.35, 0.06);
+    setTimeout(() => { playBell(440.00, 0.50, 0.06); }, 120);
+  } else {
+    // Default: zen
+    playBowl(174.61, 0.45, 0.07);
+  }
+}
+
 
 // Track current and target heights for smooth linear interpolation (lerp)
 const barStates = Array.from(bars).map(() => ({
@@ -152,10 +334,11 @@ function updateAnimation() {
 updateAnimation();
 
 // Listen for recording-state updates: "recording" | "processing" | "error"
-listen("recording-state", (event) => {
+listen("recording-state", async (event) => {
   currentState = event.payload;
 
   if (currentState === "recording") {
+    await updateActiveThemeSettings();
     recordStart = Date.now();
     statusEl.textContent = "0:00";
     statusEl.classList.remove("error");
@@ -164,7 +347,7 @@ listen("recording-state", (event) => {
 
     // Animate show and play startup sound
     pill.classList.add("visible");
-    playStartSound();
+    playThemeStart();
   } else if (currentState === "processing") {
     angle = 0;
     statusEl.textContent = "Обработка…";
@@ -181,7 +364,7 @@ listen("recording-state", (event) => {
     resetBars();
 
     // Play error sound and animate hide after a brief delay
-    playErrorSound();
+    playThemeError();
     setTimeout(() => {
       pill.classList.remove("visible");
       // Safe hide on animation finish
@@ -199,9 +382,9 @@ listen("hide-overlay-requested", (event) => {
   const status = payload.status || "success";
 
   if (status === "success") {
-    playSuccessSound();
+    playThemeSuccess();
   } else {
-    playErrorSound();
+    playThemeError();
   }
 
   pill.classList.remove("visible");
