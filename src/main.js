@@ -107,6 +107,13 @@ document.addEventListener("DOMContentLoaded", () => {
       }
       selectModelCard(card.dataset.model);
     });
+
+    card.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        selectModelCard(card.dataset.model);
+      }
+    });
   });
 
   function selectModelCard(model) {

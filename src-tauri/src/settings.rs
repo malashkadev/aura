@@ -43,6 +43,25 @@ impl Default for Settings {
     }
 }
 
+impl Settings {
+    pub fn migrate_legacy_keys(&mut self) {
+        if !self.api_key.is_empty() {
+            match self.api_provider.as_str() {
+                "gemini" if self.api_key_gemini.is_empty() => {
+                    self.api_key_gemini = self.api_key.clone();
+                }
+                "openai" if self.api_key_openai.is_empty() => {
+                    self.api_key_openai = self.api_key.clone();
+                }
+                "groq" if self.api_key_groq.is_empty() => {
+                    self.api_key_groq = self.api_key.clone();
+                }
+                _ => {}
+            }
+        }
+    }
+}
+
 pub fn get_settings_path(app_handle: &tauri::AppHandle) -> Result<PathBuf, String> {
     let config_dir = app_handle
         .path()
@@ -66,20 +85,7 @@ pub fn load_settings(app_handle: &tauri::AppHandle) -> Result<Settings, String> 
         }
     };
     
-    if !settings.api_key.is_empty() {
-        match settings.api_provider.as_str() {
-            "gemini" if settings.api_key_gemini.is_empty() => {
-                settings.api_key_gemini = settings.api_key.clone();
-            }
-            "openai" if settings.api_key_openai.is_empty() => {
-                settings.api_key_openai = settings.api_key.clone();
-            }
-            "groq" if settings.api_key_groq.is_empty() => {
-                settings.api_key_groq = settings.api_key.clone();
-            }
-            _ => {}
-        }
-    }
+    settings.migrate_legacy_keys();
     Ok(settings)
 }
 
@@ -141,20 +147,7 @@ mod tests {
         assert_eq!(settings.api_key_openai, "");
         assert_eq!(settings.api_key_groq, "");
 
-        if !settings.api_key.is_empty() {
-            match settings.api_provider.as_str() {
-                "gemini" if settings.api_key_gemini.is_empty() => {
-                    settings.api_key_gemini = settings.api_key.clone();
-                }
-                "openai" if settings.api_key_openai.is_empty() => {
-                    settings.api_key_openai = settings.api_key.clone();
-                }
-                "groq" if settings.api_key_groq.is_empty() => {
-                    settings.api_key_groq = settings.api_key.clone();
-                }
-                _ => {}
-            }
-        }
+        settings.migrate_legacy_keys();
 
         assert_eq!(settings.api_key_gemini, "old-key-123");
         assert_eq!(settings.api_key_openai, "");
