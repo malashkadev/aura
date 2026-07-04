@@ -84,6 +84,19 @@ document.addEventListener("DOMContentLoaded", () => {
   const historyList = document.getElementById("history-list");
   const btnClearHistory = document.getElementById("btn-clear-history");
   
+  const checkboxSounds = document.getElementById("checkbox-sounds");
+  const selectSoundTheme = document.getElementById("select-sound-theme");
+
+  function updateSoundUI() {
+    const themeGroup = document.getElementById("sound-theme-group");
+    if (themeGroup) {
+      themeGroup.style.display = (checkboxSounds && checkboxSounds.checked) ? "flex" : "none";
+    }
+  }
+  if (checkboxSounds) {
+    checkboxSounds.addEventListener("change", updateSoundUI);
+  }
+  
   let apiKeys = {
     gemini: "",
     openai: "",
@@ -111,7 +124,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const inputs = [
       radioCloud, radioLocal, selectProvider, apiKeyInput, selectHotkey,
       selectLanguage, textareaDictionary, checkboxToggle, checkboxPunctuation,
-      checkboxAutostart, checkboxStreaming
+      checkboxAutostart, checkboxStreaming, checkboxSounds, selectSoundTheme
     ];
     inputs.forEach(input => {
       if (input) {
@@ -197,6 +210,14 @@ document.addEventListener("DOMContentLoaded", () => {
           checkboxStreaming.checked = !!settings.streaming_enabled;
         }
 
+        if (checkboxSounds) {
+          checkboxSounds.checked = settings.overlay_sounds !== false;
+        }
+        if (selectSoundTheme) {
+          selectSoundTheme.value = settings.overlay_sound_theme || "zen";
+        }
+        updateSoundUI();
+
         updateEngineUI();
         await refreshDownloadedModels();
         
@@ -268,7 +289,9 @@ document.addEventListener("DOMContentLoaded", () => {
         language: selectLanguage ? selectLanguage.value : "auto",
         dictionary: textareaDictionary ? textareaDictionary.value : "",
         voice_punctuation: checkboxPunctuation ? checkboxPunctuation.checked : false,
-        autostart: checkboxAutostart ? checkboxAutostart.checked : false
+        autostart: checkboxAutostart ? checkboxAutostart.checked : false,
+        overlay_sounds: checkboxSounds ? checkboxSounds.checked : true,
+        overlay_sound_theme: selectSoundTheme ? selectSoundTheme.value : "zen"
       };
 
       await invoke("set_settings", { settings });
