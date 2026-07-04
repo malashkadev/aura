@@ -21,9 +21,6 @@ document.addEventListener("DOMContentLoaded", () => {
       if (targetPanel) {
         targetPanel.style.display = "flex";
       }
-      if (tab.dataset.tab === "history") {
-        renderHistory();
-      }
     });
   });
 
@@ -81,8 +78,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const checkboxPunctuation = document.getElementById("checkbox-punctuation");
   const checkboxAutostart = document.getElementById("checkbox-autostart");
   const btnSaveSettings = document.getElementById("btn-save-settings");
-  const historyList = document.getElementById("history-list");
-  const btnClearHistory = document.getElementById("btn-clear-history");
   
   const checkboxSounds = document.getElementById("checkbox-sounds");
   const selectSoundTheme = document.getElementById("select-sound-theme");
@@ -333,7 +328,13 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   async function deleteModelCard(model) {
-    if (!confirm(`Вы действительно хотите удалить локальную модель '${model}'?`)) {
+    const confirmed = await showConfirm(
+      "Удаление модели",
+      `Вы действительно хотите удалить локальную модель '${model}'?`,
+      "Удалить",
+      "Отмена"
+    );
+    if (!confirmed) {
       return;
     }
     try {
@@ -373,94 +374,46 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // --- Transcription History ---
+  // --- Asynchronous Custom Confirm Dialog ---
+  function showConfirm(title, message, confirmText = "ОК", cancelText = "Отмена") {
+    return new Promise((resolve) => {
+      const modal = document.getElementById("custom-confirm-modal");
+      const titleEl = document.getElementById("confirm-modal-title");
+      const msgEl = document.getElementById("confirm-modal-message");
+      const btnOk = document.getElementById("btn-confirm-ok");
+      const btnCancel = document.getElementById("btn-confirm-cancel");
 
-  function formatHistoryDate(timestampMs) {
-    try {
-      return new Date(timestampMs).toLocaleString("ru-RU", {
-        day: "2-digit", month: "2-digit",
-        hour: "2-digit", minute: "2-digit"
-      });
-    } catch {
-      return "";
-    }
-  }
-
-  async function renderHistory() {
-    if (!historyList) return;
-    try {
-      const entries = await invoke("get_history");
-      historyList.innerHTML = "";
-
-      if (!entries || entries.length === 0) {
-        const empty = document.createElement("p");
-        empty.className = "history-empty";
-        empty.textContent = "Пока нет ни одной записи.";
-        historyList.appendChild(empty);
+      if (!modal) {
+        resolve(false);
         return;
       }
 
-      entries.forEach(entry => {
-        const item = document.createElement("div");
-        item.className = "history-item";
+      titleEl.textContent = title;
+      msgEl.textContent = message;
+      btnOk.textContent = confirmText;
+      btnCancel.textContent = cancelText;
 
-        const textEl = document.createElement("p");
-        textEl.className = "history-text";
-        textEl.textContent = entry.text;
+      modal.style.display = "flex";
+      modal.offsetHeight; // force reflow
+      modal.classList.add("active");
 
-        const metaEl = document.createElement("div");
-        metaEl.className = "history-meta";
-
-        const dateEl = document.createElement("span");
-        dateEl.className = "history-date";
-        const modeLabel = entry.mode === "local" ? "локально" : "облако";
-        dateEl.textContent = `${formatHistoryDate(entry.timestamp_ms)} · ${modeLabel}`;
-
-        const copyBtn = document.createElement("button");
-        copyBtn.type = "button";
-        copyBtn.className = "btn-copy";
-        copyBtn.textContent = "Копировать";
-        copyBtn.addEventListener("click", async () => {
-          try {
-            await invoke("copy_to_clipboard", { text: entry.text });
-            copyBtn.textContent = "Скопировано ✓";
-            setTimeout(() => { copyBtn.textContent = "Копировать"; }, 1500);
-          } catch (err) {
-            console.error("Failed to copy history entry", err);
-          }
-        });
-
-        metaEl.appendChild(dateEl);
-        metaEl.appendChild(copyBtn);
-        item.appendChild(textEl);
-        item.appendChild(metaEl);
-        historyList.appendChild(item);
-      });
-    } catch (err) {
-      console.error("Failed to load history", err);
-    }
-  }
-
-  if (btnClearHistory) {
-    btnClearHistory.addEventListener("click", async () => {
-      try {
-        await invoke("clear_history");
-        renderHistory();
-        showStatus("История очищена");
-      } catch (err) {
-        console.error(err);
-        showStatus(`Ошибка очистки истории: ${err}`, true);
+      function cleanUp(result) {
+        modal.classList.remove("active");
+        btnOk.removeEventListener("click", onOk);
+        btnCancel.removeEventListener("click", onCancel);
+        setTimeout(() => {
+          modal.style.display = "none";
+          resolve(result);
+        }, 200);
       }
+
+      function onOk() { cleanUp(true); }
+      function onCancel() { cleanUp(false); }
+
+      btnOk.addEventListener("click", onOk);
+      btnCancel.addEventListener("click", onCancel);
     });
   }
-
-  // Refresh the list live when a new transcription is saved
-  listen("history-updated", () => {
-    const historyPanel = document.getElementById("panel-history");
-    if (historyPanel && historyPanel.style.display !== "none") {
-      renderHistory();
-    }
-  });
 
   // Helpers
   function showStatus(msg, isError = false, isModified = false) {

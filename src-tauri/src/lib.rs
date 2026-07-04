@@ -508,6 +508,20 @@ async fn show_overlay_error(app_handle: &tauri::AppHandle, _my_gen: u64, error_m
     // JS handles playing error sound and animating the hide after a 2.5s display timeout
 }
 
+/// Emits hide-overlay-requested event and runs a 500ms backup safety timer to close the overlay window.
+fn request_animated_hide(app_handle: &tauri::AppHandle, status: &str) {
+    if let Some(overlay) = app_handle.get_webview_window("overlay") {
+        let _ = app_handle.emit("hide-overlay-requested", serde_json::json!({ "status": status }));
+        let overlay_clone = overlay.clone();
+        tokio::spawn(async move {
+            tokio::time::sleep(std::time::Duration::from_millis(500)).await;
+            if let Ok(true) = overlay_clone.is_visible() {
+                let _ = overlay_clone.hide();
+            }
+        });
+    }
+}
+
 /// Stops and discards the current recording (accidental tap or Esc cancel).
 fn discard_recording(app_handle: &tauri::AppHandle) {
     if let Some(state) = app_handle.try_state::<AppState>() {
@@ -517,12 +531,7 @@ fn discard_recording(app_handle: &tauri::AppHandle) {
         let _ = state.audio_recorder.cancel_recording();
     }
     keyboard_hook::set_recording_active(false);
-    if let Some(overlay) = app_handle.get_webview_window("overlay") {
-        let emitted = app_handle.emit("hide-overlay-requested", serde_json::json!({ "status": "cancel" }));
-        if emitted.is_err() {
-            let _ = overlay.hide();
-        }
-    }
+    request_animated_hide(app_handle, "cancel");
 }
 
 /// Esc pressed during recording: discard audio and erase any streamed preview text.
@@ -927,12 +936,7 @@ async fn finalize_recording(app_handle: tauri::AppHandle) {
                 .map(|s| s.session_gen.load(Ordering::SeqCst) == my_gen)
                 .unwrap_or(false);
             if session_ok {
-                if let Some(overlay) = app_handle_clone.get_webview_window("overlay") {
-                    let emitted = app_handle_clone.emit("hide-overlay-requested", serde_json::json!({ "status": "success" }));
-                    if emitted.is_err() {
-                        let _ = overlay.hide(); // Fallback
-                    }
-                }
+                request_animated_hide(&app_handle_clone, "success");
             }
         }
     });

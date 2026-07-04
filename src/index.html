@@ -263,5 +263,17 @@
       <button type="button" class="btn-save" id="btn-save-settings">Сохранить настройки</button>
     </footer>
   </div>
+
+  <!-- Custom modal overlay for confirmation dialogs -->
+  <div id="custom-confirm-modal" class="modal-overlay" style="display: none;">
+    <div class="modal-card">
+      <h3 class="modal-title" id="confirm-modal-title">Подтверждение</h3>
+      <p class="modal-message" id="confirm-modal-message">Вы действительно хотите выполнить это действие?</p>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-secondary" id="btn-confirm-cancel">Отмена</button>
+        <button type="button" class="btn btn-primary" id="btn-confirm-ok">Подтвердить</button>
+      </div>
+    </div>
+  </div>
 </body>
 </html>
