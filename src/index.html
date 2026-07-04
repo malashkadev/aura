@@ -13,32 +13,33 @@
 </head>
 <body>
   <div class="glass-container">
-    <header class="app-header" data-tauri-drag-region>
+    <header class="app-header">
       <div class="logo-container" data-tauri-drag-region>
-        <div class="logo-glow"></div>
+        <div class="logo-glow" data-tauri-drag-region></div>
         <svg class="app-logo" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg" data-tauri-drag-region>
           <path d="M398.114 421C445.533 380.876 474.714 322.514 474.714 256.857C474.714 136.486 376.229 38 255.857 38C135.486 38 37 136.486 37 256.857C37 322.514 66.1809 380.876 113.6 421" stroke="currentColor" stroke-width="73.1573"/>
           <path d="M181.963 176.024L42.0293 511.651H142.825L200.192 352.952L247.909 233.927C250.769 226.064 253.45 222.132 255.952 222.132C258.096 222.132 260.598 226.064 263.458 233.927L311.175 352.952L368.542 511.651H469.874L329.404 176.024C322.255 158.867 312.783 147.25 300.988 141.174C289.55 135.098 274.538 132.06 255.952 132.06C234.148 132.06 217.885 135.455 207.162 142.246C196.797 149.038 188.397 160.297 181.963 176.024Z" fill="currentColor"/>
         </svg>
         <span class="logo-text" data-tauri-drag-region>AURA</span>
       </div>
-      <div class="header-right" data-tauri-drag-region>
-        <h1 class="header-title" data-tauri-drag-region data-i18n="title_settings">Настройки</h1>
-        
-        <div class="lang-selector-header">
-          <svg class="globe-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
-          <select id="select-ui-lang" class="custom-select ui-lang-select" aria-label="Язык интерфейса">
-            <option value="ru">Русский</option>
-            <option value="en">English</option>
-            <option value="de">Deutsch</option>
-            <option value="es">Español</option>
-            <option value="fr">Français</option>
-            <option value="it">Italiano</option>
-            <option value="zh">中文</option>
-            <option value="pt">Português</option>
-            <option value="tr">Türkçe</option>
-          </select>
-        </div>
+
+      <div class="lang-selector-header">
+        <svg class="globe-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+        <select id="select-ui-lang" class="custom-select ui-lang-select" aria-label="Язык интерфейса">
+          <option value="ru">Русский</option>
+          <option value="en">English</option>
+          <option value="de">Deutsch</option>
+          <option value="es">Español</option>
+          <option value="fr">Français</option>
+          <option value="it">Italiano</option>
+          <option value="zh">中文</option>
+          <option value="pt">Português</option>
+          <option value="tr">Türkçe</option>
+        </select>
+      </div>
+
+      <div class="header-right">
+        <h1 class="header-title" data-i18n="title_settings">Настройки</h1>
 
         <div class="window-controls">
           <button type="button" class="window-control-btn" id="btn-window-minimize" title="Свернуть">

@@ -861,7 +861,8 @@ body {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-right: 16px;
+  margin-left: 16px;
+  margin-right: auto;
   position: relative;
 }
 
@@ -877,12 +878,12 @@ body {
 
 .ui-lang-select {
   padding-left: 34px !important;
-  padding-right: 28px !important;
+  padding-right: 24px !important;
   height: 34px;
-  width: 120px;
+  width: 140px;
   font-size: 0.85rem;
   font-weight: 500;
-  background-position: right 10px center;
+  background-position: right 8px center;
 }
 
 /* Textarea custom style */

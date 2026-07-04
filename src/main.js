@@ -1296,8 +1296,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const appHeader = document.querySelector(".app-header");
   if (appHeader) {
     appHeader.addEventListener("mousedown", (e) => {
-      // Only trigger drag on left click and avoid dragging when clicking on control buttons
-      if (e.button === 0 && !e.target.closest(".window-control-btn") && !e.target.closest("button")) {
+      // Only trigger drag on left click and avoid dragging when clicking on control buttons or select elements
+      if (e.button === 0 && !e.target.closest(".window-control-btn") && !e.target.closest("button") && !e.target.closest("select")) {
         invoke("start_dragging_command");
       }
     });
