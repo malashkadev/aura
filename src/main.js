@@ -76,7 +76,6 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // Settings elements
-  const selectModel = document.getElementById("select-model");
   const selectProvider = document.getElementById("select-provider");
   const selectHotkey = document.getElementById("select-hotkey");
   const selectLanguage = document.getElementById("select-language");
@@ -84,8 +83,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const checkboxToggle = document.getElementById("checkbox-toggle");
   const checkboxPunctuation = document.getElementById("checkbox-punctuation");
   const checkboxAutostart = document.getElementById("checkbox-autostart");
-  const btnDownloadModel = document.getElementById("btn-download-model");
-  const btnDeleteModel = document.getElementById("btn-delete-model");
   const btnSaveSettings = document.getElementById("btn-save-settings");
   const historyList = document.getElementById("history-list");
   const btnClearHistory = document.getElementById("btn-clear-history");
@@ -97,11 +94,29 @@ document.addEventListener("DOMContentLoaded", () => {
   };
   let previousSelProvider = selectProvider.value;
   
-  const progressContainer = document.getElementById("progress-container");
-  const progressStatus = document.getElementById("progress-status");
-  const progressPercent = document.getElementById("progress-percent");
-  const progressBarFill = document.getElementById("progress-bar-fill");
   const footerStatusText = document.getElementById("footer-status-text");
+
+  let selectedModelName = "base";
+  const modelCards = document.querySelectorAll(".model-card");
+
+  modelCards.forEach(card => {
+    card.addEventListener("click", (e) => {
+      // Prevent selection trigger when clicking delete/download buttons inside the card
+      if (e.target.closest(".btn-delete-card-model") || e.target.closest(".btn-download-card-model")) {
+        return;
+      }
+      selectModelCard(card.dataset.model);
+    });
+  });
+
+  function selectModelCard(model) {
+    selectedModelName = model;
+    modelCards.forEach(c => {
+      const isCurrent = c.dataset.model === model;
+      c.classList.toggle("active", isCurrent);
+      c.setAttribute("aria-checked", isCurrent ? "true" : "false");
+    });
+  }
 
   // Load Settings from Backend
   async function loadSettings() {
@@ -116,7 +131,7 @@ document.addEventListener("DOMContentLoaded", () => {
           radioCloud.checked = true;
         }
         
-        selectModel.value = settings.model_name || "base";
+        selectModelCard(settings.model_name || "base");
         apiKeys.gemini = settings.api_key_gemini || "";
         apiKeys.openai = settings.api_key_openai || "";
         apiKeys.groq = settings.api_key_groq || "";
@@ -159,64 +174,36 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // Check which models are downloaded and update dropdown list options
   async function refreshDownloadedModels() {
     try {
       const downloaded = await invoke("get_downloaded_models");
-      const modelOptions = selectModel.querySelectorAll("option");
-      modelOptions.forEach(opt => {
-        const val = opt.value;
-        let baseText = opt.textContent;
-        // Clean up any previously appended checkmarks or labels
-        if (baseText.endsWith(" ✓")) {
-          baseText = baseText.substring(0, baseText.length - 2);
-        }
-        if (baseText.endsWith(" [Скачана]")) {
-          baseText = baseText.substring(0, baseText.length - 10);
-        }
-        if (baseText.startsWith("✓ ")) {
-          baseText = baseText.substring(2);
-        }
+      modelCards.forEach(card => {
+        const model = card.dataset.model;
+        const isDownloaded = downloaded.includes(model);
+        const actionEl = document.getElementById(`action-${model}`);
         
-        if (downloaded.includes(val)) {
-          opt.textContent = `✓ ${baseText}`;
-          opt.classList.add("downloaded-option");
+        if (isDownloaded) {
+          actionEl.innerHTML = `
+            <span class="status-ready">Готова</span>
+            <button type="button" class="btn-delete-card-model" title="Удалить модель" data-model="${model}">
+              <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+            </button>
+          `;
+          // Bind click to the delete button
+          actionEl.querySelector(".btn-delete-card-model").addEventListener("click", () => deleteModelCard(model));
         } else {
-          opt.textContent = baseText;
-          opt.classList.remove("downloaded-option");
+          actionEl.innerHTML = `
+            <button type="button" class="btn-download-card-model" data-model="${model}">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="btn-icon"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+              Скачать
+            </button>
+          `;
+          // Bind click to the download button
+          actionEl.querySelector(".btn-download-card-model").addEventListener("click", () => downloadModelCard(model));
         }
       });
-      await updateDownloadButtonState();
     } catch (err) {
       console.error("Failed to check downloaded models", err);
-    }
-  }
-
-  // Update Download Button State based on model presence on disk
-  async function updateDownloadButtonState() {
-    try {
-      const downloaded = await invoke("get_downloaded_models");
-      const selectedModel = selectModel.value;
-      const isDownloaded = downloaded.includes(selectedModel);
-      
-      if (isDownloaded) {
-        btnDownloadModel.innerHTML = `
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="btn-icon"><polyline points="20 6 9 17 4 12"></polyline></svg>
-          Модель скачана
-        `;
-        btnDownloadModel.classList.add("downloaded");
-        if (btnDeleteModel) btnDeleteModel.style.display = "flex";
-      } else {
-        btnDownloadModel.innerHTML = `
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="btn-icon"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-          Скачать модель
-        `;
-        btnDownloadModel.classList.remove("downloaded");
-        btnDownloadModel.disabled = false;
-        if (btnDeleteModel) btnDeleteModel.style.display = "none";
-      }
-    } catch (err) {
-      console.error("Failed to update download button state", err);
     }
   }
 
@@ -237,7 +224,7 @@ document.addEventListener("DOMContentLoaded", () => {
         api_key_gemini: apiKeys.gemini,
         api_key_openai: apiKeys.openai,
         api_key_groq: apiKeys.groq,
-        model_name: selectModel.value,
+        model_name: selectedModelName,
         hotkey: selectHotkey ? selectHotkey.value : "Alt+V",
         streaming_enabled: checkboxStreaming ? checkboxStreaming.checked : false,
         toggle_enabled: checkboxToggle ? checkboxToggle.checked : false,
@@ -260,45 +247,40 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // Download Whisper Model
-  async function downloadModel() {
-    const modelName = selectModel.value;
+  async function downloadModelCard(model) {
     try {
-      showStatus(`Запуск скачивания для модели '${modelName}'...`);
-      btnDownloadModel.disabled = true;
-      progressContainer.style.display = "flex";
-      progressBarFill.style.width = "0%";
-      progressPercent.textContent = "0%";
-      progressStatus.textContent = "Подключение к Hugging Face...";
-      
-      await invoke("download_model_command", { modelName });
+      showStatus(`Запуск скачивания для модели '${model}'...`);
+      const actionEl = document.getElementById(`action-${model}`);
+      const progressEl = document.getElementById(`progress-${model}`);
+      const fillEl = document.getElementById(`fill-${model}`);
+      const pctEl = document.getElementById(`pct-${model}`);
+
+      // Hide actions, show progress
+      actionEl.style.display = "none";
+      progressEl.style.display = "flex";
+      fillEl.style.width = "0%";
+      pctEl.textContent = "0%";
+
+      await invoke("download_model_command", { modelName: model });
     } catch (err) {
       console.error(err);
       showStatus(`Ошибка скачивания: ${err}`, true);
-      btnDownloadModel.disabled = false;
-      progressStatus.textContent = "Произошла ошибка";
+      refreshDownloadedModels();
     }
   }
 
-  // Delete Whisper Model from Local Disk
-  async function deleteModel() {
-    const modelName = selectModel.value;
-    if (!confirm(`Вы действительно хотите удалить локальную модель '${modelName}'?`)) {
+  async function deleteModelCard(model) {
+    if (!confirm(`Вы действительно хотите удалить локальную модель '${model}'?`)) {
       return;
     }
     try {
-      showStatus(`Удаление модели '${modelName}'...`);
-      btnDeleteModel.disabled = true;
-      await invoke("delete_model_command", { modelName });
+      showStatus(`Удаление модели '${model}'...`);
+      await invoke("delete_model_command", { modelName: model });
       showStatus("Модель успешно удалена");
-      btnDeleteModel.disabled = false;
-      
-      // Refresh list of downloaded models and button states
       await refreshDownloadedModels();
     } catch (err) {
       console.error(err);
       showStatus(`Ошибка удаления: ${err}`, true);
-      btnDeleteModel.disabled = false;
     }
   }
 
@@ -307,22 +289,24 @@ document.addEventListener("DOMContentLoaded", () => {
     const payload = event.payload;
     if (!payload) return;
 
+    const model = payload.model;
     const percent = Math.round(payload.percentage);
-    progressBarFill.style.width = `${percent}%`;
-    progressPercent.textContent = `${percent}%`;
     
+    const fillEl = document.getElementById(`fill-${model}`);
+    const pctEl = document.getElementById(`pct-${model}`);
+    const progressEl = document.getElementById(`progress-${model}`);
+    const actionEl = document.getElementById(`action-${model}`);
+    
+    if (fillEl && pctEl) {
+      fillEl.style.width = `${percent}%`;
+      pctEl.textContent = `${percent}%`;
+    }
+
     if (payload.done) {
-      progressStatus.textContent = `Модель '${payload.model}' готова`;
-      showStatus(`Модель '${payload.model}' скачана!`);
-      btnDownloadModel.disabled = false;
+      showStatus(`Модель '${model}' скачана!`);
+      if (progressEl) progressEl.style.display = "none";
+      if (actionEl) actionEl.style.display = "flex";
       refreshDownloadedModels();
-      setTimeout(() => {
-        progressContainer.style.display = "none";
-      }, 4000);
-    } else {
-      const mbDownloaded = (payload.downloaded / 1024 / 1024).toFixed(1);
-      const totalMb = payload.total ? (payload.total / 1024 / 1024).toFixed(1) : "?";
-      progressStatus.textContent = `Скачивание: ${mbDownloaded} / ${totalMb} МБ`;
     }
   });
 
@@ -427,10 +411,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Bind Events
   btnSaveSettings.addEventListener("click", saveSettings);
-  btnDownloadModel.addEventListener("click", downloadModel);
-  if (btnDeleteModel) {
-    btnDeleteModel.addEventListener("click", deleteModel);
-  }
   selectProvider.addEventListener("change", () => {
     // 1. Save input to current provider
     apiKeys[previousSelProvider] = apiKeyInput.value;
@@ -440,7 +420,6 @@ document.addEventListener("DOMContentLoaded", () => {
     apiKeyInput.value = apiKeys[selectProvider.value] || "";
     updateApiKeyLink();
   });
-  selectModel.addEventListener("change", updateDownloadButtonState);
 
   // Window controls via Tauri IPC commands
   const btnWindowMinimize = document.getElementById("btn-window-minimize");
