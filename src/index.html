@@ -88,28 +88,66 @@
             <p class="card-desc">Выберите и скачайте подходящую модель. Более крупные модели точнее, но требуют больше ресурсов CPU и памяти.</p>
             
             <div class="form-group">
-              <label for="select-model" class="field-label">Размер модели</label>
-              <select id="select-model" class="custom-select">
-                <option value="tiny">Tiny (~75 МБ - сверхбыстрая)</option>
-                <option value="base" selected>Base (~145 МБ - рекомендуемая)</option>
-                <option value="small">Small (~465 МБ - точная для русского)</option>
-                <option value="medium">Medium (~1.5 ГБ - продвинутая)</option>
-              </select>
-            </div>
-
-            <div class="download-section">
-              <button type="button" class="btn-primary" id="btn-download-model">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="btn-icon"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-                Скачать модель
-              </button>
-              
-              <div class="download-progress-container" id="progress-container" style="display: none;">
-                <div class="progress-info">
-                  <span class="progress-status" id="progress-status">Скачивание...</span>
-                  <span class="progress-percent" id="progress-percent">0%</span>
+              <label class="field-label">Размер модели</label>
+              <div class="model-cards-group" id="model-cards-container" role="radiogroup" aria-label="Выберите модель локального ИИ">
+                <!-- Tiny -->
+                <div class="model-card" data-model="tiny" role="radio" aria-checked="false" tabindex="0">
+                  <div class="model-card-main">
+                    <div class="model-card-info">
+                      <span class="model-name">Tiny</span>
+                      <span class="model-meta">~75 МБ — сверхбыстрая</span>
+                    </div>
+                    <div class="model-card-action" id="action-tiny"></div>
+                  </div>
+                  <div class="model-card-progress" id="progress-tiny" style="display: none;">
+                    <div class="progress-bar-bg"><div class="progress-bar-fill" id="fill-tiny"></div></div>
+                    <span class="progress-pct" id="pct-tiny">0%</span>
+                  </div>
                 </div>
-                <div class="progress-bar-bg">
-                  <div class="progress-bar-fill" id="progress-bar-fill" style="width: 0%;"></div>
+                
+                <!-- Base -->
+                <div class="model-card" data-model="base" role="radio" aria-checked="false" tabindex="0">
+                  <div class="model-card-main">
+                    <div class="model-card-info">
+                      <span class="model-name">Base</span>
+                      <span class="model-meta">~145 МБ — рекомендуемая</span>
+                    </div>
+                    <div class="model-card-action" id="action-base"></div>
+                  </div>
+                  <div class="model-card-progress" id="progress-base" style="display: none;">
+                    <div class="progress-bar-bg"><div class="progress-bar-fill" id="fill-base"></div></div>
+                    <span class="progress-pct" id="pct-base">0%</span>
+                  </div>
+                </div>
+
+                <!-- Small -->
+                <div class="model-card" data-model="small" role="radio" aria-checked="false" tabindex="0">
+                  <div class="model-card-main">
+                    <div class="model-card-info">
+                      <span class="model-name">Small</span>
+                      <span class="model-meta">~465 МБ — точная для русского</span>
+                    </div>
+                    <div class="model-card-action" id="action-small"></div>
+                  </div>
+                  <div class="model-card-progress" id="progress-small" style="display: none;">
+                    <div class="progress-bar-bg"><div class="progress-bar-fill" id="fill-small"></div></div>
+                    <span class="progress-pct" id="pct-small">0%</span>
+                  </div>
+                </div>
+
+                <!-- Medium -->
+                <div class="model-card" data-model="medium" role="radio" aria-checked="false" tabindex="0">
+                  <div class="model-card-main">
+                    <div class="model-card-info">
+                      <span class="model-name">Medium</span>
+                      <span class="model-meta">~1.5 ГБ — продвинутая</span>
+                    </div>
+                    <div class="model-card-action" id="action-medium"></div>
+                  </div>
+                  <div class="model-card-progress" id="progress-medium" style="display: none;">
+                    <div class="progress-bar-bg"><div class="progress-bar-fill" id="fill-medium"></div></div>
+                    <span class="progress-pct" id="pct-medium">0%</span>
+                  </div>
                 </div>
               </div>
             </div>
