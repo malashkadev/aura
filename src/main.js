@@ -784,7 +784,7 @@ const i18nDict = {
     status_modified: "Ayarlar değiştirildi (kaydedilmedi)",
     status_saving: "Ayarlar kaydediliyor...",
     status_saved: "Ayarlar başarıyla kaydedildi!",
-    status_error: "Fehler: ",
+    status_error: "Hata: ",
     model_status_ready: "Hazır",
     model_action_download: "İndir",
     model_action_delete: "Sil",
@@ -1258,10 +1258,10 @@ document.addEventListener("DOMContentLoaded", () => {
       footerStatus.classList.remove("modified", "error", "success");
       if (isError) {
         footerStatus.classList.add("error");
-        footerStatusText.style.color = "hsl(0, 85%, 65%)";
+        footerStatusText.style.color = "var(--status-error)";
       } else if (isModified) {
         footerStatus.classList.add("modified");
-        footerStatusText.style.color = "hsl(40, 95%, 55%)";
+        footerStatusText.style.color = "var(--status-modified)";
       } else {
         footerStatus.classList.add("success");
         footerStatusText.style.color = "";
