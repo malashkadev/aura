@@ -1197,3 +1197,16 @@ body {
   text-align: right;
 }
 
+/* Footer Status Dot States */
+.footer-status.modified::before {
+  background-color: hsl(40, 95%, 55%) !important;
+  box-shadow: 0 0 8px hsl(40, 95%, 55%) !important;
+}
+.footer-status.error::before {
+  background-color: hsl(0, 85%, 60%) !important;
+  box-shadow: 0 0 8px hsl(0, 85%, 60%) !important;
+}
+.footer-status.success::before {
+  background-color: hsl(140, 80%, 45%) !important;
+  box-shadow: 0 0 8px hsl(140, 80%, 45%) !important;
+}
