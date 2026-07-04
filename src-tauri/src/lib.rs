@@ -394,6 +394,17 @@ fn restore_clipboard(backup: ClipboardBackup) {
     }
 }
 
+struct ClipboardGuard {
+    backup: ClipboardBackup,
+}
+
+impl Drop for ClipboardGuard {
+    fn drop(&mut self) {
+        let backup = std::mem::replace(&mut self.backup, ClipboardBackup::Empty);
+        restore_clipboard(backup);
+    }
+}
+
 /// Runs the blocking whisper.cpp sidecar off the async runtime.
 async fn run_local_whisper_async(
     app_handle: tauri::AppHandle,
@@ -571,7 +582,9 @@ async fn start_recording_session(app_handle: tauri::AppHandle) {
     // into API prompts).
     let app_handle_copy = app_handle.clone();
     tauri::async_runtime::spawn(async move {
-        let original_clipboard = backup_clipboard();
+        let _guard = ClipboardGuard {
+            backup: backup_clipboard(),
+        };
 
         if let Ok(mut cb) = arboard::Clipboard::new() {
             let _ = cb.clear();
@@ -590,8 +603,6 @@ async fn start_recording_session(app_handle: tauri::AppHandle) {
                 eprintln!("Aura Dev Log: Captured selected text ({} chars)", copied.chars().count());
             }
         }
-
-        restore_clipboard(original_clipboard);
     });
 
     // Start recording to a session-unique temporary WAV path
@@ -624,16 +635,16 @@ async fn start_recording_session(app_handle: tauri::AppHandle) {
             // Match width and height from tauri.conf.json
             let overlay_width = 160.0;
             let overlay_height = 80.0;
+            const TASKBAR_MARGIN: f64 = 95.0; // Place cleanly above the taskbar
 
-            // Center horizontally, place ~95px above the bottom (just above the taskbar)
+            // Center horizontally
             let x = (monitor_width - overlay_width) / 2.0;
-            let y = monitor_height - overlay_height - 95.0;
+            let y = monitor_height - overlay_height - TASKBAR_MARGIN;
 
             let _ = overlay.set_position(tauri::Position::Logical(tauri::LogicalPosition::new(x, y)));
         }
         let _ = overlay.set_always_on_top(true);
         let _ = overlay.show();
-        let _ = overlay.set_always_on_top(true);
     }
 
     let _ = app_handle.emit("recording-state", "recording");
@@ -816,16 +827,20 @@ async fn finalize_recording(app_handle: tauri::AppHandle) {
             )
             .await
         } else {
-            ai_client::transcribe_and_clean(
-                provider_from(&settings),
-                &settings.api_key,
-                &temp_path_str,
-                &selected_text,
-                &language,
-                &settings.dictionary,
-                true,
-            )
-            .await
+            if settings.api_key.trim().is_empty() {
+                Err("Введите API-ключ в настройках программы".to_string())
+            } else {
+                ai_client::transcribe_and_clean(
+                    provider_from(&settings),
+                    &settings.api_key,
+                    &temp_path_str,
+                    &selected_text,
+                    &language,
+                    &settings.dictionary,
+                    true,
+                )
+                .await
+            }
         };
         eprintln!("Aura Dev Log: Transcription call duration = {} ms", api_call_start.elapsed().as_millis());
 
