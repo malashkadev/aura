@@ -231,6 +231,7 @@ fn is_silence_hallucination(text: &str) -> bool {
         "субтитры создал",
         "редактор субтитров",
         "подпишитесь на канал",
+        "blank_audio",
     ];
     for marker in &substring_markers {
         if t.contains(marker) {
@@ -253,6 +254,10 @@ fn is_silence_hallucination(text: &str) -> bool {
         "thank you for watching",
         "thanks for watching",
         "thank you",
+        "you",
+        "you you",
+        "you you you",
+        "you you you you",
     ];
     exact_markers.contains(&normalized.as_str())
 }
@@ -1114,6 +1119,12 @@ mod tests {
         assert!(is_silence_hallucination("Продолжение следует..."));
         assert!(is_silence_hallucination("Субтитры сделал DimaTorzok"));
         assert!(is_silence_hallucination("No speech detected."));
+        assert!(is_silence_hallucination("[BLANK_AUDIO]"));
+        assert!(is_silence_hallucination("blank_audio"));
+        assert!(is_silence_hallucination("You"));
+        assert!(is_silence_hallucination("You."));
+        assert!(is_silence_hallucination("you you"));
+        assert!(is_silence_hallucination("You You You"));
     }
 
     #[test]
