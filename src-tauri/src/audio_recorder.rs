@@ -21,6 +21,7 @@ struct ActiveRecording {
 // SAFETY: cpal::Stream is !Send because some platforms tie streams to a thread.
 // On Windows (WASAPI) moving the handle between threads is tolerated in practice;
 // access is serialized through the surrounding Mutex.
+#[cfg(target_os = "windows")]
 unsafe impl Send for ActiveRecording {}
 
 impl AudioRecorder {
