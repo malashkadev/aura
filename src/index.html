@@ -23,7 +23,23 @@
         <span class="logo-text" data-tauri-drag-region>AURA</span>
       </div>
       <div class="header-right" data-tauri-drag-region>
-        <h1 class="header-title" data-tauri-drag-region>Настройки</h1>
+        <h1 class="header-title" data-tauri-drag-region data-i18n="title_settings">Настройки</h1>
+        
+        <div class="lang-selector-header">
+          <svg class="globe-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+          <select id="select-ui-lang" class="custom-select ui-lang-select" aria-label="Язык интерфейса">
+            <option value="ru">Русский</option>
+            <option value="en">English</option>
+            <option value="de">Deutsch</option>
+            <option value="es">Español</option>
+            <option value="fr">Français</option>
+            <option value="it">Italiano</option>
+            <option value="zh">中文</option>
+            <option value="pt">Português</option>
+            <option value="tr">Türkçe</option>
+          </select>
+        </div>
+
         <div class="window-controls">
           <button type="button" class="window-control-btn" id="btn-window-minimize" title="Свернуть">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="control-icon"><line x1="5" y1="12" x2="19" y2="12"></line></svg>
@@ -40,238 +56,327 @@
       <nav class="settings-nav" aria-label="Категории настроек">
         <button type="button" class="nav-tab active" id="tab-btn-general" data-tab="general">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="nav-icon"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
-          Основные
+          <span data-i18n="tab_general">Основные</span>
         </button>
-        <button type="button" class="nav-tab" id="tab-btn-cloud" data-tab="cloud">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="nav-icon"><path d="M17.5 19A3.5 3.5 0 0 0 21 15.5c0-2.79-2.54-4.5-5-4.5-.42-1.04-1.21-1.88-2.21-2.42a6 6 0 0 0-10.74 3.92A5 5 0 0 0 3 22h12.5a4.5 4.5 0 0 0 2-3z"></path></svg>
-          Облачный ИИ
+        <button type="button" class="nav-tab" id="tab-btn-speech" data-tab="speech">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="nav-icon"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
+          <span data-i18n="tab_speech">Голос</span>
+        </button>
+        <button type="button" class="nav-tab" id="tab-btn-hotkeys" data-tab="hotkeys">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="nav-icon"><rect x="2" y="4" width="20" height="16" rx="2" ry="2"></rect><line x1="6" y1="8" x2="6" y2="8"></line><line x1="10" y1="8" x2="10" y2="8"></line><line x1="14" y1="8" x2="14" y2="8"></line><line x1="18" y1="8" x2="18" y2="8"></line><line x1="6" y1="12" x2="6" y2="12"></line><line x1="18" y1="12" x2="18" y2="12"></line><line x1="7" y1="16" x2="17" y2="16"></line></svg>
+          <span data-i18n="tab_hotkeys">Управление</span>
+        </button>
+        <button type="button" class="nav-tab" id="tab-btn-apikeys" data-tab="apikeys">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="nav-icon"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"></path></svg>
+          <span data-i18n="tab_apikeys">API-ключи</span>
+        </button>
+        <button type="button" class="nav-tab" id="tab-btn-history" data-tab="history">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="nav-icon"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+          <span data-i18n="tab_history">История</span>
         </button>
         <button type="button" class="nav-tab" id="tab-btn-about" data-tab="about">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="nav-icon"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
-          О программе
+          <span data-i18n="tab_about">О программе</span>
         </button>
       </nav>
 
       <!-- Основная область содержимого -->
-      <main class="settings-content" id="settings-main-content">
-        <!-- Вкладка: Основные -->
-        <section class="tab-panel active" id="panel-general" aria-labelledby="tab-btn-general">
-          <div class="card">
-            <h2 class="card-title">Движок распознавания</h2>
-            <p class="card-desc">Выберите между облачной обработкой высокого качества или полностью автономным локальным распознаванием речи.</p>
-            
-            <div class="engine-toggle-group">
-              <label class="engine-option" id="label-cloud">
-                <input type="radio" name="transcription_mode" value="cloud" checked id="radio-cloud" />
-                <span class="engine-card">
-                  <span class="engine-name">Облачный ИИ</span>
-                  <span class="engine-meta">Gemini / OpenAI / Groq (требуется API-ключ)</span>
+        <main class="settings-content" id="settings-main-content">
+          <!-- 1. GENERAL PANEL -->
+          <section class="tab-panel active" id="panel-general" aria-labelledby="tab-btn-general">
+            <div class="card">
+              <h2 class="card-title" data-i18n="general_autostart_title">Автозапуск Aura</h2>
+              <p class="card-desc" data-i18n="general_autostart_desc">Запускать приложение автоматически при входе в операционную систему Windows.</p>
+              <label class="toggle-switch">
+                <input type="checkbox" id="checkbox-autostart" />
+                <span class="toggle-track">
+                  <span class="toggle-thumb"></span>
                 </span>
-              </label>
-              <label class="engine-option" id="label-local">
-                <input type="radio" name="transcription_mode" value="local" id="radio-local" />
-                <span class="engine-card">
-                  <span class="engine-name">Локальный ИИ</span>
-                  <span class="engine-meta">Whisper.cpp (100% оффлайн и приватно)</span>
-                </span>
+                <span class="toggle-label" data-i18n="general_autostart_checkbox">Запускать Aura при старте системы</span>
               </label>
             </div>
-          </div>
-
-          <div class="card">
-            <h2 class="card-title">Режим ввода текста</h2>
-            <p class="card-desc">Выберите способ отображения наговариваемого текста.</p>
+          </section>
+  
+          <!-- 2. SPEECH PANEL -->
+          <section class="tab-panel" id="panel-speech" aria-labelledby="tab-btn-speech" style="display: none;">
+            <div class="card">
+              <h2 class="card-title" data-i18n="engine_title">Движок распознавания</h2>
+              <p class="card-desc" data-i18n="engine_desc">Выберите между облачной обработкой высокого качества или полностью автономным локальным распознаванием речи.</p>
+              
+              <div class="engine-toggle-group">
+                <label class="engine-option" id="label-cloud">
+                  <input type="radio" name="transcription_mode" value="cloud" checked id="radio-cloud" />
+                  <span class="engine-card">
+                    <span class="engine-name" data-i18n="engine_cloud">Облачный ИИ</span>
+                    <span class="engine-meta">Gemini / OpenAI / Groq (API-key)</span>
+                  </span>
+                </label>
+                <label class="engine-option" id="label-local">
+                  <input type="radio" name="transcription_mode" value="local" id="radio-local" />
+                  <span class="engine-card">
+                    <span class="engine-name" data-i18n="engine_local">Локальный ИИ</span>
+                    <span class="engine-meta">Whisper.cpp (100% offline)</span>
+                  </span>
+                </label>
+              </div>
+            </div>
+  
+            <div class="card">
+              <h2 class="card-title" data-i18n="lang_bias_title">Язык распознавания</h2>
+              <p class="card-desc" data-i18n="lang_bias_desc">Выберите принудительный язык ввода или включите автоопределение.</p>
+              <div class="form-group">
+                <label for="select-language" class="field-label" data-i18n="lang_bias_label">Выберите язык</label>
+                <select id="select-language" class="custom-select">
+                  <option value="auto" data-i18n="lang_opt_auto">Автоопределение (по умолчанию)</option>
+                  <option value="layout" data-i18n="lang_opt_layout">По раскладке клавиатуры</option>
+                  <option value="ru">Русский (Russian)</option>
+                  <option value="en">English (English)</option>
+                  <option value="de">Deutsch (German)</option>
+                  <option value="es">Español (Spanish)</option>
+                  <option value="fr">Français (French)</option>
+                  <option value="it">Italiano (Italian)</option>
+                  <option value="zh">中文 (Chinese)</option>
+                  <option value="pt">Português (Portuguese)</option>
+                  <option value="tr">Türkçe (Turkish)</option>
+                </select>
+              </div>
+            </div>
+  
+            <div class="card">
+              <h2 class="card-title" data-i18n="streaming_title">Режим ввода текста</h2>
+              <p class="card-desc" data-i18n="streaming_desc">Выберите способ отображения наговариваемого текста.</p>
               <label class="toggle-switch">
                 <input type="checkbox" id="checkbox-streaming" />
                 <span class="toggle-track">
                   <span class="toggle-thumb"></span>
                 </span>
-                <span class="toggle-label">Потоковый ввод в реальном времени (экспериментальный)</span>
+                <span class="toggle-label" data-i18n="streaming_checkbox">Потоковый ввод в реальном времени (экспериментальный)</span>
               </label>
-              <p class="switch-desc">
-                Если выключено: текст вставится целиком только после того, как вы отпустите клавиши (режим версии 1.0). Рекомендуется для стабильной работы с бесплатным API Groq.
+              <p class="switch-desc" data-i18n="streaming_subdesc">
+                Если выключено: текст вставится целиком только после того, как вы отпустите клавиши.
               </p>
-          </div>
-
-          <div class="card" id="card-local-model" style="display: none;">
-            <h2 class="card-title">Локальная модель Whisper</h2>
-            <p class="card-desc">Выберите и скачайте подходящую модель. Более крупные модели точнее, но требуют больше ресурсов CPU и памяти.</p>
-            
-            <div class="form-group">
-              <label class="field-label">Размер модели</label>
-              <div class="model-cards-group" id="model-cards-container" role="radiogroup" aria-label="Выберите модель локального ИИ">
-                <!-- Tiny -->
-                <div class="model-card" data-model="tiny" role="radio" aria-checked="false" tabindex="0">
-                  <div class="model-card-main">
-                    <div class="model-card-info">
-                      <span class="model-name">Tiny</span>
-                      <span class="model-meta">~75 МБ — сверхбыстрая</span>
+            </div>
+  
+            <div class="card">
+              <h2 class="card-title" data-i18n="punct_title">Интеллектуальная пунктуация</h2>
+              <p class="card-desc" data-i18n="punct_desc">Преобразовывать голосовые команды ("запятая", "точка с запятой") в знаки препинания.</p>
+              <label class="toggle-switch">
+                <input type="checkbox" id="checkbox-punctuation" />
+                <span class="toggle-track">
+                  <span class="toggle-thumb"></span>
+                </span>
+                <span class="toggle-label" data-i18n="punct_checkbox">Включить обработку голосовой пунктуации</span>
+              </label>
+            </div>
+  
+            <div class="card">
+              <h2 class="card-title" data-i18n="vocab_title">Пользовательский словарь</h2>
+              <p class="card-desc" data-i18n="vocab_desc">Внесите термины, имена или брендовые названия через запятую, чтобы улучшить их распознавание.</p>
+              <div class="form-group">
+                <textarea id="textarea-dictionary" class="custom-textarea" placeholder="Например: Аура, коммит, репозиторий..." autocomplete="off"></textarea>
+              </div>
+            </div>
+  
+            <div class="card" id="card-local-model" style="display: none;">
+              <h2 class="card-title" data-i18n="local_model_title">Локальная модель Whisper</h2>
+              <p class="card-desc" data-i18n="local_model_desc">Скачайте модель для оффлайн-работы. Более крупные модели точнее, но требуют больше памяти.</p>
+              <div class="form-group">
+                <label class="field-label" data-i18n="local_model_label">Размер модели</label>
+                <div class="model-cards-group" id="model-cards-container" role="radiogroup" aria-label="Выберите модель">
+                  <!-- Tiny -->
+                  <div class="model-card" data-model="tiny" role="radio" aria-checked="false" tabindex="0">
+                    <div class="model-card-main">
+                      <div class="model-card-info">
+                        <span class="model-name">Tiny</span>
+                        <span class="model-meta">~75 MB</span>
+                      </div>
+                      <div class="model-card-action" id="action-tiny"></div>
                     </div>
-                    <div class="model-card-action" id="action-tiny"></div>
-                  </div>
-                  <div class="model-card-progress" id="progress-tiny" style="display: none;">
-                    <div class="progress-bar-bg"><div class="progress-bar-fill" id="fill-tiny"></div></div>
-                    <span class="progress-pct" id="pct-tiny">0%</span>
-                  </div>
-                </div>
-                
-                <!-- Base -->
-                <div class="model-card" data-model="base" role="radio" aria-checked="false" tabindex="0">
-                  <div class="model-card-main">
-                    <div class="model-card-info">
-                      <span class="model-name">Base</span>
-                      <span class="model-meta">~145 МБ — рекомендуемая</span>
+                    <div class="model-card-progress" id="progress-tiny" style="display: none;">
+                      <div class="progress-bar-bg"><div class="progress-bar-fill" id="fill-tiny"></div></div>
+                      <span class="progress-pct" id="pct-tiny">0%</span>
                     </div>
-                    <div class="model-card-action" id="action-base"></div>
                   </div>
-                  <div class="model-card-progress" id="progress-base" style="display: none;">
-                    <div class="progress-bar-bg"><div class="progress-bar-fill" id="fill-base"></div></div>
-                    <span class="progress-pct" id="pct-base">0%</span>
-                  </div>
-                </div>
-
-                <!-- Small -->
-                <div class="model-card" data-model="small" role="radio" aria-checked="false" tabindex="0">
-                  <div class="model-card-main">
-                    <div class="model-card-info">
-                      <span class="model-name">Small</span>
-                      <span class="model-meta">~465 МБ — точная для русского</span>
+                  <!-- Base -->
+                  <div class="model-card" data-model="base" role="radio" aria-checked="false" tabindex="0">
+                    <div class="model-card-main">
+                      <div class="model-card-info">
+                        <span class="model-name">Base</span>
+                        <span class="model-meta">~145 MB</span>
+                      </div>
+                      <div class="model-card-action" id="action-base"></div>
                     </div>
-                    <div class="model-card-action" id="action-small"></div>
-                  </div>
-                  <div class="model-card-progress" id="progress-small" style="display: none;">
-                    <div class="progress-bar-bg"><div class="progress-bar-fill" id="fill-small"></div></div>
-                    <span class="progress-pct" id="pct-small">0%</span>
-                  </div>
-                </div>
-
-                <!-- Medium -->
-                <div class="model-card" data-model="medium" role="radio" aria-checked="false" tabindex="0">
-                  <div class="model-card-main">
-                    <div class="model-card-info">
-                      <span class="model-name">Medium</span>
-                      <span class="model-meta">~1.5 ГБ — продвинутая</span>
+                    <div class="model-card-progress" id="progress-base" style="display: none;">
+                      <div class="progress-bar-bg"><div class="progress-bar-fill" id="fill-base"></div></div>
+                      <span class="progress-pct" id="pct-base">0%</span>
                     </div>
-                    <div class="model-card-action" id="action-medium"></div>
                   </div>
-                  <div class="model-card-progress" id="progress-medium" style="display: none;">
-                    <div class="progress-bar-bg"><div class="progress-bar-fill" id="fill-medium"></div></div>
-                    <span class="progress-pct" id="pct-medium">0%</span>
+                  <!-- Small -->
+                  <div class="model-card" data-model="small" role="radio" aria-checked="false" tabindex="0">
+                    <div class="model-card-main">
+                      <div class="model-card-info">
+                        <span class="model-name">Small</span>
+                        <span class="model-meta">~465 MB</span>
+                      </div>
+                      <div class="model-card-action" id="action-small"></div>
+                    </div>
+                    <div class="model-card-progress" id="progress-small" style="display: none;">
+                      <div class="progress-bar-bg"><div class="progress-bar-fill" id="fill-small"></div></div>
+                      <span class="progress-pct" id="pct-small">0%</span>
+                    </div>
+                  </div>
+                  <!-- Medium -->
+                  <div class="model-card" data-model="medium" role="radio" aria-checked="false" tabindex="0">
+                    <div class="model-card-main">
+                      <div class="model-card-info">
+                        <span class="model-name">Medium</span>
+                        <span class="model-meta">~1.5 GB</span>
+                      </div>
+                      <div class="model-card-action" id="action-medium"></div>
+                    </div>
+                    <div class="model-card-progress" id="progress-medium" style="display: none;">
+                      <div class="progress-bar-bg"><div class="progress-bar-fill" id="fill-medium"></div></div>
+                      <span class="progress-pct" id="pct-medium">0%</span>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
-
-          <div class="card">
-            <h2 class="card-title">Глобальная горячая клавиша</h2>
-            <p class="card-desc">Зажмите выбранную комбинацию для начала записи, отпустите для распознавания и вставки текста.</p>
-            <div class="form-group">
-              <label for="select-hotkey" class="field-label">Выберите комбинацию</label>
-              <select id="select-hotkey" class="custom-select">
-                <option value="Alt+V" selected>Alt + V (По умолчанию)</option>
-                <option value="Alt+N">Alt + N</option>
-                <option value="Alt+Space">Alt + Пробел</option>
-                <option value="Alt+K">Alt + K</option>
-                <option value="Ctrl+Space">Ctrl + Пробел</option>
-                <option value="F8">F8 (Одиночная клавиша)</option>
-                <option value="Caps Lock">Caps Lock (Одиночная клавиша)</option>
-              </select>
+          </section>
+  
+          <!-- 3. HOTKEYS PANEL -->
+          <section class="tab-panel" id="panel-hotkeys" aria-labelledby="tab-btn-hotkeys" style="display: none;">
+            <div class="card">
+              <h2 class="card-title" data-i18n="hotkey_title">Глобальная горячая клавиша</h2>
+              <p class="card-desc" data-i18n="hotkey_desc">Зажмите выбранную комбинацию для начала записи, отпустите для распознавания.</p>
+              <div class="form-group">
+                <label for="select-hotkey" class="field-label" data-i18n="hotkey_label">Комбинация</label>
+                <select id="select-hotkey" class="custom-select">
+                  <option value="Alt+V">Alt + V</option>
+                  <option value="Alt+N">Alt + N</option>
+                  <option value="Alt+Space">Alt + Space</option>
+                  <option value="Alt+K">Alt + K</option>
+                  <option value="Ctrl+Space">Ctrl + Space</option>
+                  <option value="F8">F8</option>
+                  <option value="Caps Lock">Caps Lock</option>
+                </select>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" id="checkbox-toggle" />
+                <span class="toggle-track">
+                  <span class="toggle-thumb"></span>
+                </span>
+                <span class="toggle-label" data-i18n="hotkey_toggle_mode">Режим переключателя (короткое нажатие)</span>
+              </label>
+              <p class="switch-desc" data-i18n="hotkey_toggle_mode_desc">
+                Короткое нажатие начинает запись без удержания клавиши. Повторный клик останавливает запись.
+              </p>
             </div>
-            <label class="toggle-switch">
-              <input type="checkbox" id="checkbox-toggle" />
-              <span class="toggle-track">
-                <span class="toggle-thumb"></span>
-              </span>
-              <span class="toggle-label">Режим переключателя (короткое нажатие)</span>
-            </label>
-            <p class="switch-desc">
-              Короткое нажатие (до 300 мс) начинает запись без удержания клавиши. Повторное нажатие или Esc завершает её. Удержание работает как обычно.
-            </p>
-          </div>
-
-          <div class="card">
-            <h2 class="card-title">Звуковое сопровождение</h2>
-            <p class="card-desc">Включите звуковые эффекты для оверлея и выберите подходящую тему.</p>
-            <label class="toggle-switch">
-              <input type="checkbox" id="checkbox-sounds" />
-              <span class="toggle-track">
-                <span class="toggle-thumb"></span>
-              </span>
-              <span class="toggle-label">Включить звуки оверлея</span>
-            </label>
-            <div class="form-group" id="sound-theme-group" style="margin-top: 10px;">
-              <label for="select-sound-theme" class="field-label">Звуковая тема</label>
-              <select id="select-sound-theme" class="custom-select">
-                <option value="zen">Дзен (Поющие чаши)</option>
-                <option value="rhodes">Rhodes (Джаз-электропианино)</option>
-                <option value="scifi">Sci-Fi (Космический футуризм)</option>
-                <option value="classic">Колокольчик (Классический)</option>
-              </select>
-            </div>
-          </div>
-        </section>
-
-        <!-- Вкладка: Настройка API -->
-        <section class="tab-panel" id="panel-cloud" aria-labelledby="tab-btn-cloud" style="display: none;">
-          <div class="card">
-            <h2 class="card-title">Настройка облачного API</h2>
-            <p class="card-desc">Укажите ваши API-ключи для авторизации в облачных сервисах Gemini, OpenAI или Groq. <a href="https://aistudio.google.com/" target="_blank" class="help-link" id="link-get-key">Получить ключ бесплатно</a></p>
-
-            <div class="form-group">
-              <label for="select-provider" class="field-label">Провайдер API</label>
-              <select id="select-provider" class="custom-select">
-                <option value="gemini" selected>Google Gemini AI</option>
-                <option value="openai">OpenAI (Whisper + GPT)</option>
-                <option value="groq">Groq (Whisper + Llama 3)</option>
-              </select>
-            </div>
-
-            <div class="form-group">
-              <label for="input-api-key" class="field-label">API-ключ</label>
-              <div class="api-key-input-wrapper">
-                <input type="password" id="input-api-key" class="custom-input" placeholder="Введите ваш API-ключ здесь..." autocomplete="off" />
-                <button type="button" class="btn-toggle-visibility" id="btn-toggle-key" aria-label="Показать/скрыть ключ">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="eye-icon"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-                </button>
+  
+            <div class="card">
+              <h2 class="card-title" data-i18n="sound_title">Звуковое сопровождение</h2>
+              <p class="card-desc" data-i18n="sound_desc">Звуковые эффекты оверлея при записи.</p>
+              <label class="toggle-switch">
+                <input type="checkbox" id="checkbox-sounds" />
+                <span class="toggle-track">
+                  <span class="toggle-thumb"></span>
+                </span>
+                <span class="toggle-label" data-i18n="sound_enable">Включить звуки оверлея</span>
+              </label>
+              <div class="form-group" id="sound-theme-group" style="margin-top: 10px;">
+                <label for="select-sound-theme" class="field-label" data-i18n="sound_theme_label">Звуковая тема</label>
+                <select id="select-sound-theme" class="custom-select">
+                  <option value="zen" data-i18n="sound_theme_zen">Дзен (Поющие чаши)</option>
+                  <option value="rhodes" data-i18n="sound_theme_rhodes">Rhodes (Джаз-электропианино)</option>
+                  <option value="scifi" data-i18n="sound_theme_scifi">Sci-Fi (Космический)</option>
+                  <option value="classic" data-i18n="sound_theme_classic">Колокольчик (Классический)</option>
+                </select>
               </div>
             </div>
-          </div>
-        </section>
-
-        <!-- Вкладка: О программе -->
-        <section class="tab-panel" id="panel-about" aria-labelledby="tab-btn-about" style="display: none;">
-          <div class="card about-card">
-            <div class="about-icon">
-              <svg class="about-logo-svg" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M398.114 421C445.533 380.876 474.714 322.514 474.714 256.857C474.714 136.486 376.229 38 255.857 38C135.486 38 37 136.486 37 256.857C37 322.514 66.1809 380.876 113.6 421" stroke="currentColor" stroke-width="73.1573"/>
-                <path d="M181.963 176.024L42.0293 511.651H142.825L200.192 352.952L247.909 233.927C250.769 226.064 253.45 222.132 255.952 222.132C258.096 222.132 260.598 226.064 263.458 233.927L311.175 352.952L368.542 511.651H469.874L329.404 176.024C322.255 158.867 312.783 147.25 300.988 141.174C289.55 135.098 274.538 132.06 255.952 132.06C234.148 132.06 217.885 135.455 207.162 142.246C196.797 149.038 188.397 160.297 181.963 176.024Z" fill="currentColor"/>
-              </svg>
+          </section>
+  
+          <!-- 4. API KEYS PANEL (Renamed from Cloud AI) -->
+          <section class="tab-panel" id="panel-apikeys" aria-labelledby="tab-btn-apikeys" style="display: none;">
+            <div class="card">
+              <h2 class="card-title" data-i18n="api_title">Авторизация API-ключей</h2>
+              <p class="card-desc" data-i18n="api_desc">Укажите ваши API-ключи для авторизации в облачных сервисах Gemini, OpenAI или Groq.</p>
+  
+              <div class="form-group">
+                <label for="select-provider" class="field-label" data-i18n="api_provider">Провайдер API</label>
+                <select id="select-provider" class="custom-select">
+                  <option value="gemini">Google Gemini AI</option>
+                  <option value="openai">OpenAI (Whisper + GPT)</option>
+                  <option value="groq">Groq (Whisper + Llama 3)</option>
+                </select>
+              </div>
+  
+              <div class="form-group">
+                <label for="input-api-key" class="field-label" data-i18n="api_key">API-ключ</label>
+                <div class="api-key-input-wrapper">
+                  <input type="password" id="input-api-key" class="custom-input" placeholder="Введите ваш API-ключ..." autocomplete="off" />
+                  <button type="button" class="btn-toggle-visibility" id="btn-toggle-key" aria-label="Показать/скрыть ключ">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="eye-icon"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                  </button>
+                </div>
+              </div>
+              
+              <div class="api-link-wrapper">
+                <a href="https://aistudio.google.com/" target="_blank" class="help-link" id="link-get-key" data-i18n="api_get_key">Получить ключ API</a>
+              </div>
             </div>
-            <h2 class="about-app-title">Голосовой ввод Aura</h2>
-            <p class="about-version" data-i18n="about_version">v1.0</p>
-            <p class="about-description">
-              Премиальный высокоскоростной клиент голосового ввода. Зажмите горячую клавишу для записи аудио, надиктуйте текст и отпустите для автоматической вставки и пунктуации с помощью искусственного интеллекта.
-            </p>
-          </div>
-        </section>
-      </main>
+          </section>
+  
+          <!-- 5. HISTORY PANEL (New!) -->
+          <section class="tab-panel" id="panel-history" aria-labelledby="tab-btn-history" style="display: none;">
+            <div class="card card-history">
+              <div class="history-header">
+                <h2 class="card-title" data-i18n="history_title">История транскрипций</h2>
+                <button type="button" class="btn-clear-history" id="btn-clear-history" data-i18n="history_clear">Очистить историю</button>
+              </div>
+              <p class="card-desc" data-i18n="history_desc">Последние надиктованные фразы хранятся локально.</p>
+              
+              <div class="history-list" id="history-items-container">
+                <!-- Entries dynamically injected here -->
+                <div class="history-empty-state" id="history-empty-text" data-i18n="history_empty">История пуста. Ваши надиктованные тексты будут отображаться здесь.</div>
+              </div>
+            </div>
+          </section>
+  
+          <!-- 6. ABOUT PANEL -->
+          <section class="tab-panel" id="panel-about" aria-labelledby="tab-btn-about" style="display: none;">
+            <div class="card about-card">
+              <div class="about-icon">
+                <svg class="about-logo-svg" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M398.114 421C445.533 380.876 474.714 322.514 474.714 256.857C474.714 136.486 376.229 38 255.857 38C135.486 38 37 136.486 37 256.857C37 322.514 66.1809 380.876 113.6 421" stroke="currentColor" stroke-width="73.1573"/>
+                  <path d="M181.963 176.024L42.0293 511.651H142.825L200.192 352.952L247.909 233.927C250.769 226.064 253.45 222.132 255.952 222.132C258.096 222.132 260.598 226.064 263.458 233.927L311.175 352.952L368.542 511.651H469.874L329.404 176.024C322.255 158.867 312.783 147.25 300.988 141.174C289.55 135.098 274.538 132.06 255.952 132.06C234.148 132.06 217.885 135.455 207.162 142.246C196.797 149.038 188.397 160.297 181.963 176.024Z" fill="currentColor"/>
+                </svg>
+              </div>
+              <h2 class="about-app-title" data-i18n="about_app_title">Голосовой ввод Aura</h2>
+              <p class="about-version" data-i18n="about_version">v1.0</p>
+              <p class="about-description" data-i18n="about_description">
+                Aura — высокоскоростной инструмент глобального голосового ввода для Windows. Программа позволяет мгновенно вводить надиктованный текст в любое активное окно с автоматической расстановкой пунктуации, удалением слов-паразитов и интеллектуальным редактированием «на лету» с использованием передовых локальных и облачных нейросетевых моделей.
+              </p>
+            </div>
+          </section>
+        </main>
     </div>
 
     <footer class="app-footer">
-      <div class="footer-status" id="footer-status-text">Готово</div>
-      <button type="button" class="btn-save" id="btn-save-settings">Сохранить настройки</button>
+      <div class="footer-status">
+        <span id="footer-status-text" data-i18n="status_ready">Готово</span>
+      </div>
+      <button type="button" class="btn-save" id="btn-save-settings" data-i18n="btn_save">Сохранить настройки</button>
     </footer>
   </div>
 
   <!-- Custom modal overlay for confirmation dialogs -->
   <div id="custom-confirm-modal" class="modal-overlay" style="display: none;">
     <div class="modal-card">
-      <h3 class="modal-title" id="confirm-modal-title">Подтверждение</h3>
-      <p class="modal-message" id="confirm-modal-message">Вы действительно хотите выполнить это действие?</p>
+      <h3 class="modal-title" id="confirm-modal-title" data-i18n="confirm_title">Подтверждение</h3>
+      <p class="modal-message" id="confirm-modal-message" data-i18n="confirm_message">Вы действительно хотите выполнить это действие?</p>
       <div class="modal-actions">
-        <button type="button" class="btn btn-secondary" id="btn-confirm-cancel">Отмена</button>
-        <button type="button" class="btn btn-primary" id="btn-confirm-ok">Подтвердить</button>
+        <button type="button" class="btn btn-secondary" id="btn-confirm-cancel" data-i18n="confirm_cancel">Отмена</button>
+        <button type="button" class="btn btn-primary" id="btn-confirm-ok" data-i18n="confirm_ok">Подтвердить</button>
       </div>
     </div>
   </div>
