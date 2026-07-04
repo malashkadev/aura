@@ -1389,7 +1389,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const selectUiLang = document.getElementById("select-ui-lang");
     if (selectUiLang) {
-      selectUiLang.ariaLabel = dict.general_ui_lang_title || "UI Language";
+      selectUiLang.setAttribute("aria-label", dict.general_ui_lang_title || "UI Language");
     }
     
     // Update inputs and placeholders
