@@ -990,12 +990,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function bindSettingsChangeListeners() {
     const checkboxStreaming = document.getElementById("checkbox-streaming");
-    const selectUiLang = document.getElementById("select-ui-lang");
     const inputs = [
       radioCloud, radioLocal, selectProvider, apiKeyInput, selectHotkey,
       selectLanguage, textareaDictionary, checkboxToggle, checkboxPunctuation,
-      checkboxAutostart, checkboxStreaming, checkboxSounds, selectSoundTheme,
-      selectUiLang
+      checkboxAutostart, checkboxStreaming, checkboxSounds, selectSoundTheme
     ];
     inputs.forEach(input => {
       if (input) {

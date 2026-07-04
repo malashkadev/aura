@@ -137,9 +137,9 @@ body {
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.15em;
-  padding: 10px 16px;
-  margin-bottom: 8px;
-  border-bottom: 1px solid var(--border-color);
+  padding: 10px 16px 2px 16px;
+  margin-bottom: 12px;
+  margin-top: 4px;
   user-select: none;
 }
 
