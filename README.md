@@ -1,7 +1,36 @@
-# Tauri + Vanilla
+# Aura — голосовой ввод для Windows
 
-This template should help get you started developing with Tauri in vanilla HTML, CSS and Javascript.
+Aura превращает речь в текст в любом приложении Windows: зажмите горячую клавишу, надиктуйте текст — после отпускания он будет распознан, очищен от слов-паразитов и вставлен в активное поле ввода.
 
-## Recommended IDE Setup
+## Возможности
 
-- [VS Code](https://code.visualstudio.com/) + [Tauri](https://marketplace.visualstudio.com/items?itemName=tauri-apps.tauri-vscode) + [rust-analyzer](https://marketplace.visualstudio.com/items?itemName=rust-lang.rust-analyzer)
+- **Два движка распознавания**: облачный (Gemini / OpenAI / Groq, нужен API-ключ) или полностью локальный (whisper.cpp, офлайн).
+- **Два режима записи**: удержание клавиши (push-to-talk) и режим переключателя — короткое нажатие начинает запись, повторное нажатие или **Esc** завершает/отменяет её.
+- **Потоковый ввод** (экспериментальный): текст печатается по мере диктовки и заменяется финальной версией.
+- **История распознаваний**: последние 50 транскрипций с копированием в один клик (вкладка «История»).
+- **Словарь**: свои имена и термины подсказываются распознавателю для точного написания.
+- **Язык речи**: автоопределение, фиксированный русский/английский или по текущей раскладке клавиатуры.
+- **Голосовая пунктуация** (опция): «запятая», «точка», «новая строка» → знаки препинания.
+- **Редактирование выделенного текста голосом**: выделите текст и продиктуйте команду («сделай формальнее», «переведи на английский»).
+- **Автозапуск с Windows**, работа из системного трея, индикатор записи с таймером.
+
+## Разработка
+
+Требования: Rust (stable), Node.js, WebView2.
+
+```bash
+npm install
+npm run tauri dev    # запуск в режиме разработки
+npm run tauri build  # сборка установщика
+```
+
+Локальный движок ожидает сайдкар `whisper-sidecar-x86_64-pc-windows-msvc.exe` в `src-tauri/binaries/` (см. `install_whisper.py`). Модели GGML скачиваются из интерфейса настроек в `%LOCALAPPDATA%/com.aura.app/models`.
+
+Настройки хранятся в `%APPDATA%/com.aura.app/settings.json`, история — в `%LOCALAPPDATA%/com.aura.app/history.json`.
+
+## Тесты
+
+```bash
+cd src-tauri
+cargo test
+```

@@ -38,47 +38,85 @@ fn format_model_filename(model_name: &str) -> String {
     format!("ggml-{}.bin", name_without_bin)
 }
 
-/// Locate the whisper sidecar executable under the resources directory or fallback paths
+/// Checks that the whisper runtime DLLs live next to the sidecar (or in its
+/// `binaries/` subfolder) and are real files, not zero-byte placeholders.
+fn dir_has_runtime_dlls(exe_path: &Path) -> bool {
+    let Some(dir) = exe_path.parent() else { return false };
+    let check = |d: &Path| {
+        ["whisper.dll", "ggml.dll"].iter().all(|name| {
+            fs::metadata(d.join(name)).map(|m| m.len() > 1024).unwrap_or(false)
+        })
+    };
+    check(dir) || check(&dir.join("binaries"))
+}
+
+/// Locate the whisper sidecar executable under the resources directory or fallback paths.
+/// Candidates with the runtime DLLs beside them are preferred; broken copies
+/// (e.g. a bare exe in target/debug without its DLLs) are used only as a last resort.
 pub fn find_sidecar<R: Runtime>(app_handle: &tauri::AppHandle<R>) -> Result<PathBuf, String> {
-    let target_name = "whisper-sidecar-x86_64-pc-windows-msvc.exe";
+    // In release bundles Tauri strips the target triple from externalBin names
+    let target_names = [
+        "whisper-sidecar-x86_64-pc-windows-msvc.exe",
+        "whisper-sidecar.exe",
+    ];
 
     let resource_dir = app_handle
         .path()
         .resource_dir()
         .map_err(|e| format!("Failed to get resource dir: {}", e))?;
 
-    // Try direct paths first
-    let direct_paths = [
-        resource_dir.join("binaries").join(target_name),
-        resource_dir.join("_up_").join("binaries").join(target_name),
-        resource_dir.join(target_name),
-    ];
+    let mut candidates: Vec<PathBuf> = Vec::new();
 
-    for path in &direct_paths {
-        if path.exists() {
-            return Ok(path.clone());
+    // Dev builds: the source binaries folder always has the exe plus all DLLs
+    #[cfg(debug_assertions)]
+    for name in &target_names {
+        candidates.push(
+            Path::new(env!("CARGO_MANIFEST_DIR")).join("binaries").join(name),
+        );
+    }
+
+    for name in &target_names {
+        candidates.push(resource_dir.join("binaries").join(name));
+        candidates.push(resource_dir.join("_up_").join("binaries").join(name));
+        candidates.push(resource_dir.join(name));
+        // CWD-relative fallbacks (dev mode launched from the workspace root)
+        candidates.push(PathBuf::from("binaries").join(name));
+        candidates.push(PathBuf::from("src-tauri").join("binaries").join(name));
+    }
+
+    // Bundled apps place externalBin next to the main executable
+    if let Ok(exe) = std::env::current_exe() {
+        if let Some(exe_dir) = exe.parent() {
+            for name in &target_names {
+                candidates.push(exe_dir.join(name));
+            }
         }
     }
 
-    // Fallback: search recursively
-    if let Some(path) = find_file_recursive(&resource_dir, target_name) {
-        return Ok(path);
+    let existing: Vec<PathBuf> = candidates.into_iter().filter(|p| p.exists()).collect();
+
+    // Prefer a copy that has its runtime DLLs; fall back to any existing copy
+    if let Some(path) = existing.iter().find(|p| dir_has_runtime_dlls(p)) {
+        return Ok(path.clone());
+    }
+    if let Some(path) = existing.first() {
+        eprintln!(
+            "Aura Dev Log WARNING: sidecar found at {:?} but whisper.dll/ggml.dll are missing next to it.",
+            path
+        );
+        return Ok(path.clone());
     }
 
-    // Additional fallback for dev mode running from workspace root
-    let dev_path = PathBuf::from("binaries").join(target_name);
-    if dev_path.exists() {
-        return Ok(dev_path);
-    }
-
-    let dev_src_path = PathBuf::from("src-tauri").join("binaries").join(target_name);
-    if dev_src_path.exists() {
-        return Ok(dev_src_path);
+    // Last resort: recursive search of the resource dir
+    for name in &target_names {
+        if let Some(path) = find_file_recursive(&resource_dir, name) {
+            return Ok(path);
+        }
     }
 
     Err(format!(
-        "Could not find sidecar executable '{}' in resource dir ({:?}) or current working directory.",
-        target_name, resource_dir
+        "Could not find sidecar executable in resource dir ({:?}) or current working directory.",
+        resource_dir
     ))
 }
 
@@ -123,7 +161,7 @@ pub async fn download_model<R: Runtime>(
         filename
     );
 
-    let client = reqwest::Client::new();
+    let client = crate::ai_client::build_http_client();
     let mut response = client
         .get(&url)
         .send()
@@ -201,17 +239,31 @@ pub async fn download_model<R: Runtime>(
     Ok(dest_path)
 }
 
-/// Run transcription using the local Whisper sidecar binary and return the result
+/// Run transcription using the local Whisper sidecar binary and return the result.
+/// `language` accepts "ru"/"en" to force a language; anything else auto-detects.
+/// `dictionary` (comma-separated terms) is passed as the initial prompt to bias recognition.
 pub fn run_local_whisper<R: Runtime>(
     app_handle: &tauri::AppHandle<R>,
     model_name: &str,
     wav_path: &str,
+    language: &str,
+    dictionary: &str,
 ) -> Result<String, String> {
     // 1. Locate sidecar binary
     let sidecar_path = find_sidecar(app_handle)?;
+    let short_sidecar_path = get_short_path(&sidecar_path)?;
     let sidecar_dir = sidecar_path
         .parent()
         .ok_or_else(|| "Invalid sidecar path".to_string())?;
+    let short_sidecar_dir = get_short_path(sidecar_dir)?;
+
+    // Resolve short path of resource DLLs folder (under resource_dir/binaries/)
+    let resource_dir = app_handle
+        .path()
+        .resource_dir()
+        .map_err(|e| format!("Failed to get resource dir: {}", e))?;
+    let dlls_dir = resource_dir.join("binaries");
+    let short_dlls_dir = get_short_path(&dlls_dir)?;
 
     // 2. Resolve model path
     let filename = format_model_filename(model_name);
@@ -229,28 +281,114 @@ pub fn run_local_whisper<R: Runtime>(
         ));
     }
 
-    let output = Command::new(&sidecar_path)
-        .current_dir(sidecar_dir)
-        .args([
-            "-m",
-            model_path.to_str().ok_or("Invalid model path encoding")?,
-            "-f",
-            wav_path,
-            "-l",
-            "auto",
-            "-nt",
-            "-np",
-        ])
+    // Convert model and wav paths to short 8.3 representations
+    let short_model_path = get_short_path(&model_path)?;
+    let short_wav_path = get_short_path(Path::new(wav_path))?;
+
+    let lang = match language {
+        "ru" | "en" => language,
+        _ => "auto",
+    };
+
+    let mut args: Vec<String> = vec![
+        "-m".to_string(),
+        short_model_path.to_str().ok_or("Invalid model path encoding")?.to_string(),
+        "-f".to_string(),
+        short_wav_path.to_str().ok_or("Invalid wav path encoding")?.to_string(),
+        "-l".to_string(),
+        lang.to_string(),
+        "-nt".to_string(),
+        "-np".to_string(),
+    ];
+
+    let dict = dictionary.trim();
+    if !dict.is_empty() {
+        args.push("--prompt".to_string());
+        args.push(dict.to_string());
+    }
+
+    let mut cmd = Command::new(&short_sidecar_path);
+    cmd.current_dir(&short_sidecar_dir);
+    cmd.args(&args);
+
+    #[cfg(target_os = "windows")]
+    {
+        use std::os::windows::process::CommandExt;
+        cmd.creation_flags(0x08000000); // CREATE_NO_WINDOW (hides the black console window)
+    }
+
+    // Prepend sidecar executable directory and resource DLLs directory to PATH for Windows DLL resolution
+    if let Some(path_env) = std::env::var_os("PATH") {
+        let mut paths = std::env::split_paths(&path_env).collect::<Vec<_>>();
+        paths.insert(0, short_sidecar_dir.to_path_buf());
+        paths.insert(0, short_dlls_dir.to_path_buf());
+        if let Ok(new_path) = std::env::join_paths(paths) {
+            cmd.env("PATH", new_path);
+        }
+    }
+
+    let output = cmd
         .output()
         .map_err(|e| format!("Failed to run sidecar command: {}", e))?;
 
     if !output.status.success() {
         let stderr = String::from_utf8_lossy(&output.stderr);
-        return Err(format!("Whisper sidecar exited with error: {}", stderr));
+        // An empty stderr with an odd exit code usually means missing DLLs
+        // (STATUS_DLL_NOT_FOUND = 0xC0000135) — include the code for diagnostics.
+        return Err(format!(
+            "Whisper sidecar exited with error (code {:?}, path {:?}): {}",
+            output.status.code(),
+            sidecar_path,
+            stderr
+        ));
     }
 
     let text = String::from_utf8_lossy(&output.stdout);
     Ok(text.trim().to_string())
+}
+
+#[cfg(target_os = "windows")]
+fn get_short_path(path: &Path) -> Result<PathBuf, String> {
+    use std::os::windows::ffi::OsStrExt;
+    use std::ffi::OsString;
+    use std::os::windows::ffi::OsStringExt;
+    
+    let wide: Vec<u16> = path.as_os_str().encode_wide().chain(Some(0)).collect();
+    let mut buffer = vec![0u16; 1024];
+    
+    let len = unsafe {
+        windows_sys::Win32::Storage::FileSystem::GetShortPathNameW(
+            wide.as_ptr(),
+            buffer.as_mut_ptr(),
+            buffer.len() as u32,
+        )
+    };
+    
+    if len == 0 {
+        return Err(format!("GetShortPathNameW failed for path {:?}", path));
+    }
+    
+    if len > buffer.len() as u32 {
+        buffer.resize(len as usize, 0);
+        let len2 = unsafe {
+            windows_sys::Win32::Storage::FileSystem::GetShortPathNameW(
+                wide.as_ptr(),
+                buffer.as_mut_ptr(),
+                buffer.len() as u32,
+            )
+        };
+        if len2 == 0 || len2 > buffer.len() as u32 {
+            return Err(format!("GetShortPathNameW failed on second try for path {:?}", path));
+        }
+    }
+    
+    let short_str = OsString::from_wide(&buffer[..len as usize]);
+    Ok(PathBuf::from(short_str))
+}
+
+#[cfg(not(target_os = "windows"))]
+fn get_short_path(path: &Path) -> Result<PathBuf, String> {
+    Ok(path.to_path_buf())
 }
 
 #[cfg(test)]
