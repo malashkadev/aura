@@ -15,54 +15,95 @@ function initAudioCtx() {
   }
 }
 
-function playTone(freq, duration, type = "triangle", gainStart = 0.1) {
+// Multi-oscillator physical bell modeling synth using exponential decay envelope
+function playBell(freq, duration, gainStart = 0.07) {
   initAudioCtx();
   if (audioCtx.state === "suspended") {
     audioCtx.resume();
   }
 
-  const osc = audioCtx.createOscillator();
-  const gainNode = audioCtx.createGain();
+  const now = audioCtx.currentTime;
 
-  osc.type = type;
-  osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+  // Layer 1: Fundamental frequency (sine wave for warm clean body)
+  const osc1 = audioCtx.createOscillator();
+  const gain1 = audioCtx.createGain();
+  osc1.type = "sine";
+  osc1.frequency.setValueAtTime(freq, now);
 
-  // Linear ramp decay envelope
-  gainNode.gain.setValueAtTime(gainStart, audioCtx.currentTime);
-  gainNode.gain.linearRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
+  // Layer 2: Warm overtone (sine wave octave higher for bell clarity)
+  const osc2 = audioCtx.createOscillator();
+  const gain2 = audioCtx.createGain();
+  osc2.type = "sine";
+  osc2.frequency.setValueAtTime(freq * 2.0, now);
 
-  osc.connect(gainNode);
-  gainNode.connect(audioCtx.destination);
+  // Layer 3: Metallic chime ring (sine wave at 3x frequency)
+  const osc3 = audioCtx.createOscillator();
+  const gain3 = audioCtx.createGain();
+  osc3.type = "sine";
+  osc3.frequency.setValueAtTime(freq * 3.0, now);
 
-  osc.start();
-  osc.stop(audioCtx.currentTime + duration);
+  // Soft attack (6ms) to prevent clipping click, followed by natural exponential decay
+  const attack = 0.006;
+  
+  gain1.gain.setValueAtTime(0.0001, now);
+  gain1.gain.linearRampToValueAtTime(gainStart, now + attack);
+  gain1.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+  gain2.gain.setValueAtTime(0.0001, now);
+  gain2.gain.linearRampToValueAtTime(gainStart * 0.45, now + attack);
+  gain2.gain.exponentialRampToValueAtTime(0.0001, now + duration * 0.7);
+
+  gain3.gain.setValueAtTime(0.0001, now);
+  gain3.gain.linearRampToValueAtTime(gainStart * 0.25, now + attack);
+  gain3.gain.exponentialRampToValueAtTime(0.0001, now + duration * 0.4);
+
+  osc1.connect(gain1);
+  gain1.connect(audioCtx.destination);
+
+  osc2.connect(gain2);
+  gain2.connect(audioCtx.destination);
+
+  osc3.connect(gain3);
+  gain3.connect(audioCtx.destination);
+
+  osc1.start(now);
+  osc1.stop(now + duration + 0.1);
+
+  osc2.start(now);
+  osc2.stop(now + duration + 0.1);
+
+  osc3.start(now);
+  osc3.stop(now + duration + 0.1);
 }
 
 function playStartSound() {
-  // Warm C5 (523Hz) followed by E5 (659Hz) chime
-  playTone(523.25, 0.12, "sine", 0.08);
+  // Warm, consonant perfect fifth chime: A4 (440Hz) -> E5 (659Hz)
+  playBell(440.00, 0.45, 0.06);
   setTimeout(() => {
-    playTone(659.25, 0.18, "sine", 0.08);
-  }, 80);
+    playBell(659.25, 0.60, 0.06);
+  }, 90);
 }
 
 function playSuccessSound() {
-  // Bright C5 (523Hz) -> G5 (784Hz) -> C6 (1046Hz) arpeggio
-  playTone(523.25, 0.10, "triangle", 0.06);
+  // Melodic, premium ascending major triad bell chord: A4 (440Hz) -> C#5 (554Hz) -> E5 (659Hz) -> A5 (880Hz)
+  playBell(440.00, 0.35, 0.05);
   setTimeout(() => {
-    playTone(783.99, 0.10, "triangle", 0.06);
+    playBell(554.37, 0.35, 0.05);
     setTimeout(() => {
-      playTone(1046.50, 0.22, "triangle", 0.06);
+      playBell(659.25, 0.45, 0.05);
+      setTimeout(() => {
+        playBell(880.00, 0.75, 0.05);
+      }, 70);
     }, 70);
   }, 70);
 }
 
 function playErrorSound() {
-  // Soft descending G4 (392Hz) -> Eb4 (311Hz) cancel chime
-  playTone(392.00, 0.12, "triangle", 0.07);
+  // Soft, calming descending fifth chime: E5 (659Hz) -> A4 (440Hz)
+  playBell(659.25, 0.35, 0.06);
   setTimeout(() => {
-    playTone(311.13, 0.22, "triangle", 0.07);
-  }, 100);
+    playBell(440.00, 0.50, 0.06);
+  }, 120);
 }
 
 // Track current and target heights for smooth linear interpolation (lerp)
