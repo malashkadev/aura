@@ -53,6 +53,13 @@ fn start_dragging_command(window: tauri::WebviewWindow) {
 }
 
 #[tauri::command]
+fn hide_overlay_window(window: tauri::WebviewWindow) {
+    if window.label() == "overlay" {
+        let _ = window.hide();
+    }
+}
+
+#[tauri::command]
 async fn get_settings(app_handle: tauri::AppHandle) -> Result<settings::Settings, String> {
     settings::load_settings(&app_handle)
 }
@@ -491,17 +498,9 @@ fn categorize_error(err: &str) -> String {
 
 /// Shows the error state in the overlay for a moment, then hides it
 /// (unless a newer session already owns the overlay).
-async fn show_overlay_error(app_handle: &tauri::AppHandle, my_gen: u64, error_msg: &str) {
+async fn show_overlay_error(app_handle: &tauri::AppHandle, _my_gen: u64, error_msg: &str) {
     let _ = app_handle.emit("recording-state", format!("error:{}", error_msg));
-    tokio::time::sleep(std::time::Duration::from_millis(3200)).await;
-    if let Some(state) = app_handle.try_state::<AppState>() {
-        if state.session_gen.load(Ordering::SeqCst) != my_gen {
-            return;
-        }
-    }
-    if let Some(overlay) = app_handle.get_webview_window("overlay") {
-        let _ = overlay.hide();
-    }
+    // JS handles playing error sound and animating the hide after a 2.5s display timeout
 }
 
 /// Stops and discards the current recording (accidental tap or Esc cancel).
@@ -514,7 +513,10 @@ fn discard_recording(app_handle: &tauri::AppHandle) {
     }
     keyboard_hook::set_recording_active(false);
     if let Some(overlay) = app_handle.get_webview_window("overlay") {
-        let _ = overlay.hide();
+        let emitted = app_handle.emit("hide-overlay-requested", serde_json::json!({ "status": "cancel" }));
+        if emitted.is_err() {
+            let _ = overlay.hide();
+        }
     }
 }
 
@@ -914,14 +916,17 @@ async fn finalize_recording(app_handle: tauri::AppHandle) {
         if let Some(msg) = had_error {
             show_overlay_error(&app_handle_clone, my_gen, &msg).await;
         } else {
-            // Hide overlay window unless a newer session already owns it
+            // Hide overlay window via animated request
             let session_ok = app_handle_clone
                 .try_state::<AppState>()
                 .map(|s| s.session_gen.load(Ordering::SeqCst) == my_gen)
                 .unwrap_or(false);
             if session_ok {
                 if let Some(overlay) = app_handle_clone.get_webview_window("overlay") {
-                    let _ = overlay.hide();
+                    let emitted = app_handle_clone.emit("hide-overlay-requested", serde_json::json!({ "status": "success" }));
+                    if emitted.is_err() {
+                        let _ = overlay.hide(); // Fallback
+                    }
                 }
             }
         }
@@ -1089,7 +1094,8 @@ pub fn run() {
             copy_to_clipboard,
             minimize_window,
             close_window,
-            start_dragging_command
+            start_dragging_command,
+            hide_overlay_window
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
