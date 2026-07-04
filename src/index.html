@@ -23,20 +23,6 @@
         <span class="logo-text" data-tauri-drag-region>AURA</span>
       </div>
 
-      <div class="lang-selector-header">
-        <svg class="globe-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
-        <select id="select-ui-lang" class="custom-select ui-lang-select" aria-label="Язык интерфейса">
-          <option value="ru">Русский</option>
-          <option value="en">English</option>
-          <option value="de">Deutsch</option>
-          <option value="es">Español</option>
-          <option value="fr">Français</option>
-          <option value="it">Italiano</option>
-          <option value="zh">中文</option>
-          <option value="pt">Português</option>
-          <option value="tr">Türkçe</option>
-        </select>
-      </div>
 
       <div class="header-right">
         <div class="window-controls">
@@ -94,6 +80,24 @@
               </span>
               <span class="toggle-label" data-i18n="general_autostart_checkbox">Запускать Aura при старте системы</span>
             </label>
+          </div>
+
+          <div class="card">
+            <h2 class="card-title" data-i18n="general_ui_lang_title">Язык интерфейса</h2>
+            <p class="card-desc" data-i18n="general_ui_lang_desc">Выберите язык для отображения настроек и уведомлений приложения.</p>
+            <div class="form-group">
+              <select id="select-ui-lang" class="custom-select">
+                <option value="ru">Русский</option>
+                <option value="en">English</option>
+                <option value="de">Deutsch</option>
+                <option value="es">Español</option>
+                <option value="fr">Français</option>
+                <option value="it">Italiano</option>
+                <option value="zh">中文</option>
+                <option value="pt">Português</option>
+                <option value="tr">Türkçe</option>
+              </select>
+            </div>
           </div>
         </section>
 
