@@ -650,7 +650,6 @@ body {
 
 .status-indicator.online::before {
   background-color: hsl(140, 80%, 45%);
-  box-shadow: 0 0 8px hsl(140, 80%, 45%);
 }
 
 /* Footer */
@@ -785,7 +784,6 @@ body {
 
 .toggle-switch input:checked + .toggle-track .toggle-thumb {
   background-color: var(--accent-color);
-  box-shadow: 0 0 8px hsla(var(--accent-color-rgb), 0.5);
   transform: translateX(20px); /* now that cache is bypassed, 20px is mathematically perfect! */
 }
 
@@ -862,10 +860,6 @@ body {
   50% { transform: scale(1.15); opacity: 1; }
 }
 
-/* Progress Bar Glow */
-.progress-bar-fill {
-  box-shadow: 0 0 12px hsla(var(--accent-color-rgb), 0.8);
-}
 
 .about-logo-svg {
   width: 56px;
@@ -1120,7 +1114,6 @@ body {
   height: 6px;
   background-color: hsl(140, 80%, 45%);
   border-radius: var(--radius-full);
-  box-shadow: 0 0 6px hsl(140, 80%, 45%);
 }
 
 .btn-delete-card-model {
@@ -1183,7 +1176,6 @@ body {
 .model-card-progress .progress-bar-fill {
   height: 100%;
   background: var(--accent-color);
-  box-shadow: 0 0 8px hsla(var(--accent-color-rgb), 0.5);
   width: 0%;
   transition: width 0.1s linear;
 }
@@ -1200,15 +1192,12 @@ body {
 /* Footer Status Dot States */
 .footer-status.modified::before {
   background-color: hsl(40, 95%, 55%) !important;
-  box-shadow: 0 0 8px hsl(40, 95%, 55%) !important;
 }
 .footer-status.error::before {
   background-color: hsl(0, 85%, 60%) !important;
-  box-shadow: 0 0 8px hsl(0, 85%, 60%) !important;
 }
 .footer-status.success::before {
   background-color: hsl(140, 80%, 45%) !important;
-  box-shadow: 0 0 8px hsl(140, 80%, 45%) !important;
 }
 
 /* Custom Confirm Modal Styling */
@@ -1218,9 +1207,7 @@ body {
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: rgba(0, 0, 0, 0.45);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  background: rgba(0, 0, 0, 0.7);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1234,7 +1221,7 @@ body {
 }
 
 .modal-card {
-  background: var(--bg-card);
+  background-color: var(--surface-color);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
   padding: 24px;
@@ -1300,12 +1287,10 @@ body {
 .modal-actions .btn-primary {
   background: var(--accent-color);
   color: #fff;
-  box-shadow: 0 0 10px hsla(var(--accent-color-rgb), 0.3);
 }
 
 .modal-actions .btn-primary:hover {
   background: hsl(15, 100%, 45%);
-  box-shadow: 0 0 15px hsla(var(--accent-color-rgb), 0.5);
 }
 
 .modal-actions .btn:active {
