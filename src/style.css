@@ -111,14 +111,7 @@ body {
   color: var(--text-primary);
 }
 
-.header-title {
-  font-family: var(--font-display);
-  font-weight: 600;
-  font-size: 1rem;
-  color: var(--text-secondary);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
+
 
 /* Main Layout */
 .main-layout {
@@ -135,6 +128,19 @@ body {
   display: flex;
   flex-direction: column;
   gap: 8px;
+}
+
+.nav-title {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  padding: 10px 16px;
+  margin-bottom: 8px;
+  border-bottom: 1px solid var(--border-color);
+  user-select: none;
 }
 
 .nav-tab {
