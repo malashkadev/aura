@@ -178,6 +178,16 @@
                 <option value="Caps Lock">Caps Lock (Одиночная клавиша)</option>
               </select>
             </div>
+            <label class="toggle-switch">
+              <input type="checkbox" id="checkbox-toggle" />
+              <span class="toggle-track">
+                <span class="toggle-thumb"></span>
+              </span>
+              <span class="toggle-label">Режим переключателя (короткое нажатие)</span>
+            </label>
+            <p class="switch-desc">
+              Короткое нажатие (до 300 мс) начинает запись без удержания клавиши. Повторное нажатие или Esc завершает её. Удержание работает как обычно.
+            </p>
           </div>
         </section>
 
@@ -185,7 +195,7 @@
         <section class="tab-panel" id="panel-cloud" aria-labelledby="tab-btn-cloud" style="display: none;">
           <div class="card">
             <h2 class="card-title">Настройка облачного API</h2>
-            <p class="card-desc">Укажите ваши API-ключи для авторизации в облачных сервисах Gemini, OpenAI или Groq.</p>
+            <p class="card-desc">Укажите ваши API-ключи для авторизации в облачных сервисах Gemini, OpenAI или Groq. <a href="https://aistudio.google.com/" target="_blank" class="help-link" id="link-get-key">Получить ключ бесплатно</a></p>
 
             <div class="form-group">
               <label for="select-provider" class="field-label">Провайдер API</label>
