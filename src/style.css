@@ -1122,6 +1122,8 @@ body {
   gap: 8px;
   transition: transform 0.15s var(--ease-out), border-color 0.25s, background-color 0.25s;
   user-select: none;
+  min-height: 60px;
+  justify-content: center;
 }
 
 .model-card:hover {
