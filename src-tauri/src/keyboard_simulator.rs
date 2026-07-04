@@ -180,6 +180,12 @@ extern "system" {
     pub fn GetKeyboardLayout(idthread: u32) -> isize;
 }
 
+/// Returns the handle of the window that currently has keyboard focus.
+/// Used to make sure simulated typing goes to the window where dictation started.
+pub fn get_foreground_window() -> isize {
+    unsafe { GetForegroundWindow() }
+}
+
 pub fn get_active_layout_language() -> String {
     unsafe {
         let hwnd = GetForegroundWindow();

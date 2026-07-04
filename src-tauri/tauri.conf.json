@@ -16,13 +16,15 @@
         "width": 700,
         "height": 550,
         "resizable": false,
-        "visible": true
+        "visible": true,
+        "decorations": false,
+        "transparent": true
       },
       {
         "label": "overlay",
         "url": "overlay.html",
         "width": 160,
-        "height": 60,
+        "height": 80,
         "decorations": false,
         "alwaysOnTop": true,
         "transparent": true,
@@ -33,7 +35,7 @@
       }
     ],
     "security": {
-      "csp": null
+      "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src ipc: http://ipc.localhost"
     }
   },
   "bundle": {
@@ -45,6 +47,9 @@
       "icons/128x128@2x.png",
       "icons/icon.icns",
       "icons/icon.ico"
+    ],
+    "resources": [
+      "binaries/*.dll"
     ],
     "externalBin": [
       "binaries/whisper-sidecar"

@@ -1,5 +1,6 @@
 use std::path::Path;
-use std::sync::{Arc, Mutex};
+use std::sync::mpsc;
+use std::sync::Mutex;
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 
 pub struct AudioRecorder {
@@ -8,14 +9,19 @@ pub struct AudioRecorder {
 
 struct ActiveRecording {
     stream: cpal::Stream,
-    raw_samples: Arc<Mutex<Vec<f32>>>,
+    // Samples arrive from the audio callback through a channel so the callback
+    // never blocks on a lock, even while readers copy the accumulated buffer.
+    receiver: mpsc::Receiver<Vec<f32>>,
+    accumulated: Vec<f32>,
     sample_rate: u32,
     channels: u16,
     output_path: String,
 }
 
+// SAFETY: cpal::Stream is !Send because some platforms tie streams to a thread.
+// On Windows (WASAPI) moving the handle between threads is tolerated in practice;
+// access is serialized through the surrounding Mutex.
 unsafe impl Send for ActiveRecording {}
-unsafe impl Sync for ActiveRecording {}
 
 impl AudioRecorder {
     /// Creates a new `AudioRecorder` instance.
@@ -48,10 +54,12 @@ impl AudioRecorder {
         let channels = config.channels();
         let sample_format = config.sample_format();
 
-        let raw_samples = Arc::new(Mutex::new(Vec::new()));
-        let raw_samples_clone = raw_samples.clone();
+        let (sender, receiver) = mpsc::channel::<Vec<f32>>();
+        let sender_i16 = sender.clone();
+        let sender_u16 = sender.clone();
+        let sender_f32 = sender;
 
-        let on_volume = Arc::new(on_volume);
+        let on_volume = std::sync::Arc::new(on_volume);
         let on_volume_i16 = on_volume.clone();
         let on_volume_u16 = on_volume.clone();
         let on_volume_f32 = on_volume.clone();
@@ -64,13 +72,13 @@ impl AudioRecorder {
                     &config.into(),
                     move |data: &[i16], _: &cpal::InputCallbackInfo| {
                         let mut sum_sq = 0.0;
-                        if let Ok(mut guard) = raw_samples_clone.lock() {
-                            for &sample in data {
-                                let f = sample as f32 / 32768.0;
-                                guard.push(f);
-                                sum_sq += f * f;
-                            }
+                        let mut chunk = Vec::with_capacity(data.len());
+                        for &sample in data {
+                            let f = sample as f32 / 32768.0;
+                            chunk.push(f);
+                            sum_sq += f * f;
                         }
+                        let _ = sender_i16.send(chunk);
                         let rms = if data.is_empty() { 0.0 } else { (sum_sq / data.len() as f32).sqrt() };
                         on_volume_i16(rms);
                     },
@@ -83,13 +91,13 @@ impl AudioRecorder {
                     &config.into(),
                     move |data: &[u16], _: &cpal::InputCallbackInfo| {
                         let mut sum_sq = 0.0;
-                        if let Ok(mut guard) = raw_samples_clone.lock() {
-                            for &sample in data {
-                                let f = (sample as f32 - 32768.0) / 32768.0;
-                                guard.push(f);
-                                sum_sq += f * f;
-                            }
+                        let mut chunk = Vec::with_capacity(data.len());
+                        for &sample in data {
+                            let f = (sample as f32 - 32768.0) / 32768.0;
+                            chunk.push(f);
+                            sum_sq += f * f;
                         }
+                        let _ = sender_u16.send(chunk);
                         let rms = if data.is_empty() { 0.0 } else { (sum_sq / data.len() as f32).sqrt() };
                         on_volume_u16(rms);
                     },
@@ -102,12 +110,10 @@ impl AudioRecorder {
                     &config.into(),
                     move |data: &[f32], _: &cpal::InputCallbackInfo| {
                         let mut sum_sq = 0.0;
-                        if let Ok(mut guard) = raw_samples_clone.lock() {
-                            guard.extend_from_slice(data);
-                            for &sample in data {
-                                sum_sq += sample * sample;
-                            }
+                        for &sample in data {
+                            sum_sq += sample * sample;
                         }
+                        let _ = sender_f32.send(data.to_vec());
                         let rms = if data.is_empty() { 0.0 } else { (sum_sq / data.len() as f32).sqrt() };
                         on_volume_f32(rms);
                     },
@@ -122,7 +128,8 @@ impl AudioRecorder {
 
         *state_guard = Some(ActiveRecording {
             stream,
-            raw_samples,
+            receiver,
+            accumulated: Vec::new(),
             sample_rate,
             channels,
             output_path: output_path.to_string(),
@@ -133,31 +140,41 @@ impl AudioRecorder {
 
     /// Stops the active recording, downmixes to mono, resamples to 16000Hz, and writes the WAV file.
     pub fn stop_recording(&self) -> Result<(), String> {
-        let active_recording = {
+        let mut active_recording = {
             let mut state_guard = self.state.lock().map_err(|e| e.to_string())?;
             state_guard.take().ok_or_else(|| "Not recording".to_string())?
         };
 
-        // Dropping the stream stops recording automatically.
+        // Dropping the stream stops recording (and closes the sender side of the channel).
         drop(active_recording.stream);
 
-        let raw_samples = active_recording.raw_samples.lock()
-            .map_err(|e| e.to_string())?;
+        while let Ok(chunk) = active_recording.receiver.try_recv() {
+            active_recording.accumulated.extend(chunk);
+        }
 
         process_and_write_wav(
-            &raw_samples,
+            &active_recording.accumulated,
             active_recording.channels,
             active_recording.sample_rate,
             &active_recording.output_path,
         )
     }
 
+    /// Discards the active recording without writing a WAV file.
+    pub fn cancel_recording(&self) -> Result<(), String> {
+        let mut state_guard = self.state.lock().map_err(|e| e.to_string())?;
+        state_guard.take().ok_or_else(|| "Not recording".to_string())?;
+        Ok(())
+    }
+
     /// Exposes a copy of currently recorded samples, sample rate, and channel count.
     pub fn get_recorded_samples(&self) -> Result<(Vec<f32>, u32, u16), String> {
-        let state_guard = self.state.lock().map_err(|e| e.to_string())?;
-        if let Some(ref active) = *state_guard {
-            let samples = active.raw_samples.lock().map_err(|e| e.to_string())?.clone();
-            Ok((samples, active.sample_rate, active.channels))
+        let mut state_guard = self.state.lock().map_err(|e| e.to_string())?;
+        if let Some(ref mut active) = *state_guard {
+            while let Ok(chunk) = active.receiver.try_recv() {
+                active.accumulated.extend(chunk);
+            }
+            Ok((active.accumulated.clone(), active.sample_rate, active.channels))
         } else {
             Err("Not recording".to_string())
         }

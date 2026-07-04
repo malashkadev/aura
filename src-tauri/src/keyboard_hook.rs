@@ -21,9 +21,29 @@ static HOTKEY_CONFIG: Mutex<HotkeyConfig> = Mutex::new(HotkeyConfig {
 });
 
 static CALLBACK: OnceLock<Box<dyn Fn(bool) + Send + Sync>> = OnceLock::new();
+static CANCEL_CALLBACK: OnceLock<Box<dyn Fn() + Send + Sync>> = OnceLock::new();
 static MODIFIER_PRESSED: AtomicBool = AtomicBool::new(false);
 static SHORTCUT_ACTIVE: AtomicBool = AtomicBool::new(false);
 static KEY_SUPPRESSED: AtomicBool = AtomicBool::new(false);
+// Set by the app while a recording session is active so the hook can intercept Esc
+static RECORDING_ACTIVE: AtomicBool = AtomicBool::new(false);
+
+const VK_ESCAPE: u32 = 0x1B;
+
+/// Marks whether a recording session is active (enables Esc interception).
+pub fn set_recording_active(active: bool) {
+    RECORDING_ACTIVE.store(active, Ordering::SeqCst);
+}
+
+/// Registers the callback fired when the user presses Esc during recording.
+pub fn set_cancel_callback<F>(callback: F) -> Result<(), &'static str>
+where
+    F: Fn() + Send + Sync + 'static,
+{
+    CANCEL_CALLBACK
+        .set(Box::new(callback))
+        .map_err(|_| "Cancel callback is already initialized")
+}
 
 fn is_modifier_key(vk_code: u32, target_modifier_vk: u32) -> bool {
     match target_modifier_vk {
@@ -34,13 +54,13 @@ fn is_modifier_key(vk_code: u32, target_modifier_vk: u32) -> bool {
     }
 }
 
-/// Dynamically updates the hotkey configuration.
-pub fn update_hotkey(hotkey_str: &str) {
+/// Parses a hotkey string like "Alt+V" or "F8" into (modifier_vk, key_vk).
+/// Returns None if no valid main key could be recognized.
+fn parse_hotkey(hotkey_str: &str) -> Option<(u32, u32)> {
     let mut modifier = 0;
     let mut key = 0;
-    
-    let parts: Vec<&str> = hotkey_str.split('+').collect();
-    for part in parts {
+
+    for part in hotkey_str.split('+') {
         let clean = part.trim().to_lowercase();
         match clean.as_str() {
             "alt" => modifier = 18,
@@ -51,22 +71,47 @@ pub fn update_hotkey(hotkey_str: &str) {
                     key = other.chars().next().unwrap().to_ascii_uppercase() as u32;
                 } else {
                     match other {
-                        "space" => key = 0x20,
+                        "space" | "пробел" => key = 0x20,
                         "capslock" | "caps lock" => key = 0x14,
+                        "tab" => key = 0x09,
+                        "f1" => key = 0x70,
+                        "f2" => key = 0x71,
+                        "f3" => key = 0x72,
+                        "f4" => key = 0x73,
+                        "f5" => key = 0x74,
+                        "f6" => key = 0x75,
+                        "f7" => key = 0x76,
                         "f8" => key = 0x77,
                         "f9" => key = 0x78,
                         "f10" => key = 0x79,
+                        "f11" => key = 0x7A,
+                        "f12" => key = 0x7B,
                         _ => {}
                     }
                 }
             }
         }
     }
-    
+
+    if key == 0 {
+        None
+    } else {
+        Some((modifier, key))
+    }
+}
+
+/// Dynamically updates the hotkey configuration.
+/// Unparseable strings are rejected and the previous hotkey stays active.
+pub fn update_hotkey(hotkey_str: &str) {
+    let Some((modifier, key)) = parse_hotkey(hotkey_str) else {
+        eprintln!("Aura Dev Log ERROR: Could not parse hotkey '{}'; keeping previous hotkey.", hotkey_str);
+        return;
+    };
+
     if let Ok(mut guard) = HOTKEY_CONFIG.lock() {
         guard.modifier_vk = modifier;
         guard.key_vk = key;
-        
+
         // Reset state flags
         MODIFIER_PRESSED.store(false, Ordering::SeqCst);
         SHORTCUT_ACTIVE.store(false, Ordering::SeqCst);
@@ -134,6 +179,14 @@ unsafe extern "system" fn low_level_keyboard_proc(
         let is_down = wparam == WM_KEYDOWN as usize || wparam == WM_SYSKEYDOWN as usize;
         let is_up = wparam == WM_KEYUP as usize || wparam == WM_SYSKEYUP as usize;
 
+        // Esc cancels an active recording session
+        if vk_code == VK_ESCAPE && is_down && RECORDING_ACTIVE.load(Ordering::SeqCst) {
+            if let Some(cb) = CANCEL_CALLBACK.get() {
+                cb();
+            }
+            return 1; // Suppress Esc so the focused app doesn't react to it
+        }
+
         let (modifier_vk, key_vk) = {
             if let Ok(guard) = HOTKEY_CONFIG.lock() {
                 (guard.modifier_vk, guard.key_vk)
@@ -189,4 +242,26 @@ unsafe extern "system" fn low_level_keyboard_proc(
     }
 
     CallNextHookEx(0, code, wparam, lparam)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_parse_hotkey_combinations() {
+        assert_eq!(parse_hotkey("Alt+V"), Some((18, 0x56)));
+        assert_eq!(parse_hotkey("Ctrl+Space"), Some((17, 0x20)));
+        assert_eq!(parse_hotkey("F8"), Some((0, 0x77)));
+        assert_eq!(parse_hotkey("F12"), Some((0, 0x7B)));
+        assert_eq!(parse_hotkey("Caps Lock"), Some((0, 0x14)));
+        assert_eq!(parse_hotkey("Shift+Tab"), Some((16, 0x09)));
+    }
+
+    #[test]
+    fn test_parse_hotkey_invalid() {
+        assert_eq!(parse_hotkey(""), None);
+        assert_eq!(parse_hotkey("Alt"), None);
+        assert_eq!(parse_hotkey("Alt+Unknown"), None);
+    }
 }
