@@ -60,7 +60,7 @@ const i18nDict = {
     history_desc: "Последние надиктованные фразы хранятся локально.",
     history_empty: "История пуста. Ваши надиктованные тексты будут отображаться здесь.",
     about_app_title: "Голосовой ввод Aura",
-    about_version: "v1.0",
+    about_version: "v1.0.0",
     about_description: "Aura — высокоскоростной инструмент глобального голосового ввода для Windows. Программа позволяет мгновенно вводить надиктованный текст в любое активное окно с автоматической расстановкой пунктуации, удалением слов-паразитов и интеллектуальным редактированием «на лету» с использованием передовых локальных и облачных нейросетевых моделей.",
     status_ready: "Готово",
     btn_save: "Сохранить настройки",
@@ -149,7 +149,7 @@ const i18nDict = {
     history_desc: "Your latest transcribed phrases are cached locally.",
     history_empty: "History is empty. Dictated text fragments will appear here.",
     about_app_title: "Aura Voice Input",
-    about_version: "v1.0",
+    about_version: "v1.0.0",
     about_description: "Aura is a high-speed global dictation tool for Windows. It enables instant speech-to-text input into any active window with automatic punctuation, filler word removal, and smart editing on-the-fly, powered by state-of-the-art local and cloud-based AI models.",
     status_ready: "Ready",
     btn_save: "Save Settings",
@@ -238,7 +238,7 @@ const i18nDict = {
     history_desc: "Die letzten aufgezeichneten Sätze werden lokal gespeichert.",
     history_empty: "Der Verlauf ist leer. Transkribierte Texte werden hier angezeigt.",
     about_app_title: "Aura Spracheingabe",
-    about_version: "v1.0",
+    about_version: "v1.0.0",
     about_description: "Aura ist ein extrem schnelles globales Spracheingabe-Tool für Windows. Die Anwendung ermöglicht die sofortige Texteingabe per Sprache in jedes aktive Fenster – mit automatischer Zeichensetzung, der Entfernung von Füllwörtern und intelligenter Live-Bearbeitung über moderne lokale und Cloud-Modelle.",
     status_ready: "Bereit",
     btn_save: "Einstellungen speichern",
@@ -327,7 +327,7 @@ const i18nDict = {
     history_desc: "Las últimas frases dictadas se guardan de forma local.",
     history_empty: "El historial está vacío. Los textos dictados se mostrarán aquí.",
     about_app_title: "Dictado por voz Aura",
-    about_version: "v1.0",
+    about_version: "v1.0.0",
     about_description: "Aura es una herramienta de dictado por voz ultrarrápida para Windows. Permite la inserción inmediata de voz a texto en cualquier ventana activa, con puntuación automática, eliminación de muletillas y edición inteligente mediante modelos locales y en la nube.",
     status_ready: "Listo",
     btn_save: "Guardar ajustes",
@@ -416,7 +416,7 @@ const i18nDict = {
     history_desc: "Les dernières phrases dictées sont enregistrées localement.",
     history_empty: "Historique vide. Vos textes transcrits s'afficheront ici.",
     about_app_title: "Dictée vocale Aura",
-    about_version: "v1.0",
+    about_version: "v1.0.0",
     about_description: "Aura est un client de dictée vocale ultrarapide pour Windows. Il insère instantanément la parole transcrite dans n'importe quelle fenêtre active, avec ponctuation automatique, suppression des mots de remplissage et édition intelligente par IA locale ou cloud.",
     status_ready: "Prêt",
     btn_save: "Enregistrer",
@@ -505,7 +505,7 @@ const i18nDict = {
     history_desc: "Le ultime frasi dettate vengono salvate in locale.",
     history_empty: "La cronologia è vuota. I testi dettati appariranno qui.",
     about_app_title: "Dettatura vocale Aura",
-    about_version: "v1.0",
+    about_version: "v1.0.0",
     about_description: "Aura è uno strumento velocissimo per l'immissione di testo tramite voce in Windows. Inserisce istantaneamente la dettatura in qualsiasi finestra attiva con punteggiatura automatica, rimozione delle parole di riempimento ed editing tramite IA locale o cloud.",
     status_ready: "Pronto",
     btn_save: "Salva impostazioni",
@@ -594,7 +594,7 @@ const i18nDict = {
     history_desc: "您最近转换出的文字将缓存在本地。",
     history_empty: "历史记录为空。您听写的文字会显示在这里。",
     about_app_title: "Aura 智能语音输入",
-    about_version: "v1.0",
+    about_version: "v1.0.0",
     about_description: "Aura 是一款适用于 Windows 的极速全局语音输入工具。按住快捷键即可录音并说话，松开后即可通过先进的本地或云端 AI 模型自动纠错、添加标点符号，并直接录入当前光标所在的任何应用窗口中。",
     status_ready: "就绪",
     btn_save: "保存设置",
@@ -683,7 +683,7 @@ const i18nDict = {
     history_desc: "As últimas frases ditadas são armazenadas localmente.",
     history_empty: "O histórico está vazio. Seus textos ditados aparecerão aqui.",
     about_app_title: "Ditado de voz Aura",
-    about_version: "v1.0",
+    about_version: "v1.0.0",
     about_description: "O Aura é um aplicativo de voz rápida para Windows. Ele insere instantaneamente a voz transcrita em qualquer janela ativa com pontuação automática, remoção de redundâncias e edição inteligente por IA local ou em nuvem.",
     status_ready: "Pronto",
     btn_save: "Salvar configurações",
@@ -772,7 +772,7 @@ const i18nDict = {
     history_desc: "Son sesli yazımlarınız yerel olarak saklanır.",
     history_empty: "Geçmiş boş. Yazdığınız metinler burada görünecektir.",
     about_app_title: "Aura Sesli Giriş",
-    about_version: "v1.0",
+    about_version: "v1.0.0",
     about_description: "Aura, Windows için son derece hızlı bir genel sesli giriş aracıdır. Kısayol tuşunu basılı tutarak konuşun; bırakıldığında gelişmiş yerel veya bulut AI modelleriyle otomatik imla düzeltmeleri yapılarak etkin pencereye doğrudan yazılır.",
     status_ready: "Hazır",
     btn_save: "Ayarları Kaydet",
@@ -982,11 +982,11 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // Load Settings from Backend
-  async function loadSettings() {
+  async function loadSettings(preFetchedSettings = null) {
     try {
       const dict = i18nDict[currentLanguage] || i18nDict.ru;
       showStatus(dict.status_loading || "Загрузка настроек...");
-      const settings = await invoke("get_settings");
+      const settings = preFetchedSettings || await invoke("get_settings");
       
       if (settings) {
         if (settings.transcription_mode === "local") {
@@ -1402,9 +1402,14 @@ document.addEventListener("DOMContentLoaded", () => {
             copyIcon.style.display = "none";
             checkIcon.style.display = "block";
             
-            setTimeout(() => {
+            if (btnCopy._copyTimeout) {
+              clearTimeout(btnCopy._copyTimeout);
+            }
+            
+            btnCopy._copyTimeout = setTimeout(() => {
               checkIcon.style.display = "none";
               copyIcon.style.display = "block";
+              btnCopy._copyTimeout = null;
             }, 1500);
           } catch (err) {
             console.error("Failed to copy", err);
@@ -1447,23 +1452,46 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // UI Language Selector Setup
-  const selectUiLang = document.getElementById("select-ui-lang");
-  const savedUiLang = localStorage.getItem("aura_ui_lang") || localStorage.getItem("ui-language") || "ru";
-  if (selectUiLang) {
-    selectUiLang.value = savedUiLang;
-    
-    selectUiLang.addEventListener("change", (e) => {
-      const selectedLang = e.target.value;
-      localStorage.setItem("aura_ui_lang", selectedLang);
-      localStorage.setItem("ui-language", selectedLang);
-      applyLanguage(selectedLang);
-    });
-  }
-  
-  // Apply initial language choice outside the if block so translations initialize even if #select-ui-lang is missing
-  applyLanguage(savedUiLang);
+  // Initialize UI language and Settings
+  (async () => {
+    let settings = null;
+    try {
+      settings = await invoke("get_settings");
+    } catch (err) {
+      console.error(err);
+    }
 
-  // Initialize
-  loadSettings();
+    let savedUiLang = localStorage.getItem("aura_ui_lang");
+    if (savedUiLang === null) {
+      savedUiLang = localStorage.getItem("ui-language");
+    }
+
+    const supportedLangs = ["ru", "en", "de", "es", "fr", "it", "zh", "pt", "tr"];
+    if (savedUiLang === null) {
+      if (settings && settings.language && supportedLangs.includes(settings.language)) {
+        savedUiLang = settings.language;
+      } else {
+        savedUiLang = "ru";
+      }
+    }
+
+    // UI Language Selector Setup
+    const selectUiLang = document.getElementById("select-ui-lang");
+    if (selectUiLang) {
+      selectUiLang.value = savedUiLang;
+      
+      selectUiLang.addEventListener("change", (e) => {
+        const selectedLang = e.target.value;
+        localStorage.setItem("aura_ui_lang", selectedLang);
+        localStorage.setItem("ui-language", selectedLang);
+        applyLanguage(selectedLang);
+      });
+    }
+    
+    // Apply initial language choice outside the if block so translations initialize even if #select-ui-lang is missing
+    applyLanguage(savedUiLang);
+
+    // Initialize Settings
+    await loadSettings(settings);
+  })();
 });
