@@ -158,6 +158,13 @@ fn normalize_language(language: &str) -> Option<&'static str> {
     match language {
         "ru" => Some("ru"),
         "en" => Some("en"),
+        "de" => Some("de"),
+        "es" => Some("es"),
+        "fr" => Some("fr"),
+        "it" => Some("it"),
+        "zh" => Some("zh"),
+        "pt" => Some("pt"),
+        "tr" => Some("tr"),
         _ => None,
     }
 }
@@ -166,6 +173,13 @@ fn language_hint(language: &str) -> String {
     match normalize_language(language) {
         Some("ru") => "\nLanguage hint: the speaker is most likely speaking Russian.".to_string(),
         Some("en") => "\nLanguage hint: the speaker is most likely speaking English.".to_string(),
+        Some("de") => "\nLanguage hint: the speaker is most likely speaking German.".to_string(),
+        Some("es") => "\nLanguage hint: the speaker is most likely speaking Spanish.".to_string(),
+        Some("fr") => "\nLanguage hint: the speaker is most likely speaking French.".to_string(),
+        Some("it") => "\nLanguage hint: the speaker is most likely speaking Italian.".to_string(),
+        Some("zh") => "\nLanguage hint: the speaker is most likely speaking Chinese.".to_string(),
+        Some("pt") => "\nLanguage hint: the speaker is most likely speaking Portuguese.".to_string(),
+        Some("tr") => "\nLanguage hint: the speaker is most likely speaking Turkish.".to_string(),
         _ => String::new(),
     }
 }
