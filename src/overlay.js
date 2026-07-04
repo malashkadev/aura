@@ -15,8 +15,9 @@ function initAudioCtx() {
   }
 }
 
-// Multi-oscillator physical bell modeling synth using exponential decay envelope
-function playBell(freq, duration, gainStart = 0.07) {
+// Tibetan singing bowl physical modeling synth.
+// Layers inharmonic overtones and detuned oscillator pairs to generate natural shimmering phase beating (tremolo).
+function playBowl(freq, duration, gainStart = 0.08) {
   initAudioCtx();
   if (audioCtx.state === "suspended") {
     audioCtx.resume();
@@ -24,86 +25,67 @@ function playBell(freq, duration, gainStart = 0.07) {
 
   const now = audioCtx.currentTime;
 
-  // Layer 1: Fundamental frequency (sine wave for warm clean body)
-  const osc1 = audioCtx.createOscillator();
-  const gain1 = audioCtx.createGain();
-  osc1.type = "sine";
-  osc1.frequency.setValueAtTime(freq, now);
+  // We layer 3 resonant components: fundamental, warm overtone, and metallic ring
+  const components = [
+    { f: freq, gain: gainStart, decay: duration },
+    { f: freq * 1.5, gain: gainStart * 0.45, decay: duration * 0.8 },
+    { f: freq * 2.76, gain: gainStart * 0.3, decay: duration * 0.55 }
+  ];
 
-  // Layer 2: Warm overtone (sine wave octave higher for bell clarity)
-  const osc2 = audioCtx.createOscillator();
-  const gain2 = audioCtx.createGain();
-  osc2.type = "sine";
-  osc2.frequency.setValueAtTime(freq * 2.0, now);
+  components.forEach(comp => {
+    // Oscillator pair detuned by ~1.4Hz creates natural acoustic shimmering tremolo (beating)
+    const oscA = audioCtx.createOscillator();
+    const gainA = audioCtx.createGain();
+    oscA.type = "sine";
+    oscA.frequency.setValueAtTime(comp.f - 0.7, now);
 
-  // Layer 3: Metallic chime ring (sine wave at 3x frequency)
-  const osc3 = audioCtx.createOscillator();
-  const gain3 = audioCtx.createGain();
-  osc3.type = "sine";
-  osc3.frequency.setValueAtTime(freq * 3.0, now);
+    const oscB = audioCtx.createOscillator();
+    const gainB = audioCtx.createGain();
+    oscB.type = "sine";
+    oscB.frequency.setValueAtTime(comp.f + 0.7, now);
 
-  // Soft attack (6ms) to prevent clipping click, followed by natural exponential decay
-  const attack = 0.006;
-  
-  gain1.gain.setValueAtTime(0.0001, now);
-  gain1.gain.linearRampToValueAtTime(gainStart, now + attack);
-  gain1.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+    // Soft mallet attack (15ms) prevents harsh transients
+    const attack = 0.015;
+    
+    gainA.gain.setValueAtTime(0.0001, now);
+    gainA.gain.linearRampToValueAtTime(comp.gain, now + attack);
+    gainA.gain.exponentialRampToValueAtTime(0.0001, now + comp.decay);
 
-  gain2.gain.setValueAtTime(0.0001, now);
-  gain2.gain.linearRampToValueAtTime(gainStart * 0.45, now + attack);
-  gain2.gain.exponentialRampToValueAtTime(0.0001, now + duration * 0.7);
+    gainB.gain.setValueAtTime(0.0001, now);
+    gainB.gain.linearRampToValueAtTime(comp.gain, now + attack);
+    gainB.gain.exponentialRampToValueAtTime(0.0001, now + comp.decay);
 
-  gain3.gain.setValueAtTime(0.0001, now);
-  gain3.gain.linearRampToValueAtTime(gainStart * 0.25, now + attack);
-  gain3.gain.exponentialRampToValueAtTime(0.0001, now + duration * 0.4);
+    oscA.connect(gainA);
+    gainA.connect(audioCtx.destination);
 
-  osc1.connect(gain1);
-  gain1.connect(audioCtx.destination);
+    oscB.connect(gainB);
+    gainB.connect(audioCtx.destination);
 
-  osc2.connect(gain2);
-  gain2.connect(audioCtx.destination);
+    oscA.start(now);
+    oscA.stop(now + comp.decay + 0.1);
 
-  osc3.connect(gain3);
-  gain3.connect(audioCtx.destination);
-
-  osc1.start(now);
-  osc1.stop(now + duration + 0.1);
-
-  osc2.start(now);
-  osc2.stop(now + duration + 0.1);
-
-  osc3.start(now);
-  osc3.stop(now + duration + 0.1);
+    oscB.start(now);
+    oscB.stop(now + comp.decay + 0.1);
+  });
 }
 
 function playStartSound() {
-  // Warm, consonant perfect fifth chime: A4 (440Hz) -> E5 (659Hz)
-  playBell(440.00, 0.45, 0.06);
-  setTimeout(() => {
-    playBell(659.25, 0.60, 0.06);
-  }, 90);
+  // Deep meditation bowl strike: F3 (174.61Hz) with a 1.2s decay
+  playBowl(174.61, 1.2, 0.08);
 }
 
 function playSuccessSound() {
-  // Melodic, premium ascending major triad bell chord: A4 (440Hz) -> C#5 (554Hz) -> E5 (659Hz) -> A5 (880Hz)
-  playBell(440.00, 0.35, 0.05);
+  // Consonant pair of resonant singing bowls: F3 (174.61Hz) and C4 (261.63Hz) struck together.
+  // Staggered slightly like a soft mallet sweep.
+  playBowl(174.61, 1.8, 0.07);
   setTimeout(() => {
-    playBell(554.37, 0.35, 0.05);
-    setTimeout(() => {
-      playBell(659.25, 0.45, 0.05);
-      setTimeout(() => {
-        playBell(880.00, 0.75, 0.05);
-      }, 70);
-    }, 70);
-  }, 70);
+    playBowl(261.63, 1.8, 0.06);
+  }, 60);
 }
 
 function playErrorSound() {
-  // Soft, calming descending fifth chime: E5 (659Hz) -> A4 (440Hz)
-  playBell(659.25, 0.35, 0.06);
-  setTimeout(() => {
-    playBell(440.00, 0.50, 0.06);
-  }, 120);
+  // A soft, damped, shorter single bowl sound
+  playBowl(174.61, 0.45, 0.07);
 }
 
 // Track current and target heights for smooth linear interpolation (lerp)
