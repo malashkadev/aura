@@ -189,6 +189,27 @@
               Короткое нажатие (до 300 мс) начинает запись без удержания клавиши. Повторное нажатие или Esc завершает её. Удержание работает как обычно.
             </p>
           </div>
+
+          <div class="card">
+            <h2 class="card-title">Звуковое сопровождение</h2>
+            <p class="card-desc">Включите звуковые эффекты для оверлея и выберите подходящую тему.</p>
+            <label class="toggle-switch">
+              <input type="checkbox" id="checkbox-sounds" />
+              <span class="toggle-track">
+                <span class="toggle-thumb"></span>
+              </span>
+              <span class="toggle-label">Включить звуки оверлея</span>
+            </label>
+            <div class="form-group" id="sound-theme-group" style="margin-top: 10px;">
+              <label for="select-sound-theme" class="field-label">Звуковая тема</label>
+              <select id="select-sound-theme" class="custom-select">
+                <option value="zen">Дзен (Поющие чаши)</option>
+                <option value="rhodes">Rhodes (Джаз-электропианино)</option>
+                <option value="scifi">Sci-Fi (Космический футуризм)</option>
+                <option value="classic">Колокольчик (Классический)</option>
+              </select>
+            </div>
+          </div>
         </section>
 
         <!-- Вкладка: Настройка API -->
