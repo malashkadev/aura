@@ -286,7 +286,7 @@ pub fn run_local_whisper<R: Runtime>(
     let short_wav_path = get_short_path(Path::new(wav_path))?;
 
     let lang = match language {
-        "ru" | "en" => language,
+        "ru" | "en" | "de" | "es" | "fr" | "it" | "zh" | "pt" | "tr" => language,
         _ => "auto",
     };
 
