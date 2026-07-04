@@ -9,9 +9,17 @@ pub struct Settings {
     pub transcription_mode: String, // "cloud" or "local"
     pub api_provider: String,       // "gemini" or "openai"
     pub api_key: String,
+    pub api_key_gemini: String,
+    pub api_key_openai: String,
+    pub api_key_groq: String,
     pub model_name: String,         // "small", "base", etc.
     pub hotkey: String,             // "Alt+N"
     pub streaming_enabled: bool,    // whether to type text on-the-fly or paste on release (v1.0 mode)
+    pub toggle_enabled: bool,       // short tap latches recording until the next tap
+    pub language: String,           // "auto" | "ru" | "en" | "layout" (detect from keyboard layout)
+    pub dictionary: String,         // comma-separated custom terms passed to the recognizer as hints
+    pub voice_punctuation: bool,    // convert spoken commands ("запятая", "новая строка") to punctuation
+    pub autostart: bool,            // launch the app on Windows startup
 }
 
 impl Default for Settings {
@@ -20,9 +28,17 @@ impl Default for Settings {
             transcription_mode: "cloud".to_string(),
             api_provider: "gemini".to_string(),
             api_key: "".to_string(),
+            api_key_gemini: "".to_string(),
+            api_key_openai: "".to_string(),
+            api_key_groq: "".to_string(),
             model_name: "base".to_string(),
             hotkey: "Alt+V".to_string(),
             streaming_enabled: false, // Default to false for stable v1.0 mode
+            toggle_enabled: false,
+            language: "auto".to_string(),
+            dictionary: "".to_string(),
+            voice_punctuation: false,
+            autostart: false,
         }
     }
 }
@@ -42,25 +58,134 @@ pub fn load_settings(app_handle: &tauri::AppHandle) -> Result<Settings, String> 
     }
     let content = fs::read_to_string(&path)
         .map_err(|e| format!("Failed to read settings file: {}", e))?;
-    let settings: Settings = match serde_json::from_str(&content) {
+    let mut settings: Settings = match serde_json::from_str(&content) {
         Ok(s) => s,
         Err(e) => {
             eprintln!("Warning: Failed to parse settings JSON: {}. Falling back to default settings.", e);
             Settings::default()
         }
     };
+    
+    if !settings.api_key.is_empty() {
+        match settings.api_provider.as_str() {
+            "gemini" if settings.api_key_gemini.is_empty() => {
+                settings.api_key_gemini = settings.api_key.clone();
+            }
+            "openai" if settings.api_key_openai.is_empty() => {
+                settings.api_key_openai = settings.api_key.clone();
+            }
+            "groq" if settings.api_key_groq.is_empty() => {
+                settings.api_key_groq = settings.api_key.clone();
+            }
+            _ => {}
+        }
+    }
     Ok(settings)
 }
 
 pub fn save_settings(app_handle: &tauri::AppHandle, settings: &Settings) -> Result<(), String> {
+    let mut settings_clone = settings.clone();
+    settings_clone.api_key = match settings_clone.api_provider.as_str() {
+        "gemini" => settings_clone.api_key_gemini.clone(),
+        "openai" => settings_clone.api_key_openai.clone(),
+        "groq" => settings_clone.api_key_groq.clone(),
+        _ => settings_clone.api_key.clone(),
+    };
+    
     let path = get_settings_path(app_handle)?;
     if let Some(parent) = path.parent() {
         fs::create_dir_all(parent)
             .map_err(|e| format!("Failed to create settings directory: {}", e))?;
     }
-    let content = serde_json::to_string_pretty(settings)
+    let content = serde_json::to_string_pretty(&settings_clone)
         .map_err(|e| format!("Failed to serialize settings: {}", e))?;
     fs::write(&path, content)
         .map_err(|e| format!("Failed to write settings file: {}", e))?;
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_settings_defaults() {
+        let settings = Settings::default();
+        assert_eq!(settings.api_key, "");
+        assert_eq!(settings.api_key_gemini, "");
+        assert_eq!(settings.api_key_openai, "");
+        assert_eq!(settings.api_key_groq, "");
+        assert_eq!(settings.transcription_mode, "cloud");
+        assert_eq!(settings.api_provider, "gemini");
+    }
+
+    #[test]
+    fn test_legacy_settings_deserialization() {
+        let json = r#"{
+            "transcription_mode": "cloud",
+            "api_provider": "gemini",
+            "api_key": "old-key-123",
+            "model_name": "base",
+            "hotkey": "Alt+V",
+            "streaming_enabled": false,
+            "toggle_enabled": false,
+            "language": "auto",
+            "dictionary": "",
+            "voice_punctuation": false,
+            "autostart": false
+        }"#;
+
+        let mut settings: Settings = serde_json::from_str(json).unwrap();
+        
+        assert_eq!(settings.api_key_gemini, "");
+        assert_eq!(settings.api_key_openai, "");
+        assert_eq!(settings.api_key_groq, "");
+
+        if !settings.api_key.is_empty() {
+            match settings.api_provider.as_str() {
+                "gemini" if settings.api_key_gemini.is_empty() => {
+                    settings.api_key_gemini = settings.api_key.clone();
+                }
+                "openai" if settings.api_key_openai.is_empty() => {
+                    settings.api_key_openai = settings.api_key.clone();
+                }
+                "groq" if settings.api_key_groq.is_empty() => {
+                    settings.api_key_groq = settings.api_key.clone();
+                }
+                _ => {}
+            }
+        }
+
+        assert_eq!(settings.api_key_gemini, "old-key-123");
+        assert_eq!(settings.api_key_openai, "");
+        assert_eq!(settings.api_key_groq, "");
+    }
+
+    #[test]
+    fn test_save_settings_sync_logic() {
+        let mut settings = Settings::default();
+        settings.api_provider = "openai".to_string();
+        settings.api_key_openai = "openai-key".to_string();
+        settings.api_key_gemini = "gemini-key".to_string();
+
+        let mut settings_clone = settings.clone();
+        settings_clone.api_key = match settings_clone.api_provider.as_str() {
+            "gemini" => settings_clone.api_key_gemini.clone(),
+            "openai" => settings_clone.api_key_openai.clone(),
+            "groq" => settings_clone.api_key_groq.clone(),
+            _ => settings_clone.api_key.clone(),
+        };
+
+        assert_eq!(settings_clone.api_key, "openai-key");
+
+        settings.api_provider = "gemini".to_string();
+        let mut settings_clone2 = settings.clone();
+        settings_clone2.api_key = match settings_clone2.api_provider.as_str() {
+            "gemini" => settings_clone2.api_key_gemini.clone(),
+            "openai" => settings_clone2.api_key_openai.clone(),
+            "groq" => settings_clone2.api_key_groq.clone(),
+            _ => settings_clone2.api_key.clone(),
+        };
+        assert_eq!(settings_clone2.api_key, "gemini-key");
+    }
 }
