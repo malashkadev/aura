@@ -1361,6 +1361,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       historyContainer.innerHTML = "";
+      const fragment = document.createDocumentFragment();
       history.forEach(entry => {
         const date = new Date(entry.timestamp_ms);
         const timeStr = date.toLocaleTimeString(currentLanguage, { hour: '2-digit', minute: '2-digit', second: '2-digit' });
@@ -1416,15 +1417,16 @@ document.addEventListener("DOMContentLoaded", () => {
           }
         });
 
-        historyContainer.appendChild(itemEl);
+        fragment.appendChild(itemEl);
       });
+      historyContainer.appendChild(fragment);
     } catch (err) {
       console.error("Failed to load history", err);
     }
   }
 
   function escapeHtml(text) {
-    return text
+    return (text || "")
       .replace(/&/g, "&amp;")
       .replace(/</g, "&lt;")
       .replace(/>/g, "&gt;")
@@ -1467,7 +1469,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     const supportedLangs = ["ru", "en", "de", "es", "fr", "it", "zh", "pt", "tr"];
-    if (savedUiLang === null) {
+    if (savedUiLang === null || !supportedLangs.includes(savedUiLang)) {
       if (settings && settings.language && supportedLangs.includes(settings.language)) {
         savedUiLang = settings.language;
       } else {
