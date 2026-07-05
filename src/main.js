@@ -267,7 +267,7 @@ const i18nDict = {
     about_app_title: "Aura Spracheingabe",
     about_app_subtitle: "(Spracheingabe)",
     about_version: "v1.0.0",
-    about_description: "Aura ist ein globales Spracheingabe-Tool für Windows. Es überträgt Sprache sofort in Text und fügt ihn mit automatischer Formatierung и Zeichensetzung in jedes aktive Fenster ein.",
+    about_description: "Aura ist ein globales Spracheingabe-Tool für Windows. Es überträgt Sprache sofort in Text und fügt ihn mit automatischer Formatierung und Zeichensetzung in jedes aktive Fenster ein.",
     status_ready: "Bereit",
     btn_save: "Einstellungen speichern",
     confirm_title: "Bestätigung",
