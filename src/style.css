@@ -1309,10 +1309,6 @@ body {
   align-items: center;
   justify-content: center;
   transition: var(--transition);
-  opacity: 0;
-}
-
-.model-card:hover .btn-delete-card-model {
   opacity: 1;
 }
 
