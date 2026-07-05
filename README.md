@@ -23,7 +23,7 @@ Hold a hotkey, speak, release — Aura transcribes your speech, cleans it up (pu
 - **Transcription history** — the last 50 dictations with one-click copy.
 - **Custom dictionary** — bias recognition towards your names and terms.
 - **11 language options** — auto-detect, keyboard-layout detection, or a fixed language (ru, en, de, es, fr, it, zh, pt, tr).
-- **Voice punctuation commands** (optional) — “запятая”, “новая строка” → `,`, newline.
+- **Voice punctuation commands** (optional) — “comma”, “period”, “new line” → `,`, `.`, newline.
 - **Polished overlay** — live waveform, recording timer, error states and optional sound themes (zen / rhodes / sci-fi / classic).
 - **Quality of life** — autostart with Windows, tray icon, single-instance guard, focus guard (never types into the wrong window).
 
@@ -42,7 +42,7 @@ For cloud mode you will need an API key — the free [Groq](https://console.groq
 | Latch recording (toggle mode, optional) | short tap `Alt+V` |
 | Cancel recording | `Esc` |
 
-The hotkey, language, engine and everything else is configurable from the settings window (tray icon → «Открыть настройки»).
+The hotkey, language, engine and everything else is configurable from the settings window (tray icon → "Open Settings").
 
 ## Building from source
 
