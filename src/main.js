@@ -1153,6 +1153,9 @@ document.addEventListener("DOMContentLoaded", () => {
         isSettingsLoaded = true;
         settingsModified = false;
         
+        // Sync custom dropdown values
+        syncCustomSelects();
+        
         showStatus(getTranslation("status_loaded"));
         
         bindSettingsChangeListeners();
@@ -1431,6 +1434,145 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  // Custom Select Dropdowns generator
+  function initCustomSelects() {
+    const selects = document.querySelectorAll("select.custom-select");
+    selects.forEach(select => {
+      // If already initialized, skip
+      if (select.nextElementSibling && select.nextElementSibling.classList.contains("custom-dropdown")) {
+        return;
+      }
+      
+      select.style.display = "none";
+      
+      const dropdown = document.createElement("div");
+      dropdown.className = "custom-dropdown";
+      dropdown.dataset.selectId = select.id;
+      
+      const trigger = document.createElement("div");
+      trigger.className = "custom-dropdown-trigger";
+      trigger.tabIndex = 0;
+      
+      const valueSpan = document.createElement("span");
+      valueSpan.className = "custom-dropdown-value";
+      
+      const arrow = document.createElement("div");
+      arrow.className = "custom-dropdown-arrow";
+      
+      trigger.appendChild(valueSpan);
+      trigger.appendChild(arrow);
+      dropdown.appendChild(trigger);
+      
+      const optionsContainer = document.createElement("div");
+      optionsContainer.className = "custom-dropdown-options";
+      
+      const options = select.querySelectorAll("option");
+      options.forEach(opt => {
+        const optionDiv = document.createElement("div");
+        optionDiv.className = "custom-dropdown-option";
+        optionDiv.dataset.value = opt.value;
+        optionDiv.textContent = opt.textContent;
+        
+        // Replicate custom list translations
+        const i18n = opt.getAttribute("data-i18n");
+        if (i18n) {
+          optionDiv.setAttribute("data-i18n", i18n);
+        }
+        
+        if (opt.selected) {
+          optionDiv.classList.add("selected");
+          valueSpan.textContent = opt.textContent;
+          if (i18n) {
+            valueSpan.setAttribute("data-i18n", i18n);
+          }
+        }
+        
+        optionDiv.addEventListener("click", (e) => {
+          e.stopPropagation();
+          select.value = opt.value;
+          
+          dropdown.querySelectorAll(".custom-dropdown-option").forEach(item => {
+            item.classList.remove("selected");
+          });
+          optionDiv.classList.add("selected");
+          
+          valueSpan.textContent = opt.textContent;
+          const optI18n = opt.getAttribute("data-i18n");
+          if (optI18n) {
+            valueSpan.setAttribute("data-i18n", optI18n);
+          } else {
+            valueSpan.removeAttribute("data-i18n");
+          }
+          
+          dropdown.classList.remove("open");
+          
+          // Dispatch change and input events
+          select.dispatchEvent(new Event("change", { bubbles: true }));
+          select.dispatchEvent(new Event("input", { bubbles: true }));
+        });
+        
+        optionsContainer.appendChild(optionDiv);
+      });
+      
+      dropdown.appendChild(optionsContainer);
+      
+      trigger.addEventListener("click", (e) => {
+        e.stopPropagation();
+        
+        document.querySelectorAll(".custom-dropdown").forEach(d => {
+          if (d !== dropdown) {
+            d.classList.remove("open");
+          }
+        });
+        
+        dropdown.classList.toggle("open");
+      });
+      
+      trigger.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          trigger.click();
+        }
+      });
+      
+      select.parentNode.insertBefore(dropdown, select.nextSibling);
+    });
+    
+    // Close dropdowns on outside click
+    document.addEventListener("click", () => {
+      document.querySelectorAll(".custom-dropdown").forEach(d => {
+        d.classList.remove("open");
+      });
+    });
+  }
+
+  function syncCustomSelects() {
+    const dropdowns = document.querySelectorAll(".custom-dropdown");
+    dropdowns.forEach(dropdown => {
+      const selectId = dropdown.dataset.selectId;
+      const select = document.getElementById(selectId);
+      if (!select) return;
+      
+      const valueSpan = dropdown.querySelector(".custom-dropdown-value");
+      const selectedOption = select.options[select.selectedIndex];
+      if (selectedOption && valueSpan) {
+        valueSpan.textContent = selectedOption.textContent;
+        const i18n = selectedOption.getAttribute("data-i18n");
+        if (i18n) {
+          valueSpan.setAttribute("data-i18n", i18n);
+        } else {
+          valueSpan.removeAttribute("data-i18n");
+        }
+      }
+      
+      const optionDivs = dropdown.querySelectorAll(".custom-dropdown-option");
+      optionDivs.forEach(optDiv => {
+        const isSelected = optDiv.dataset.value === select.value;
+        optDiv.classList.toggle("selected", isSelected);
+      });
+    });
+  }
+
   // Translations Helper
   function applyLanguage(lang) {
     currentLanguage = lang;
@@ -1442,6 +1584,20 @@ document.addEventListener("DOMContentLoaded", () => {
       const key = el.getAttribute("data-i18n");
       if (dict[key]) {
         el.textContent = dict[key];
+      }
+    });
+
+    // Update custom dropdown labels
+    const dropdowns = document.querySelectorAll(".custom-dropdown");
+    dropdowns.forEach(dropdown => {
+      const selectId = dropdown.dataset.selectId;
+      const select = document.getElementById(selectId);
+      if (!select) return;
+      
+      const valueSpan = dropdown.querySelector(".custom-dropdown-value");
+      const selectedOption = select.options[select.selectedIndex];
+      if (selectedOption && valueSpan) {
+        valueSpan.textContent = selectedOption.textContent;
       }
     });
 
@@ -1586,6 +1742,9 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
   }
+
+  // Initialize custom selects
+  initCustomSelects();
 
   // Initialize UI language and Settings
   (async () => {
