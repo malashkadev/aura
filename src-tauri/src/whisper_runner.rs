@@ -47,7 +47,7 @@ fn dir_has_runtime_dlls(exe_path: &Path) -> bool {
             fs::metadata(d.join(name)).map(|m| m.len() > 1024).unwrap_or(false)
         })
     };
-    check(dir) || check(&dir.join("binaries"))
+    check(dir) || check(&dir.join("binaries")) || check(&dir.join("resources").join("binaries"))
 }
 
 /// Locate the whisper sidecar executable under the resources directory or fallback paths.
@@ -317,11 +317,19 @@ pub fn run_local_whisper<R: Runtime>(
         cmd.creation_flags(0x08000000); // CREATE_NO_WINDOW (hides the black console window)
     }
 
-    // Prepend sidecar executable directory and resource DLLs directory to PATH for Windows DLL resolution
+    // Prepend sidecar executable directory, resources, and dll paths to PATH for Windows DLL resolution
     if let Some(path_env) = std::env::var_os("PATH") {
         let mut paths = std::env::split_paths(&path_env).collect::<Vec<_>>();
+        
+        // Add all possible location candidates of whisper.dll / ggml.dll to guarantee resolution
+        if let Some(parent) = sidecar_path.parent() {
+            paths.insert(0, parent.join("resources").join("binaries"));
+            paths.insert(0, parent.to_path_buf());
+        }
+        paths.insert(0, dlls_dir.clone());
         paths.insert(0, short_sidecar_dir.to_path_buf());
         paths.insert(0, short_dlls_dir.to_path_buf());
+
         if let Ok(new_path) = std::env::join_paths(paths) {
             cmd.env("PATH", new_path);
         }
