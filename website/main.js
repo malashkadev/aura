@@ -212,8 +212,12 @@ function startTypingSimulator() {
   if (!editorText || !overlayPill || !overlayStatus) return;
 
   const isRu = document.documentElement.lang === 'ru';
-  const rawPhrase = isRu ? "Привет... эээ... запусти локальный Whisper." : "Hello... uh... start local Whisper.";
-  const cleanPhrase = isRu ? "Привет, запусти локальный Whisper." : "Hello, start local Whisper.";
+  const rawPhrase = isRu 
+    ? "Так... эээ... напиши питон скрипт для парсинга логов. Погоди, нет, лучше функцию на расте, она быстрее." 
+    : "So... uh... write a python script to parse logs. Wait, no, make it a rust function since it's faster.";
+  const cleanPhrase = isRu 
+    ? "Так, напиши Python-скрипт для парсинга логов. Погоди, нет, лучше функцию на Rust, она быстрее." 
+    : "So write a Python script to parse logs. Wait, no, make it a Rust function since it's faster.";
   
   let breathingInterval = null;
   let timerInterval = null;
