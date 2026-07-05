@@ -633,6 +633,9 @@ async fn start_recording_session(app_handle: tauri::AppHandle) {
     // into API prompts).
     let app_handle_copy = app_handle.clone();
     tauri::async_runtime::spawn(async move {
+        // Sleep 50ms to let the OS keyboard state settle after the physical hotkey down
+        tokio::time::sleep(std::time::Duration::from_millis(50)).await;
+
         let _guard = ClipboardGuard {
             backup: backup_clipboard(),
         };
@@ -641,7 +644,7 @@ async fn start_recording_session(app_handle: tauri::AppHandle) {
             let _ = cb.clear();
         }
         keyboard_simulator::simulate_copy();
-        tokio::time::sleep(std::time::Duration::from_millis(150)).await;
+        tokio::time::sleep(std::time::Duration::from_millis(200)).await;
 
         let copied = arboard::Clipboard::new()
             .ok()
