@@ -315,14 +315,17 @@ setInterval(updateTimer, 500);
 // Main animation and physics loop (60fps)
 function updateAnimation() {
   if (currentState === "processing") {
-    // Smooth sine wave scanning animation
+    // Smooth left-to-right neural scanline sweep
+    const sweepCenter = (angle * 2.5) % 15; // Sweep speed and range across the 9 bars
     bars.forEach((bar, index) => {
-      const h = 6 + Math.sin(angle + index * 0.8) * 8;
+      const dist = Math.abs(index - sweepCenter);
+      const factor = Math.max(0, 1 - dist / 1.8);
+      const h = 3 + factor * 11; // height scales between 3px and 14px
       const y = 14.6 - (h / 2);
       bar.setAttribute("height", h.toString());
       bar.setAttribute("y", y.toString());
     });
-    angle += 0.12;
+    angle += 0.08;
   } else if (currentState === "recording") {
     // Smoothly slide currentHeight towards targetHeight
     bars.forEach((bar, index) => {
