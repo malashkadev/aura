@@ -1,5 +1,5 @@
 # Ignore binary executables (whisper sidecar in src-tauri/binaries is intentionally tracked)
-glaido-core.exe
+Aura.exe
 *.exe
 !src-tauri/binaries/*.exe
 
@@ -26,3 +26,5 @@ skills-lock.json
 docs/superpowers/
 test_out.txt
 /Logo DARK.png
+DESIGN.md
+PRODUCT.md
