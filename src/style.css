@@ -90,6 +90,7 @@ body {
   height: 24px;
   color: var(--accent-color);
   z-index: 1;
+  overflow: visible;
 }
 
 .app-logo-img-header {
