@@ -47,8 +47,14 @@ function setupSmoothScrolling() {
   
   navLinks.forEach(link => {
     link.addEventListener('click', (e) => {
-      e.preventDefault();
       const targetId = link.getAttribute('href');
+      
+      // Let standard navigation happen for page redirects (like lang switchers)
+      if (!targetId || !targetId.startsWith('#')) {
+        return;
+      }
+      
+      e.preventDefault();
       
       if (targetId === '#') {
         window.scrollTo({ top: 0, behavior: 'smooth' });
