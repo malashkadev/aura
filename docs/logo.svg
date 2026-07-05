@@ -1,17 +1,16 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="-128 -128 768 768" fill="none">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-256 -256 1024 1024" fill="none">
   <style>
     .logo-outer,
     .logo-inner,
     .logo-outer-ripple {
-      transform-origin: center;
-      transform-box: view-box;
+      transform-origin: 256px 256px;
     }
     .logo-outer {
       stroke: #ff4200;
     }
     .logo-outer-ripple {
       stroke: #ff4200;
-      animation: logoRipple 1.5s infinite cubic-bezier(0.1, 0.8, 0.3, 1);
+      animation: logoRipple 1.8s infinite cubic-bezier(0.16, 1, 0.3, 1);
     }
     .logo-inner {
       fill: #ff4200;
@@ -23,9 +22,9 @@
         stroke-width: 73.1573;
       }
       100% {
-        transform: scale(1.6);
+        transform: scale(1.5);
         opacity: 0;
-        stroke-width: 10;
+        stroke-width: 15;
       }
     }
   </style>

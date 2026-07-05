@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/logo.svg?v=4" width="120" height="120" alt="Aura Logo" />
+  <img src="docs/logo.svg?v=5" width="120" height="120" alt="Aura Logo" />
 </p>
 
 <h1 align="center">Aura — голосовой ввод для Windows</h1>
