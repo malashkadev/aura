@@ -4,7 +4,8 @@ import io
 import os
 import shutil
 
-target_dir = r"d:\Загрузки\1\src-tauri\binaries"
+# Extract next to this script so the repo can be cloned anywhere
+target_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "src-tauri", "binaries")
 os.makedirs(target_dir, exist_ok=True)
 
 url = "https://github.com/ggml-org/whisper.cpp/releases/download/v1.9.1/whisper-bin-x64.zip"

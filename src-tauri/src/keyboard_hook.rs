@@ -6,7 +6,10 @@ use windows_sys::Win32::UI::WindowsAndMessaging::{
     TranslateMessage, UnhookWindowsHookEx, KBDLLHOOKSTRUCT, MSG,
     WH_KEYBOARD_LL, WM_KEYDOWN, WM_KEYUP, WM_SYSKEYDOWN, WM_SYSKEYUP,
 };
-use windows_sys::Win32::UI::Input::KeyboardAndMouse::GetAsyncKeyState;
+use windows_sys::Win32::UI::Input::KeyboardAndMouse::{
+    GetAsyncKeyState, SendInput, INPUT, INPUT_KEYBOARD, KEYBDINPUT,
+    KEYEVENTF_EXTENDEDKEY, KEYEVENTF_KEYUP, VK_CONTROL,
+};
 
 use std::sync::Mutex;
 
@@ -43,6 +46,48 @@ where
     CANCEL_CALLBACK
         .set(Box::new(callback))
         .map_err(|_| "Cancel callback is already initialized")
+}
+
+fn keyboard_input(vk: u16, scan: u16, flags: u32) -> INPUT {
+    let mut input: INPUT = unsafe { std::mem::zeroed() };
+    input.r#type = INPUT_KEYBOARD;
+    input.Anonymous.ki = KEYBDINPUT {
+        wVk: vk,
+        wScan: scan,
+        dwFlags: flags,
+        time: 0,
+        dwExtraInfo: 0,
+    };
+    input
+}
+
+/// A "clean" Alt press-and-release focuses the menu bar of the foreground app
+/// (browsers move focus out of the input field). Because we suppress the hotkey
+/// letter, the app never sees a key between Alt-down and Alt-up, so it would
+/// treat the release as clean. A dummy Ctrl tap while Alt is still held disarms
+/// that heuristic without any visible side effect.
+fn send_dummy_ctrl_tap() {
+    let mut inputs = [
+        keyboard_input(VK_CONTROL, 0, 0),
+        keyboard_input(VK_CONTROL, 0, KEYEVENTF_KEYUP),
+    ];
+    unsafe {
+        SendInput(inputs.len() as u32, inputs.as_mut_ptr(), std::mem::size_of::<INPUT>() as i32);
+    }
+}
+
+/// Swallows the real Alt-up and re-injects it preceded by a dummy Ctrl tap so
+/// the foreground app never sees a menu-activating "clean" Alt release.
+fn send_disarmed_alt_up(kbd: &KBDLLHOOKSTRUCT) {
+    let ext = if (kbd.flags & 0x01) != 0 { KEYEVENTF_EXTENDEDKEY } else { 0 };
+    let mut inputs = [
+        keyboard_input(VK_CONTROL, 0, 0),
+        keyboard_input(VK_CONTROL, 0, KEYEVENTF_KEYUP),
+        keyboard_input(kbd.vkCode as u16, kbd.scanCode as u16, KEYEVENTF_KEYUP | ext),
+    ];
+    unsafe {
+        SendInput(inputs.len() as u32, inputs.as_mut_ptr(), std::mem::size_of::<INPUT>() as i32);
+    }
 }
 
 fn is_modifier_key(vk_code: u32, target_modifier_vk: u32) -> bool {
@@ -205,6 +250,12 @@ unsafe extern "system" fn low_level_keyboard_proc(
                     if let Some(cb) = CALLBACK.get() {
                         cb(false);
                     }
+                    // Alt ended the shortcut: replace the real Alt-up with a
+                    // disarmed sequence so the focused window keeps its caret.
+                    if modifier_vk == 18 {
+                        send_disarmed_alt_up(&kbd_struct);
+                        return 1;
+                    }
                 }
             }
         } else if is_target_key {
@@ -232,6 +283,12 @@ unsafe extern "system" fn low_level_keyboard_proc(
                 if was_active {
                     if let Some(cb) = CALLBACK.get() {
                         cb(false);
+                    }
+                    // The suppressed letter never reached the app, so the
+                    // upcoming physical Alt release would look "clean" and
+                    // focus the menu bar. Disarm it while Alt is still held.
+                    if modifier_vk == 18 && modifier_satisfied {
+                        send_dummy_ctrl_tap();
                     }
                 }
                 if suppressed || modifier_satisfied || was_active {

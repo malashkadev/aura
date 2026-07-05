@@ -6,29 +6,53 @@ use windows_sys::Win32::UI::Input::KeyboardAndMouse::{
 fn release_modifiers() -> Vec<u16> {
     let mut released = Vec::new();
     unsafe {
-        let modifiers = [
-            (VK_MENU, "Alt"),
-            (VK_CONTROL, "Ctrl"),
-            (VK_SHIFT, "Shift"),
-            (VK_LWIN, "LWin"),
-            (VK_RWIN, "RWin"),
-        ];
-        
-        for &(vk, _) in &modifiers {
-            if (GetAsyncKeyState(vk as i32) as u16 & 0x8000) != 0 {
-                let mut input = std::mem::zeroed::<INPUT>();
-                input.r#type = INPUT_KEYBOARD;
-                input.Anonymous.ki = KEYBDINPUT {
-                    wVk: vk,
-                    wScan: 0,
-                    dwFlags: KEYEVENTF_KEYUP,
-                    time: 0,
-                    dwExtraInfo: 0,
-                };
-                SendInput(1, &input, std::mem::size_of::<INPUT>() as i32);
-                released.push(vk);
-            }
+        let modifiers = [VK_MENU, VK_CONTROL, VK_SHIFT, VK_LWIN, VK_RWIN];
+
+        let held: Vec<u16> = modifiers
+            .iter()
+            .copied()
+            .filter(|&vk| (GetAsyncKeyState(vk as i32) as u16 & 0x8000) != 0)
+            .collect();
+        if held.is_empty() {
+            return released;
         }
+
+        let mut inputs: Vec<INPUT> = Vec::with_capacity(held.len() + 2);
+
+        // A "clean" Alt/Win release focuses the app's menu bar and the input
+        // field loses its caret. A dummy Ctrl tap sent first disarms that.
+        if held.iter().any(|&vk| vk == VK_MENU || vk == VK_LWIN || vk == VK_RWIN) {
+            let mut down = std::mem::zeroed::<INPUT>();
+            down.r#type = INPUT_KEYBOARD;
+            down.Anonymous.ki = KEYBDINPUT {
+                wVk: VK_CONTROL,
+                wScan: 0,
+                dwFlags: 0,
+                time: 0,
+                dwExtraInfo: 0,
+            };
+            let mut up = down;
+            up.Anonymous.ki.dwFlags = KEYEVENTF_KEYUP;
+            inputs.push(down);
+            inputs.push(up);
+        }
+
+        for &vk in &held {
+            let mut input = std::mem::zeroed::<INPUT>();
+            input.r#type = INPUT_KEYBOARD;
+            input.Anonymous.ki = KEYBDINPUT {
+                wVk: vk,
+                wScan: 0,
+                dwFlags: KEYEVENTF_KEYUP,
+                time: 0,
+                dwExtraInfo: 0,
+            };
+            inputs.push(input);
+            released.push(vk);
+        }
+
+        // One batch keeps the ordering guaranteed: Ctrl tap, then the key-ups
+        SendInput(inputs.len() as u32, inputs.as_mut_ptr(), std::mem::size_of::<INPUT>() as i32);
     }
     released
 }
