@@ -1150,23 +1150,26 @@ body {
   gap: 8px;
 }
 
-.status-ready {
-  font-family: var(--font-display);
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: hsl(140, 80%, 45%);
-  display: flex;
+.status-ready-badge {
+  display: inline-flex;
   align-items: center;
   gap: 6px;
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--accent-color);
+  background-color: rgba(var(--accent-color-rgb), 0.08);
+  border: 1px solid rgba(var(--accent-color-rgb), 0.2);
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
 }
 
-.status-ready::before {
-  content: '';
-  display: inline-block;
-  width: 6px;
-  height: 6px;
-  background-color: hsl(140, 80%, 45%);
-  border-radius: var(--radius-full);
+.status-ready-icon {
+  width: 12px;
+  height: 12px;
+  flex-shrink: 0;
 }
 
 .btn-delete-card-model {
