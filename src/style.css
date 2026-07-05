@@ -55,7 +55,7 @@ body {
 .glass-container {
   width: 760px;
   height: 550px;
-  background: hsla(0, 0%, 4%, 0.85);
+  background: #090909;
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-lg);
@@ -73,7 +73,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background-color: hsl(0, 0%, 5%);
+  background-color: #090909;
   user-select: none;
 }
 
@@ -781,7 +781,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background-color: hsla(0, 0%, 6%, 0.4);
+  background-color: #090909;
 }
 
 .footer-status {
