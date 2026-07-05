@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <!-- SEO Meta Tags -->
+  <title>Aura: умный голосовой ввод для Windows | Бесплатно и без ограничений</title>
+  <meta name="description" content="Aura: бесплатная программа с открытым исходным кодом для голосового ввода на Windows. Работает через облачные ИИ (Gemini, OpenAI, Groq) или полностью локально и приватно через Whisper." />
+  <meta name="keywords" content="голосовой ввод, диктовка, Windows, Whisper, ИИ, распознавание речи, транскрипция, бесплатно, открытый код, Gemini, Groq, OpenAI" />
+  
+  <!-- Open Graph -->
+  <meta property="og:title" content="Aura: умный голосовой ввод для Windows" />
+  <meta property="og:description" content="Зажмите горячую клавишу, продиктуйте текст и отпустите. Умный ИИ уберёт слова-паразиты, расставит знаки препинания и вставит результат в любое окно." />
+  <meta property="og:type" content="website" />
+  <meta property="og:image" content="assets/logo.svg" />
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet" />
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="style.css?v=2.0.3" />
+  <script src="main.js?v=2.0.3" defer></script>
+</head>
+<body>
+
+  <!-- Background System -->
+  <div class="aura-bg-container">
+    <div class="aura-bg-grid"></div>
+    <div class="aura-glow aura-glow-1"></div>
+    <div class="aura-glow aura-glow-2"></div>
+    <div class="aura-glow aura-glow-3"></div>
+  </div>
+
+  <!-- Navigation Bar -->
+  <header class="site-header">
+    <div class="header-container">
+      <a href="#" class="logo-link" aria-label="На главную" id="nav-logo">
+        <svg class="site-logo" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path class="logo-outer" d="M398.114 421C445.533 380.876 474.714 322.514 474.714 256.857C474.714 136.486 376.229 38 255.857 38C135.486 38 37 136.486 37 256.857C37 322.514 66.1809 380.876 113.6 421" stroke="currentColor" stroke-width="73.1573" />
+          <path class="logo-outer-ripple" d="M398.114 421C445.533 380.876 474.714 322.514 474.714 256.857C474.714 136.486 376.229 38 255.857 38C135.486 38 37 136.486 37 256.857C37 322.514 66.1809 380.876 113.6 421" stroke="currentColor" stroke-width="73.1573" />
+          <path class="logo-inner" d="M181.963 176.024L42.0293 511.651H142.825L200.192 352.952L247.909 233.927C250.769 226.064 253.45 222.132 255.952 222.132C258.096 222.132 260.598 226.064 263.458 233.927L311.175 352.952L368.542 511.651H469.874L329.404 176.024C322.255 158.867 312.783 147.25 300.988 141.174C289.55 135.098 274.538 132.06 255.952 132.06C234.148 132.06 217.885 135.455 207.162 142.246C196.797 149.038 188.397 160.297 181.963 176.024Z" fill="currentColor" />
+        </svg>
+        <span class="logo-text">AURA</span>
+      </a>
+      <nav class="main-nav" aria-label="Навигация по сайту">
+        <a href="#features" class="nav-link" id="link-features">Особенности</a>
+        <a href="#workflow" class="nav-link" id="link-workflow">Как работать</a>
+        <a href="#demo" class="nav-link" id="link-demo">Демонстрация</a>
+        <a href="#faq" class="nav-link" id="link-faq">Вопросы</a>
+        <a href="index.html" class="nav-link lang-switch" aria-label="Switch to English" style="border: 1px solid rgba(255,255,255,0.15); padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; margin-left: 8px;">EN</a>
+      </nav>
+      <div class="header-actions">
+        <a href="https://github.com/malashkadev/aura" class="btn btn-outline" id="header-github-btn">Открыть GitHub</a>
+        <a href="https://github.com/malashkadev/aura/releases/download/v1.0.0/Aura_1.0.0_x64-setup.exe" class="btn btn-primary btn-header-cta" id="header-download-btn">Скачать Aura</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main>
+    <!-- Hero Section -->
+    <section class="hero-section" id="hero">
+    <div class="section-container hero-container">
+      <div class="hero-content reveal-on-scroll">
+        <h1 class="hero-title">Aura: умный голосовой ввод для Windows</h1>
+        <p class="hero-subtitle">Зажмите горячую клавишу, надиктуйте текст и отпустите. Умный ИИ уберёт слова-паразиты, расставит знаки препинания и вставит результат в любое окно.</p>
+        <div class="hero-actions">
+          <a href="https://github.com/malashkadev/aura/releases/download/v1.0.0/Aura_1.0.0_x64-setup.exe" class="btn btn-primary btn-hero-cta" id="hero-download-btn">Скачать Aura</a>
+          <a href="https://github.com/malashkadev/aura" class="btn btn-secondary" id="hero-github-btn">Открыть GitHub</a>
+        </div>
+      </div>
+      <div class="hero-visual reveal-on-scroll">
+        <div class="visual-wrapper">
+          <!-- Live Dictation Typing Simulator -->
+          <div class="window-mockup typing-demo-window">
+            <div class="mockup-editor-content">
+              <div class="editor-line">
+                <span class="line-num">1</span>
+                <span class="editor-text" id="demo-editor-text"></span><span class="editor-cursor">|</span>
+              </div>
+            </div>
+            
+            <!-- Real replica of Aura dictation overlay pill -->
+            <div class="mock-aura-overlay-wrapper" id="mock-overlay-wrapper">
+              <div class="mock-overlay-pill" id="mock-overlay-pill">
+                <svg width="103" height="30" viewBox="0 0 103 30" fill="none" xmlns="http://www.w3.org/2000/svg" class="overlay-pill-svg">
+                  <g clip-path="url(#clip_overlay)" transform="translate(3.0, 3.825) scale(0.75)">
+                    <path d="M12.2707 20.7875C10.4925 19.2829 9.39822 17.0943 9.39822 14.6322C9.39822 10.1183 13.0914 6.42505 17.6054 6.42505C22.1193 6.42505 25.8125 10.1183 25.8125 14.6322C25.8125 17.0943 24.7182 19.2829 22.94 20.7875" stroke="#FF4200" stroke-width="2.7434"/>
+                    <path d="M20.3763 11.601L25.6238 24.1871H21.844L19.6927 18.2358L17.9033 13.7724C17.796 13.4776 17.6955 13.3301 17.6017 13.3301C17.5213 13.3301 17.4274 13.4776 17.3202 13.7724L15.5308 18.2358L13.3795 24.1871H9.57961L14.8472 11.601C15.1153 10.9577 15.4705 10.522 15.9128 10.2942C16.3418 10.0663 16.9047 9.95239 17.6017 9.95239C18.4193 9.95239 19.0292 10.0797 19.4313 10.3344C19.82 10.5891 20.135 11.0113 20.3763 11.601Z" fill="#FE4200"/>
+                  </g>
+                  <rect class="sound-bar" x="32.4" y="11.6001" width="3" height="6" rx="1.5" fill="#FE4200"/>
+                  <rect class="sound-bar" x="38.7" y="11.6001" width="3" height="6" rx="1.5" fill="#FE4200"/>
+                  <rect class="sound-bar" x="45.0" y="11.6001" width="3" height="6" rx="1.5" fill="#FE4200"/>
+                  <rect class="sound-bar" x="51.3" y="11.6001" width="3" height="6" rx="1.5" fill="#FE4200"/>
+                  <rect class="sound-bar" x="57.6" y="11.6001" width="3" height="6" rx="1.5" fill="#FE4200"/>
+                  <rect class="sound-bar" x="63.9" y="11.6001" width="3" height="6" rx="1.5" fill="#FE4200"/>
+                  <rect class="sound-bar" x="70.2" y="11.6001" width="3" height="6" rx="1.5" fill="#FE4200"/>
+                  <rect class="sound-bar" x="76.5" y="11.6001" width="3" height="6" rx="1.5" fill="#FE4200"/>
+                  <rect class="sound-bar" x="82.8" y="11.6001" width="3" height="6" rx="1.5" fill="#FE4200"/>
+                  <rect class="sound-bar" x="89.1" y="11.6001" width="3" height="6" rx="1.5" fill="#FE4200"/>
+                  <defs>
+                    <clipPath id="clip_overlay">
+                      <rect width="19.2" height="19.2" fill="white" transform="matrix(-1 0 0 1 27.2 5)"/>
+                    </clipPath>
+                  </defs>
+                </svg>
+                <div id="mock-overlay-status">0:00</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features Bento Section -->
+  <section class="features-section" id="features">
+    <div class="section-container">
+      <h2 class="section-title reveal-on-scroll">Создана для удобства диктовки</h2>
+      
+      <div class="bento-grid">
+        <!-- Bento Cell 1: Engines (Double columns) -->
+        <div class="bento-card bento-col-2 bento-cloud-local reveal-on-scroll">
+          <div class="card-glow"></div>
+          <div class="bento-card-content">
+            <h3 class="bento-card-title">Два режима: в облаке или локально</h3>
+            <p class="bento-card-desc">Пользуйтесь быстрыми облачными ИИ-моделями (Gemini, OpenAI, Groq) или переключитесь в полностью автономный режим. Локальный Whisper.cpp работает на вашем ПК без интернета и гарантирует 100% приватность.</p>
+            <div class="engine-graphic">
+              <div class="engine-node node-active" id="node-cloud">
+                <svg class="engine-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M17.5 19A3.5 3.5 0 0 0 21 15.5c0-2.79-2.54-4.5-5-4.5-.42 0-.83.07-1.23.21A6 6 0 0 0 3 13.5A3.5 3.5 0 0 0 6.5 17H17.5z"></path>
+                </svg>
+                <span class="node-label">Облако (API)</span>
+              </div>
+              
+              <div class="engine-link-dots link-left"></div>
+              
+              <div class="engine-center-node">
+                <svg class="engine-center-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                  <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                  <line x1="12" y1="19" x2="12" y2="23"></line>
+                </svg>
+                <span class="node-center-label">Ввод (ПК)</span>
+              </div>
+              
+              <div class="engine-link-dots link-right"></div>
+              
+              <div class="engine-node node-active" id="node-local">
+                <svg class="engine-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                  <line x1="8" y1="21" x2="16" y2="21"></line>
+                  <line x1="12" y1="17" x2="12" y2="21"></line>
+                </svg>
+                <span class="node-label">Whisper Офлайн</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bento Cell 2: Free & Open (Single column) -->
+        <div class="bento-card bento-accent-theme reveal-on-scroll">
+          <div class="card-glow"></div>
+          <div class="bento-card-content">
+            <h3 class="bento-card-title">100% Бесплатно и Открыто</h3>
+            <p class="bento-card-desc">Никаких скрытых платежей, подписок, лимитов или встроенной рекламы. Aura — это свободный проект с открытым кодом под лицензией AGPL-3.0.</p>
+            <span class="card-accent-badge">AGPL-3.0 License</span>
+          </div>
+        </div>
+
+        <!-- Bento Cell 3: Smart Formatting (Single column) -->
+        <div class="bento-card reveal-on-scroll">
+          <div class="card-glow"></div>
+          <div class="bento-card-content">
+            <h3 class="bento-card-title">Умное форматирование</h3>
+            <p class="bento-card-desc">Программа не просто транскрибирует: она вырезает слова-паразиты («эээ», «типа»), наводит порядок в грамматике и аккуратно расставляет знаки препинания.</p>
+          </div>
+        </div>
+
+        <!-- Bento Cell 4: Additional benefits (Double columns) -->
+        <div class="bento-card bento-col-2 reveal-on-scroll">
+          <div class="card-glow"></div>
+          <div class="bento-card-content">
+            <h3 class="bento-card-title">Продуманные детали</h3>
+            <p class="bento-card-desc">Автоопределение языка (11 вариантов), потоковый ввод текста по мере произношения, личный словарь для специфических терминов и система Focus Guard, которая защищает от печати текста не в то окно.</p>
+            <div class="details-tags">
+              <span class="detail-tag">11 языков</span>
+              <span class="detail-tag">Словарь терминов</span>
+              <span class="detail-tag">Focus Guard</span>
+              <span class="detail-tag">Потоковый ввод</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 🆕 How It Works Section -->
+  <section class="workflow-section" id="workflow">
+    <div class="section-container">
+      <h2 class="section-title reveal-on-scroll">Как работает Aura?</h2>
+      
+      <div class="timeline-container">
+        <!-- Connecting decorative grid lines -->
+        <div class="timeline-line"></div>
+        
+        <div class="timeline-grid">
+          <!-- Step 1 -->
+          <div class="timeline-step reveal-on-scroll">
+            <div class="step-badge">1</div>
+            <h3 class="step-title">Запуск</h3>
+            <p class="step-desc">Нажмите и удерживайте глобальную горячую клавишу <kbd class="step-kbd">Alt + V</kbd> в любой программе или поле ввода на вашем компьютере.</p>
+          </div>
+          
+          <!-- Step 2 -->
+          <div class="timeline-step reveal-on-scroll">
+            <div class="step-badge">2</div>
+            <h3 class="step-title">Диктовка</h3>
+            <p class="step-desc">Произнесите фразу. Небольшой аккуратный оверлей покажет активность записи микрофона и текущий таймер.</p>
+          </div>
+          
+          <!-- Step 3 -->
+          <div class="timeline-step reveal-on-scroll">
+            <div class="step-badge">3</div>
+            <h3 class="step-title">Вставка</h3>
+            <p class="step-desc">Отпустите клавишу. Умный ИИ отформатирует текст, исправит ошибки, расставит знаки препинания и мгновенно вставит его.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Demo & Settings Section -->
+  <section class="demo-section" id="demo">
+    <div class="section-container split-layout">
+      <div class="layout-visual reveal-on-scroll">
+        <!-- Interactive Settings Mockup Window -->
+        <div class="window-mockup settings-mockup-window">
+          <div class="settings-mockup-layout">
+            <!-- Sidebar Navigation -->
+            <nav class="mock-settings-sidebar" aria-label="Разделы настроек" role="tablist">
+              <div class="mock-nav-title">Настройки</div>
+              <button type="button" class="mock-nav-tab mock-tab-active" data-mock-tab="general" role="tab" aria-selected="true" aria-controls="mock-panel-general" id="tab-general">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mock-tab-icon"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                Основные
+              </button>
+              <button type="button" class="mock-nav-tab" data-mock-tab="speech" role="tab" aria-selected="false" aria-controls="mock-panel-speech" id="tab-speech">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mock-tab-icon"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
+                Голос
+              </button>
+              <button type="button" class="mock-nav-tab" data-mock-tab="hotkeys" role="tab" aria-selected="false" aria-controls="mock-panel-hotkeys" id="tab-hotkeys">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mock-tab-icon"><rect x="2" y="4" width="20" height="16" rx="2" ry="2"></rect><line x1="6" y1="8" x2="6" y2="8"></line><line x1="10" y1="8" x2="10" y2="8"></line><line x1="14" y1="8" x2="14" y2="8"></line><line x1="18" y1="8" x2="18" y2="8"></line><line x1="6" y1="12" x2="6" y2="12"></line><line x1="18" y1="12" x2="18" y2="12"></line><line x1="7" y1="16" x2="17" y2="16"></line></svg>
+                Управление
+              </button>
+              <button type="button" class="mock-nav-tab" data-mock-tab="apikeys" role="tab" aria-selected="false" aria-controls="mock-panel-apikeys" id="tab-apikeys">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mock-tab-icon"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"></path></svg>
+                API-ключи
+              </button>
+              <button type="button" class="mock-nav-tab" data-mock-tab="history" role="tab" aria-selected="false" aria-controls="mock-panel-history" id="tab-history">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mock-tab-icon"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                История
+              </button>
+              <button type="button" class="mock-nav-tab" data-mock-tab="about" role="tab" aria-selected="false" aria-controls="mock-panel-about" id="tab-about">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mock-tab-icon"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                О программе
+              </button>
+            </nav>
+            
+            <!-- Content Pane -->
+            <div class="mock-settings-pane" id="mock-settings-pane">
+              
+              <!-- 1. PANEL: GENERAL (Active) -->
+              <div class="mock-panel mock-panel-active" id="mock-panel-general" role="tabpanel" aria-labelledby="tab-general">
+                <div class="mock-card-inner">
+                  <h5 class="mock-inner-title">Автозапуск Aura</h5>
+                  <p class="mock-inner-desc">Запускать приложение автоматически при входе в операционную систему Windows.</p>
+                  <label class="mock-toggle-switch">
+                    <input type="checkbox" id="mock-autostart-chk" checked />
+                    <span class="mock-toggle-track">
+                      <span class="mock-toggle-thumb"></span>
+                    </span>
+                    <span class="mock-toggle-label">Запускать Aura при старте системы</span>
+                  </label>
+                </div>
+                <div class="mock-card-inner">
+                  <h5 class="mock-inner-title">Язык интерфейса</h5>
+                  <p class="mock-inner-desc">Выберите язык для отображения настроек и уведомлений приложения.</p>
+                  <div class="mock-select-wrapper">
+                    <select class="mock-select-box" aria-label="Язык интерфейса">
+                      <option value="ru">Русский</option>
+                      <option value="en">English</option>
+                      <option value="de">Deutsch</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- 2. PANEL: SPEECH -->
+              <div class="mock-panel" id="mock-panel-speech" style="display: none;" role="tabpanel" aria-labelledby="tab-speech">
+                <div class="mock-card-inner">
+                  <h5 class="mock-inner-title">Способ распознавания</h5>
+                  <p class="mock-inner-desc">Выберите между облачной обработкой высокого качества или полностью локальным Whisper.</p>
+                  <div class="mock-engine-toggle-group">
+                    <label class="mock-engine-option">
+                      <input type="radio" name="mock_trans_mode" value="cloud" checked id="mock-radio-cloud" />
+                      <span class="mock-engine-card">
+                        <span class="mock-engine-name">Облачный ИИ</span>
+                        <span class="mock-engine-meta">Gemini / OpenAI / Groq</span>
+                      </span>
+                    </label>
+                    <label class="mock-engine-option">
+                      <input type="radio" name="mock_trans_mode" value="local" id="mock-radio-local" />
+                      <span class="mock-engine-card">
+                        <span class="mock-engine-name">Локальный ИИ</span>
+                        <span class="mock-engine-meta">Whisper.cpp (Офлайн)</span>
+                      </span>
+                    </label>
+                  </div>
+                </div>
+                
+                <!-- Local Model Subcard -->
+                <div class="mock-card-inner" id="mock-card-local-model" style="display: none;">
+                  <h5 class="mock-inner-title">Локальная модель Whisper</h5>
+                  <div class="mock-model-selection">
+                    <div class="mock-model-card mock-model-active" data-mock-model="base">
+                      <span class="mock-model-name">Base</span>
+                      <span class="mock-model-meta">~145 МБ (рекомендуемая)</span>
+                    </div>
+                    <div class="mock-model-card" data-mock-model="small">
+                      <span class="mock-model-name">Small</span>
+                      <span class="mock-model-meta">~465 МБ (точная для RU)</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="mock-card-inner">
+                  <h5 class="mock-inner-title">Язык распознавания</h5>
+                  <div class="mock-select-wrapper">
+                    <select class="mock-select-box" aria-label="Язык распознавания">
+                      <option value="auto">Автоопределение (по умолчанию)</option>
+                      <option value="layout">По раскладке клавиатуры</option>
+                      <option value="ru">Русский (Russian)</option>
+                      <option value="en">English (English)</option>
+                    </select>
+                  </div>
+                </div>
+                
+                <div class="mock-card-inner">
+                  <h5 class="mock-inner-title">Режим ввода текста</h5>
+                  <label class="mock-toggle-switch">
+                    <input type="checkbox" id="mock-streaming-chk" />
+                    <span class="mock-toggle-track">
+                      <span class="mock-toggle-thumb"></span>
+                    </span>
+                    <span class="mock-toggle-label">Потоковый ввод (экспериментальный)</span>
+                  </label>
+                </div>
+              </div>
+              
+              <!-- 3. PANEL: HOTKEYS -->
+              <div class="mock-panel" id="mock-panel-hotkeys" style="display: none;" role="tabpanel" aria-labelledby="tab-hotkeys">
+                <div class="mock-card-inner">
+                  <h5 class="mock-inner-title">Глобальная горячая клавиша</h5>
+                  <p class="mock-inner-desc">Зажмите выбранную комбинацию для начала записи, отпустите для распознавания.</p>
+                  <input type="text" class="mock-text-input" value="Alt + V" readonly aria-label="Глобальная горячая клавиша" />
+                  <div style="margin-top: 10px;">
+                    <label class="mock-toggle-switch">
+                      <input type="checkbox" id="mock-switch-trigger" />
+                      <span class="mock-toggle-track">
+                        <span class="mock-toggle-thumb"></span>
+                      </span>
+                      <span class="mock-toggle-label">Режим переключателя (короткий клик)</span>
+                    </label>
+                  </div>
+                </div>
+                <div class="mock-card-inner">
+                  <h5 class="mock-inner-title">Звуковое сопровождение</h5>
+                  <label class="mock-toggle-switch">
+                    <input type="checkbox" id="mock-sound-chk" checked />
+                    <span class="mock-toggle-track">
+                      <span class="mock-toggle-thumb"></span>
+                    </span>
+                    <span class="mock-toggle-label">Включить звуки оверлея</span>
+                  </label>
+                  <div class="mock-slider-row" style="margin-top: 15px;">
+                    <span class="mock-label-text">Громкость:</span>
+                    <input type="range" id="mock-sound-vol" class="mock-range-slider" min="0" max="100" value="80" aria-label="Громкость звукового сопровождения" />
+                    <span id="mock-vol-val" class="mock-slider-val-label">80%</span>
+                  </div>
+                  <div style="margin-top: 12px;">
+                    <label class="mock-inner-title" for="mock-sound-theme" style="display: block; font-size: 0.8rem; margin-bottom: 6px;">Звуковая тема</label>
+                    <div class="mock-select-wrapper">
+                      <select id="mock-sound-theme" class="mock-select-box">
+                        <option value="zen">Дзен (Поющие чаши)</option>
+                        <option value="rhodes">Rhodes (Джаз-пианино)</option>
+                        <option value="scifi">Sci-Fi (Космический)</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- 4. PANEL: API KEYS -->
+              <div class="mock-panel" id="mock-panel-apikeys" style="display: none;" role="tabpanel" aria-labelledby="tab-apikeys">
+                <div class="mock-card-inner">
+                  <h5 class="mock-inner-title">Авторизация API-ключей</h5>
+                  <p class="mock-inner-desc">Укажите ваши API-ключи для авторизации в облачных сервисах Gemini, OpenAI или Groq.</p>
+                  
+                  <div style="margin-bottom: 12px;">
+                    <label class="mock-inner-title" for="mock-api-provider" style="display: block; font-size: 0.8rem; margin-bottom: 6px;">Провайдер API</label>
+                    <div class="mock-select-wrapper">
+                      <select id="mock-api-provider" class="mock-select-box">
+                        <option value="gemini">Google Gemini AI</option>
+                        <option value="openai">OpenAI (Whisper + GPT)</option>
+                        <option value="groq">Groq (Whisper + Llama)</option>
+                      </select>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <label class="mock-inner-title" for="mock-api-key" style="display: block; font-size: 0.8rem; margin-bottom: 6px;">API-ключ</label>
+                    <input type="password" id="mock-api-key" class="mock-text-input" placeholder="Введите ваш API-ключ Gemini..." />
+                  </div>
+                </div>
+              </div>
+              
+              <!-- 5. PANEL: HISTORY -->
+              <div class="mock-panel" id="mock-panel-history" style="display: none;" role="tabpanel" aria-labelledby="tab-history">
+                <div class="mock-card-inner" style="padding: 0;">
+                  <div class="mock-history-header">
+                    <h5 class="mock-inner-title">История транскрипций</h5>
+                    <button type="button" class="mock-btn-clear" id="mock-btn-clear-history">Очистить</button>
+                  </div>
+                  
+                  <div class="mock-history-list" id="mock-history-list">
+                    <div class="mock-history-item">
+                      <div class="mock-history-text">Привет, запусти локальный Whisper.</div>
+                      <div class="mock-history-meta">10 секунд назад &middot; Cloud</div>
+                    </div>
+                    <div class="mock-history-item">
+                      <div class="mock-history-text">Aura: умный голосовой ввод.</div>
+                      <div class="mock-history-meta">2 минуты назад &middot; Cloud</div>
+                    </div>
+                    <div class="mock-history-item">
+                      <div class="mock-history-text">Тестируем оффлайн-диктовку на русском языке.</div>
+                      <div class="mock-history-meta">5 минут назад &middot; Local</div>
+                    </div>
+                  </div>
+                  
+                  <div class="mock-history-empty" id="mock-history-empty" style="display: none;">
+                    История пуста. Ваши надиктованные тексты будут здесь.
+                  </div>
+                </div>
+              </div>
+              
+              <!-- 6. PANEL: ABOUT -->
+              <div class="mock-panel" id="mock-panel-about" style="display: none;" role="tabpanel" aria-labelledby="tab-about">
+                <div class="mock-card-inner mock-about-card">
+                  <div class="mock-about-logo">
+                    <svg viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg" style="background: none; width: 44px; height: 44px;">
+                      <path class="logo-outer" d="M398.114 421C445.533 380.876 474.714 322.514 474.714 256.857C474.714 136.486 376.229 38 255.857 38C135.486 38 37 136.486 37 256.857C37 322.514 66.1809 380.876 113.6 421" stroke="#FF4200" stroke-width="73.1573" />
+                      <path class="logo-inner" d="M181.963 176.024L42.0293 511.651H142.825L200.192 352.952L247.909 233.927C250.769 226.064 253.45 222.132 255.952 222.132C258.096 222.132 260.598 226.064 263.458 233.927L311.175 352.952L368.542 511.651H469.874L329.404 176.024C322.255 158.867 312.783 147.25 300.988 141.174C289.55 135.098 274.538 132.06 255.952 132.06C234.148 132.06 217.885 135.455 207.162 142.246C196.797 149.038 188.397 160.297 181.963 176.024Z" fill="#FE4200" />
+                    </svg>
+                  </div>
+                  <h4 class="mock-about-title">Aura</h4>
+                  <span class="mock-about-ver">v1.0.0</span>
+                  <p class="mock-about-text">Высокоскоростной инструмент глобального голосового ввода для Windows. Программа позволяет вводить надиктованный текст в любое активное окно с автоматической обработкой слов-паразитов и расстановкой пунктуации.</p>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="layout-content reveal-on-scroll">
+        <h2 class="section-title">Гибкость в каждой детали</h2>
+        <p class="section-desc">Настраивайте Aura под свои сценарии работы. Выбирайте глобальные горячие клавиши, включайте режим переключателя кликом вместо удержания или меняйте звуковые темы оверлея (от спокойных поющих чаш дзен до космического Rhodes-пианино).</p>
+        
+        <div class="shortcuts-card">
+          <h3 class="shortcuts-title">Управление по умолчанию:</h3>
+          <div class="shortcut-row">
+            <span class="shortcut-action">Начать запись</span>
+            <kbd class="shortcut-key">Alt + V</kbd>
+          </div>
+          <div class="shortcut-row">
+            <span class="shortcut-action">Завершить и вставить</span>
+            <span class="shortcut-desc">отпустить Alt+V</span>
+          </div>
+          <div class="shortcut-row">
+            <span class="shortcut-action">Режим переключателя</span>
+            <span class="shortcut-desc">короткое нажатие</span>
+          </div>
+          <div class="shortcut-row">
+            <span class="shortcut-action">Отменить запись</span>
+            <kbd class="shortcut-key">Esc</kbd>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 🆕 Dedicated Privacy Highlight Banner Section -->
+  <section class="privacy-section" id="privacy">
+    <div class="section-container">
+      <div class="privacy-card reveal-on-scroll">
+        <div class="privacy-glow"></div>
+        <div class="privacy-card-layout">
+          <div class="privacy-icon-area">
+            <svg class="privacy-lock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+            </svg>
+          </div>
+          <div class="privacy-text-area">
+            <h3 class="privacy-title">Бескомпромиссная приватность</h3>
+            <p class="privacy-desc">Конфиденциальность данных является главным приоритетом Aura. Локальный режим работает полностью автономно на вашем ПК и не отправляет ваши записи в сеть. В облачном режиме аудио передаётся только выбранному вами провайдеру (Gemini, OpenAI или Groq) напрямую. Программа не имеет скрытых систем сбора данных или телеметрии. Все настройки и API-ключи хранятся на вашем устройстве.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 🆕 FAQ Section (Accordions) -->
+  <section class="faq-section" id="faq">
+    <div class="section-container">
+      <h2 class="section-title reveal-on-scroll">Часто задаваемые вопросы</h2>
+      
+      <div class="faq-list">
+        <!-- Q1 -->
+        <div class="faq-item reveal-on-scroll">
+          <button type="button" class="faq-question-btn" aria-expanded="false">
+            <span>В чём отличие от встроенного ввода Windows (Win+H)?</span>
+            <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </button>
+          <div class="faq-answer-pane">
+            <div class="faq-answer-content">
+              <p>В отличие от стандартной диктовки Windows, Aura использует интеллектуальные ИИ-модели для смыслового форматирования. Она автоматически удаляет звуки-паразиты («эээ», «типа»), наводит порядок в грамматике, расставляет знаки препинания и позволяет диктовать прямо в любое активное окно без потери фокуса. Кроме того, Aura поддерживает полностью локальное Whisper-распознавание без отправки аудио в интернет.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Q2 -->
+        <div class="faq-item reveal-on-scroll">
+          <button type="button" class="faq-question-btn" aria-expanded="false">
+            <span>Насколько это безопасно и конфиденциально?</span>
+            <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </button>
+          <div class="faq-answer-pane">
+            <div class="faq-answer-content">
+              <p>Абсолютно безопасно. В программе нет встроенной телеметрии или скрытых серверов сбора данных. Если вы используете локальный режим (Whisper Офлайн), аудиоданные обрабатываются прямо на вашем процессоре/видеокарте и никуда не передаются. При использовании облачного режима звук отправляется напрямую провайдерам (Google, OpenAI, Groq) по зашифрованным соединениям. API-ключи хранятся локально в файле настроек.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Q3 -->
+        <div class="faq-item reveal-on-scroll">
+          <button type="button" class="faq-question-btn" aria-expanded="false">
+            <span>Какие требования к ПК для локальной работы Whisper?</span>
+            <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </button>
+          <div class="faq-answer-pane">
+            <div class="faq-answer-content">
+              <p>Для быстрой офлайн-работы модели `Base` (~145 МБ) достаточно любого современного 4-ядерного процессора и 4 ГБ оперативной памяти. Локальный Whisper в Aura работает полностью автономно «из коробки» на ресурсах вашего процессора, поэтому вам <strong>не нужно устанавливать</strong> Python, библиотеки CUDA, драйверы для видеокарты или сторонние утилиты. Программа скачивает оптимизированный файл модели одним кликом и готова к работе.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Q4 -->
+        <div class="faq-item reveal-on-scroll">
+          <button type="button" class="faq-question-btn" aria-expanded="false">
+            <span>Нужно ли платить за использование программы?</span>
+            <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </button>
+          <div class="faq-answer-pane">
+            <div class="faq-answer-content">
+              <p>Нет, программа Aura на 100% бесплатна и имеет открытый исходный код под копилефт-лицензией AGPL-3.0. В ней нет платных подписок, скрытых лимитов на объём ввода или рекламы. Если вы используете облачный режим через собственные API-ключи, вы оплачиваете провайдерам лишь копеечную стоимость токенов напрямую (например, в Groq или Google Gemini часто есть бесплатные лимиты).</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <div class="footer-container">
+      <div class="footer-brand">
+        <div class="footer-logo-row">
+          <svg class="footer-logo" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path class="logo-outer" d="M398.114 421C445.533 380.876 474.714 322.514 474.714 256.857C474.714 136.486 376.229 38 255.857 38C135.486 38 37 136.486 37 256.857C37 322.514 66.1809 380.876 113.6 421" stroke="currentColor" stroke-width="73.1573" />
+            <path class="logo-outer-ripple" d="M398.114 421C445.533 380.876 474.714 322.514 474.714 256.857C474.714 136.486 376.229 38 255.857 38C135.486 38 37 136.486 37 256.857C37 322.514 66.1809 380.876 113.6 421" stroke="currentColor" stroke-width="73.1573" />
+            <path class="logo-inner" d="M181.963 176.024L42.0293 511.651H142.825L200.192 352.952L247.909 233.927C250.769 226.064 253.45 222.132 255.952 222.132C258.096 222.132 260.598 226.064 263.458 233.927L311.175 352.952L368.542 511.651H469.874L329.404 176.024C322.255 158.867 312.783 147.25 300.988 141.174C289.55 135.098 274.538 132.06 255.952 132.06C234.148 132.06 217.885 135.455 207.162 142.246C196.797 149.038 188.397 160.297 181.963 176.024Z" fill="currentColor" />
+          </svg>
+          <span class="logo-text">AURA</span>
+        </div>
+        <p class="footer-desc">Умный голосовой ввод с открытым исходным кодом для Windows. Создано <a href="https://github.com/malashkadev" target="_blank" rel="noopener noreferrer" style="color: var(--accent-color); font-weight: 500;">@malashkadev</a>.</p>
+      </div>
+      <div class="footer-links">
+        <div class="footer-link-group">
+          <span class="footer-group-title">Программа</span>
+          <a href="https://github.com/malashkadev/aura/releases/download/v1.0.0/Aura_1.0.0_x64-setup.exe" class="footer-link" id="footer-download-link">Скачать Aura</a>
+          <a href="https://github.com/malashkadev/aura/releases" class="footer-link" id="footer-releases-link">История версий</a>
+        </div>
+        <div class="footer-link-group">
+          <span class="footer-group-title">Разработка</span>
+          <a href="https://github.com/malashkadev/aura" class="footer-link" id="footer-github-link">Открыть GitHub</a>
+          <a href="https://github.com/malashkadev/aura/blob/main/LICENSE" class="footer-link" id="footer-license-link">Лицензия AGPL-3.0</a>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p class="copyright">&copy; 2026 Aura App. Выпущено под лицензией AGPL-3.0. Продукт независимой разработки.</p>
+    </div>
+  </footer>
+
+  <!-- Scroll to Top Button -->
+  <button type="button" class="scroll-top-btn" id="scroll-top-btn" aria-label="Вернуться наверх">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="scroll-top-icon">
+      <line x1="12" y1="19" x2="12" y2="5"></line>
+      <polyline points="5 12 12 5 19 12"></polyline>
+    </svg>
+  </button>
+
+</body>
+</html>
