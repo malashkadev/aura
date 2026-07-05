@@ -683,20 +683,17 @@ body {
 }
 
 .about-icon {
-  width: 96px;
-  height: 96px;
-  background-color: rgba(var(--accent-color-rgb), 0.06);
-  border-radius: var(--radius-full);
   color: var(--accent-color);
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid rgba(var(--accent-color-rgb), 0.15);
+  margin-bottom: 8px;
 }
 
 .about-icon svg {
-  width: 56px;
-  height: 56px;
+  width: 80px;
+  height: 80px;
+  overflow: visible;
 }
 
 .about-app-title {
