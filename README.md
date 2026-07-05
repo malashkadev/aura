@@ -6,6 +6,8 @@
 
 Hold a hotkey, speak, release — Aura transcribes your speech, cleans it up (punctuation, filler words) and types it into **any** Windows application. Works with cloud AI (Gemini / OpenAI / Groq) or fully offline with local Whisper.
 
+**100% Free & Open Source** — Aura is completely free, with no ads, paid subscriptions, trial periods, or hidden limits.
+
 > 🇷🇺 [Документация на русском](README.ru.md)
 
 ![Aura demo](docs/Aura.gif)
