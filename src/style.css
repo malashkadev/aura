@@ -53,7 +53,7 @@ body {
 
 /* Glassmorphic Container */
 .glass-container {
-  width: 700px;
+  width: 760px;
   height: 550px;
   background: hsla(0, 0%, 4%, 0.85);
   border: 1px solid var(--border-color);
@@ -122,7 +122,7 @@ body {
 
 /* Sidebar Navigation */
 .settings-nav {
-  width: 200px;
+  width: 230px;
   padding: 20px 12px;
   border-right: 1px solid var(--border-color);
   display: flex;
