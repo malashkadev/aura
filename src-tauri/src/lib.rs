@@ -262,6 +262,35 @@ fn is_silence_hallucination(text: &str) -> bool {
     exact_markers.contains(&normalized.as_str())
 }
 
+fn capitalize_word(s: &str) -> String {
+    let mut c = s.chars();
+    match c.next() {
+        None => String::new(),
+        Some(f) => f.to_uppercase().collect::<String>() + c.as_str(),
+    }
+}
+
+fn clean_hallucinated_brackets(text: &str) -> String {
+    let mut cleaned = text.trim().to_string();
+    let noise_words = [
+        "музыка", "music", "laughter", "смех", "background noise", "шум", "applause", "аплодисменты",
+        "silence", "тишина", "sigh", "вздох", "cough", "кашель", "crying", "плач"
+    ];
+    for term in &noise_words {
+        let brackets_upper = format!("[{}]", capitalize_word(term));
+        let brackets_lower = format!("[{}]", term);
+        let parens_upper = format!("({})", capitalize_word(term));
+        let parens_lower = format!("({})", term);
+        
+        cleaned = cleaned.replace(&brackets_upper, "");
+        cleaned = cleaned.replace(&brackets_lower, "");
+        cleaned = cleaned.replace(&parens_upper, "");
+        cleaned = cleaned.replace(&parens_lower, "");
+    }
+    cleaned.trim().to_string()
+}
+
+
 /// Converts spoken punctuation commands ("запятая", "новая строка") into symbols.
 /// Opt-in via settings; mainly useful for the local/raw transcription mode.
 fn apply_voice_punctuation(text: &str) -> String {
@@ -742,7 +771,8 @@ async fn start_recording_session(app_handle: tauri::AppHandle) {
 
                                 match transcription_result {
                                     Ok(text) => {
-                                        let trimmed = text.trim().to_string();
+                                        let cleaned_text = clean_hallucinated_brackets(&text);
+                                        let trimmed = cleaned_text.trim().to_string();
                                         eprintln!("Aura Dev Log: Streaming transcription success: '{}'", trimmed);
                                         if !trimmed.is_empty() && !is_silence_hallucination(&trimmed) {
                                             type_streaming_update(
@@ -866,7 +896,8 @@ async fn finalize_recording(app_handle: tauri::AppHandle) {
         let mut had_error = None;
         match transcription_result {
             Ok(text) => {
-                let trimmed = text.trim().to_string();
+                let cleaned_text = clean_hallucinated_brackets(&text);
+                let trimmed = cleaned_text.trim().to_string();
                 eprintln!("Aura Dev Log: Final transcription success: '{}'", trimmed);
                 if !trimmed.is_empty() && !is_silence_hallucination(&trimmed) {
                     let final_text = if settings.voice_punctuation {
@@ -1181,5 +1212,14 @@ mod tests {
         assert_eq!(rms(&[]), 0.0);
         assert!(rms(&[0.0, 0.0, 0.0]) < f32::EPSILON);
         assert!((rms(&[0.5, -0.5, 0.5, -0.5]) - 0.5).abs() < 1e-6);
+    }
+
+    #[test]
+    fn test_clean_hallucinated_brackets() {
+        assert_eq!(clean_hallucinated_brackets("Привет [Музыка] как дела"), "Привет  как дела");
+        assert_eq!(clean_hallucinated_brackets("Привет (laughter) как дела"), "Привет  как дела");
+        assert_eq!(clean_hallucinated_brackets("[тишина]"), "");
+        assert_eq!(clean_hallucinated_brackets("   [смех]   "), "");
+        assert_eq!(clean_hallucinated_brackets("Обычный текст без шума"), "Обычный текст без шума");
     }
 }
