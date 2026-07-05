@@ -8,8 +8,7 @@ Hold a hotkey, speak, release — Aura transcribes your speech, cleans it up (pu
 
 > 🇷🇺 [Документация на русском](README.ru.md)
 
-<!-- TODO: add a screenshot/GIF here before publishing -->
-<!-- ![Aura demo](docs/demo.gif) -->
+![Aura demo](docs/Aura.gif)
 
 ## Features
 
