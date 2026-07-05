@@ -1,8 +1,10 @@
 [package]
 name = "glaido-app"
 version = "1.0.0"
-description = "A Tauri App"
-authors = ["you"]
+description = "Aura — voice dictation for Windows: hold a hotkey, speak, get clean text in any app (Whisper local/cloud + LLM cleanup)"
+authors = ["Aura contributors"]
+license = "MIT"
+repository = "https://github.com/malashkadev/aura"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html

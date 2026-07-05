@@ -1,10 +1,14 @@
 {
-  "name": "glaido-app",
+  "name": "aura-voice",
   "private": true,
   "version": "1.0.0",
+  "description": "Aura — voice dictation for Windows (Whisper + LLM cleanup)",
+  "license": "MIT",
   "type": "module",
   "scripts": {
-    "tauri": "tauri"
+    "tauri": "tauri",
+    "dev": "tauri dev",
+    "build": "tauri build"
   },
   "devDependencies": {
     "@tauri-apps/cli": "^2",

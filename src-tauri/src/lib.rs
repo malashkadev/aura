@@ -1089,7 +1089,8 @@ pub fn run() {
                         }
                     } else {
                         eprintln!("Aura Dev Log: Hotkey up");
-                        keyboard_simulator::send_dummy_key();
+                        // Alt-menu disarming is handled synchronously inside the
+                        // keyboard hook (send_disarmed_alt_up / dummy Ctrl tap).
 
                         if state.ignore_next_release.swap(false, Ordering::SeqCst) {
                             return;

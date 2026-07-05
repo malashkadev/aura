@@ -1,6 +1,7 @@
-# Ignore binary executables
+# Ignore binary executables (whisper sidecar in src-tauri/binaries is intentionally tracked)
 glaido-core.exe
 *.exe
+!src-tauri/binaries/*.exe
 
 # Ignore node_modules
 node_modules/
@@ -14,3 +15,14 @@ target/
 *.db-wal
 .window-state.json
 settings.json
+
+# AI-tooling working files (not part of the app)
+.agents/
+.impeccable/
+.superdesign/
+graphify-out/
+.graphifyignore
+skills-lock.json
+docs/superpowers/
+test_out.txt
+/Logo DARK.png
