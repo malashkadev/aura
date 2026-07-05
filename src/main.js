@@ -79,7 +79,7 @@ const i18nDict = {
     status_saving: "Сохранение настроек...",
     status_saved: "Настройки успешно сохранены!",
     status_error: "Ошибка: ",
-    model_status_ready: "Готова",
+    model_status_ready: "Установлено",
     model_action_download: "Скачать",
     model_action_delete: "Удалить",
     api_get_key_pattern: "Получить ключ на {name}",
@@ -176,7 +176,7 @@ const i18nDict = {
     status_saving: "Saving settings...",
     status_saved: "Settings saved successfully!",
     status_error: "Error: ",
-    model_status_ready: "Ready",
+    model_status_ready: "Installed",
     model_action_download: "Download",
     model_action_delete: "Delete",
     api_get_key_pattern: "Get key on {name}",
@@ -273,7 +273,7 @@ const i18nDict = {
     status_saving: "Einstellungen werden gespeichert...",
     status_saved: "Einstellungen erfolgreich gespeichert!",
     status_error: "Fehler: ",
-    model_status_ready: "Bereit",
+    model_status_ready: "Installiert",
     model_action_download: "Herunterladen",
     model_action_delete: "Löschen",
     api_get_key_pattern: "Schlüssel erhalten auf {name}",
@@ -370,7 +370,7 @@ const i18nDict = {
     status_saving: "Guardando ajustes...",
     status_saved: "¡Ajustes guardados correctamente!",
     status_error: "Error: ",
-    model_status_ready: "Listo",
+    model_status_ready: "Instalado",
     model_action_download: "Descargar",
     model_action_delete: "Eliminar",
     api_get_key_pattern: "Obtener clave en {name}",
@@ -467,7 +467,7 @@ const i18nDict = {
     status_saving: "Enregistrement...",
     status_saved: "Paramètres enregistrés !",
     status_error: "Erreur: ",
-    model_status_ready: "Prêt",
+    model_status_ready: "Installé",
     model_action_download: "Télécharger",
     model_action_delete: "Supprimer",
     api_get_key_pattern: "Obtenir la clé sur {name}",
@@ -564,7 +564,7 @@ const i18nDict = {
     status_saving: "Salvataggio...",
     status_saved: "Impostazioni salvate con successo!",
     status_error: "Errore: ",
-    model_status_ready: "Pronto",
+    model_status_ready: "Installato",
     model_action_download: "Scarica",
     model_action_delete: "Elimina",
     api_get_key_pattern: "Ottieni la chiave su {name}",
@@ -661,7 +661,7 @@ const i18nDict = {
     status_saving: "正在保存设置...",
     status_saved: "设置保存成功！",
     status_error: "发生错误: ",
-    model_status_ready: "就绪",
+    model_status_ready: "已安装",
     model_action_download: "下载",
     model_action_delete: "删除",
     api_get_key_pattern: "在 {name} 获取密钥",
@@ -758,7 +758,7 @@ const i18nDict = {
     status_saving: "Salvando...",
     status_saved: "Configurações salvas com sucesso!",
     status_error: "Erro: ",
-    model_status_ready: "Pronto",
+    model_status_ready: "Instalado",
     model_action_download: "Baixar",
     model_action_delete: "Excluir",
     api_get_key_pattern: "Obter chave em {name}",
@@ -855,7 +855,7 @@ const i18nDict = {
     status_saving: "Ayarlar kaydediliyor...",
     status_saved: "Ayarlar başarıyla kaydedildi!",
     status_error: "Hata: ",
-    model_status_ready: "Hazır",
+    model_status_ready: "Yüklendi",
     model_action_download: "İndir",
     model_action_delete: "Sil",
     api_get_key_pattern: "{name} üzerinden anahtar al",
@@ -1133,7 +1133,12 @@ document.addEventListener("DOMContentLoaded", () => {
         
         if (isDownloaded) {
           actionEl.innerHTML = `
-            <span class="status-ready">${dict.model_status_ready || "Готова"}</span>
+            <span class="status-ready-badge">
+              <svg class="status-ready-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>
+              <span data-i18n="model_status_ready">${dict.model_status_ready || "Установлено"}</span>
+            </span>
             <button type="button" class="btn-delete-card-model" title="${dict.model_action_delete || "Удалить"}" data-model="${model}">
               <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
             </button>
