@@ -1,6 +1,6 @@
 [package]
 name = "aura-app"
-version = "1.0.0"
+version = "1.0.1"
 description = "Aura — voice dictation for Windows: hold a hotkey, speak, get clean text in any app (Whisper local/cloud + LLM cleanup)"
 authors = ["Aura contributors"]
 license = "AGPL-3.0-only"
