@@ -16,7 +16,7 @@ pub struct Settings {
     pub hotkey: String,             // "Alt+N"
     pub streaming_enabled: bool,    // whether to type text on-the-fly or paste on release (v1.0 mode)
     pub toggle_enabled: bool,       // short tap latches recording until the next tap
-    pub language: String,           // "auto" | "ru" | "en" | "layout" (detect from keyboard layout)
+    pub language: String,           // "auto" | "layout" | "ru" | "en" | "de" | "es" | "fr" | "it" | "zh" | "pt" | "tr" (dictation language bias/hint)
     pub dictionary: String,         // comma-separated custom terms passed to the recognizer as hints
     pub voice_punctuation: bool,    // convert spoken commands ("запятая", "новая строка") to punctuation
     pub autostart: bool,            // launch the app on Windows startup
