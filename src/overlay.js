@@ -357,7 +357,8 @@ const processingTranslations = {
 };
 
 const errorTranslations = {
-  "Ошибка запуска микрофона": {
+  "Microphone start error": {
+    ru: "Ошибка запуска микрофона",
     en: "Microphone start error",
     de: "Fehler beim Starten des Mikrofons",
     fr: "Erreur de démarrage du microphone",
@@ -368,7 +369,8 @@ const errorTranslations = {
     ja: "マイクの起動エラー",
     tr: "Mikrofon başlatılamadı"
   },
-  "Ошибка остановки записи": {
+  "Recording stop error": {
+    ru: "Ошибка остановки записи",
     en: "Recording stop error",
     de: "Fehler beim Stoppen der Aufnahme",
     fr: "Erreur d'arrêt de l'enregistrement",
@@ -379,7 +381,8 @@ const errorTranslations = {
     ja: "録音停止エラー",
     tr: "Kayıt durdurulamadı"
   },
-  "Ошибка загрузки настроек": {
+  "Settings load error": {
+    ru: "Ошибка загрузки настроек",
     en: "Settings load error",
     de: "Fehler beim Laden der Einstellungen",
     fr: "Erreur de chargement des paramètres",
@@ -390,7 +393,8 @@ const errorTranslations = {
     ja: "設定の読み込みエラー",
     tr: "Ayarlar yüklenemedi"
   },
-  "Gemini недоступен в вашем регионе. Включите VPN для всех приложений или выберите Groq": {
+  "Gemini is unavailable in your region. Enable global VPN or choose Groq": {
+    ru: "Gemini недоступен в вашем регионе. Включите VPN для всех приложений или выберите Groq",
     en: "Gemini is unavailable in your region. Enable global VPN or choose Groq",
     de: "Gemini ist in Ihrer Region nicht verfügbar. Aktivieren Sie VPN oder wählen Sie Groq",
     fr: "Gemini n'est pas disponible dans votre région. Activez un VPN ou choisissez Groq",
@@ -401,7 +405,8 @@ const errorTranslations = {
     ja: "Geminiはお住まいの地域では利用できません。VPNを有効にするかGroqを選択してください",
     tr: "Gemini bölgenizde kullanılamıyor. VPN'i etkinleştirin veya Groq'u seçin"
   },
-  "Неверный API-ключ в настройках": {
+  "Invalid API key in settings": {
+    ru: "Неверный API-ключ в настройках",
     en: "Invalid API key in settings",
     de: "Ungültiger API-Schlüssel in den Einstellungen",
     fr: "Clé API non valide dans les paramètres",
@@ -412,7 +417,8 @@ const errorTranslations = {
     ja: "設定のAPIキーが無効です",
     tr: "Ayarlardaki API anahtarı geçersiz"
   },
-  "Ошибка соединения через VPN/прокси": {
+  "Connection error via VPN/Proxy": {
+    ru: "Ошибка соединения через VPN/прокси",
     en: "Connection error via VPN/Proxy",
     de: "Verbindungsfehler über VPN/Proxy",
     fr: "Erreur de connexion via VPN/Proxy",
@@ -423,7 +429,8 @@ const errorTranslations = {
     ja: "VPN/プロキシ経由の接続エラー",
     tr: "VPN/Proxy bağlantı hatası"
   },
-  "Локальная модель не скачана": {
+  "Local model not downloaded": {
+    ru: "Локальная модель не скачана",
     en: "Local model not downloaded",
     de: "Lokales Modell nicht heruntergeladen",
     fr: "Modèle local non téléchargé",
@@ -434,7 +441,8 @@ const errorTranslations = {
     ja: "ローカルモデルがダウンロードされていません",
     tr: "Yerel model indirilmedi"
   },
-  "Сбой локального Whisper-клиента": {
+  "Local Whisper client failure": {
+    ru: "Сбой локального Whisper-клиента",
     en: "Local Whisper client failure",
     de: "Fehler des lokalen Whisper-Clients",
     fr: "Échec du client Whisper local",
@@ -445,7 +453,8 @@ const errorTranslations = {
     ja: "ローカルWhisperクライアントの起動失敗",
     tr: "Yerel Whisper istemci hatası"
   },
-  "Лимит запросов API исчерпан": {
+  "API rate limit reached": {
+    ru: "Лимит запросов API исчерпан",
     en: "API rate limit reached",
     de: "API-Anfragenlimit erreicht",
     fr: "Limite de requêtes API atteinte",
@@ -456,7 +465,8 @@ const errorTranslations = {
     ja: "APIリクエストの上限に達しました",
     tr: "API istek limiti tükendi"
   },
-  "Баланс API ключа исчерпан": {
+  "API key balance exhausted": {
+    ru: "Баланс API ключа исчерпан",
     en: "API key balance exhausted",
     de: "Guthaben des API-Schlüssels aufgebraucht",
     fr: "Solde de la clé API épuisé",
@@ -470,14 +480,14 @@ const errorTranslations = {
 };
 
 function translateError(errStr, lang) {
-  if (lang === "ru") return errStr;
   const match = errorTranslations[errStr];
   if (match && match[lang]) {
     return match[lang];
   }
-  if (errStr.startsWith("Нет сети:")) {
-    const details = errStr.replace("Нет сети:", "").trim();
+  if (errStr.startsWith("No network:")) {
+    const details = errStr.replace("No network:", "").trim();
     const netTranslations = {
+      ru: "Нет сети:",
       en: "No network:",
       de: "Kein Netzwerk:",
       fr: "Pas de réseau :",

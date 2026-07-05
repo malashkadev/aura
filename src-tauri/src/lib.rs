@@ -520,11 +520,11 @@ fn categorize_error(err: &str) -> String {
         || err_lower.contains("user location")
         || err_lower.contains("failed_precondition")
     {
-        "Gemini недоступен в вашем регионе. Включите VPN для всех приложений или выберите Groq".to_string()
+        "Gemini is unavailable in your region. Enable global VPN or choose Groq".to_string()
     } else if err_lower.contains("api key") || err_lower.contains("invalid key") || err_lower.contains("key is invalid") || err_lower.contains("incorrect api key") || err_lower.contains("401") || err_lower.contains("permission_denied") {
-        "Неверный API-ключ в настройках".to_string()
+        "Invalid API key in settings".to_string()
     } else if err_lower.contains("proxy") || err_lower.contains("certificate") || err_lower.contains("tls") || err_lower.contains("ssl") {
-        "Ошибка соединения через VPN/прокси".to_string()
+        "Connection error via VPN/Proxy".to_string()
     } else if err_lower.contains("network") || err_lower.contains("timeout") || err_lower.contains("timed out") || err_lower.contains("dns") || err_lower.contains("connection") || err_lower.contains("reqwest") {
         let clean_err = err.replace("Gemini API request failed: ", "").replace("reqwest::Error", "");
         let truncated = if clean_err.chars().count() > 50 {
@@ -532,15 +532,15 @@ fn categorize_error(err: &str) -> String {
         } else {
             clean_err
         };
-        format!("Нет сети: {}", truncated)
+        format!("No network: {}", truncated)
     } else if err_lower.contains("ggml") || err_lower.contains("model file") || err_lower.contains("not found") {
-        "Локальная модель не скачана".to_string()
+        "Local model not downloaded".to_string()
     } else if err_lower.contains("whisper-sidecar") || err_lower.contains("sidecar") {
-        "Сбой локального Whisper-клиента".to_string()
+        "Local Whisper client failure".to_string()
     } else if err_lower.contains("rate limit") || err_lower.contains("429") {
-        "Лимит запросов API исчерпан".to_string()
+        "API rate limit reached".to_string()
     } else if err_lower.contains("quota") || err_lower.contains("insufficient balance") {
-        "Баланс API ключа исчерпан".to_string()
+        "API key balance exhausted".to_string()
     } else {
         if err.chars().count() > 40 {
             err.chars().take(37).collect::<String>() + "..."
@@ -685,7 +685,7 @@ async fn start_recording_session(app_handle: tauri::AppHandle) {
         eprintln!("Aura Dev Log ERROR: Failed to start recording: {}", e);
         state.is_recording.store(false, Ordering::SeqCst);
         keyboard_hook::set_recording_active(false);
-        show_overlay_error(&app_handle, gen, "Ошибка запуска микрофона").await;
+        show_overlay_error(&app_handle, gen, "Microphone start error").await;
         return;
     }
 
@@ -852,7 +852,7 @@ async fn finalize_recording(app_handle: tauri::AppHandle) {
     eprintln!("Aura Dev Log: stop_recording result = {:?}", stop_res);
     if let Err(e) = stop_res {
         eprintln!("Aura Dev Log ERROR: Failed to stop recording: {}", e);
-        show_overlay_error(&app_handle, my_gen, "Ошибка остановки записи").await;
+        show_overlay_error(&app_handle, my_gen, "Recording stop error").await;
         return;
     }
 
@@ -869,7 +869,7 @@ async fn finalize_recording(app_handle: tauri::AppHandle) {
             Ok(s) => s,
             Err(e) => {
                 eprintln!("Aura Dev Log ERROR: Failed to load settings: {}", e);
-                show_overlay_error(&app_handle_clone, my_gen, "Ошибка загрузки настроек").await;
+                show_overlay_error(&app_handle_clone, my_gen, "Settings load error").await;
                 return;
             }
         };
@@ -897,7 +897,7 @@ async fn finalize_recording(app_handle: tauri::AppHandle) {
             .await
         } else {
             if settings.api_key.trim().is_empty() {
-                Err("Введите API-ключ в настройках программы".to_string())
+                Err("Please enter your API key in settings".to_string())
             } else {
                 ai_client::transcribe_and_clean(
                     provider_from(&settings),
@@ -1029,8 +1029,8 @@ pub fn run() {
             }
 
             // 2. Build system tray menu
-            let quit_i = MenuItem::with_id(app, "quit", "Выход", true, None::<&str>)?;
-            let show_i = MenuItem::with_id(app, "show", "Открыть настройки", true, None::<&str>)?;
+            let quit_i = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
+            let show_i = MenuItem::with_id(app, "show", "Open Settings", true, None::<&str>)?;
             let menu = Menu::with_items(app, &[&show_i, &quit_i])?;
 
             // 3. Build tray icon
