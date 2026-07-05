@@ -489,11 +489,15 @@ p {
   text-align: right;
 }
 
-.editor-text {
+.editor-text-wrapper {
   word-break: normal;
   overflow-wrap: break-word;
   white-space: pre-wrap;
   color: var(--text-primary);
+}
+
+.editor-text {
+  color: inherit;
 }
 
 .editor-cursor {
