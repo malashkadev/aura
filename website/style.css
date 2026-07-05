@@ -277,6 +277,7 @@ p {
 
 .main-nav {
   display: flex;
+  align-items: center;
   gap: 32px;
 }
 
@@ -292,6 +293,19 @@ p {
 
 .nav-link.active {
   color: var(--accent-color);
+}
+
+.lang-switch {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  padding: 0 8px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  margin-left: 8px;
+  height: 24px;
+  line-height: 1;
 }
 
 .header-actions {
