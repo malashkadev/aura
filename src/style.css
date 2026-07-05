@@ -1545,3 +1545,51 @@ body {
   background: var(--accent-hover);
 }
 
+/* Hotkey recorder widget styling */
+.hotkey-field-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  gap: 8px;
+}
+
+.hotkey-input {
+  cursor: pointer;
+  text-align: center;
+  font-weight: 600;
+  caret-color: transparent; /* Hide text cursor since it's readonly click-to-record */
+}
+
+.hotkey-input.recording {
+  border-color: var(--accent-color) !important;
+  background-color: rgba(var(--accent-color-rgb), 0.04) !important;
+  color: var(--accent-color) !important;
+}
+
+.btn-reset-icon {
+  background: none;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  width: 38px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: var(--transition);
+}
+
+.btn-reset-icon:hover {
+  border-color: var(--accent-color);
+  color: var(--accent-color);
+}
+
+.btn-reset-icon svg {
+  width: 16px;
+  height: 16px;
+}
+
+

@@ -99,7 +99,8 @@ const i18nDict = {
     confirm_clear_history_title: "Очистить историю",
     confirm_clear_history_msg: "Вы действительно хотите очистить всю историю транскрипций?",
     general_ui_lang_title: "Язык интерфейса",
-    general_ui_lang_desc: "Выберите язык для отображения настроек и уведомлений приложения."
+    general_ui_lang_desc: "Выберите язык для отображения настроек и уведомлений приложения.",
+    hotkey_reset_title: "Сбросить на Alt+V"
   },
   en: {
     title_settings: "Settings",
@@ -197,7 +198,8 @@ const i18nDict = {
     confirm_clear_history_title: "Clear history",
     confirm_clear_history_msg: "Are you sure you want to clear all transcription history?",
     general_ui_lang_title: "Interface Language",
-    general_ui_lang_desc: "Select the language for settings and application notifications."
+    general_ui_lang_desc: "Select the language for settings and application notifications.",
+    hotkey_reset_title: "Reset to Alt+V"
   },
   de: {
     title_settings: "Einstellungen",
@@ -295,7 +297,8 @@ const i18nDict = {
     confirm_clear_history_title: "Verlauf löschen",
     confirm_clear_history_msg: "Möchten Sie den gesamten Transkriptionsverlauf wirklich löschen?",
     general_ui_lang_title: "Sprache der Benutzeroberfläche",
-    general_ui_lang_desc: "Wählen Sie die Sprache für Einstellungen und Benachrichtigungen."
+    general_ui_lang_desc: "Wählen Sie die Sprache für Einstellungen und Benachrichtigungen.",
+    hotkey_reset_title: "Auf Alt+V zurücksetzen"
   },
   es: {
     title_settings: "Ajustes",
@@ -393,7 +396,8 @@ const i18nDict = {
     confirm_clear_history_title: "Limpiar historial",
     confirm_clear_history_msg: "¿Está seguro de que desea limpiar todo el historial de transcripciones?",
     general_ui_lang_title: "Idioma de la interfaz",
-    general_ui_lang_desc: "Seleccione el idioma para los ajustes y las notificaciones."
+    general_ui_lang_desc: "Seleccione el idioma para los ajustes y las notificaciones.",
+    hotkey_reset_title: "Restablecer a Alt+V"
   },
   fr: {
     title_settings: "Paramètres",
@@ -491,7 +495,8 @@ const i18nDict = {
     confirm_clear_history_title: "Effacer l'historique",
     confirm_clear_history_msg: "Voulez-vous vraiment effacer tout l'historique des transcriptions ?",
     general_ui_lang_title: "Langue de l'interface",
-    general_ui_lang_desc: "Sélectionnez la langue pour les paramètres et les notifications de l'application."
+    general_ui_lang_desc: "Sélectionnez la langue pour les paramètres et les notifications de l'application.",
+    hotkey_reset_title: "Réinitialiser à Alt+V"
   },
   it: {
     title_settings: "Impostazioni",
@@ -589,7 +594,8 @@ const i18nDict = {
     confirm_clear_history_title: "Cancella cronologia",
     confirm_clear_history_msg: "Sei sicuro di voler cancellare tutta la cronologia delle trascrizioni?",
     general_ui_lang_title: "Lingua dell'interfaccia",
-    general_ui_lang_desc: "Seleziona la lingua per le impostazioni e le notifiche dell'applicazione."
+    general_ui_lang_desc: "Seleziona la lingua per le impostazioni e le notifiche dell'applicazione.",
+    hotkey_reset_title: "Ripristina ad Alt+V"
   },
   zh: {
     title_settings: "设置",
@@ -687,7 +693,8 @@ const i18nDict = {
     confirm_clear_history_title: "清空历史",
     confirm_clear_history_msg: "您确定要清空所有听写历史记录吗？",
     general_ui_lang_title: "界面语言",
-    general_ui_lang_desc: "选择设置和应用程序通知的语言。"
+    general_ui_lang_desc: "选择设置和应用程序通知的语言。",
+    hotkey_reset_title: "重置为 Alt+V"
   },
   pt: {
     title_settings: "Configurações",
@@ -785,7 +792,8 @@ const i18nDict = {
     confirm_clear_history_title: "Limpar histórico",
     confirm_clear_history_msg: "Tem certeza de que deseja limpar todo o histórico de transcrições?",
     general_ui_lang_title: "Idioma da interface",
-    general_ui_lang_desc: "Selecione o idioma para as configurações e notificações do aplicativo."
+    general_ui_lang_desc: "Selecione o idioma para as configurações e notificações do aplicativo.",
+    hotkey_reset_title: "Redefinir para Alt+V"
   },
   tr: {
     title_settings: "Ayarlar",
@@ -883,7 +891,8 @@ const i18nDict = {
     confirm_clear_history_title: "Geçmişi Temizle",
     confirm_clear_history_msg: "Tüm transkripsiyon geçmişini temizlemek istediğinizden emin misiniz?",
     general_ui_lang_title: "Arayüz Dili",
-    general_ui_lang_desc: "Ayarlar ve uygulama bildirimleri için dili seçin."
+    general_ui_lang_desc: "Ayarlar ve uygulama bildirimleri için dili seçin.",
+    hotkey_reset_title: "Alt+V'ye Sıfırla"
   }
 };
 
@@ -972,7 +981,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Settings elements
   const selectProvider = document.getElementById("select-provider");
-  const selectHotkey = document.getElementById("select-hotkey");
+  const selectHotkey = document.getElementById("input-hotkey");
   const selectLanguage = document.getElementById("select-language");
   const textareaDictionary = document.getElementById("textarea-dictionary");
   const checkboxToggle = document.getElementById("checkbox-toggle");
@@ -992,6 +1001,86 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
   }
+
+  // Hotkey Recorder Widget Events
+  const btnResetHotkey = document.getElementById("btn-reset-hotkey");
+  let isRecordingHotkey = false;
+
+  const allowedSpecialKeys = {
+    "Space": "Space",
+    " ": "Space",
+    "CapsLock": "Caps Lock",
+    "Tab": "Tab",
+    "F1": "F1", "F2": "F2", "F3": "F3", "F4": "F4", "F5": "F5", "F6": "F6",
+    "F7": "F7", "F8": "F8", "F9": "F9", "F10": "F10", "F11": "F11", "F12": "F12"
+  };
+
+  if (selectHotkey) {
+    selectHotkey.addEventListener("focus", () => {
+      isRecordingHotkey = true;
+      selectHotkey.value = "Нажмите клавиши...";
+      selectHotkey.classList.add("recording");
+    });
+
+    selectHotkey.addEventListener("blur", () => {
+      isRecordingHotkey = false;
+      selectHotkey.classList.remove("recording");
+      // Restore current settings value on blur
+      invoke("get_settings").then(settings => {
+        if (settings) {
+          selectHotkey.value = settings.hotkey || "Alt+V";
+        }
+      }).catch(() => {
+        selectHotkey.value = "Alt+V";
+      });
+    });
+
+    selectHotkey.addEventListener("keydown", (e) => {
+      if (!isRecordingHotkey) return;
+      e.preventDefault();
+      e.stopPropagation();
+
+      const key = e.key;
+
+      // Ignore modifiers themselves
+      if (key === "Control" || key === "Alt" || key === "Shift" || key === "Meta") {
+        return;
+      }
+
+      let modifier = "";
+      if (e.ctrlKey) modifier = "Ctrl";
+      else if (e.altKey) modifier = "Alt";
+      else if (e.shiftKey) modifier = "Shift";
+
+      let keyName = key;
+      if (allowedSpecialKeys[key]) {
+        keyName = allowedSpecialKeys[key];
+      } else if (key.length === 1 && /[a-zA-Z0-9]/.test(key)) {
+        keyName = key.toUpperCase();
+      } else {
+        return;
+      }
+
+      const hotkeyStr = modifier ? `${modifier}+${keyName}` : keyName;
+      selectHotkey.value = hotkeyStr;
+      isRecordingHotkey = false;
+      selectHotkey.classList.remove("recording");
+      selectHotkey.blur();
+
+      // Trigger modified state
+      selectHotkey.dispatchEvent(new Event("change", { bubbles: true }));
+    });
+  }
+
+  if (btnResetHotkey) {
+    btnResetHotkey.addEventListener("click", () => {
+      if (selectHotkey) {
+        selectHotkey.value = "Alt+V";
+        selectHotkey.dispatchEvent(new Event("change", { bubbles: true }));
+      }
+    });
+  }
+
 
   function updateSoundUI() {
     const themeGroup = document.getElementById("sound-theme-group");
@@ -1596,6 +1685,12 @@ document.addEventListener("DOMContentLoaded", () => {
     if (selectUiLang) {
       selectUiLang.setAttribute("aria-label", dict.general_ui_lang_title || "UI Language");
     }
+
+    const btnReset = document.getElementById("btn-reset-hotkey");
+    if (btnReset) {
+      btnReset.setAttribute("title", dict.hotkey_reset_title || "Сбросить на Alt+V");
+    }
+
     
     // Update inputs and placeholders
     const apiInput = document.getElementById("input-api-key");

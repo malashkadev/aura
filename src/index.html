@@ -254,16 +254,13 @@
             <h2 class="card-title" data-i18n="hotkey_title">Глобальная горячая клавиша</h2>
             <p class="card-desc" data-i18n="hotkey_desc">Зажмите выбранную комбинацию для начала записи, отпустите для распознавания.</p>
             <div class="form-group">
-              <label for="select-hotkey" class="field-label" data-i18n="hotkey_label">Комбинация</label>
-              <select id="select-hotkey" class="custom-select">
-                <option value="Alt+V">Alt + V</option>
-                <option value="Alt+N">Alt + N</option>
-                <option value="Alt+Space">Alt + Space</option>
-                <option value="Alt+K">Alt + K</option>
-                <option value="Ctrl+Space">Ctrl + Space</option>
-                <option value="F8">F8</option>
-                <option value="Caps Lock">Caps Lock</option>
-              </select>
+              <label for="input-hotkey" class="field-label" data-i18n="hotkey_label">Комбинация</label>
+              <div class="hotkey-field-wrapper">
+                <input type="text" id="input-hotkey" class="custom-input hotkey-input" readonly placeholder="Нажмите комбинацию клавиш..." />
+                <button type="button" id="btn-reset-hotkey" class="btn-reset-icon" title="Сбросить на Alt+V">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><polyline points="3 3 3 8 8 8"></polyline></svg>
+                </button>
+              </div>
             </div>
             <label class="toggle-switch">
               <input type="checkbox" id="checkbox-toggle" />
