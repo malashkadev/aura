@@ -181,7 +181,7 @@ fn provider_from(settings: &settings::Settings) -> ai_client::ApiProvider {
 /// Resolves the language to send to the recognizer from settings + detected layout.
 fn effective_language(settings: &settings::Settings, layout_language: &str) -> String {
     match settings.language.as_str() {
-        "ru" | "en" => settings.language.clone(),
+        "ru" | "en" | "de" | "es" | "fr" | "it" | "zh" | "pt" | "tr" => settings.language.clone(),
         "layout" => layout_language.to_string(),
         _ => String::new(), // auto-detect
     }
