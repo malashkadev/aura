@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/logo.svg?v=2" width="120" height="120" alt="Aura Logo" />
+  <img src="docs/logo.svg?v=3" width="120" height="120" alt="Aura Logo" />
 </p>
 
 <h1 align="center">Aura — Voice Dictation for Windows</h1>
