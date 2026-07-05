@@ -2,7 +2,10 @@
   <img src="docs/logo.svg?v=5" width="120" height="120" alt="Aura Logo" />
 </p>
 
-<h1 align="center">Aura — Voice Dictation for Windows</h1>
+<h1 align="center"><a href="https://aura-beryl-five.vercel.app/" style="text-decoration: none; color: inherit;">Aura — Voice Dictation for Windows</a></h1>
+<p align="center">
+  <a href="https://aura-beryl-five.vercel.app/"><b>🌐 Official Website: aura-beryl-five.vercel.app</b></a>
+</p>
 
 <p align="center">
   <a href="https://github.com/malashkadev/aura/actions/workflows/ci.yml"><img src="https://github.com/malashkadev/aura/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
