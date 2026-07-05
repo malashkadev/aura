@@ -165,6 +165,7 @@ body {
   height: 18px;
   opacity: 0.7;
   transition: var(--transition);
+  flex-shrink: 0;
 }
 
 .nav-tab:hover {
@@ -796,11 +797,15 @@ body {
 
 /* Keyboard Focus Indicators */
 .btn-primary:focus-visible,
-.btn-save:focus-visible,
-.custom-select:focus-visible,
-.custom-input:focus-visible {
+.btn-save:focus-visible {
   outline: 2px solid var(--accent-color);
   outline-offset: 2px;
+}
+
+.custom-select:focus-visible,
+.custom-input:focus-visible {
+  outline: none;
+  border-color: var(--accent-color);
 }
 
 .engine-option input:focus-visible + .engine-card {
