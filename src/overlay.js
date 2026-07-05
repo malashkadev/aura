@@ -315,17 +315,15 @@ setInterval(updateTimer, 500);
 // Main animation and physics loop (60fps)
 function updateAnimation() {
   if (currentState === "processing") {
-    // Smooth left-to-right neural scanline sweep
-    const sweepCenter = (angle * 2.5) % 15; // Sweep speed and range across the 9 bars
+    // Slow, organic breathing wave centered around the middle bar (index 4)
     bars.forEach((bar, index) => {
-      const dist = Math.abs(index - sweepCenter);
-      const factor = Math.max(0, 1 - dist / 1.8);
-      const h = 3 + factor * 11; // height scales between 3px and 14px
+      const distFromCenter = Math.abs(index - 4);
+      const h = 5 + Math.sin(angle - distFromCenter * 0.45) * 5.5;
       const y = 14.6 - (h / 2);
       bar.setAttribute("height", h.toString());
       bar.setAttribute("y", y.toString());
     });
-    angle += 0.08;
+    angle += 0.05;
   } else if (currentState === "recording") {
     // Smoothly slide currentHeight towards targetHeight
     bars.forEach((bar, index) => {
@@ -345,6 +343,157 @@ function updateAnimation() {
 // Start the animation loop
 updateAnimation();
 
+const processingTranslations = {
+  ru: "Обработка…",
+  en: "Processing…",
+  de: "Verarbeitung…",
+  fr: "Traitement…",
+  it: "Elaborazione…",
+  es: "Procesando…",
+  pt: "Processamento…",
+  zh: "处理中…",
+  ja: "処理中…",
+  tr: "İşleniyor…"
+};
+
+const errorTranslations = {
+  "Ошибка запуска микрофона": {
+    en: "Microphone start error",
+    de: "Fehler beim Starten des Mikrofons",
+    fr: "Erreur de démarrage du microphone",
+    it: "Errore di avvio del microfono",
+    es: "Error al iniciar el micrófono",
+    pt: "Erro ao iniciar o microfone",
+    zh: "无法启动麦克风",
+    ja: "マイクの起動エラー",
+    tr: "Mikrofon başlatılamadı"
+  },
+  "Ошибка остановки записи": {
+    en: "Recording stop error",
+    de: "Fehler beim Stoppen der Aufnahme",
+    fr: "Erreur d'arrêt de l'enregistrement",
+    it: "Errore di arresto della registrazione",
+    es: "Error al detener la grabación",
+    pt: "Erro ao parar a gravação",
+    zh: "无法停止录音",
+    ja: "録音停止エラー",
+    tr: "Kayıt durdurulamadı"
+  },
+  "Ошибка загрузки настроек": {
+    en: "Settings load error",
+    de: "Fehler beim Laden der Einstellungen",
+    fr: "Erreur de chargement des paramètres",
+    it: "Errore di caricamento delle impostazioni",
+    es: "Error al cargar los ajustes",
+    pt: "Erro ao carregar as configurações",
+    zh: "无法加载设置",
+    ja: "設定の読み込みエラー",
+    tr: "Ayarlar yüklenemedi"
+  },
+  "Gemini недоступен в вашем регионе. Включите VPN для всех приложений или выберите Groq": {
+    en: "Gemini is unavailable in your region. Enable global VPN or choose Groq",
+    de: "Gemini ist in Ihrer Region nicht verfügbar. Aktivieren Sie VPN oder wählen Sie Groq",
+    fr: "Gemini n'est pas disponible dans votre région. Activez un VPN ou choisissez Groq",
+    it: "Gemini non è disponibile nella tua regione. Abilita la VPN o scegli Groq",
+    es: "Gemini no está disponible en su región. Active una VPN o elija Groq",
+    pt: "Gemini indisponível na sua região. Ative a VPN ou escolha o Groq",
+    zh: "Gemini 在您所在地区不可用。请启用全局 VPN 或选择 Groq",
+    ja: "Geminiはお住まいの地域では利用できません。VPNを有効にするかGroqを選択してください",
+    tr: "Gemini bölgenizde kullanılamıyor. VPN'i etkinleştirin veya Groq'u seçin"
+  },
+  "Неверный API-ключ в настройках": {
+    en: "Invalid API key in settings",
+    de: "Ungültiger API-Schlüssel in den Einstellungen",
+    fr: "Clé API non valide dans les paramètres",
+    it: "Chiave API non valida nelle impostazioni",
+    es: "Clave API no válida en los ajustes",
+    pt: "Chave API inválida nas configurações",
+    zh: "设置中的 API 密钥无效",
+    ja: "設定のAPIキーが無効です",
+    tr: "Ayarlardaki API anahtarı geçersiz"
+  },
+  "Ошибка соединения через VPN/прокси": {
+    en: "Connection error via VPN/Proxy",
+    de: "Verbindungsfehler über VPN/Proxy",
+    fr: "Erreur de connexion via VPN/Proxy",
+    it: "Errore di connessione tramite VPN/Proxy",
+    es: "Error de conexión a través de VPN/Proxy",
+    pt: "Erro de conexão via VPN/Proxy",
+    zh: "通过 VPN/代理连接失败",
+    ja: "VPN/プロキシ経由の接続エラー",
+    tr: "VPN/Proxy bağlantı hatası"
+  },
+  "Локальная модель не скачана": {
+    en: "Local model not downloaded",
+    de: "Lokales Modell nicht heruntergeladen",
+    fr: "Modèle local non téléchargé",
+    it: "Modello locale non scaricato",
+    es: "Modelo local no descargado",
+    pt: "Modelo local não baixado",
+    zh: "本地模型未下载",
+    ja: "ローカルモデルがダウンロードされていません",
+    tr: "Yerel model indirilmedi"
+  },
+  "Сбой локального Whisper-клиента": {
+    en: "Local Whisper client failure",
+    de: "Fehler des lokalen Whisper-Clients",
+    fr: "Échec du client Whisper local",
+    it: "Errore del client Whisper locale",
+    es: "Fallo del cliente Whisper local",
+    pt: "Falha no cliente Whisper local",
+    zh: "本地 Whisper 客户端崩溃",
+    ja: "ローカルWhisperクライアントの起動失敗",
+    tr: "Yerel Whisper istemci hatası"
+  },
+  "Лимит запросов API исчерпан": {
+    en: "API rate limit reached",
+    de: "API-Anfragenlimit erreicht",
+    fr: "Limite de requêtes API atteinte",
+    it: "Limite di richieste API raggiunto",
+    es: "Límite de solicitudes API agotado",
+    pt: "Limite de solicitações da API atingido",
+    zh: "已达到 API 请求频率限制",
+    ja: "APIリクエストの上限に達しました",
+    tr: "API istek limiti tükendi"
+  },
+  "Баланс API ключа исчерпан": {
+    en: "API key balance exhausted",
+    de: "Guthaben des API-Schlüssels aufgebraucht",
+    fr: "Solde de la clé API épuisé",
+    it: "Credito della chiave API esaurito",
+    es: "Saldo de la clave API agotado",
+    pt: "Saldo da chave API esgotado",
+    zh: "API 密钥余额不足",
+    ja: "APIキー of 残高が不足しています",
+    tr: "API anahtar bakiyesi tükendi"
+  }
+};
+
+function translateError(errStr, lang) {
+  if (lang === "ru") return errStr;
+  const match = errorTranslations[errStr];
+  if (match && match[lang]) {
+    return match[lang];
+  }
+  if (errStr.startsWith("Нет сети:")) {
+    const details = errStr.replace("Нет сети:", "").trim();
+    const netTranslations = {
+      en: "No network:",
+      de: "Kein Netzwerk:",
+      fr: "Pas de réseau :",
+      it: "Nessuna rete:",
+      es: "Sin red:",
+      pt: "Sem rede:",
+      zh: "无网络：",
+      ja: "ネットワークなし：",
+      tr: "Ağ bağlantısı yok:"
+    };
+    const prefix = netTranslations[lang] || netTranslations.en;
+    return `${prefix} ${details}`;
+  }
+  return errStr;
+}
+
 // Listen for recording-state updates: "recording" | "processing" | "error"
 listen("recording-state", async (event) => {
   currentState = event.payload;
@@ -362,7 +511,8 @@ listen("recording-state", async (event) => {
     playThemeStart();
   } else if (currentState === "processing") {
     angle = 0;
-    statusEl.textContent = "Обработка…";
+    const uiLang = localStorage.getItem("aura_ui_lang") || "ru";
+    statusEl.textContent = processingTranslations[uiLang] || processingTranslations.en;
     statusEl.classList.remove("error");
   } else if (currentState.startsWith("error")) {
     recordStart = null;
@@ -370,7 +520,8 @@ listen("recording-state", async (event) => {
     if (currentState.includes(":")) {
       errMsg = currentState.substring(currentState.indexOf(":") + 1);
     }
-    statusEl.textContent = errMsg;
+    const uiLang = localStorage.getItem("aura_ui_lang") || "ru";
+    statusEl.textContent = translateError(errMsg, uiLang);
     statusEl.classList.add("error");
     setBarColor("#666666");
     resetBars();
