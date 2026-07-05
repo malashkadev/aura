@@ -490,10 +490,12 @@ p {
 }
 
 .editor-text-wrapper {
+  flex: 1;
   word-break: normal;
   overflow-wrap: break-word;
   white-space: pre-wrap;
   color: var(--text-primary);
+  text-align: left;
 }
 
 .editor-text {
