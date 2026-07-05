@@ -1005,6 +1005,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // Hotkey Recorder Widget Events
   const btnResetHotkey = document.getElementById("btn-reset-hotkey");
   let isRecordingHotkey = false;
+  let hasRecordedThisSession = false;
 
   const allowedSpecialKeys = {
     "Space": "Space",
@@ -1018,6 +1019,7 @@ document.addEventListener("DOMContentLoaded", () => {
   if (selectHotkey) {
     selectHotkey.addEventListener("focus", () => {
       isRecordingHotkey = true;
+      hasRecordedThisSession = false;
       selectHotkey.value = "Нажмите клавиши...";
       selectHotkey.classList.add("recording");
     });
@@ -1025,14 +1027,16 @@ document.addEventListener("DOMContentLoaded", () => {
     selectHotkey.addEventListener("blur", () => {
       isRecordingHotkey = false;
       selectHotkey.classList.remove("recording");
-      // Restore current settings value on blur
-      invoke("get_settings").then(settings => {
-        if (settings) {
-          selectHotkey.value = settings.hotkey || "Alt+V";
-        }
-      }).catch(() => {
-        selectHotkey.value = "Alt+V";
-      });
+      // Restore current settings value on blur ONLY if user didn't record a new combination
+      if (!hasRecordedThisSession) {
+        invoke("get_settings").then(settings => {
+          if (settings) {
+            selectHotkey.value = settings.hotkey || "Alt+V";
+          }
+        }).catch(() => {
+          selectHotkey.value = "Alt+V";
+        });
+      }
     });
 
     selectHotkey.addEventListener("keydown", (e) => {
@@ -1086,6 +1090,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       const hotkeyStr = modifier ? `${modifier}+${keyName}` : keyName;
+      hasRecordedThisSession = true; // Mark as successfully recorded
       selectHotkey.value = hotkeyStr;
       isRecordingHotkey = false;
       selectHotkey.classList.remove("recording");
