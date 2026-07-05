@@ -3,6 +3,14 @@
 </p>
 
 <h1 align="center">Aura — голосовой ввод для Windows</h1>
+
+<p align="center">
+  <a href="https://github.com/malashkadev/aura/actions/workflows/ci.yml"><img src="https://github.com/malashkadev/aura/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-AGPL_v3-blue.svg" alt="Лицензия: AGPL v3" /></a>
+  <img src="https://img.shields.io/badge/platform-Windows%2010%2F11-blue" alt="Платформа" />
+  <a href="https://aura-beryl-five.vercel.app/"><img src="https://img.shields.io/badge/website-live-brightgreen.svg" alt="Сайт проекта" /></a>
+</p>
+
 Зажмите горячую клавишу, продиктуйте текст, отпустите — Aura распознает речь, уберёт слова-паразиты, расставит пунктуацию и вставит результат в **любое** приложение Windows. Работает с облачным ИИ (Gemini / OpenAI / Groq) или полностью офлайн через локальный Whisper.
 
 **100% бесплатно и без скрытых платежей** — Aura является проектом с открытым исходным кодом. В ней нет рекламы, платных подписок, ограничений по времени использования или скрытых лимитов.
@@ -31,7 +39,7 @@
 
 ## Установка
 
-Скачайте установщик из [Releases](https://github.com/malashkadev/aura/releases) и запустите.
+Скачайте установщик из [Releases](https://github.com/malashkadev/aura/releases) и запустите. Ознакомиться с интерактивным макетом настроек и посмотреть живую демонстрацию можно на нашем [Официальном сайте](https://aura-beryl-five.vercel.app/).
 
 Для облачного режима нужен API-ключ — бесплатного тарифа [Groq](https://console.groq.com/) более чем достаточно, и он доступен без VPN. Для локального режима просто скачайте модель Whisper из настроек (base — хороший старт).
 

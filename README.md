@@ -8,6 +8,7 @@
   <a href="https://github.com/malashkadev/aura/actions/workflows/ci.yml"><img src="https://github.com/malashkadev/aura/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-AGPL_v3-blue.svg" alt="License: AGPL v3" /></a>
   <img src="https://img.shields.io/badge/platform-Windows%2010%2F11-blue" alt="Platform" />
+  <a href="https://aura-beryl-five.vercel.app/"><img src="https://img.shields.io/badge/website-live-brightgreen.svg" alt="Website" /></a>
 </p>
 
 Hold a hotkey, speak, release — Aura transcribes your speech, cleans it up (punctuation, filler words) and types it into **any** Windows application. Works with cloud AI (Gemini / OpenAI / Groq) or fully offline with local Whisper.
@@ -38,7 +39,7 @@ Hold a hotkey, speak, release — Aura transcribes your speech, cleans it up (pu
 
 ## Installation
 
-Download the latest installer from [Releases](https://github.com/malashkadev/aura/releases) and run it.
+Download the latest installer from [Releases](https://github.com/malashkadev/aura/releases) and run it. You can explore the interactive settings mockup and watch the live demo on our [Official Website](https://aura-beryl-five.vercel.app/).
 
 For cloud mode you will need an API key — the free [Groq](https://console.groq.com/) tier works great. For local mode just download a Whisper model from the settings (base is a good start).
 
