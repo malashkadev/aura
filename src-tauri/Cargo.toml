@@ -3,7 +3,7 @@ name = "aura-app"
 version = "1.0.0"
 description = "Aura — voice dictation for Windows: hold a hotkey, speak, get clean text in any app (Whisper local/cloud + LLM cleanup)"
 authors = ["Aura contributors"]
-license = "MIT"
+license = "AGPL-3.0-only"
 repository = "https://github.com/malashkadev/aura"
 edition = "2021"
 

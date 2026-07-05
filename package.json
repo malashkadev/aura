@@ -3,7 +3,7 @@
   "private": true,
   "version": "1.0.0",
   "description": "Aura — voice dictation for Windows (Whisper + LLM cleanup)",
-  "license": "MIT",
+  "license": "AGPL-3.0-only",
   "type": "module",
   "scripts": {
     "tauri": "tauri",

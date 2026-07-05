@@ -75,4 +75,4 @@ cargo test
 
 ## Лицензия
 
-[MIT](LICENSE)
+[AGPL-3.0](LICENSE)

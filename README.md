@@ -6,7 +6,7 @@
 
 <p align="center">
   <a href="https://github.com/malashkadev/aura/actions/workflows/ci.yml"><img src="https://github.com/malashkadev/aura/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
-  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-orange.svg" alt="License: MIT" /></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-AGPL_v3-blue.svg" alt="License: AGPL v3" /></a>
   <img src="https://img.shields.io/badge/platform-Windows%2010%2F11-blue" alt="Platform" />
 </p>
 
