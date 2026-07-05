@@ -347,46 +347,6 @@ pub fn run_local_whisper<R: Runtime>(
     Ok(text.trim().to_string())
 }
 
-#[cfg(target_os = "windows")]
-fn get_short_path(path: &Path) -> Result<PathBuf, String> {
-    use std::os::windows::ffi::OsStrExt;
-    use std::ffi::OsString;
-    use std::os::windows::ffi::OsStringExt;
-    
-    let wide: Vec<u16> = path.as_os_str().encode_wide().chain(Some(0)).collect();
-    let mut buffer = vec![0u16; 1024];
-    
-    let len = unsafe {
-        windows_sys::Win32::Storage::FileSystem::GetShortPathNameW(
-            wide.as_ptr(),
-            buffer.as_mut_ptr(),
-            buffer.len() as u32,
-        )
-    };
-    
-    if len == 0 {
-        return Err(format!("GetShortPathNameW failed for path {:?}", path));
-    }
-    
-    if len > buffer.len() as u32 {
-        buffer.resize(len as usize, 0);
-        let len2 = unsafe {
-            windows_sys::Win32::Storage::FileSystem::GetShortPathNameW(
-                wide.as_ptr(),
-                buffer.as_mut_ptr(),
-                buffer.len() as u32,
-            )
-        };
-        if len2 == 0 || len2 > buffer.len() as u32 {
-            return Err(format!("GetShortPathNameW failed on second try for path {:?}", path));
-        }
-    }
-    
-    let short_str = OsString::from_wide(&buffer[..len as usize]);
-    Ok(PathBuf::from(short_str))
-}
-
-#[cfg(not(target_os = "windows"))]
 fn get_short_path(path: &Path) -> Result<PathBuf, String> {
     Ok(path.to_path_buf())
 }
