@@ -1,12 +1,18 @@
-# Aura — голосовой ввод для Windows
+<p align="center">
+  <img src="docs/logo.svg" width="120" height="120" alt="Aura Logo" />
+</p>
 
+<h1 align="center">Aura — голосовой ввод для Windows</h1>
 Зажмите горячую клавишу, продиктуйте текст, отпустите — Aura распознает речь, уберёт слова-паразиты, расставит пунктуацию и вставит результат в **любое** приложение Windows. Работает с облачным ИИ (Gemini / OpenAI / Groq) или полностью офлайн через локальный Whisper.
 
 **100% бесплатно и без скрытых платежей** — Aura является проектом с открытым исходным кодом. В ней нет рекламы, платных подписок, ограничений по времени использования или скрытых лимитов.
 
 > 🇬🇧 [English documentation](README.md)
 
-![Демонстрация Aura](docs/Aura.gif)
+<p align="center">
+  <img src="docs/Aura.gif" width="49%" alt="Демонстрация работы Aura" />
+  <img src="docs/Settings.gif" width="49%" alt="Настройки Aura" />
+</p>
 
 ## Возможности
 

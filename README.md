@@ -1,8 +1,14 @@
-# Aura — Voice Dictation for Windows
+<p align="center">
+  <img src="docs/logo.svg" width="120" height="120" alt="Aura Logo" />
+</p>
 
-[![CI](https://github.com/malashkadev/aura/actions/workflows/ci.yml/badge.svg)](https://github.com/malashkadev/aura/actions/workflows/ci.yml)
-[![License: MIT](https://img.shields.io/badge/License-MIT-orange.svg)](LICENSE)
-[![Platform](https://img.shields.io/badge/platform-Windows%2010%2F11-blue)](#)
+<h1 align="center">Aura — Voice Dictation for Windows</h1>
+
+<p align="center">
+  <a href="https://github.com/malashkadev/aura/actions/workflows/ci.yml"><img src="https://github.com/malashkadev/aura/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-orange.svg" alt="License: MIT" /></a>
+  <img src="https://img.shields.io/badge/platform-Windows%2010%2F11-blue" alt="Platform" />
+</p>
 
 Hold a hotkey, speak, release — Aura transcribes your speech, cleans it up (punctuation, filler words) and types it into **any** Windows application. Works with cloud AI (Gemini / OpenAI / Groq) or fully offline with local Whisper.
 
@@ -10,7 +16,10 @@ Hold a hotkey, speak, release — Aura transcribes your speech, cleans it up (pu
 
 > 🇷🇺 [Документация на русском](README.ru.md)
 
-![Aura demo](docs/Aura.gif)
+<p align="center">
+  <img src="docs/Aura.gif" width="49%" alt="Aura Dictation Demo" />
+  <img src="docs/Settings.gif" width="49%" alt="Aura Settings Demo" />
+</p>
 
 ## Features
 
