@@ -685,15 +685,6 @@ body {
   gap: 8px;
 }
 
-.footer-status::before {
-  content: '';
-  display: inline-block;
-  width: 8px;
-  height: 8px;
-  background-color: var(--accent-color);
-  border-radius: var(--radius-full);
-}
-
 .btn-save {
   background: none;
   border: 1px solid var(--border-color);
@@ -1253,15 +1244,30 @@ body {
   text-align: right;
 }
 
-/* Footer Status Dot States */
-.footer-status.modified::before {
-  background-color: hsl(40, 95%, 55%) !important;
+.status-icon-wrapper {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
 }
-.footer-status.error::before {
-  background-color: hsl(0, 85%, 60%) !important;
+
+.status-icon-wrapper svg {
+  width: 100%;
+  height: 100%;
 }
-.footer-status.success::before {
-  background-color: hsl(140, 80%, 45%) !important;
+
+.footer-status.success .status-icon-wrapper {
+  color: hsl(140, 80%, 45%);
+}
+
+.footer-status.modified .status-icon-wrapper {
+  color: hsl(40, 95%, 55%);
+}
+
+.footer-status.error .status-icon-wrapper {
+  color: hsl(0, 85%, 60%);
 }
 
 /* Custom Confirm Modal Styling */

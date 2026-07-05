@@ -1368,22 +1368,31 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Helpers
   function showStatus(msg, isError = false, isModified = false) {
     footerStatusText.textContent = msg;
     const footerStatus = footerStatusText.closest(".footer-status");
     
     if (footerStatus) {
       footerStatus.classList.remove("modified", "error", "success");
+      const iconEl = document.getElementById("footer-status-icon");
       if (isError) {
         footerStatus.classList.add("error");
         footerStatusText.style.color = "var(--status-error)";
+        if (iconEl) {
+          iconEl.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line><circle cx="12" cy="12" r="10"></circle></svg>`;
+        }
       } else if (isModified) {
         footerStatus.classList.add("modified");
         footerStatusText.style.color = "var(--status-modified)";
+        if (iconEl) {
+          iconEl.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>`;
+        }
       } else {
         footerStatus.classList.add("success");
         footerStatusText.style.color = "";
+        if (iconEl) {
+          iconEl.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+        }
       }
     }
   }
