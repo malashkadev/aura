@@ -74,11 +74,17 @@ async fn set_settings(app_handle: tauri::AppHandle, settings: settings::Settings
 
 #[tauri::command]
 async fn download_model_command(app_handle: tauri::AppHandle, model_name: String) -> Result<(), String> {
+    if model_name.chars().any(|c| !c.is_ascii_alphanumeric() && c != '.' && c != '-') {
+        return Err("Invalid model name".to_string());
+    }
     whisper_runner::download_model(&app_handle, &model_name).await.map(|_| ())
 }
 
 #[tauri::command]
 async fn delete_model_command(app_handle: tauri::AppHandle, model_name: String) -> Result<(), String> {
+    if model_name.chars().any(|c| !c.is_ascii_alphanumeric() && c != '.' && c != '-') {
+        return Err("Invalid model name".to_string());
+    }
     let filename = format!("ggml-{}.bin", model_name.strip_prefix("ggml-").unwrap_or(&model_name).strip_suffix(".bin").unwrap_or(&model_name));
     let app_local_data = app_handle
         .path()
