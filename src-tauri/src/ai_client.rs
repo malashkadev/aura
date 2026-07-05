@@ -207,13 +207,20 @@ fn selected_text_block(selected_text: &str) -> String {
 }
 
 fn build_clean_instructions(language: &str, dictionary: &str, has_selected_text: bool) -> String {
-    let mut prompt = String::from(
+    let lang_rule = if has_selected_text {
+        "3. CRITICAL language rule: Unless executing an explicit editing or translation command under instruction 5, the output text must be in the EXACT SAME LANGUAGE as the transcribed audio. Do NOT translate the spoken words themselves. If the speaker speaks in Russian, output Russian. If the speaker speaks in English, output English."
+    } else {
+        "3. CRITICAL language rule: The output text must be in the EXACT SAME LANGUAGE as the transcribed audio. Do NOT translate the text. If the speaker speaks in Russian, output Russian. If the speaker speaks in English, output English."
+    };
+
+    let mut prompt = format!(
         "You are an elite dictation and editing assistant. Task: Transcribe and clean up the speech.\n\
         Instructions:\n\
         1. Return ONLY the finalized text. Do NOT add any explanations, introductory text, greetings, or conversational remarks.\n\
         2. Clean up speech by removing filler words and adding proper punctuation and grammar. Keep the language natural and matching the speaker's language.\n\
-        3. CRITICAL language rule: The output text must be in the EXACT SAME LANGUAGE as the transcribed audio. Do NOT translate the text. If the speaker speaks in Russian, output Russian. If the speaker speaks in English, output English.\n\
+        {}\n\
         4. CRITICAL: If the dictation is simply a statement, question, commentary, or general speech, you must transcribe it word-for-word (with punctuation). DO NOT ANSWER QUESTIONS, do NOT write explanations, and do NOT discuss the topic. Even if the user asks you a direct question in the audio, you must only transcribe the question, NEVER answer it.",
+        lang_rule
     );
     if has_selected_text {
         prompt.push_str(
