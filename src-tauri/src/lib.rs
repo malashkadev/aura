@@ -309,12 +309,26 @@ fn apply_voice_punctuation(text: &str) -> String {
         (&["вопросительный", "знак"], "?"),
         (&["восклицательный", "знак"], "!"),
         (&["точка", "с", "запятой"], ";"),
+        (&["new", "paragraph"], "\n\n"),
+        (&["new", "line"], "\n"),
+        (&["question", "mark"], "?"),
+        (&["exclamation", "mark"], "!"),
+        (&["exclamation", "point"], "!"),
+        (&["full", "stop"], "."),
+        (&["open", "parenthesis"], "("),
+        (&["close", "parenthesis"], ")"),
         (&["двоеточие"], ":"),
         (&["запятая"], ","),
         (&["точка"], "."),
         (&["тире"], "—"),
         (&["открыть", "скобку"], "("),
         (&["закрыть", "скобку"], ")"),
+        (&["newline"], "\n"),
+        (&["comma"], ","),
+        (&["period"], "."),
+        (&["colon"], ":"),
+        (&["semicolon"], ";"),
+        (&["dash"], "—"),
     ];
 
     fn norm(token: &str) -> String {
@@ -1193,6 +1207,14 @@ mod tests {
         assert_eq!(
             apply_voice_punctuation("первая строка новая строка вторая строка"),
             "первая строка\nВторая строка"
+        );
+        assert_eq!(
+            apply_voice_punctuation("hello comma how are you question mark"),
+            "hello, how are you?"
+        );
+        assert_eq!(
+            apply_voice_punctuation("this is a test period new line next sentence"),
+            "this is a test.\nNext sentence"
         );
     }
 
