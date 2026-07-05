@@ -1041,9 +1041,13 @@ document.addEventListener("DOMContentLoaded", () => {
       e.stopPropagation();
 
       const key = e.key;
+      const code = e.code;
 
       // Ignore modifiers themselves
-      if (key === "Control" || key === "Alt" || key === "Shift" || key === "Meta") {
+      if (key === "Control" || key === "Alt" || key === "Shift" || key === "Meta" ||
+          code === "ControlLeft" || code === "ControlRight" ||
+          code === "AltLeft" || code === "AltRight" ||
+          code === "ShiftLeft" || code === "ShiftRight") {
         return;
       }
 
@@ -1052,13 +1056,33 @@ document.addEventListener("DOMContentLoaded", () => {
       else if (e.altKey) modifier = "Alt";
       else if (e.shiftKey) modifier = "Shift";
 
-      let keyName = key;
-      if (allowedSpecialKeys[key]) {
-        keyName = allowedSpecialKeys[key];
-      } else if (key.length === 1 && /[a-zA-Z0-9]/.test(key)) {
-        keyName = key.toUpperCase();
+      let keyName = "";
+      if (code.startsWith("Key")) {
+        // Physical letter keys, e.g. "KeyV" -> "V"
+        keyName = code.substring(3).toUpperCase();
+      } else if (code.startsWith("Digit")) {
+        // Physical number keys, e.g. "Digit1" -> "1"
+        keyName = code.substring(5);
+      } else if (code.startsWith("F") && code.length >= 2 && !isNaN(code.substring(1))) {
+        // Function keys, e.g. "F8" -> "F8"
+        keyName = code;
       } else {
-        return;
+        // Map common physical layout codes
+        const codeMap = {
+          "Space": "Space",
+          "CapsLock": "Caps Lock",
+          "Tab": "Tab"
+        };
+        if (codeMap[code]) {
+          keyName = codeMap[code];
+        } else {
+          // If e.code is empty or unrecognized, fallback to e.key for basic alphanumeric
+          if (key.length === 1 && /[a-zA-Z0-9]/.test(key)) {
+            keyName = key.toUpperCase();
+          } else {
+            return;
+          }
+        }
       }
 
       const hotkeyStr = modifier ? `${modifier}+${keyName}` : keyName;
