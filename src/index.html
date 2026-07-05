@@ -287,6 +287,13 @@
               </span>
               <span class="toggle-label" data-i18n="sound_enable">Включить звуки оверлея</span>
             </label>
+            <div class="form-group" id="sound-volume-group" style="margin-top: 10px;">
+              <label for="range-sound-volume" class="field-label" data-i18n="sound_volume_label">Громкость звука</label>
+              <div class="volume-slider-container">
+                <input type="range" id="range-sound-volume" min="0" max="100" value="80" class="custom-slider" />
+                <span id="volume-value-label" class="volume-value-text">80%</span>
+              </div>
+            </div>
             <div class="form-group" id="sound-theme-group" style="margin-top: 10px;">
               <label for="select-sound-theme" class="field-label" data-i18n="sound_theme_label">Звуковая тема</label>
               <select id="select-sound-theme" class="custom-select">

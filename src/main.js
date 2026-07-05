@@ -50,6 +50,7 @@ const i18nDict = {
     sound_title: "Звуковое сопровождение",
     sound_desc: "Звуковые эффекты оверлея при записи.",
     sound_enable: "Включить звуки оверлея",
+    sound_volume_label: "Громкость звука",
     sound_theme_label: "Звуковая тема",
     sound_theme_zen: "Дзен (Поющие чаши)",
     sound_theme_rhodes: "Rhodes (Джаз-электропианино)",
@@ -148,6 +149,7 @@ const i18nDict = {
     sound_title: "Overlay Audio Feedback",
     sound_desc: "Audio sound effects when recording states change.",
     sound_enable: "Enable overlay sounds",
+    sound_volume_label: "Sound Volume",
     sound_theme_label: "Sound Theme",
     sound_theme_zen: "Zen (Singing Bowls)",
     sound_theme_rhodes: "Rhodes (Jazz Electric Piano)",
@@ -246,6 +248,7 @@ const i18nDict = {
     sound_title: "Audio-Rückmeldung",
     sound_desc: "Soundeffekte des Overlays während der Aufnahme.",
     sound_enable: "Overlay-Sounds aktivieren",
+    sound_volume_label: "Tonlautstärke",
     sound_theme_label: "Sound-Theme",
     sound_theme_zen: "Zen (Klangschalen)",
     sound_theme_rhodes: "Rhodes (Jazz Electric Piano)",
@@ -344,6 +347,7 @@ const i18nDict = {
     sound_title: "Efectos de audio",
     sound_desc: "Efectos sonoros del overlay al grabar.",
     sound_enable: "Activar sonidos del overlay",
+    sound_volume_label: "Volumen del sonido",
     sound_theme_label: "Tema sonoro",
     sound_theme_zen: "Zen (Cuencos tibetanos)",
     sound_theme_rhodes: "Rhodes (Piano eléctrico)",
@@ -442,6 +446,7 @@ const i18nDict = {
     sound_title: "Retours audio",
     sound_desc: "Effets sonores de l'overlay lors de l'enregistrement.",
     sound_enable: "Activer les sons de l'overlay",
+    sound_volume_label: "Volume du son",
     sound_theme_label: "Thème sonore",
     sound_theme_zen: "Zen (Bols chantants)",
     sound_theme_rhodes: "Rhodes (Piano électrique)",
@@ -540,6 +545,7 @@ const i18nDict = {
     sound_title: "Feedback sonori",
     sound_desc: "Effetti acustici dell'overlay durante la registrazione.",
     sound_enable: "Attiva i suoni dell'overlay",
+    sound_volume_label: "Volume del suono",
     sound_theme_label: "Tema sonoro",
     sound_theme_zen: "Zen (Campane tibetane)",
     sound_theme_rhodes: "Rhodes (Piano elettrico)",
@@ -638,6 +644,7 @@ const i18nDict = {
     sound_title: "声音反馈",
     sound_desc: "录音状态切换时播放提示音。",
     sound_enable: "启用悬浮条声音反馈",
+    sound_volume_label: "音量",
     sound_theme_label: "声音主题",
     sound_theme_zen: "禅宗 (颂钵音)",
     sound_theme_rhodes: "Rhodes (爵士电钢琴)",
@@ -736,6 +743,7 @@ const i18nDict = {
     sound_title: "Feedback sonoro",
     sound_desc: "Efeitos sonoros do overlay ao gravar.",
     sound_enable: "Habilitar sons do overlay",
+    sound_volume_label: "Volume do som",
     sound_theme_label: "Tema sonoro",
     sound_theme_zen: "Zen (Tigelas cantantes)",
     sound_theme_rhodes: "Rhodes (Piano elétrico)",
@@ -834,6 +842,7 @@ const i18nDict = {
     sound_title: "Ses Geri Bildirimi",
     sound_desc: "Kayıt durumları değiştiğinde çalınacak ses efektleri.",
     sound_enable: "Overlay seslerini etkinleştir",
+    sound_volume_label: "Ses Seviyesi",
     sound_theme_label: "Ses Teması",
     sound_theme_zen: "Zen (Nepal Çanakları)",
     sound_theme_rhodes: "Rhodes (Caz Elektro Piyano)",
@@ -982,11 +991,26 @@ document.addEventListener("DOMContentLoaded", () => {
   
   const checkboxSounds = document.getElementById("checkbox-sounds");
   const selectSoundTheme = document.getElementById("select-sound-theme");
+  const rangeVolume = document.getElementById("range-sound-volume");
+  const volumeLabel = document.getElementById("volume-value-label");
+
+  if (rangeVolume) {
+    rangeVolume.addEventListener("input", () => {
+      if (volumeLabel) {
+        volumeLabel.textContent = `${rangeVolume.value}%`;
+      }
+    });
+  }
 
   function updateSoundUI() {
     const themeGroup = document.getElementById("sound-theme-group");
+    const volumeGroup = document.getElementById("sound-volume-group");
+    const show = (checkboxSounds && checkboxSounds.checked) ? "flex" : "none";
     if (themeGroup) {
-      themeGroup.style.display = (checkboxSounds && checkboxSounds.checked) ? "flex" : "none";
+      themeGroup.style.display = show;
+    }
+    if (volumeGroup) {
+      volumeGroup.style.display = show;
     }
   }
   if (checkboxSounds) {
@@ -1020,7 +1044,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const inputs = [
       radioCloud, radioLocal, selectProvider, apiKeyInput, selectHotkey,
       selectLanguage, textareaDictionary, checkboxToggle, checkboxPunctuation,
-      checkboxAutostart, checkboxStreaming, checkboxSounds, selectSoundTheme
+      checkboxAutostart, checkboxStreaming, checkboxSounds, selectSoundTheme,
+      rangeVolume
     ];
     inputs.forEach(input => {
       if (input) {
@@ -1113,6 +1138,13 @@ document.addEventListener("DOMContentLoaded", () => {
         if (selectSoundTheme) {
           selectSoundTheme.value = settings.overlay_sound_theme || "zen";
         }
+        if (rangeVolume) {
+          const volumeVal = typeof settings.overlay_sound_volume === "number" ? Math.round(settings.overlay_sound_volume * 100) : 80;
+          rangeVolume.value = volumeVal;
+          if (volumeLabel) {
+            volumeLabel.textContent = `${volumeVal}%`;
+          }
+        }
         updateSoundUI();
  
         updateEngineUI();
@@ -1181,6 +1213,8 @@ document.addEventListener("DOMContentLoaded", () => {
       // Update apiKeys cache from active input first:
       apiKeys[selectProvider.value] = apiKeyInput.value;
 
+      const soundVolFloat = rangeVolume ? parseFloat(rangeVolume.value) / 100 : 0.8;
+
       const settings = {
         transcription_mode: radioLocal.checked ? "local" : "cloud",
         api_provider: selectProvider.value,
@@ -1197,7 +1231,8 @@ document.addEventListener("DOMContentLoaded", () => {
         voice_punctuation: checkboxPunctuation ? checkboxPunctuation.checked : false,
         autostart: checkboxAutostart ? checkboxAutostart.checked : false,
         overlay_sounds: checkboxSounds ? checkboxSounds.checked : true,
-        overlay_sound_theme: selectSoundTheme ? selectSoundTheme.value : "zen"
+        overlay_sound_theme: selectSoundTheme ? selectSoundTheme.value : "zen",
+        overlay_sound_volume: soundVolFloat
       };
 
       await invoke("set_settings", { settings });

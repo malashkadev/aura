@@ -8,10 +8,15 @@ let recordStart = null;
 let angle = 0;
 
 let audioCtx = null;
+let soundVolume = 0.8;
+let globalGain = null;
 
 function initAudioCtx() {
   if (!audioCtx) {
     audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    globalGain = audioCtx.createGain();
+    globalGain.gain.value = soundVolume;
+    globalGain.connect(audioCtx.destination);
   }
 }
 
@@ -56,10 +61,10 @@ function playBowl(freq, duration, gainStart = 0.08) {
     gainB.gain.exponentialRampToValueAtTime(0.0001, now + comp.decay);
 
     oscA.connect(gainA);
-    gainA.connect(audioCtx.destination);
+    gainA.connect(globalGain);
 
     oscB.connect(gainB);
-    gainB.connect(audioCtx.destination);
+    gainB.connect(globalGain);
 
     oscA.start(now);
     oscA.stop(now + comp.decay + 0.1);
@@ -96,9 +101,9 @@ function playRhodes(freq, duration, gainStart = 0.08) {
   gain2.gain.exponentialRampToValueAtTime(0.0001, now + duration);
 
   osc1.connect(gain1);
-  gain1.connect(audioCtx.destination);
+  gain1.connect(globalGain);
   osc2.connect(gain2);
-  gain2.connect(audioCtx.destination);
+  gain2.connect(globalGain);
 
   osc1.start(now);
   osc1.stop(now + duration + 0.1);
@@ -131,7 +136,7 @@ function playSciFi(freqStart, freqEnd, duration, gainStart = 0.06) {
 
   osc1.connect(gainNode);
   osc2.connect(gainNode);
-  gainNode.connect(audioCtx.destination);
+  gainNode.connect(globalGain);
 
   osc1.start(now);
   osc1.stop(now + duration + 0.1);
@@ -173,11 +178,11 @@ function playBell(freq, duration, gainStart = 0.07) {
   gain3.gain.exponentialRampToValueAtTime(0.0001, now + duration * 0.4);
 
   osc1.connect(gain1);
-  gain1.connect(audioCtx.destination);
+  gain1.connect(globalGain);
   osc2.connect(gain2);
-  gain2.connect(audioCtx.destination);
+  gain2.connect(globalGain);
   osc3.connect(gain3);
-  gain3.connect(audioCtx.destination);
+  gain3.connect(globalGain);
 
   osc1.start(now);
   osc1.stop(now + duration + 0.1);
@@ -195,6 +200,10 @@ async function updateActiveThemeSettings() {
     const settings = await window.__TAURI__.core.invoke("get_settings");
     soundsEnabled = settings.overlay_sounds !== false;
     soundTheme = settings.overlay_sound_theme || "zen";
+    soundVolume = typeof settings.overlay_sound_volume === "number" ? settings.overlay_sound_volume : 0.8;
+    if (globalGain) {
+      globalGain.gain.setValueAtTime(soundVolume, audioCtx.currentTime);
+    }
   } catch (e) {
     console.error("Failed to query settings in overlay", e);
   }

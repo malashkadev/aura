@@ -22,6 +22,7 @@ pub struct Settings {
     pub autostart: bool,            // launch the app on Windows startup
     pub overlay_sounds: bool,
     pub overlay_sound_theme: String,
+    pub overlay_sound_volume: f32,
 }
 
 impl Default for Settings {
@@ -43,6 +44,7 @@ impl Default for Settings {
             autostart: false,
             overlay_sounds: true,
             overlay_sound_theme: "zen".to_string(),
+            overlay_sound_volume: 0.8,
         }
     }
 }
@@ -129,6 +131,7 @@ mod tests {
         assert_eq!(settings.api_provider, "gemini");
         assert_eq!(settings.overlay_sounds, true);
         assert_eq!(settings.overlay_sound_theme, "zen");
+        assert_eq!(settings.overlay_sound_volume, 0.8);
     }
 
     #[test]
