@@ -66,6 +66,8 @@ Download the latest installer from [Releases](https://github.com/malashkadev/aur
 
 For cloud mode you will need an API key — the free [Groq](https://console.groq.com/) tier works great. For local mode just download a Whisper model from the settings (base is a good start).
 
+> **First launch — "Windows protected your PC"?** The installer isn't code-signed yet (a certificate costs a few hundred dollars a year), so Windows SmartScreen shows a warning for new open-source apps. Click **More info → Run anyway**. The source is fully open if you'd rather build it yourself.
+
 ## Usage
 
 | Action | Default |
@@ -103,6 +105,16 @@ cargo test
 - **Local mode** never sends anything anywhere — audio is processed on your machine.
 - **Cloud mode** sends the recorded audio to the provider you chose. Nothing else is collected; there is no telemetry.
 - Settings (including API keys) are stored locally in `%APPDATA%/com.aura.app/settings.json`; history in `%LOCALAPPDATA%/com.aura.app/history.json`. Known limitation: API keys are stored in plain text — see [issue tracker](https://github.com/malashkadev/aura/issues) for the Credential Manager migration plan.
+
+## Roadmap
+
+Planned, in rough priority order. Ideas and contributions are welcome — open an issue!
+
+- **Parakeet local model** — offline NVIDIA Parakeet TDT v3 (via [sherpa-onnx](https://github.com/k2-fsa/sherpa-onnx)) alongside Whisper: faster on CPU, built-in punctuation, and strong Russian/European accuracy.
+- **Proper VAD** — replace the energy-based silence gate with Silero voice-activity detection to trim pauses and cut hallucinations.
+- **macOS support** — an experimental native port already exists (global hotkeys via `CGEventTap`); it needs testing and packaging on a real Mac before release.
+- **Secure key storage** — move API keys from plain-text JSON into the OS credential manager.
+- **Auto-updates** — signed releases with an in-app updater.
 
 ## License
 
