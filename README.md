@@ -112,7 +112,7 @@ Planned, in rough priority order. Ideas and contributions are welcome — open a
 
 - **Parakeet local model** — offline NVIDIA Parakeet TDT v3 (via [sherpa-onnx](https://github.com/k2-fsa/sherpa-onnx)) alongside Whisper: faster on CPU, built-in punctuation, and strong Russian/European accuracy.
 - **Proper VAD** — replace the energy-based silence gate with Silero voice-activity detection to trim pauses and cut hallucinations.
-- **macOS support** — an experimental native port already exists (global hotkeys via `CGEventTap`); it needs testing and packaging on a real Mac before release.
+- **macOS support** — the native port (global hotkeys via `CGEventTap`, CoreAudio capture) now lives in the main codebase and **compiles in CI**. Still needs a macOS Whisper sidecar, `.app` bundling, the Accessibility-permission flow and testing on real hardware before it's usable.
 - **Secure key storage** — move API keys from plain-text JSON into the OS credential manager.
 - **Auto-updates** — signed releases with an in-app updater.
 
