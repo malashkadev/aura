@@ -408,13 +408,19 @@ p {
 }
 
 .hero-download-wrapper {
-  display: flex;
+  position: relative;
+  display: inline-flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
 }
 
 .download-subtext {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-top: 6px;
+  white-space: nowrap;
   font-size: 0.75rem;
   color: var(--text-muted);
   opacity: 0.45;
