@@ -1969,6 +1969,13 @@ kbd.shortcut-key {
 }
 
 /* Asymmetric exit timing: snap down and fade out fast */
+.modal-overlay.exiting {
+  opacity: 0;
+  backdrop-filter: blur(0px);
+  -webkit-backdrop-filter: blur(0px);
+  transition: opacity 0.12s ease-in, backdrop-filter 0.12s ease-in, visibility 0.12s;
+}
+
 .modal-overlay.exiting .modal-card {
   transform: scale(0.97) translateY(6px);
   opacity: 0;
@@ -2048,7 +2055,7 @@ kbd.shortcut-key {
   font-family: var(--font-sans);
   font-size: 0.9rem;
   font-weight: 600;
-  padding: 10px 20px;
+  padding: 12px 20px;
   border-radius: var(--radius-sm);
   cursor: pointer;
   display: inline-flex;

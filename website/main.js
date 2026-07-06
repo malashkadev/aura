@@ -508,6 +508,28 @@ function setupConfirmDownloadModal() {
       closeModal();
     }
   });
+
+  // Trap focus inside modal for keyboard accessibility
+  modal.addEventListener('keydown', (e) => {
+    if (e.key === 'Tab' && modal.classList.contains('active')) {
+      const focusables = modal.querySelectorAll('button, a[href]');
+      if (focusables.length === 0) return;
+      const firstFocusable = focusables[0];
+      const lastFocusable = focusables[focusables.length - 1];
+
+      if (e.shiftKey) { // Shift + Tab
+        if (document.activeElement === firstFocusable) {
+          e.preventDefault();
+          lastFocusable.focus();
+        }
+      } else { // Tab
+        if (document.activeElement === lastFocusable) {
+          e.preventDefault();
+          firstFocusable.focus();
+        }
+      }
+    }
+  });
 }
 
 
