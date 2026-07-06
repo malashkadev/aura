@@ -308,7 +308,7 @@ pub fn run_local_whisper<R: Runtime>(
     }
 
     let mut cmd = Command::new(&short_sidecar_path);
-    cmd.current_dir(&short_sidecar_dir);
+    cmd.current_dir(&short_dlls_dir);
     cmd.args(&args);
 
     #[cfg(target_os = "windows")]
@@ -318,21 +318,28 @@ pub fn run_local_whisper<R: Runtime>(
     }
 
     // Prepend sidecar executable directory, resources, and dll paths to PATH for Windows DLL resolution
-    if let Some(path_env) = std::env::var_os("PATH") {
-        let mut paths = std::env::split_paths(&path_env).collect::<Vec<_>>();
-        
-        // Add all possible location candidates of whisper.dll / ggml.dll to guarantee resolution
-        if let Some(parent) = sidecar_path.parent() {
-            paths.insert(0, parent.join("resources").join("binaries"));
-            paths.insert(0, parent.to_path_buf());
-        }
-        paths.insert(0, dlls_dir.clone());
-        paths.insert(0, short_sidecar_dir.to_path_buf());
-        paths.insert(0, short_dlls_dir.to_path_buf());
+    let path_key = std::env::vars_os()
+        .map(|(k, _)| k.to_string_lossy().into_owned())
+        .find(|name| name.eq_ignore_ascii_case("path"))
+        .unwrap_or_else(|| "PATH".to_string());
 
-        if let Ok(new_path) = std::env::join_paths(paths) {
-            cmd.env("PATH", new_path);
-        }
+    let mut paths = if let Some(path_env) = std::env::var_os(&path_key) {
+        std::env::split_paths(&path_env).collect::<Vec<_>>()
+    } else {
+        Vec::new()
+    };
+    
+    // Add all possible location candidates of whisper.dll / ggml.dll to guarantee resolution
+    if let Some(parent) = sidecar_path.parent() {
+        paths.insert(0, parent.join("resources").join("binaries"));
+        paths.insert(0, parent.to_path_buf());
+    }
+    paths.insert(0, dlls_dir.clone());
+    paths.insert(0, short_sidecar_dir.to_path_buf());
+    paths.insert(0, short_dlls_dir.to_path_buf());
+
+    if let Ok(new_path) = std::env::join_paths(paths) {
+        cmd.env(&path_key, new_path);
     }
 
     let output = cmd

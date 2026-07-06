@@ -976,6 +976,9 @@ async fn finalize_recording(app_handle: tauri::AppHandle) {
             }
             Err(e) => {
                 eprintln!("Aura Dev Log ERROR: Final transcription failed: {}", e);
+                if let Ok(dir) = app_handle_clone.path().app_local_data_dir() {
+                    let _ = std::fs::write(dir.join("last_transcription_error.txt"), &e);
+                }
                 had_error = Some(categorize_error(&e));
             }
         }
