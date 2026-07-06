@@ -402,6 +402,7 @@ p {
 
 .hero-actions {
   display: flex;
+  align-items: flex-start;
   gap: 16px;
   margin-top: 8px;
 }
