@@ -412,19 +412,19 @@ function setupPlatformSpecificDownloads() {
   const isRu = document.documentElement.lang === 'ru';
   const isWindows = /Windows|Win32|Win64|wintarget/i.test(navigator.userAgent || navigator.platform);
   
-  const line1 = document.getElementById('subtext-line-1');
-  const line2 = document.getElementById('subtext-line-2');
   const heroSubtext = document.getElementById('hero-download-subtext');
   
-  if (line1 && line2) {
+  if (heroSubtext) {
     if (isWindows) {
-      line1.textContent = isRu ? "совместимо с" : "compatible with";
-      line2.textContent = isRu ? "Windows 10 и 11" : "Windows 10 & 11";
-      if (heroSubtext) heroSubtext.style.color = ""; // default color
+      heroSubtext.textContent = isRu 
+        ? "(Windows 10 и 11)" 
+        : "(Windows 10 & 11)";
+      heroSubtext.style.color = ""; // reset to default CSS opacity
     } else {
-      line1.textContent = isRu ? "требуется" : "requires";
-      line2.textContent = isRu ? "Windows 10 или 11" : "Windows 10 or 11";
-      if (heroSubtext) heroSubtext.style.color = "rgba(255, 66, 0, 0.65)"; // warning highlight
+      heroSubtext.textContent = isRu 
+        ? "(требуется Windows 10 или 11)" 
+        : "(requires Windows 10 or 11)";
+      heroSubtext.style.color = "rgba(255, 66, 0, 0.55)"; // highlight warning slightly
     }
   }
 }
