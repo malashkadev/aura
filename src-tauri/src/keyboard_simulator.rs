@@ -462,7 +462,7 @@ mod macos_impl {
 
     pub fn get_foreground_window() -> isize {
         unsafe {
-            let ns_workspace: objc::runtime::Class = *objc::runtime::Class::get("NSWorkspace").unwrap();
+            let ns_workspace = objc::runtime::Class::get("NSWorkspace").unwrap();
             let workspace: *mut objc::runtime::Object = msg_send![ns_workspace, sharedWorkspace];
             if workspace.is_null() {
                 return 0;

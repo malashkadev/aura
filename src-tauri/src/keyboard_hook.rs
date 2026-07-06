@@ -462,7 +462,7 @@ mod macos_impl {
         Ok(())
     }
 
-    unsafe extern "system" fn macos_event_tap_callback(
+    unsafe extern "C" fn macos_event_tap_callback(
         _proxy: CGEventTapProxy,
         type_: u32,
         event: CGEventRef,
