@@ -198,6 +198,154 @@ function setupMockSettings() {
       clearHistoryBtn.style.display = 'none';
     });
   }
+
+  // Web Audio API Synthesizer for Mock sound themes preview
+  let audioCtx = null;
+
+  function playThemeSound(theme) {
+    try {
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContext) return;
+      
+      // Create context on gesture
+      if (!audioCtx) {
+        audioCtx = new AudioContext();
+      } else if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+      
+      const now = audioCtx.currentTime;
+      
+      // Read current volume from mockup slider
+      const volumePercent = slider ? parseInt(slider.value) : 80;
+      const baseVolume = (volumePercent / 100) * 0.25; // Scale down to be pleasant (max 0.25)
+      
+      const masterGain = audioCtx.createGain();
+      masterGain.gain.setValueAtTime(baseVolume, now);
+      masterGain.connect(audioCtx.destination);
+      
+      if (theme === 'zen') {
+        // Zen: Singing bowl detuned sine waves creating deep rich harmonics and beating
+        const frequencies = [220, 440.5, 660.2, 879.5, 1100.8];
+        const gains = [0.6, 0.4, 0.25, 0.15, 0.08];
+        
+        frequencies.forEach((freq, i) => {
+          const osc = audioCtx.createOscillator();
+          const oscGain = audioCtx.createGain();
+          
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(freq, now);
+          
+          const decayTime = 3.5 - (i * 0.4);
+          oscGain.gain.setValueAtTime(gains[i], now);
+          oscGain.gain.exponentialRampToValueAtTime(0.0001, now + decayTime);
+          
+          osc.connect(oscGain);
+          oscGain.connect(masterGain);
+          
+          osc.start(now);
+          osc.stop(now + decayTime);
+        });
+      } else if (theme === 'rhodes') {
+        // Rhodes: Warm electric piano minor 9th jazz chord with simulated reed striking transient
+        const chord = [130.81, 196.00, 261.63, 329.63, 493.88]; // Cmaj9 voicing
+        const tineFreqs = [2200, 3100, 4400];
+        
+        chord.forEach((freq, idx) => {
+          const oscTri = audioCtx.createOscillator();
+          const oscSine = audioCtx.createOscillator();
+          const noteGain = audioCtx.createGain();
+          
+          oscTri.type = 'triangle';
+          oscTri.frequency.setValueAtTime(freq, now);
+          
+          oscSine.type = 'sine';
+          oscSine.frequency.setValueAtTime(freq, now);
+          
+          noteGain.gain.setValueAtTime(0, now);
+          noteGain.gain.linearRampToValueAtTime(0.3, now + 0.01 + (idx * 0.015));
+          noteGain.gain.exponentialRampToValueAtTime(0.08, now + 0.25);
+          noteGain.gain.exponentialRampToValueAtTime(0.0001, now + 2.0);
+          
+          oscTri.connect(noteGain);
+          oscSine.connect(noteGain);
+          noteGain.connect(masterGain);
+          
+          oscTri.start(now);
+          oscSine.start(now);
+          oscTri.stop(now + 2.2);
+          oscSine.stop(now + 2.2);
+        });
+        
+        tineFreqs.forEach(freq => {
+          const oscTine = audioCtx.createOscillator();
+          const tineGain = audioCtx.createGain();
+          
+          oscTine.type = 'sine';
+          oscTine.frequency.setValueAtTime(freq, now);
+          
+          tineGain.gain.setValueAtTime(0.12, now);
+          tineGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.15);
+          
+          oscTine.connect(tineGain);
+          tineGain.connect(masterGain);
+          
+          oscTine.start(now);
+          oscTine.stop(now + 0.25);
+        });
+      } else if (theme === 'scifi') {
+        // Sci-Fi: Upward exponential filter sweeps with delay feedback (retro space beeps)
+        const osc = audioCtx.createOscillator();
+        const filter = audioCtx.createBiquadFilter();
+        const oscGain = audioCtx.createGain();
+        
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(120, now);
+        osc.frequency.exponentialRampToValueAtTime(1400, now + 0.45);
+        
+        filter.type = 'lowpass';
+        filter.Q.setValueAtTime(8, now);
+        filter.frequency.setValueAtTime(180, now);
+        filter.frequency.exponentialRampToValueAtTime(3200, now + 0.45);
+        
+        osc.connect(filter);
+        filter.connect(oscGain);
+        
+        const delay = audioCtx.createDelay();
+        delay.delayTime.setValueAtTime(0.15, now);
+        
+        const delayFeedback = audioCtx.createGain();
+        delayFeedback.gain.setValueAtTime(0.4, now);
+        
+        oscGain.connect(masterGain);
+        
+        oscGain.connect(delay);
+        delay.connect(delayFeedback);
+        delayFeedback.connect(delay);
+        delayFeedback.connect(masterGain);
+        
+        osc.start(now);
+        osc.stop(now + 1.2);
+      }
+    } catch (error) {
+      console.warn("Web Audio API not supported:", error);
+    }
+  }
+
+  // Sound themes selection handler
+  const soundThemeSelect = document.getElementById('mock-sound-theme');
+  if (soundThemeSelect) {
+    soundThemeSelect.addEventListener('change', (e) => {
+      playThemeSound(e.target.value);
+    });
+  }
+
+  // Volume change release preview handler
+  if (slider && soundThemeSelect) {
+    slider.addEventListener('change', () => {
+      playThemeSound(soundThemeSelect.value);
+    });
+  }
 }
 
 /**
