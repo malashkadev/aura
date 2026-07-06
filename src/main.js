@@ -46,6 +46,7 @@ const i18nDict = {
     model_meta_turbo_q5: "~550 МБ — почти как Turbo, вдвое легче",
     model_cancel_download: "Отменить загрузку",
     model_download_cancelled: "Загрузка отменена",
+    update_available: "Доступно обновление",
     hotkey_title: "Глобальная горячая клавиша",
     hotkey_desc: "Зажмите выбранную комбинацию для начала записи, отпустите для распознавания.",
     hotkey_label: "Комбинация",
@@ -149,6 +150,7 @@ const i18nDict = {
     model_meta_turbo_q5: "~550 MB — near-Turbo, half the size",
     model_cancel_download: "Cancel download",
     model_download_cancelled: "Download cancelled",
+    update_available: "Update available",
     hotkey_title: "Global Hotkey",
     hotkey_desc: "Hold down the selected hotkey to record, release to transcribe.",
     hotkey_label: "Combination",
@@ -1305,7 +1307,17 @@ document.addEventListener("DOMContentLoaded", () => {
         const model = card.dataset.model;
         const isDownloaded = downloaded.includes(model);
         const actionEl = document.getElementById(`action-${model}`);
-        
+
+        // Always restore a clean, non-downloading state. Without this, a cancelled
+        // download leaves the progress bar frozen and the action button hidden.
+        const progressEl = document.getElementById(`progress-${model}`);
+        if (progressEl) {
+          const cancelBtn = progressEl.querySelector(".btn-cancel-download");
+          if (cancelBtn) cancelBtn.remove();
+          progressEl.style.display = "none";
+        }
+        if (actionEl) actionEl.style.display = "flex";
+
         if (isDownloaded) {
           actionEl.innerHTML = `
             <span class="status-ready-badge">
@@ -1952,5 +1964,24 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Initialize Settings
     await loadSettings(settings);
+
+    // Check GitHub for a newer release; show the update badge in About if found
+    try {
+      const badge = document.getElementById("update-badge");
+      const badgeText = document.getElementById("update-badge-text");
+      if (badge) {
+        const info = await invoke("check_for_update");
+        if (info && info.available) {
+          const label = getTranslation("update_available") || "Доступно обновление";
+          badgeText.textContent = `${label} (v${info.latest})`;
+          badge.style.display = "inline-flex";
+          badge.addEventListener("click", () => {
+            invoke("open_url", { url: info.url }).catch(e => console.error(e));
+          });
+        }
+      }
+    } catch (err) {
+      console.error("Update check failed", err);
+    }
   })();
 });

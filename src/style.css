@@ -1609,3 +1609,23 @@ body {
 .btn-cancel-download svg { width: 14px; height: 14px; }
 .btn-cancel-download:hover { background-color: rgba(255, 92, 92, 0.15); color: #ff5c5c; }
 .btn-cancel-download:disabled { opacity: 0.5; cursor: default; }
+
+/* --- Update-available badge in About tab (v1.0.2) --- */
+.update-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 6px auto 0;
+  padding: 7px 14px;
+  border: 1px solid var(--accent-color, #ff5a1f);
+  border-radius: 9999px;
+  background: rgba(255, 90, 31, 0.12);
+  color: var(--accent-color, #ff5a1f);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.15s ease, transform 0.15s ease;
+}
+.update-badge svg { width: 15px; height: 15px; }
+.update-badge:hover { background: rgba(255, 90, 31, 0.22); transform: translateY(-1px); }

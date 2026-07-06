@@ -149,6 +149,85 @@ async fn copy_to_clipboard(text: String) -> Result<(), String> {
     cb.set_text(text).map_err(|e| e.to_string())
 }
 
+#[derive(serde::Serialize)]
+struct UpdateInfo {
+    available: bool,
+    current: String,
+    latest: String,
+    url: String,
+}
+
+/// Parses a dotted version ("1.0.2") into numeric components for comparison.
+fn parse_version(v: &str) -> Vec<u32> {
+    v.trim()
+        .trim_start_matches('v')
+        .split('.')
+        .map(|p| p.chars().take_while(|c| c.is_ascii_digit()).collect::<String>().parse().unwrap_or(0))
+        .collect()
+}
+
+/// Returns true if `latest` is a strictly newer version than `current`.
+fn is_newer_version(latest: &str, current: &str) -> bool {
+    let l = parse_version(latest);
+    let c = parse_version(current);
+    for i in 0..l.len().max(c.len()) {
+        let lv = l.get(i).copied().unwrap_or(0);
+        let cv = c.get(i).copied().unwrap_or(0);
+        if lv != cv {
+            return lv > cv;
+        }
+    }
+    false
+}
+
+/// Checks GitHub for the latest release and reports whether it's newer than this build.
+#[tauri::command]
+async fn check_for_update() -> Result<UpdateInfo, String> {
+    let current = env!("CARGO_PKG_VERSION").to_string();
+    let client = ai_client::build_http_client();
+    let resp = client
+        .get("https://api.github.com/repos/malashkadev/aura/releases/latest")
+        .header("User-Agent", "Aura-Updater")
+        .header("Accept", "application/vnd.github+json")
+        .send()
+        .await
+        .map_err(|e| format!("Update check request failed: {e}"))?;
+
+    if !resp.status().is_success() {
+        return Err(format!("GitHub API returned status {}", resp.status()));
+    }
+
+    let json: serde_json::Value = resp
+        .json()
+        .await
+        .map_err(|e| format!("Failed to parse GitHub response: {e}"))?;
+
+    let latest = json
+        .get("tag_name")
+        .and_then(|v| v.as_str())
+        .unwrap_or("")
+        .trim_start_matches('v')
+        .to_string();
+    let url = json
+        .get("html_url")
+        .and_then(|v| v.as_str())
+        .unwrap_or("https://github.com/malashkadev/aura/releases/latest")
+        .to_string();
+
+    let available = !latest.is_empty() && is_newer_version(&latest, &current);
+    Ok(UpdateInfo { available, current, latest, url })
+}
+
+/// Opens a URL in the user's default browser (used by the update badge).
+#[tauri::command]
+async fn open_url(app_handle: tauri::AppHandle, url: String) -> Result<(), String> {
+    use tauri_plugin_opener::OpenerExt;
+    app_handle
+        .opener()
+        .open_url(url, None::<&str>)
+        .map_err(|e| e.to_string())
+}
+
 fn sync_autostart(app_handle: &tauri::AppHandle, enabled: bool) {
     let manager = app_handle.autolaunch();
     let result = if enabled { manager.enable() } else { manager.disable() };
@@ -1173,6 +1252,8 @@ pub fn run() {
             get_history,
             clear_history,
             copy_to_clipboard,
+            check_for_update,
+            open_url,
             minimize_window,
             close_window,
             start_dragging_command,
@@ -1261,6 +1342,17 @@ mod tests {
         assert_eq!(rms(&[]), 0.0);
         assert!(rms(&[0.0, 0.0, 0.0]) < f32::EPSILON);
         assert!((rms(&[0.5, -0.5, 0.5, -0.5]) - 0.5).abs() < 1e-6);
+    }
+
+    #[test]
+    fn test_is_newer_version() {
+        assert!(is_newer_version("1.0.3", "1.0.2"));
+        assert!(is_newer_version("1.1.0", "1.0.9"));
+        assert!(is_newer_version("2.0.0", "1.9.9"));
+        assert!(is_newer_version("v1.0.2", "1.0.1")); // tolerates leading v
+        assert!(!is_newer_version("1.0.2", "1.0.2")); // equal
+        assert!(!is_newer_version("1.0.1", "1.0.2")); // older
+        assert!(!is_newer_version("", "1.0.2"));
     }
 
     #[test]
