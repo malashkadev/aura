@@ -41,13 +41,21 @@ fn format_model_filename(model_name: &str) -> String {
 /// Checks that the whisper runtime DLLs live next to the sidecar (or in its
 /// `binaries/` subfolder) and are real files, not zero-byte placeholders.
 fn dir_has_runtime_dlls(exe_path: &Path) -> bool {
-    let Some(dir) = exe_path.parent() else { return false };
-    let check = |d: &Path| {
-        ["whisper.dll", "ggml.dll"].iter().all(|name| {
-            fs::metadata(d.join(name)).map(|m| m.len() > 1024).unwrap_or(false)
-        })
-    };
-    check(dir) || check(&dir.join("binaries")) || check(&dir.join("resources").join("binaries"))
+    #[cfg(target_os = "macos")]
+    {
+        let _ = exe_path;
+        true // macOS does not use DLLs
+    }
+    #[cfg(not(target_os = "macos"))]
+    {
+        let Some(dir) = exe_path.parent() else { return false };
+        let check = |d: &Path| {
+            ["whisper.dll", "ggml.dll"].iter().all(|name| {
+                fs::metadata(d.join(name)).map(|m| m.len() > 1024).unwrap_or(false)
+            })
+        };
+        check(dir) || check(&dir.join("binaries")) || check(&dir.join("resources").join("binaries"))
+    }
 }
 
 /// Locate the whisper sidecar executable under the resources directory or fallback paths.
@@ -55,10 +63,19 @@ fn dir_has_runtime_dlls(exe_path: &Path) -> bool {
 /// (e.g. a bare exe in target/debug without its DLLs) are used only as a last resort.
 pub fn find_sidecar<R: Runtime>(app_handle: &tauri::AppHandle<R>) -> Result<PathBuf, String> {
     // In release bundles Tauri strips the target triple from externalBin names
+    #[cfg(target_os = "windows")]
     let target_names = [
         "whisper-sidecar-x86_64-pc-windows-msvc.exe",
         "whisper-sidecar.exe",
     ];
+    #[cfg(target_os = "macos")]
+    let target_names = [
+        "whisper-sidecar-x86_64-apple-darwin",
+        "whisper-sidecar-aarch64-apple-darwin",
+        "whisper-sidecar",
+    ];
+    #[cfg(not(any(target_os = "windows", target_os = "macos")))]
+    let target_names = ["whisper-sidecar"];
 
     let resource_dir = app_handle
         .path()
@@ -100,6 +117,7 @@ pub fn find_sidecar<R: Runtime>(app_handle: &tauri::AppHandle<R>) -> Result<Path
         return Ok(path.clone());
     }
     if let Some(path) = existing.first() {
+        #[cfg(target_os = "windows")]
         eprintln!(
             "Aura Dev Log WARNING: sidecar found at {:?} but whisper.dll/ggml.dll are missing next to it.",
             path
@@ -317,29 +335,32 @@ pub fn run_local_whisper<R: Runtime>(
         cmd.creation_flags(0x08000000); // CREATE_NO_WINDOW (hides the black console window)
     }
 
-    // Prepend sidecar executable directory, resources, and dll paths to PATH for Windows DLL resolution
-    let path_key = std::env::vars_os()
-        .map(|(k, _)| k.to_string_lossy().into_owned())
-        .find(|name| name.eq_ignore_ascii_case("path"))
-        .unwrap_or_else(|| "PATH".to_string());
+    #[cfg(target_os = "windows")]
+    {
+        // Prepend sidecar executable directory, resources, and dll paths to PATH for Windows DLL resolution
+        let path_key = std::env::vars_os()
+            .map(|(k, _)| k.to_string_lossy().into_owned())
+            .find(|name| name.eq_ignore_ascii_case("path"))
+            .unwrap_or_else(|| "PATH".to_string());
 
-    let mut paths = if let Some(path_env) = std::env::var_os(&path_key) {
-        std::env::split_paths(&path_env).collect::<Vec<_>>()
-    } else {
-        Vec::new()
-    };
-    
-    // Add all possible location candidates of whisper.dll / ggml.dll to guarantee resolution
-    if let Some(parent) = sidecar_path.parent() {
-        paths.insert(0, parent.join("resources").join("binaries"));
-        paths.insert(0, parent.to_path_buf());
-    }
-    paths.insert(0, dlls_dir.clone());
-    paths.insert(0, short_sidecar_dir.to_path_buf());
-    paths.insert(0, short_dlls_dir.to_path_buf());
+        let mut paths = if let Some(path_env) = std::env::var_os(&path_key) {
+            std::env::split_paths(&path_env).collect::<Vec<_>>()
+        } else {
+            Vec::new()
+        };
+        
+        // Add all possible location candidates of whisper.dll / ggml.dll to guarantee resolution
+        if let Some(parent) = sidecar_path.parent() {
+            paths.insert(0, parent.join("resources").join("binaries"));
+            paths.insert(0, parent.to_path_buf());
+        }
+        paths.insert(0, dlls_dir.clone());
+        paths.insert(0, short_sidecar_dir.to_path_buf());
+        paths.insert(0, short_dlls_dir.to_path_buf());
 
-    if let Ok(new_path) = std::env::join_paths(paths) {
-        cmd.env(&path_key, new_path);
+        if let Ok(new_path) = std::env::join_paths(paths) {
+            cmd.env(&path_key, new_path);
+        }
     }
 
     let output = cmd

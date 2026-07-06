@@ -7,7 +7,7 @@ on:
     branches: [main, master]
 
 jobs:
-  test:
+  test-windows:
     name: Rust tests (Windows)
     runs-on: windows-latest
     steps:
@@ -24,5 +24,24 @@ jobs:
       - name: Run tests
         run: cargo test --manifest-path src-tauri/Cargo.toml
 
-      - name: Check formatting-agnostic compile warnings
+      - name: Check compile warnings
         run: cargo check --manifest-path src-tauri/Cargo.toml
+
+  build-macos:
+    name: Compile check (macOS)
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust (stable)
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      # Verifies the macOS native port (CGEventTap etc.) compiles and the
+      # shared logic passes its tests. Bundling/signing is done separately on a Mac.
+      - name: Run tests (macOS)
+        run: cargo test --manifest-path src-tauri/Cargo.toml

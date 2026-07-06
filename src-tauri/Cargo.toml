@@ -22,7 +22,6 @@ tauri-build = { version = "2", features = [] }
 [dependencies]
 tauri = { version = "2", features = ["tray-icon"] }
 tauri-plugin-opener = "2"
-windows-sys = { version = "0.52", features = ["Win32_UI_WindowsAndMessaging", "Win32_Foundation", "Win32_System_LibraryLoader", "Win32_UI_Input_KeyboardAndMouse", "Win32_Storage_FileSystem"] }
 cpal = "0.15"
 hound = "3.5"
 reqwest = { version = "0.11", features = ["json", "multipart", "socks"] }
@@ -33,6 +32,15 @@ base64 = "0.21"
 arboard = "3.4.0"
 tauri-plugin-autostart = "2"
 tauri-plugin-single-instance = "2"
+
+[target.'cfg(target_os = "windows")'.dependencies]
+windows-sys = { version = "0.52", features = ["Win32_UI_WindowsAndMessaging", "Win32_Foundation", "Win32_System_LibraryLoader", "Win32_UI_Input_KeyboardAndMouse", "Win32_Storage_FileSystem"] }
 winreg = "0.52"
+
+[target.'cfg(target_os = "macos")'.dependencies]
+cocoa = "0.25"
+objc = "0.2.7"
+core-foundation = "0.9"
+core-graphics = "0.23"
 
 
