@@ -28,3 +28,6 @@ test_out.txt
 /Logo DARK.png
 DESIGN.md
 PRODUCT.md
+
+.vercel
+.env*

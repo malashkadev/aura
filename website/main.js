@@ -10,6 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
   setupScrollListeners();
   setupFAQAccordions();
   setupPlatformSpecificDownloads();
+  setupConfirmDownloadModal();
 });
 
 /**
@@ -427,6 +428,86 @@ function setupPlatformSpecificDownloads() {
       heroSubtext.style.color = "rgba(255, 66, 0, 0.55)"; // highlight warning slightly
     }
   }
+}
+
+/**
+ * Sets up the Confirm Download Modal dialog and binds it to download triggers.
+ */
+function setupConfirmDownloadModal() {
+  const modal = document.getElementById('download-modal');
+  if (!modal) return;
+
+  const cancelBtn = document.getElementById('modal-cancel-btn');
+  const confirmBtn = document.getElementById('modal-confirm-btn');
+  const downloadLinks = document.querySelectorAll('#hero-download-btn, #header-download-btn, #footer-download-link');
+
+  let activeUrl = '';
+
+  // Open modal handler
+  function openModal(e, url) {
+    e.preventDefault();
+    activeUrl = url;
+    if (confirmBtn) {
+      confirmBtn.setAttribute('href', activeUrl);
+    }
+    document.body.classList.add('modal-active');
+    modal.classList.remove('exiting');
+    modal.classList.add('active');
+    
+    // Focus Cancel button for accessibility
+    if (cancelBtn) {
+      cancelBtn.focus();
+    }
+  }
+
+  // Close modal handler with asymmetric exit timing (snap down animation)
+  function closeModal() {
+    modal.classList.add('exiting');
+    
+    // Wait for the exit animation (120ms) before hiding overlay
+    setTimeout(() => {
+      modal.classList.remove('active');
+      modal.classList.remove('exiting');
+      document.body.classList.remove('modal-active');
+      activeUrl = '';
+    }, 120);
+  }
+
+  // Bind download buttons
+  downloadLinks.forEach(link => {
+    link.addEventListener('click', (e) => {
+      const url = link.getAttribute('href');
+      if (url && url !== '#') {
+        openModal(e, url);
+      }
+    });
+  });
+
+  // Bind cancel and confirm actions
+  if (cancelBtn) {
+    cancelBtn.addEventListener('click', closeModal);
+  }
+
+  if (confirmBtn) {
+    confirmBtn.addEventListener('click', () => {
+      // Small timeout to allow active transition feel before redirect
+      setTimeout(closeModal, 100);
+    });
+  }
+
+  // Close on overlay click
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) {
+      closeModal();
+    }
+  });
+
+  // Close on ESC key press
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && modal.classList.contains('active')) {
+      closeModal();
+    }
+  });
 }
 
 

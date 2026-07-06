@@ -29,7 +29,7 @@
   --radius-full: 9999px;
   
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
-  --transition: all 0.3s var(--ease-out);
+  --transition: opacity 0.22s var(--ease-out), transform 0.22s var(--ease-out), border-color 0.22s var(--ease-out), box-shadow 0.22s var(--ease-out), color 0.22s var(--ease-out), background-color 0.22s var(--ease-out);
 }
 
 /* Global Reset */
@@ -445,12 +445,7 @@ p {
   border-radius: var(--radius-md);
   overflow: hidden;
   box-shadow: var(--shadow-lg), 0 0 40px rgba(0, 0, 0, 0.5);
-  transition: transform 0.5s var(--ease-out), box-shadow 0.5s var(--ease-out), border-color 0.5s var(--ease-out);
-}
-
-.window-mockup:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-lg), 0 0 50px rgba(var(--accent-color-rgb), 0.05);
+  transition: transform 0.22s var(--ease-out), box-shadow 0.22s var(--ease-out), border-color 0.22s var(--ease-out);
 }
 
 .mockup-header {
@@ -646,12 +641,6 @@ p {
   transition: var(--transition);
 }
 
-.bento-card:hover {
-  border-color: rgba(255, 66, 0, 0.3);
-  background: rgba(16, 16, 16, 0.55);
-  transform: translateY(-2px);
-}
-
 .bento-col-2 {
   grid-column: span 2;
 }
@@ -665,12 +654,7 @@ p {
   background: radial-gradient(circle 200px at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(var(--accent-color-rgb), 0.04) 0%, transparent 80%);
   pointer-events: none;
   opacity: 0.4;
-  transition: opacity 0.4s var(--ease-out);
-}
-
-.bento-card:hover .card-glow {
-  opacity: 1;
-  background: radial-gradient(circle 250px at var(--mouse-x) var(--mouse-y), rgba(var(--accent-color-rgb), 0.09) 0%, transparent 80%);
+  transition: opacity 0.22s var(--ease-out);
 }
 
 .bento-card-content {
@@ -1829,7 +1813,7 @@ kbd.shortcut-key {
   width: 18px;
   height: 18px;
   color: var(--text-secondary);
-  transition: transform 0.3s var(--ease-out);
+  transition: transform 0.22s var(--ease-out);
 }
 
 .faq-item.faq-active .faq-chevron {
@@ -1840,7 +1824,8 @@ kbd.shortcut-key {
 .faq-answer-pane {
   max-height: 0;
   overflow: hidden;
-  transition: max-height 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: max-height;
+  transition: max-height 0.25s var(--ease-out);
 }
 
 .faq-answer-content {
@@ -1934,3 +1919,216 @@ kbd.shortcut-key {
     display: none;
   }
 }
+
+/* ==========================================
+   Confirm Download Modal Dialog & Overlays
+   ========================================== */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(0px);
+  -webkit-backdrop-filter: blur(0px);
+  opacity: 0;
+  visibility: hidden;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.24s var(--ease-out), visibility 0.24s, backdrop-filter 0.24s var(--ease-out);
+}
+
+.modal-overlay.active {
+  opacity: 1;
+  visibility: visible;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.modal-card {
+  background: rgba(12, 12, 12, 0.9);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 66, 0, 0.15);
+  border-radius: var(--radius-lg);
+  padding: 36px;
+  width: 90%;
+  max-width: 460px;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.8), 0 0 40px rgba(255, 66, 0, 0.05);
+  transform: scale(0.95) translateY(12px);
+  opacity: 0;
+  transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.modal-overlay.active .modal-card {
+  transform: scale(1) translateY(0);
+  opacity: 1;
+}
+
+/* Asymmetric exit timing: snap down and fade out fast */
+.modal-overlay.exiting .modal-card {
+  transform: scale(0.97) translateY(6px);
+  opacity: 0;
+  transition: transform 0.12s ease-in, opacity 0.12s ease-in;
+}
+
+.modal-header {
+  margin-bottom: 18px;
+}
+
+.modal-title {
+  font-family: var(--font-display);
+  font-size: 1.45rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0;
+}
+
+.modal-title svg {
+  width: 22px;
+  height: 22px;
+  color: var(--accent-color);
+  flex-shrink: 0;
+}
+
+.modal-body {
+  margin-bottom: 24px;
+  color: var(--text-secondary);
+  font-size: 0.92rem;
+  line-height: 1.6;
+}
+
+.modal-body strong {
+  color: var(--text-primary);
+}
+
+.modal-meta-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  margin-top: 16px;
+  padding: 14px 16px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+}
+
+.modal-meta-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.modal-meta-label {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.modal-meta-value {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.modal-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+.modal-btn {
+  font-family: var(--font-sans);
+  font-size: 0.9rem;
+  font-weight: 600;
+  padding: 10px 20px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.2s var(--ease-out), transform 0.2s var(--ease-out), background-color 0.2s var(--ease-out), border-color 0.2s var(--ease-out), box-shadow 0.2s var(--ease-out);
+  text-decoration: none;
+  outline: none;
+}
+
+.modal-btn-cancel {
+  background: transparent;
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+}
+
+.modal-btn-confirm {
+  background: var(--accent-color);
+  border: 1px solid var(--accent-color);
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(var(--accent-color-rgb), 0.2);
+}
+
+/* Scroll Lock when Modal is open */
+body.modal-active {
+  overflow: hidden;
+  height: 100vh;
+}
+
+/* ==========================================
+   Motion Design Gating & Accessibility
+   ========================================== */
+
+/* 1. Reduced Motion Overrides */
+@media (prefers-reduced-motion: reduce) {
+  .aura-glow-1, .aura-glow-2, .aura-glow-3 {
+    animation: none !important;
+  }
+  .reveal-on-scroll {
+    transform: none !important;
+    transition: opacity 0.3s ease !important;
+  }
+  .bento-card, .window-mockup, .btn, .faq-chevron, .faq-answer-pane, .modal-card, .modal-overlay {
+    transition: opacity 0.2s ease !important;
+    transform: none !important;
+  }
+}
+
+/* 2. Hover gates for pointer devices only */
+@media (hover: hover) and (pointer: fine) {
+  .bento-card:hover {
+    border-color: rgba(255, 66, 0, 0.3);
+    background: rgba(16, 16, 16, 0.55);
+    transform: translateY(-2px);
+  }
+  
+  .window-mockup:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg), 0 0 50px rgba(var(--accent-color-rgb), 0.05);
+  }
+  
+  .bento-card:hover .card-glow {
+    opacity: 1;
+    background: radial-gradient(circle 250px at var(--mouse-x) var(--mouse-y), rgba(var(--accent-color-rgb), 0.09) 0%, transparent 80%);
+  }
+
+  .modal-btn-cancel:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: var(--border-hover);
+  }
+
+  .modal-btn-confirm:hover {
+    background: var(--accent-hover);
+    border-color: var(--accent-hover);
+    box-shadow: 0 4px 20px rgba(var(--accent-color-rgb), 0.4);
+    transform: translateY(-1px);
+  }
+  
+  .modal-btn-confirm:active {
+    transform: translateY(0);
+  }
+}
+
