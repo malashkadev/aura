@@ -406,6 +406,19 @@ p {
   margin-top: 8px;
 }
 
+.hero-download-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.download-subtext {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  padding-left: 4px;
+}
+
 .hero-visual {
   display: flex;
   justify-content: center;
@@ -1843,6 +1856,10 @@ kbd.shortcut-key {
   
   .hero-actions {
     justify-content: center;
+  }
+
+  .hero-download-wrapper {
+    align-items: center;
   }
 
   .bento-grid {

@@ -9,6 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
   setupRevealOnScroll();
   setupScrollListeners();
   setupFAQAccordions();
+  setupPlatformSpecificDownloads();
 });
 
 /**
@@ -405,6 +406,32 @@ function setupFAQAccordions() {
       }
     });
   });
+}
+
+/**
+ * Automatically detects the user's operating system and customizes the download buttons and subtexts
+ */
+function setupPlatformSpecificDownloads() {
+  const isRu = document.documentElement.lang === 'ru';
+  const isWindows = /Windows|Win32|Win64|wintarget/i.test(navigator.userAgent || navigator.platform);
+  
+  const headerBtn = document.getElementById('header-download-btn');
+  const heroBtn = document.getElementById('hero-download-btn');
+  const heroSubtext = document.getElementById('hero-download-subtext');
+  
+  if (isWindows) {
+    if (headerBtn) headerBtn.textContent = isRu ? "Скачать для Windows" : "Download for Windows";
+    if (heroBtn) heroBtn.textContent = isRu ? "Скачать для Windows" : "Download for Windows";
+    if (heroSubtext) heroSubtext.textContent = isRu ? "Совместимо с Windows 10 и 11" : "Compatible with Windows 10 & 11";
+  } else {
+    // Non-Windows platform (macOS, Linux, iOS, Android, etc.)
+    if (headerBtn) headerBtn.textContent = isRu ? "Скачать Aura" : "Download Aura";
+    if (heroBtn) heroBtn.textContent = isRu ? "Скачать Aura" : "Download Aura";
+    if (heroSubtext) {
+      heroSubtext.textContent = isRu ? "Требуется Windows 10 или 11" : "Requires Windows 10 or 11";
+      heroSubtext.style.color = "rgba(255, 66, 0, 0.7)"; // highlight compatibility warning in accent orange
+    }
+  }
 }
 
 
