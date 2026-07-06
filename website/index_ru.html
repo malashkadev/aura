@@ -24,8 +24,8 @@
   <link rel="icon" type="image/svg+xml" href="favicon.svg" />
 
   <!-- Stylesheet -->
-  <link rel="stylesheet" href="style.css?v=2.0.8" />
-  <script src="main.js?v=2.0.8" defer></script>
+  <link rel="stylesheet" href="style.css?v=2.0.9" />
+  <script src="main.js?v=2.0.9" defer></script>
 </head>
 <body>
 
@@ -73,7 +73,14 @@
         <div class="hero-actions">
           <div class="hero-download-wrapper">
             <a href="https://github.com/malashkadev/aura/releases/download/v1.0.0/Aura_1.0.0_x64-setup.exe" class="btn btn-primary btn-hero-cta" id="hero-download-btn">Скачать Aura</a>
-            <span class="download-subtext" id="hero-download-subtext">(совместимо с Windows 10 и 11)</span>
+            <div class="download-subtext-brackets" id="hero-download-subtext">
+              <span class="bracket-char bracket-left">(</span>
+              <div class="bracket-text">
+                <span id="subtext-line-1">совместимо с</span>
+                <span id="subtext-line-2">Windows 10 и 11</span>
+              </div>
+              <span class="bracket-char bracket-right">)</span>
+            </div>
           </div>
           <a href="https://github.com/malashkadev/aura" class="btn btn-secondary" id="hero-github-btn">Открыть GitHub</a>
         </div>
