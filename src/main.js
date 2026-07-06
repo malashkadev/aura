@@ -44,6 +44,8 @@ const i18nDict = {
     model_meta_medium: "~1.5 ГБ — продвинутая",
     model_meta_turbo: "~1.6 ГБ — лучшая точность для RU/EN",
     model_meta_turbo_q5: "~550 МБ — почти как Turbo, вдвое легче",
+    model_cancel_download: "Отменить загрузку",
+    model_download_cancelled: "Загрузка отменена",
     hotkey_title: "Глобальная горячая клавиша",
     hotkey_desc: "Зажмите выбранную комбинацию для начала записи, отпустите для распознавания.",
     hotkey_label: "Комбинация",
@@ -69,7 +71,7 @@ const i18nDict = {
     history_desc: "Последние надиктованные фразы хранятся локально.",
     history_empty: "История пуста. Ваши надиктованные тексты будут отображаться здесь.",
     about_app_title: "Голосовой ввод Aura",
-    about_version: "v1.0.1",
+    about_version: "v1.0.2",
     about_description: "Инструмент глобального голосового ввода для Windows. Программа переводит речь в текст и вставляет его в любое активное окно с автоматическим форматированием и расстановкой пунктуации.",
     status_ready: "Готово",
     btn_save: "Сохранить настройки",
@@ -145,6 +147,8 @@ const i18nDict = {
     model_meta_medium: "~1.5 GB — advanced",
     model_meta_turbo: "~1.6 GB — best accuracy for RU/EN",
     model_meta_turbo_q5: "~550 MB — near-Turbo, half the size",
+    model_cancel_download: "Cancel download",
+    model_download_cancelled: "Download cancelled",
     hotkey_title: "Global Hotkey",
     hotkey_desc: "Hold down the selected hotkey to record, release to transcribe.",
     hotkey_label: "Combination",
@@ -170,7 +174,7 @@ const i18nDict = {
     history_desc: "Your latest transcribed phrases are cached locally.",
     history_empty: "History is empty. Dictated text fragments will appear here.",
     about_app_title: "Aura Voice Input",
-    about_version: "v1.0.1",
+    about_version: "v1.0.2",
     about_description: "Global voice input tool for Windows. The program transcribes speech to text and inserts it into any active window with automatic formatting and punctuation.",
     status_ready: "Ready",
     btn_save: "Save Settings",
@@ -271,7 +275,7 @@ const i18nDict = {
     history_desc: "Die letzten aufgezeichneten Sätze werden lokal gespeichert.",
     history_empty: "Der Verlauf ist leer. Transkribierte Texte werden hier angezeigt.",
     about_app_title: "Aura Spracheingabe",
-    about_version: "v1.0.1",
+    about_version: "v1.0.2",
     about_description: "Globales Spracheingabe-Tool für Windows. Die Anwendung überträgt Sprache in Text und fügt ihn mit automatischer Formatierung und Zeichensetzung in jedes aktive Fenster ein.",
     status_ready: "Bereit",
     btn_save: "Einstellungen speichern",
@@ -372,7 +376,7 @@ const i18nDict = {
     history_desc: "Las últimas frases dictadas se guardan de forma local.",
     history_empty: "El historial está vacío. Los textos dictados se mostrarán aquí.",
     about_app_title: "Dictado por voz Aura",
-    about_version: "v1.0.1",
+    about_version: "v1.0.2",
     about_description: "Herramienta de entrada de voz global para Windows. El programa transcribe el habla en texto y lo inserta en cualquier ventana activa con formato y puntuación automáticos.",
     status_ready: "Listo",
     btn_save: "Guardar ajustes",
@@ -473,7 +477,7 @@ const i18nDict = {
     history_desc: "Les dernières phrases dictées sont enregistrées localement.",
     history_empty: "Historique vide. Vos textes transcrits s'afficheront ici.",
     about_app_title: "Dictée vocale Aura",
-    about_version: "v1.0.1",
+    about_version: "v1.0.2",
     about_description: "Outil de saisie vocale globale pour Windows. Le programme transcrit la parole en texte et l'insère dans n'importe quelle fenêtre active avec un formatage et une ponctuation automatiques.",
     status_ready: "Prêt",
     btn_save: "Enregistrer",
@@ -574,7 +578,7 @@ const i18nDict = {
     history_desc: "Le ultime frasi dettate vengono salvate in locale.",
     history_empty: "La cronologia è vuota. I testi dettati appariranno qui.",
     about_app_title: "Dettatura vocale Aura",
-    about_version: "v1.0.1",
+    about_version: "v1.0.2",
     about_description: "Strumento di inserimento vocale globale per Windows. Il programma trascrive la voce in testo e la inserisce in qualsiasi finestra attiva con formattazione e punteggiatura automatiche.",
     status_ready: "Pronto",
     btn_save: "Salva impostazioni",
@@ -675,7 +679,7 @@ const i18nDict = {
     history_desc: "您最近转换出的文字将缓存在本地。",
     history_empty: "历史记录为空。您听写的文字会显示在这里。",
     about_app_title: "Aura 智能语音输入",
-    about_version: "v1.0.1",
+    about_version: "v1.0.2",
     about_description: "适用于 Windows 的全局语音输入工具。本程序可以将语音转录为文本，并以自动格式和标点符号插入到任何活动窗口中。",
     status_ready: "就绪",
     btn_save: "保存设置",
@@ -776,7 +780,7 @@ const i18nDict = {
     history_desc: "As últimas frases ditadas são armazenadas localmente.",
     history_empty: "O histórico está vazio. Seus textos ditados aparecerão aqui.",
     about_app_title: "Ditado de voz Aura",
-    about_version: "v1.0.1",
+    about_version: "v1.0.2",
     about_description: "Ferramenta de entrada de voz global para Windows. O programa transcreve a fala em texto e a insere em qualquer janela ativa com formatação e pontuação automáticas.",
     status_ready: "Pronto",
     btn_save: "Salvar configurações",
@@ -877,7 +881,7 @@ const i18nDict = {
     history_desc: "Son sesli yazımlarınız yerel olarak saklanır.",
     history_empty: "Geçmiş boş. Yazdığınız metinler burada görünecektir.",
     about_app_title: "Aura Sesli Giriş",
-    about_version: "v1.0.1",
+    about_version: "v1.0.2",
     about_description: "Windows için genel sesli giriş aracı. Program, konuşmayı metne dönüştürür ve otomatik biçimlendirme ve noktalama işaretleriyle herhangi bir aktif pencereye ekler.",
     status_ready: "Hazır",
     btn_save: "Ayarları Kaydet",
@@ -1186,7 +1190,7 @@ document.addEventListener("DOMContentLoaded", () => {
   modelCards.forEach(card => {
     card.addEventListener("click", (e) => {
       // Prevent selection trigger when clicking delete/download buttons inside the card
-      if (e.target.closest(".btn-delete-card-model") || e.target.closest(".btn-download-card-model")) {
+      if (e.target.closest(".btn-delete-card-model") || e.target.closest(".btn-download-card-model") || e.target.closest(".btn-cancel-download")) {
         return;
       }
       selectModelCard(card.dataset.model);
@@ -1396,10 +1400,34 @@ document.addEventListener("DOMContentLoaded", () => {
       fillEl.style.width = "0%";
       pctEl.textContent = "0%";
 
+      // Add a fresh cancel (×) button while downloading
+      if (progressEl) {
+        const oldBtn = progressEl.querySelector(".btn-cancel-download");
+        if (oldBtn) oldBtn.remove();
+        const cancelBtn = document.createElement("button");
+        cancelBtn.type = "button";
+        cancelBtn.className = "btn-cancel-download";
+        const cancelLabel = getTranslation("model_cancel_download") || "Отменить загрузку";
+        cancelBtn.title = cancelLabel;
+        cancelBtn.setAttribute("aria-label", cancelLabel);
+        cancelBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>';
+        cancelBtn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          cancelBtn.disabled = true;
+          invoke("cancel_model_download", { modelName: model }).catch(e2 => console.error(e2));
+        });
+        progressEl.appendChild(cancelBtn);
+      }
+
       await invoke("download_model_command", { modelName: model });
     } catch (err) {
       console.error(err);
-      showStatus(getTranslation("model_download_error_pattern", { err }), true);
+      const errStr = String(err).toLowerCase();
+      if (errStr.includes("cancel")) {
+        showStatus(getTranslation("model_download_cancelled") || "Загрузка отменена");
+      } else {
+        showStatus(getTranslation("model_download_error_pattern", { err }), true);
+      }
       refreshDownloadedModels();
     }
   }
@@ -1451,7 +1479,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (payload.done) {
       showStatus(getTranslation("model_downloaded_success_pattern", { model }));
-      if (progressEl) progressEl.style.display = "none";
+      if (progressEl) {
+        const cancelBtn = progressEl.querySelector(".btn-cancel-download");
+        if (cancelBtn) cancelBtn.remove();
+        progressEl.style.display = "none";
+      }
       if (actionEl) actionEl.style.display = "flex";
       refreshDownloadedModels();
     }

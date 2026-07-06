@@ -1588,3 +1588,24 @@ body {
 }
 
 
+
+/* --- Cancel download (x) button on model cards (v1.0.2) --- */
+.btn-cancel-download {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  margin-left: 8px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--text-muted, #8a8a8a);
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+.btn-cancel-download svg { width: 14px; height: 14px; }
+.btn-cancel-download:hover { background-color: rgba(255, 92, 92, 0.15); color: #ff5c5c; }
+.btn-cancel-download:disabled { opacity: 0.5; cursor: default; }

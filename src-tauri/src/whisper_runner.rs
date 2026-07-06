@@ -2,6 +2,32 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 use tauri::{Manager, Emitter, Runtime};
+use std::collections::HashSet;
+use std::sync::{Mutex, OnceLock};
+
+/// Models whose in-flight download the user asked to cancel (keyed by model name).
+static DOWNLOAD_CANCEL: OnceLock<Mutex<HashSet<String>>> = OnceLock::new();
+
+fn cancel_set() -> &'static Mutex<HashSet<String>> {
+    DOWNLOAD_CANCEL.get_or_init(|| Mutex::new(HashSet::new()))
+}
+
+/// Requests cancellation of the running download for `model_name`.
+pub fn request_cancel_download(model_name: &str) {
+    if let Ok(mut set) = cancel_set().lock() {
+        set.insert(model_name.to_string());
+    }
+}
+
+fn is_cancel_requested(model_name: &str) -> bool {
+    cancel_set().lock().map(|s| s.contains(model_name)).unwrap_or(false)
+}
+
+fn clear_cancel(model_name: &str) {
+    if let Ok(mut set) = cancel_set().lock() {
+        set.remove(model_name);
+    }
+}
 
 #[derive(Clone, serde::Serialize)]
 pub struct DownloadProgress {
@@ -174,6 +200,9 @@ pub async fn download_model<R: Runtime>(
         }
     }
 
+    // Clear any stale cancel flag from a previous attempt for this model
+    clear_cancel(model_name);
+
     let url = format!(
         "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/{}",
         filename
@@ -210,6 +239,14 @@ pub async fn download_model<R: Runtime>(
         .await
         .map_err(|e| format!("Error while downloading chunk: {}", e))?
     {
+        // Abort promptly if the user pressed the cancel (×) button
+        if is_cancel_requested(model_name) {
+            drop(file);
+            let _ = fs::remove_file(&temp_path);
+            clear_cancel(model_name);
+            return Err("Download cancelled".to_string());
+        }
+
         use tokio::io::AsyncWriteExt;
         file.write_all(&chunk)
             .await
@@ -242,6 +279,8 @@ pub async fn download_model<R: Runtime>(
 
     fs::rename(&temp_path, &dest_path)
         .map_err(|e| format!("Failed to rename temp file to destination: {}", e))?;
+
+    clear_cancel(model_name);
 
     let _ = app_handle.emit(
         "model-download-progress",
@@ -308,6 +347,13 @@ pub fn run_local_whisper<R: Runtime>(
         _ => "auto",
     };
 
+    // whisper.cpp defaults to only 4 threads; on modern many-core CPUs that leaves
+    // most of the machine idle (~20% usage). Use all available logical cores so
+    // transcription runs several times faster.
+    let n_threads = std::thread::available_parallelism()
+        .map(|n| n.get())
+        .unwrap_or(4);
+
     let mut args: Vec<String> = vec![
         "-m".to_string(),
         short_model_path.to_str().ok_or("Invalid model path encoding")?.to_string(),
@@ -315,6 +361,8 @@ pub fn run_local_whisper<R: Runtime>(
         short_wav_path.to_str().ok_or("Invalid wav path encoding")?.to_string(),
         "-l".to_string(),
         lang.to_string(),
+        "-t".to_string(),
+        n_threads.to_string(),
         "-nt".to_string(),
         "-np".to_string(),
     ];

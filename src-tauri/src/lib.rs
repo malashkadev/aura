@@ -81,6 +81,12 @@ async fn download_model_command(app_handle: tauri::AppHandle, model_name: String
 }
 
 #[tauri::command]
+async fn cancel_model_download(model_name: String) -> Result<(), String> {
+    whisper_runner::request_cancel_download(&model_name);
+    Ok(())
+}
+
+#[tauri::command]
 async fn delete_model_command(app_handle: tauri::AppHandle, model_name: String) -> Result<(), String> {
     if model_name.chars().any(|c| !c.is_ascii_alphanumeric() && c != '.' && c != '-' && c != '_') {
         return Err("Invalid model name".to_string());
@@ -1161,6 +1167,7 @@ pub fn run() {
             get_settings,
             set_settings,
             download_model_command,
+            cancel_model_download,
             delete_model_command,
             get_downloaded_models,
             get_history,
