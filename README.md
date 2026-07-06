@@ -16,6 +16,8 @@
 
 Hold a hotkey, speak, release — Aura transcribes your speech, cleans it up (punctuation, filler words) and types it into **any** Windows application. Works with cloud AI (Gemini / OpenAI / Groq) or fully offline with local Whisper.
 
+Think of it as a **free, open-source alternative to Wispr Flow** — not just a transcriber, but a dictation *and editing* assistant: it polishes what you say and can even rewrite selected text on voice command.
+
 **100% Free & Open Source** — Aura is completely free, with no ads, paid subscriptions, trial periods, or hidden limits.
 
 > 🇷🇺 [Документация на русском](README.ru.md)
@@ -39,6 +41,24 @@ Hold a hotkey, speak, release — Aura transcribes your speech, cleans it up (pu
 - **Voice punctuation commands** (optional) — “comma”, “period”, “new line” → `,`, `.`, newline.
 - **Polished overlay** — live waveform, recording timer, error states and optional sound themes (zen / rhodes / sci-fi / classic).
 - **Quality of life** — autostart with Windows, tray icon, single-instance guard, focus guard (never types into the wrong window).
+
+## How Aura compares
+
+Aura sits between minimalist local transcribers and paid AI dictation tools. If you just want raw offline transcription, [Handy](https://handy.computer/) is excellent and cross-platform. Aura's focus is the **AI editing layer on top** — and it's free.
+
+| | **Aura** | **Handy** | **Wispr Flow** |
+|---|---|---|---|
+| Price | Free & open source | Free & open source | Paid (subscription) |
+| Platforms | Windows | Windows / macOS / Linux | Windows / macOS |
+| Local engine (private) | ✅ Whisper | ✅ Whisper / Parakeet | ❌ cloud only |
+| Cloud engine (no GPU needed) | ✅ Gemini / OpenAI / Groq | ❌ | ✅ |
+| AI cleanup (filler removal, grammar) | ✅ | ➖ basic punctuation only | ✅ |
+| Edit selected text by voice | ✅ | ❌ | ✅ |
+| Voice punctuation commands | ✅ | ❌ | ➖ |
+| Transcription history | ✅ | ❌ | ✅ |
+| Custom dictionary | ✅ | ❌ | ✅ |
+
+> Honest trade-offs: Aura is Windows-only for now, and its cloud mode sends audio to the provider you pick (local mode does not). Handy is more mature and cross-platform. Wispr Flow is the most polished but paid and cloud-only.
 
 ## Installation
 
