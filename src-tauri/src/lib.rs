@@ -523,6 +523,10 @@ fn categorize_error(err: &str) -> String {
         "Gemini is unavailable in your region. Enable global VPN or choose Groq".to_string()
     } else if err_lower.contains("api key") || err_lower.contains("invalid key") || err_lower.contains("key is invalid") || err_lower.contains("incorrect api key") || err_lower.contains("401") || err_lower.contains("permission_denied") {
         "Invalid API key in settings".to_string()
+    } else if err_lower.contains("403") || err_lower.contains("forbidden") {
+        // Groq/OpenAI are reachable without a VPN; a 403 almost always means the
+        // provider's edge (Cloudflare) blocked the VPN/proxy exit IP, not a bad key.
+        "Access forbidden (403): VPN/proxy IP is blocked. Turn off the VPN for Groq/OpenAI or switch server".to_string()
     } else if err_lower.contains("proxy") || err_lower.contains("certificate") || err_lower.contains("tls") || err_lower.contains("ssl") {
         "Connection error via VPN/Proxy".to_string()
     } else if err_lower.contains("network") || err_lower.contains("timeout") || err_lower.contains("timed out") || err_lower.contains("dns") || err_lower.contains("connection") || err_lower.contains("reqwest") {
