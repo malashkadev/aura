@@ -41,6 +41,16 @@ jobs:
         with:
           workspaces: src-tauri
 
+      # tauri-build validates that each externalBin exists for the current target
+      # triple before compiling. We only compile-check here (no real Mac sidecar
+      # is built yet), so create empty placeholders to satisfy that check.
+      - name: Create placeholder macOS sidecars (compile check only)
+        run: |
+          mkdir -p src-tauri/binaries
+          touch src-tauri/binaries/whisper-sidecar-aarch64-apple-darwin
+          touch src-tauri/binaries/whisper-sidecar-x86_64-apple-darwin
+          chmod +x src-tauri/binaries/whisper-sidecar-aarch64-apple-darwin src-tauri/binaries/whisper-sidecar-x86_64-apple-darwin
+
       # Verifies the macOS native port (CGEventTap etc.) compiles and the
       # shared logic passes its tests. Bundling/signing is done separately on a Mac.
       - name: Run tests (macOS)
