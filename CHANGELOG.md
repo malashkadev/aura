@@ -3,7 +3,13 @@
 All notable changes to Aura are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/), versions follow [SemVer](https://semver.org/).
 
-## [1.0.0] — Unreleased (first public release)
+## [1.0.1] — 2026-07-06
+
+### Changed
+- Settings/overlay UI polish: refined modal exit animation, glassmorphic download confirmation, button sizing and accessibility tweaks.
+- Bumped executable and UI version metadata to 1.0.1.
+
+## [1.0.0] — 2026-07-05 (first public release)
 
 ### Added
 - Global-hotkey dictation with push-to-talk and toggle (tap-to-latch) modes; `Esc` cancels a recording.
@@ -26,3 +32,4 @@ The format follows [Keep a Changelog](https://keepachangelog.com/), versions fol
 - Blocking whisper.cpp/typing calls moved off the async runtime.
 - Sidecar discovery works in dev and bundled builds; runtime DLLs ship with the installer.
 - Model name validation prevents directory traversal.
+- Alt-based hotkeys no longer steal focus from the active input field (e.g. in browsers) by disarming the menu-activating Alt release.
