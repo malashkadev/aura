@@ -1629,3 +1629,16 @@ body {
 }
 .update-badge svg { width: 15px; height: 15px; }
 .update-badge:hover { background: rgba(255, 90, 31, 0.22); transform: translateY(-1px); }
+
+/* --- Update-available dot on the About nav tab (v1.0.2) --- */
+.nav-tab { position: relative; }
+.nav-update-dot {
+  position: absolute;
+  top: 6px;
+  right: 10px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent-color, #ff5a1f);
+  box-shadow: 0 0 0 2px var(--surface-color, #0d0d0d);
+}

@@ -63,6 +63,7 @@
         <button type="button" class="nav-tab" id="tab-btn-about" data-tab="about">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="nav-icon"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
           <span data-i18n="tab_about">О программе</span>
+          <span id="update-dot" class="nav-update-dot" style="display: none;"></span>
         </button>
       </nav>
 
@@ -264,6 +265,18 @@
                 <span class="toggle-thumb"></span>
               </span>
               <span class="toggle-label" data-i18n="punct_checkbox">Включить обработку голосовой пунктуации</span>
+            </label>
+          </div>
+
+          <div class="card">
+            <h2 class="card-title" data-i18n="fallback_title">Автопереключение при недоступности облака</h2>
+            <p class="card-desc" data-i18n="fallback_desc">Если облачный ИИ недоступен (VPN, блокировка региона, нет сети), автоматически использовать уже скачанную локальную модель для этой записи.</p>
+            <label class="toggle-switch">
+              <input type="checkbox" id="checkbox-cloud-fallback" checked />
+              <span class="toggle-track">
+                <span class="toggle-thumb"></span>
+              </span>
+              <span class="toggle-label" data-i18n="fallback_checkbox">Включить автопереключение на локальную модель</span>
             </label>
           </div>
 

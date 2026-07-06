@@ -599,6 +599,28 @@ async fn type_streaming_update(
     .await;
 }
 
+/// True when the cloud error looks like "the network/provider is unreachable from here"
+/// (VPN/region block, no network, proxy/TLS failure) rather than a config mistake like a
+/// bad API key or an exhausted quota — those need the user's attention, not a silent swap.
+fn is_cloud_unreachable(err: &str) -> bool {
+    let e = err.to_lowercase();
+    e.contains("location is not supported")
+        || e.contains("user location")
+        || e.contains("failed_precondition")
+        || e.contains("403")
+        || e.contains("forbidden")
+        || e.contains("proxy")
+        || e.contains("certificate")
+        || e.contains("tls")
+        || e.contains("ssl")
+        || e.contains("network")
+        || e.contains("timeout")
+        || e.contains("timed out")
+        || e.contains("dns")
+        || e.contains("connection")
+        || e.contains("reqwest")
+}
+
 fn categorize_error(err: &str) -> String {
     let err_lower = err.to_lowercase();
     if err_lower.contains("location is not supported")
@@ -975,7 +997,8 @@ async fn finalize_recording(app_handle: tauri::AppHandle) {
 
         eprintln!("Aura Dev Log: Calling final transcription...");
         let api_call_start = std::time::Instant::now();
-        let transcription_result = if settings.transcription_mode == "local" {
+        let mut used_local_fallback = false;
+        let mut transcription_result = if settings.transcription_mode == "local" {
             run_local_whisper_async(
                 app_handle_clone.clone(),
                 settings.model_name.clone(),
@@ -1000,6 +1023,42 @@ async fn finalize_recording(app_handle: tauri::AppHandle) {
                 .await
             }
         };
+
+        // Cloud unreachable (VPN block / no network / region block)? Retry once with
+        // whichever local model is already downloaded, instead of failing outright.
+        if settings.transcription_mode != "local" && settings.cloud_fallback_enabled {
+            if let Err(cloud_err) = &transcription_result {
+                if is_cloud_unreachable(cloud_err) {
+                    if let Ok(downloaded) = get_downloaded_models(app_handle_clone.clone()).await {
+                        let fallback_model = if downloaded.contains(&settings.model_name) {
+                            Some(settings.model_name.clone())
+                        } else {
+                            downloaded.first().cloned()
+                        };
+                        if let Some(model) = fallback_model {
+                            eprintln!("Aura Dev Log: Cloud unreachable, falling back to local model '{}'", model);
+                            let local_result = run_local_whisper_async(
+                                app_handle_clone.clone(),
+                                model,
+                                temp_path_str.clone(),
+                                language.clone(),
+                                settings.dictionary.clone(),
+                            )
+                            .await;
+                            if local_result.is_ok() {
+                                used_local_fallback = true;
+                                transcription_result = local_result;
+                                let _ = app_handle_clone.emit(
+                                    "recording-state",
+                                    "notice:Cloud unavailable — used local model instead",
+                                );
+                                tokio::time::sleep(std::time::Duration::from_millis(1400)).await;
+                            }
+                        }
+                    }
+                }
+            }
+        }
         eprintln!("Aura Dev Log: Transcription call duration = {} ms", api_call_start.elapsed().as_millis());
 
         // The temporary WAV is no longer needed
@@ -1019,7 +1078,8 @@ async fn finalize_recording(app_handle: tauri::AppHandle) {
                     };
 
                     // Save to history and notify the settings UI
-                    match history::add_entry(&app_handle_clone, &final_text, &settings.transcription_mode) {
+                    let history_mode = if used_local_fallback { "local (cloud fallback)" } else { settings.transcription_mode.as_str() };
+                    match history::add_entry(&app_handle_clone, &final_text, history_mode) {
                         Ok(()) => {
                             let _ = app_handle_clone.emit("history-updated", ());
                         }
@@ -1342,6 +1402,16 @@ mod tests {
         assert_eq!(rms(&[]), 0.0);
         assert!(rms(&[0.0, 0.0, 0.0]) < f32::EPSILON);
         assert!((rms(&[0.5, -0.5, 0.5, -0.5]) - 0.5).abs() < 1e-6);
+    }
+
+    #[test]
+    fn test_is_cloud_unreachable() {
+        assert!(is_cloud_unreachable("Gemini API returned status 403 Forbidden"));
+        assert!(is_cloud_unreachable("error sending request: dns error"));
+        assert!(is_cloud_unreachable("Groq Whisper API request failed: connection timed out"));
+        assert!(is_cloud_unreachable("location is not supported for the API use"));
+        assert!(!is_cloud_unreachable("Incorrect API key provided"));
+        assert!(!is_cloud_unreachable("insufficient_quota: You exceeded your current quota"));
     }
 
     #[test]

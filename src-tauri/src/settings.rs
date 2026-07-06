@@ -23,6 +23,7 @@ pub struct Settings {
     pub overlay_sounds: bool,
     pub overlay_sound_theme: String,
     pub overlay_sound_volume: f32,
+    pub cloud_fallback_enabled: bool, // auto-retry locally when cloud is unreachable (VPN/network/region block)
 }
 
 impl Default for Settings {
@@ -45,6 +46,7 @@ impl Default for Settings {
             overlay_sounds: true,
             overlay_sound_theme: "zen".to_string(),
             overlay_sound_volume: 0.8,
+            cloud_fallback_enabled: true,
         }
     }
 }

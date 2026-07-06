@@ -1010,6 +1010,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const textareaDictionary = document.getElementById("textarea-dictionary");
   const checkboxToggle = document.getElementById("checkbox-toggle");
   const checkboxPunctuation = document.getElementById("checkbox-punctuation");
+  const checkboxCloudFallback = document.getElementById("checkbox-cloud-fallback");
   const checkboxAutostart = document.getElementById("checkbox-autostart");
   const btnSaveSettings = document.getElementById("btn-save-settings");
   
@@ -1176,7 +1177,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const checkboxStreaming = document.getElementById("checkbox-streaming");
     const inputs = [
       radioCloud, radioLocal, selectProvider, apiKeyInput, selectHotkey,
-      selectLanguage, textareaDictionary, checkboxToggle, checkboxPunctuation,
+      selectLanguage, textareaDictionary, checkboxToggle, checkboxPunctuation, checkboxCloudFallback,
       checkboxAutostart, checkboxStreaming, checkboxSounds, selectSoundTheme,
       rangeVolume
     ];
@@ -1255,6 +1256,9 @@ document.addEventListener("DOMContentLoaded", () => {
         }
         if (checkboxPunctuation) {
           checkboxPunctuation.checked = !!settings.voice_punctuation;
+        }
+        if (checkboxCloudFallback) {
+          checkboxCloudFallback.checked = settings.cloud_fallback_enabled !== false;
         }
         if (checkboxAutostart) {
           checkboxAutostart.checked = !!settings.autostart;
@@ -1375,6 +1379,7 @@ document.addEventListener("DOMContentLoaded", () => {
         language: selectLanguage ? selectLanguage.value : "auto",
         dictionary: textareaDictionary ? textareaDictionary.value : "",
         voice_punctuation: checkboxPunctuation ? checkboxPunctuation.checked : false,
+        cloud_fallback_enabled: checkboxCloudFallback ? checkboxCloudFallback.checked : true,
         autostart: checkboxAutostart ? checkboxAutostart.checked : false,
         overlay_sounds: checkboxSounds ? checkboxSounds.checked : true,
         overlay_sound_theme: selectSoundTheme ? selectSoundTheme.value : "zen",
@@ -1969,6 +1974,7 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
       const badge = document.getElementById("update-badge");
       const badgeText = document.getElementById("update-badge-text");
+      const navDot = document.getElementById("update-dot");
       if (badge) {
         const info = await invoke("check_for_update");
         if (info && info.available) {
@@ -1978,6 +1984,8 @@ document.addEventListener("DOMContentLoaded", () => {
           badge.addEventListener("click", () => {
             invoke("open_url", { url: info.url }).catch(e => console.error(e));
           });
+          // Visible without opening the About tab: a dot on the nav item itself
+          if (navDot) navDot.style.display = "inline-block";
         }
       }
     } catch (err) {

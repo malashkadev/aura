@@ -524,6 +524,11 @@ listen("recording-state", async (event) => {
     const uiLang = localStorage.getItem("aura_ui_lang") || "ru";
     statusEl.textContent = processingTranslations[uiLang] || processingTranslations.en;
     statusEl.classList.remove("error");
+  } else if (currentState.startsWith("notice:")) {
+    // Non-alarming transient message (e.g. cloud->local fallback); no error sound.
+    statusEl.textContent = currentState.substring("notice:".length);
+    statusEl.classList.remove("error");
+    setBarColor("#FE4200");
   } else if (currentState.startsWith("error")) {
     recordStart = null;
     let errMsg = "Ошибка распознавания";
