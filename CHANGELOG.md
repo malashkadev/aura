@@ -3,10 +3,14 @@
 All notable changes to Aura are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/), versions follow [SemVer](https://semver.org/).
 
-## [1.0.4] — 2026-07-08
+## [1.0.5] — 2026-07-08
 
 ### Fixed
-- The v1.0.3 release built and published successfully but was missing `createUpdaterArtifacts: true` in `tauri.conf.json` — Tauri silently skipped generating the signed updater bundle (`.zip`, `.sig`, `latest.json`) even though the signing key was present. In-app one-click updates therefore couldn't find an update yet; the app fell back to opening the release page in the browser, so nothing was broken for users, just not fully wired. Fixed by adding the flag; this release is the first with working in-app updates.
+- The real fix for the updater manifest: `createUpdaterArtifacts: true` (added in 1.0.4) made Tauri produce signed `.sig` files, but a plain `tauri build` invocation never generates the `latest.json` manifest the updater endpoint needs, and the release workflow's asset glob patterns didn't even match the `.sig` files it did produce. Switched the release workflow from a manual `tauri build` + asset-upload step to the official `tauri-apps/tauri-action`, which builds, signs, uploads assets, and generates `latest.json` together. v1.0.4 was never published (its release draft was deleted; no user was on it) since I verified the artifacts before publishing and caught this.
+
+## [1.0.4] — 2026-07-08 (superseded, never published)
+
+- Added `createUpdaterArtifacts: true` — a necessary but insufficient fix; see 1.0.5.
 
 ## [1.0.3] — 2026-07-07
 
