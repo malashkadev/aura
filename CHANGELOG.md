@@ -3,6 +3,11 @@
 All notable changes to Aura are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/), versions follow [SemVer](https://semver.org/).
 
+## [1.0.4] — 2026-07-08
+
+### Fixed
+- The v1.0.3 release built and published successfully but was missing `createUpdaterArtifacts: true` in `tauri.conf.json` — Tauri silently skipped generating the signed updater bundle (`.zip`, `.sig`, `latest.json`) even though the signing key was present. In-app one-click updates therefore couldn't find an update yet; the app fell back to opening the release page in the browser, so nothing was broken for users, just not fully wired. Fixed by adding the flag; this release is the first with working in-app updates.
+
 ## [1.0.3] — 2026-07-07
 
 ### Added
