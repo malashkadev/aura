@@ -6,9 +6,17 @@ The format follows [Keep a Changelog](https://keepachangelog.com/), versions fol
 ## [1.0.3] — 2026-07-07
 
 ### Added
-- Integrated **Silero VAD (Voice Activity Detection)** to completely eliminate silence hallucinations.
-- Integrated **NVIDIA Parakeet** (TDT 0.6b v3) local offline speech-to-text option next to Whisper.cpp.
-- Implemented **Signed Tauri Auto-Updater** with secure cryptographic validation and automated CI pipeline.
+- Integrated **Silero VAD (Voice Activity Detection)** to trim silence and cut down silence hallucinations, replacing the old energy-threshold gate.
+- Integrated **NVIDIA Parakeet** (TDT 0.6b v3) as a second local offline engine next to Whisper.cpp, running as a resident WebSocket server so the model loads once instead of per-utterance — recognition latency drops from ~12s to well under 1s.
+- Offline English punctuation for local dictation via a small CT-Transformer model, auto-downloaded alongside Parakeet.
+- Implemented **signed Tauri auto-updater**: releases are cryptographically signed in CI; the app checks for and can install updates in-app.
+
+### Fixed
+- Bundled the Parakeet websocket-server/punctuation sidecars as installer `resources` — they ran in `tauri dev` but were missing from the actual installer before this fix.
+- `run_parakeet` now has a 30s socket read-timeout, so a hung/dead Parakeet server can no longer stall a dictation forever; a "loading model" overlay notice is shown on the first (slow) connection instead of a silent wait.
+
+### Known limitations
+- The custom dictionary is not applied when using the Parakeet engine (it runs as a resident daemon started with fixed arguments); it still works with Whisper and the cloud providers.
 
 ## [1.0.2] — 2026-07-07
 
