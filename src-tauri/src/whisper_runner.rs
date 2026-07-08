@@ -431,8 +431,689 @@ pub fn run_local_whisper<R: Runtime>(
     Ok(text.trim().to_string())
 }
 
+pub fn find_sherpa_sidecar<R: Runtime>(app_handle: &tauri::AppHandle<R>) -> Result<PathBuf, String> {
+    #[cfg(target_os = "windows")]
+    let target_names = [
+        "sherpa-onnx-offline-x86_64-pc-windows-msvc.exe",
+        "sherpa-onnx-offline.exe",
+    ];
+    #[cfg(target_os = "macos")]
+    let target_names = [
+        "sherpa-onnx-offline-aarch64-apple-darwin",
+        "sherpa-onnx-offline-x86_64-apple-darwin",
+        "sherpa-onnx-offline",
+    ];
+    #[cfg(not(any(target_os = "windows", target_os = "macos")))]
+    let target_names = ["sherpa-onnx-offline"];
+
+    let resource_dir = app_handle
+        .path()
+        .resource_dir()
+        .map_err(|e| format!("Failed to get resource dir: {}", e))?;
+
+    let mut candidates: Vec<PathBuf> = Vec::new();
+
+    #[cfg(debug_assertions)]
+    for name in &target_names {
+        candidates.push(
+            Path::new(env!("CARGO_MANIFEST_DIR")).join("binaries").join(name),
+        );
+    }
+
+    for name in &target_names {
+        candidates.push(resource_dir.join("binaries").join(name));
+        candidates.push(resource_dir.join("_up_").join("binaries").join(name));
+        candidates.push(resource_dir.join(name));
+        candidates.push(PathBuf::from("binaries").join(name));
+        candidates.push(PathBuf::from("src-tauri").join("binaries").join(name));
+    }
+
+    if let Ok(exe) = std::env::current_exe() {
+        if let Some(exe_dir) = exe.parent() {
+            for name in &target_names {
+                candidates.push(exe_dir.join(name));
+            }
+        }
+    }
+
+    let existing: Vec<PathBuf> = candidates.into_iter().filter(|p| p.exists()).collect();
+
+    if let Some(path) = existing.first() {
+        return Ok(path.clone());
+    }
+
+    for name in &target_names {
+        if let Some(path) = find_file_recursive(&resource_dir, name) {
+            return Ok(path);
+        }
+    }
+
+    Err(format!(
+        "Could not find sherpa-onnx sidecar executable in resource dir ({:?}).",
+        resource_dir
+    ))
+}
+
+pub async fn download_parakeet_model<R: Runtime>(
+    app_handle: &tauri::AppHandle<R>
+) -> Result<PathBuf, String> {
+    let app_local_data = app_handle
+        .path()
+        .app_local_data_dir()
+        .map_err(|e| format!("Failed to get app local data dir: {}", e))?;
+    let parakeet_dir = app_local_data.join("models").join("parakeet-v3");
+
+    if !parakeet_dir.exists() {
+        fs::create_dir_all(&parakeet_dir)
+            .map_err(|e| format!("Failed to create parakeet-v3 directory: {}", e))?;
+    }
+
+    let files = [
+        ("encoder.int8.onnx", "encoder.onnx"),
+        ("decoder.int8.onnx", "decoder.onnx"),
+        ("joiner.int8.onnx", "joiner.onnx"),
+        ("tokens.txt", "tokens.txt"),
+    ];
+
+    let all_exist = files.iter().all(|(_, local)| parakeet_dir.join(local).exists());
+    if all_exist {
+        let _ = app_handle.emit(
+            "model-download-progress",
+            DownloadProgress {
+                model: "parakeet-v3".to_string(),
+                downloaded: 670_000_000,
+                total: Some(670_000_000),
+                percentage: 100.0,
+                done: true,
+            },
+        );
+        return Ok(parakeet_dir);
+    }
+
+    clear_cancel("parakeet-v3");
+
+    let total_estimated_size: u64 = 670_000_000;
+    let mut total_downloaded: u64 = 0;
+
+    let client = crate::ai_client::build_http_client();
+
+    for (remote_file, local_file) in &files {
+        let url = format!(
+            "https://huggingface.co/csukuangfj/sherpa-onnx-nemo-parakeet-tdt-0.6b-v3-int8/resolve/main/{}",
+            remote_file
+        );
+        let mut response = client
+            .get(&url)
+            .send()
+            .await
+            .map_err(|e| format!("Failed to download {}: {}", remote_file, e))?;
+
+        if !response.status().is_success() {
+            return Err(format!(
+                "Failed to download {}: HTTP status {}",
+                remote_file,
+                response.status()
+            ));
+        }
+
+        let dest_path = parakeet_dir.join(local_file);
+        let temp_path = parakeet_dir.join(format!("{}.tmp", local_file));
+
+        if temp_path.exists() {
+            let _ = fs::remove_file(&temp_path);
+        }
+
+        let mut file = tokio::fs::File::create(&temp_path)
+            .await
+            .map_err(|e| format!("Failed to create temp file for {}: {}", local_file, e))?;
+
+        while let Some(chunk) = response
+            .chunk()
+            .await
+            .map_err(|e| format!("Error while downloading chunk of {}: {}", remote_file, e))?
+        {
+            if is_cancel_requested("parakeet-v3") {
+                drop(file);
+                let _ = fs::remove_file(&temp_path);
+                clear_cancel("parakeet-v3");
+                return Err("Download cancelled".to_string());
+            }
+
+            use tokio::io::AsyncWriteExt;
+            file.write_all(&chunk)
+                .await
+                .map_err(|e| format!("Failed to write chunk of {}: {}", local_file, e))?;
+            total_downloaded += chunk.len() as u64;
+
+            let percentage = (total_downloaded as f64 / total_estimated_size as f64 * 100.0).min(99.9);
+
+            let _ = app_handle.emit(
+                "model-download-progress",
+                DownloadProgress {
+                    model: "parakeet-v3".to_string(),
+                    downloaded: total_downloaded,
+                    total: Some(total_estimated_size),
+                    percentage,
+                    done: false,
+                },
+            );
+        }
+
+        use tokio::io::AsyncWriteExt;
+        file.flush()
+            .await
+            .map_err(|e| format!("Failed to flush temp file for {}: {}", local_file, e))?;
+        drop(file);
+
+        fs::rename(&temp_path, &dest_path)
+            .map_err(|e| format!("Failed to rename temp file to destination: {}", e))?;
+    }
+
+    clear_cancel("parakeet-v3");
+
+    let _ = app_handle.emit(
+        "model-download-progress",
+        DownloadProgress {
+            model: "parakeet-v3".to_string(),
+            downloaded: total_estimated_size,
+            total: Some(total_estimated_size),
+            percentage: 100.0,
+            done: true,
+        },
+    );
+
+    Ok(parakeet_dir)
+}
+
+pub fn find_sherpa_websocket_server<R: Runtime>(app_handle: &tauri::AppHandle<R>) -> Result<PathBuf, String> {
+    #[cfg(target_os = "windows")]
+    let target_names = [
+        "sherpa-onnx-offline-websocket-server.exe",
+    ];
+    #[cfg(not(target_os = "windows"))]
+    let target_names = ["sherpa-onnx-offline-websocket-server"];
+
+    let resource_dir = app_handle
+        .path()
+        .resource_dir()
+        .map_err(|e| format!("Failed to get resource dir: {}", e))?;
+
+    let mut candidates: Vec<PathBuf> = Vec::new();
+
+    #[cfg(debug_assertions)]
+    for name in &target_names {
+        candidates.push(
+            Path::new(env!("CARGO_MANIFEST_DIR")).join("binaries").join(name),
+        );
+    }
+
+    for name in &target_names {
+        candidates.push(resource_dir.join("binaries").join(name));
+        candidates.push(resource_dir.join("_up_").join("binaries").join(name));
+        candidates.push(resource_dir.join(name));
+        candidates.push(PathBuf::from("binaries").join(name));
+        candidates.push(PathBuf::from("src-tauri").join("binaries").join(name));
+    }
+
+    if let Ok(exe) = std::env::current_exe() {
+        if let Some(exe_dir) = exe.parent() {
+            for name in &target_names {
+                candidates.push(exe_dir.join(name));
+            }
+        }
+    }
+
+    let existing: Vec<PathBuf> = candidates.into_iter().filter(|p| p.exists()).collect();
+
+    if let Some(path) = existing.first() {
+        return Ok(path.clone());
+    }
+
+    for name in &target_names {
+        if let Some(path) = find_file_recursive(&resource_dir, name) {
+            return Ok(path);
+        }
+    }
+
+    Err(format!(
+        "Failed to find sidecar file '{}' or alternatives in candidates.",
+        target_names[0]
+    ))
+}
+
+fn get_free_port() -> u16 {
+    std::net::TcpListener::bind("127.0.0.1:0")
+        .ok()
+        .and_then(|listener| listener.local_addr().ok())
+        .map(|addr| addr.port())
+        .unwrap_or(3033)
+}
+
+pub fn start_parakeet_server<R: Runtime>(app_handle: &tauri::AppHandle<R>) -> Result<(), String> {
+    if let Some(state) = app_handle.try_state::<crate::AppState>() {
+        let mut server_guard = state.parakeet_server.lock().unwrap();
+        if server_guard.is_some() {
+            return Ok(());
+        }
+
+        eprintln!("Aura Dev Log: Starting Parakeet WebSocket server...");
+
+        #[cfg(target_os = "windows")]
+        {
+            use std::os::windows::process::CommandExt;
+            let _ = Command::new("taskkill")
+                .args(&["/F", "/IM", "sherpa-onnx-offline-websocket-server.exe"])
+                .creation_flags(0x08000000)
+                .output();
+        }
+
+        let server_path = find_sherpa_websocket_server(app_handle)?;
+        let short_server_path = get_short_path(&server_path)?;
+
+        let app_local_data = app_handle
+            .path()
+            .app_local_data_dir()
+            .map_err(|e| format!("Failed to get app local data dir: {}", e))?;
+        let model_dir = app_local_data.join("models").join("parakeet-v3");
+
+        if !model_dir.exists() {
+            return Err("Parakeet model not found. Please download it first.".to_string());
+        }
+
+        let encoder_path = model_dir.join("encoder.onnx");
+        let decoder_path = model_dir.join("decoder.onnx");
+        let joiner_path = model_dir.join("joiner.onnx");
+        let tokens_path = model_dir.join("tokens.txt");
+
+        if !encoder_path.exists()
+            || !decoder_path.exists()
+            || !joiner_path.exists()
+            || !tokens_path.exists()
+        {
+            return Err("Parakeet model files are incomplete. Please redownload.".to_string());
+        }
+
+        let short_encoder = get_short_path(&encoder_path)?;
+        let short_decoder = get_short_path(&decoder_path)?;
+        let short_joiner = get_short_path(&joiner_path)?;
+        let short_tokens = get_short_path(&tokens_path)?;
+
+        let n_threads = std::thread::available_parallelism()
+            .map(|n| n.get())
+            .unwrap_or(4);
+
+        let port = get_free_port();
+        state.parakeet_port.store(port, std::sync::atomic::Ordering::SeqCst);
+
+        let log_file_path = app_local_data.join("parakeet_server_log.txt");
+        if log_file_path.exists() {
+            let _ = std::fs::remove_file(&log_file_path);
+        }
+
+        let args = [
+            format!("--encoder={}", short_encoder.to_string_lossy()),
+            format!("--decoder={}", short_decoder.to_string_lossy()),
+            format!("--joiner={}", short_joiner.to_string_lossy()),
+            format!("--tokens={}", short_tokens.to_string_lossy()),
+            format!("--port={}", port),
+            "--feat-dim=128".to_string(),
+            format!("--num-work-threads={}", n_threads),
+            format!("--log-file={}", log_file_path.to_string_lossy()),
+        ];
+
+        let mut cmd = Command::new(&short_server_path);
+        cmd.args(&args);
+
+        #[cfg(target_os = "windows")]
+        {
+            use std::os::windows::process::CommandExt;
+            cmd.creation_flags(0x08000000);
+        }
+
+        let child = cmd.spawn().map_err(|e| format!("Failed to spawn Parakeet server: {}", e))?;
+        *server_guard = Some(child);
+        eprintln!("Aura Dev Log: Parakeet WebSocket server process spawned on port {}.", port);
+    }
+    Ok(())
+}
+
+pub fn stop_parakeet_server<R: Runtime>(app_handle: &tauri::AppHandle<R>) {
+    if let Some(state) = app_handle.try_state::<crate::AppState>() {
+        let mut server_guard = state.parakeet_server.lock().unwrap();
+        if let Some(mut child) = server_guard.take() {
+            eprintln!("Aura Dev Log: Stopping background Parakeet server...");
+            let _ = child.kill();
+            let _ = child.wait();
+        }
+    }
+}
+
+pub fn ensure_parakeet_server_state<R: Runtime>(app_handle: &tauri::AppHandle<R>, settings: &crate::settings::Settings) {
+    if settings.transcription_mode == "local" && settings.local_engine == "parakeet" {
+        if let Err(e) = start_parakeet_server(app_handle) {
+            eprintln!("Aura Dev Log ERROR: Failed to start Parakeet server: {}", e);
+        }
+    } else {
+        stop_parakeet_server(app_handle);
+    }
+}
+
+/// Transcribes a 16 kHz mono WAV via the resident Parakeet WebSocket server.
+///
+/// Note: `language` and `dictionary` are intentionally unused. Parakeet v3 auto-detects the
+/// language, and the custom dictionary (hotwords) can't be applied here because the server is a
+/// long-lived daemon started once with fixed args — biasing would require a `--hotwords-file`
+/// baked in at server start plus a restart whenever the dictionary changes. Left as a documented
+/// limitation rather than shipping an unverified server flag that could stop the daemon from
+/// starting. The dictionary still works on the Whisper engine and the cloud providers.
+pub fn run_parakeet<R: Runtime>(
+    app_handle: &tauri::AppHandle<R>,
+    wav_path: &str,
+    _language: &str,
+    _dictionary: &str,
+) -> Result<String, String> {
+    if let Err(e) = start_parakeet_server(app_handle) {
+        return Err(format!("Parakeet server is not running and failed to start: {}", e));
+    }
+
+    let mut reader = hound::WavReader::open(wav_path)
+        .map_err(|e| format!("Failed to open WAV file: {}", e))?;
+    let spec = reader.spec();
+    if spec.sample_rate != 16000 || spec.channels != 1 {
+        return Err(format!(
+            "Unsupported WAV format: channels={}, sample_rate={}",
+            spec.channels, spec.sample_rate
+        ));
+    }
+
+    let samples_i16: Vec<i16> = reader
+        .samples::<i16>()
+        .collect::<Result<Vec<i16>, hound::Error>>()
+        .map_err(|e| format!("Failed to read WAV samples: {}", e))?;
+
+    let samples_f32: Vec<f32> = samples_i16
+        .iter()
+        .map(|&s| s as f32 / 32768.0)
+        .collect();
+
+    let port = if let Some(state) = app_handle.try_state::<crate::AppState>() {
+        state.parakeet_port.load(std::sync::atomic::Ordering::SeqCst)
+    } else {
+        3033
+    };
+    let url = format!("ws://127.0.0.1:{}", port);
+    let mut socket = {
+        let start_connect = std::time::Instant::now();
+        let mut notified = false;
+        loop {
+            match tungstenite::connect(&url) {
+                Ok((s, _)) => {
+                    break s;
+                }
+                Err(e) => {
+                    if start_connect.elapsed().as_secs() > 15 {
+                        return Err(format!("Parakeet server connection timeout: {}", e));
+                    }
+                    // First failed connect = the server is still loading the model into RAM.
+                    // Tell the user so the wait doesn't look like a freeze.
+                    if !notified {
+                        notified = true;
+                        let _ = app_handle.emit("recording-state", "notice:Загрузка модели…");
+                    }
+                    std::thread::sleep(std::time::Duration::from_millis(200));
+                }
+            }
+        }
+    };
+
+    // Guard against a hung/dead server: without a read timeout, socket.read() below
+    // would block this dictation forever, leaving the overlay stuck on "processing".
+    if let tungstenite::stream::MaybeTlsStream::Plain(stream) = socket.get_ref() {
+        let _ = stream.set_read_timeout(Some(std::time::Duration::from_secs(30)));
+    }
+
+    let sample_rate = spec.sample_rate as i32;
+    let expected_byte_size = (samples_f32.len() * 4) as i32;
+
+    let mut payload = Vec::with_capacity(8 + expected_byte_size as usize);
+    payload.extend_from_slice(&sample_rate.to_le_bytes());
+    payload.extend_from_slice(&expected_byte_size.to_le_bytes());
+
+    for &sample in &samples_f32 {
+        payload.extend_from_slice(&sample.to_le_bytes());
+    }
+
+    socket.send(tungstenite::Message::Binary(payload))
+        .map_err(|e| format!("Failed to send audio data: {}", e))?;
+
+    let msg = socket.read()
+        .map_err(|e| format!("Failed to read transcription response: {}", e))?;
+
+    let response_text = match msg {
+        tungstenite::Message::Text(text) => text,
+        _ => return Err("Unexpected message format from server".to_string()),
+    };
+
+    let _ = socket.send(tungstenite::Message::Text("Done".to_string()));
+
+    let mut transcript = response_text.clone();
+    if let Ok(val) = serde_json::from_str::<serde_json::Value>(&response_text) {
+        if let Some(t) = val.get("text").and_then(|v| v.as_str()) {
+            transcript = t.trim().to_string();
+        }
+    }
+
+    Ok(transcript)
+}
+
+pub fn find_sherpa_punctuation_exe<R: Runtime>(app_handle: &tauri::AppHandle<R>) -> Result<PathBuf, String> {
+    #[cfg(target_os = "windows")]
+    let target_names = [
+        "sherpa-onnx-offline-punctuation.exe",
+    ];
+    #[cfg(not(target_os = "windows"))]
+    let target_names = ["sherpa-onnx-offline-punctuation"];
+
+    let resource_dir = app_handle
+        .path()
+        .resource_dir()
+        .map_err(|e| format!("Failed to get resource dir: {}", e))?;
+
+    let mut candidates: Vec<PathBuf> = Vec::new();
+
+    #[cfg(debug_assertions)]
+    for name in &target_names {
+        candidates.push(
+            Path::new(env!("CARGO_MANIFEST_DIR")).join("binaries").join(name),
+        );
+    }
+
+    for name in &target_names {
+        candidates.push(resource_dir.join("binaries").join(name));
+        candidates.push(resource_dir.join("_up_").join("binaries").join(name));
+        candidates.push(resource_dir.join(name));
+        candidates.push(PathBuf::from("binaries").join(name));
+        candidates.push(PathBuf::from("src-tauri").join("binaries").join(name));
+    }
+
+    if let Ok(exe) = std::env::current_exe() {
+        if let Some(exe_dir) = exe.parent() {
+            for name in &target_names {
+                candidates.push(exe_dir.join(name));
+            }
+        }
+    }
+
+    let existing: Vec<PathBuf> = candidates.into_iter().filter(|p| p.exists()).collect();
+
+    if let Some(path) = existing.first() {
+        return Ok(path.clone());
+    }
+
+    for name in &target_names {
+        if let Some(path) = find_file_recursive(&resource_dir, name) {
+            return Ok(path);
+        }
+    }
+
+    Err(format!(
+        "Failed to find punctuation binary '{}' in candidates.",
+        target_names[0]
+    ))
+}
+
+pub async fn download_punctuation_model<R: Runtime>(app_handle: &tauri::AppHandle<R>) -> Result<(), String> {
+    let app_local_data = app_handle
+        .path()
+        .app_local_data_dir()
+        .map_err(|e| format!("Failed to get app local data dir: {}", e))?;
+    let punc_dir = app_local_data.join("models").join("punctuation");
+    
+    if punc_dir.join("model.int8.onnx").exists() {
+        return Ok(()); // Already downloaded
+    }
+    
+    std::fs::create_dir_all(&punc_dir).map_err(|e| format!("Failed to create punctuation dir: {}", e))?;
+    
+    eprintln!("Aura Dev Log: Downloading local punctuation model...");
+    let url = "https://github.com/k2-fsa/sherpa-onnx/releases/download/punctuation-models/sherpa-onnx-punct-ct-transformer-zh-en-vocab272727-2024-04-12-int8.tar.bz2";
+    
+    let response = reqwest::get(url).await.map_err(|e| format!("Failed to download punctuation model: {}", e))?;
+    let bytes = response.bytes().await.map_err(|e| format!("Failed to read punctuation bytes: {}", e))?;
+    
+    let temp_tar_path = punc_dir.join("temp_punc.tar.bz2");
+    std::fs::write(&temp_tar_path, &bytes).map_err(|e| format!("Failed to write temp punctuation archive: {}", e))?;
+    
+    #[cfg(target_os = "windows")]
+    {
+        use std::os::windows::process::CommandExt;
+        let mut cmd = Command::new("tar");
+        cmd.args(&[
+            "-xf",
+            temp_tar_path.to_str().unwrap(),
+            "-C",
+            punc_dir.to_str().unwrap(),
+        ]);
+        cmd.creation_flags(0x08000000); // CREATE_NO_WINDOW
+        let _ = cmd.output();
+    }
+    #[cfg(not(target_os = "windows"))]
+    {
+        let _ = Command::new("tar")
+            .args(&[
+                "-xf",
+                temp_tar_path.to_str().unwrap(),
+                "-C",
+                punc_dir.to_str().unwrap(),
+            ])
+            .output();
+    }
+    
+    let _ = std::fs::remove_file(&temp_tar_path);
+    
+    let ext_dir = punc_dir.join("sherpa-onnx-punct-ct-transformer-zh-en-vocab272727-2024-04-12-int8");
+    if ext_dir.exists() {
+        if let Ok(entries) = std::fs::read_dir(&ext_dir) {
+            for entry in entries.flatten() {
+                let dest_path = punc_dir.join(entry.file_name());
+                let _ = std::fs::rename(entry.path(), dest_path);
+            }
+        }
+        let _ = std::fs::remove_dir_all(&ext_dir);
+    }
+    
+    eprintln!("Aura Dev Log: Punctuation model downloaded successfully.");
+    Ok(())
+}
+
+pub fn run_punctuation<R: Runtime>(app_handle: &tauri::AppHandle<R>, text: &str) -> Result<String, String> {
+    let app_local_data = app_handle
+        .path()
+        .app_local_data_dir()
+        .map_err(|e| format!("Failed to get app local data dir: {}", e))?;
+    let punc_dir = app_local_data.join("models").join("punctuation");
+    let model_path = punc_dir.join("model.int8.onnx");
+    
+    if !model_path.exists() {
+        return Err("Punctuation model not found".to_string());
+    }
+    
+    let punc_exe = find_sherpa_punctuation_exe(app_handle)?;
+    let short_punc_exe = get_short_path(&punc_exe)?;
+    let short_model_path = get_short_path(&model_path)?;
+    
+    let mut cmd = Command::new(&short_punc_exe);
+    cmd.args(&[
+        format!("--ct-transformer={}", short_model_path.to_string_lossy()),
+        text.to_string(),
+    ]);
+    
+    #[cfg(target_os = "windows")]
+    {
+        use std::os::windows::process::CommandExt;
+        cmd.creation_flags(0x08000000); // CREATE_NO_WINDOW
+    }
+    
+    let output = cmd.output().map_err(|e| format!("Failed to run punctuation tool: {}", e))?;
+    if !output.status.success() {
+        return Err("Punctuation process failed".to_string());
+    }
+    
+    let stdout_str = String::from_utf8_lossy(&output.stdout);
+    
+    for line in stdout_str.lines() {
+        let trimmed = line.trim();
+        if trimmed.starts_with("Output text:") {
+            let punc_text = trimmed.replace("Output text:", "").trim().to_string();
+            let normalized = punc_text
+                .replace("？", "? ")
+                .replace("。", ". ")
+                .replace("，", ", ")
+                .replace("；", "; ")
+                .replace("：", ": ")
+                .replace("！", "! ")
+                .replace(" ,", ",")
+                .replace(" .", ".")
+                .replace(" ?", "?")
+                .replace(" !", "!")
+                .replace("  ", " ");
+            return Ok(normalized.trim().to_string());
+        }
+    }
+    
+    Err("Failed to parse punctuation output".to_string())
+}
+
 fn get_short_path(path: &Path) -> Result<PathBuf, String> {
-    Ok(path.to_path_buf())
+    #[cfg(target_os = "windows")]
+    {
+        use std::os::windows::ffi::OsStrExt;
+        use std::os::windows::ffi::OsStringExt;
+        use windows_sys::Win32::Storage::FileSystem::GetShortPathNameW;
+
+        let wide_path: Vec<u16> = path.as_os_str().encode_wide().chain(Some(0)).collect();
+        
+        unsafe {
+            let size = GetShortPathNameW(wide_path.as_ptr(), std::ptr::null_mut(), 0);
+            if size == 0 {
+                return Ok(path.to_path_buf());
+            }
+            
+            let mut buffer: Vec<u16> = vec![0; size as usize];
+            let written = GetShortPathNameW(wide_path.as_ptr(), buffer.as_mut_ptr(), size);
+            if written == 0 || written >= size {
+                return Ok(path.to_path_buf());
+            }
+            
+            let short_str = std::ffi::OsString::from_wide(&buffer[..written as usize]);
+            Ok(PathBuf::from(short_str))
+        }
+    }
+
+    #[cfg(not(target_os = "windows"))]
+    {
+        Ok(path.to_path_buf())
+    }
 }
 
 #[cfg(test)]

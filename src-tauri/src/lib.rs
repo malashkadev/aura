@@ -7,6 +7,7 @@ pub mod whisper_runner;
 pub mod settings;
 pub mod keyboard_simulator;
 pub mod history;
+pub mod vad;
 
 use std::sync::Mutex;
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
@@ -16,8 +17,6 @@ use tauri::tray::{TrayIconBuilder, TrayIconEvent, MouseButton};
 use tauri_plugin_autostart::MacosLauncher;
 use tauri_plugin_autostart::ManagerExt;
 
-/// Streaming chunks whose new audio is quieter than this RMS are skipped (VAD-lite).
-const SILENCE_RMS_THRESHOLD: f32 = 0.005;
 
 struct AppState {
     audio_recorder: audio_recorder::AudioRecorder,
@@ -35,6 +34,8 @@ struct AppState {
     ignore_next_release: AtomicBool,
     /// Window that had focus when the recording started (focus guard for typing).
     start_hwnd: Mutex<isize>,
+    parakeet_server: Mutex<Option<std::process::Child>>,
+    parakeet_port: std::sync::atomic::AtomicU16,
 }
 
 #[tauri::command]
@@ -69,6 +70,7 @@ async fn set_settings(app_handle: tauri::AppHandle, settings: settings::Settings
     settings::save_settings(&app_handle, &settings)?;
     keyboard_hook::update_hotkey(&settings.hotkey);
     sync_autostart(&app_handle, settings.autostart);
+    whisper_runner::ensure_parakeet_server_state(&app_handle, &settings);
     Ok(())
 }
 
@@ -77,7 +79,13 @@ async fn download_model_command(app_handle: tauri::AppHandle, model_name: String
     if model_name.chars().any(|c| !c.is_ascii_alphanumeric() && c != '.' && c != '-' && c != '_') {
         return Err("Invalid model name".to_string());
     }
-    whisper_runner::download_model(&app_handle, &model_name).await.map(|_| ())
+    if model_name == "parakeet-v3" {
+        whisper_runner::download_parakeet_model(&app_handle).await?;
+        let _ = whisper_runner::download_punctuation_model(&app_handle).await;
+        Ok(())
+    } else {
+        whisper_runner::download_model(&app_handle, &model_name).await.map(|_| ())
+    }
 }
 
 #[tauri::command]
@@ -91,11 +99,21 @@ async fn delete_model_command(app_handle: tauri::AppHandle, model_name: String) 
     if model_name.chars().any(|c| !c.is_ascii_alphanumeric() && c != '.' && c != '-' && c != '_') {
         return Err("Invalid model name".to_string());
     }
-    let filename = format!("ggml-{}.bin", model_name.strip_prefix("ggml-").unwrap_or(&model_name).strip_suffix(".bin").unwrap_or(&model_name));
     let app_local_data = app_handle
         .path()
         .app_local_data_dir()
         .map_err(|e| format!("Failed to get app local data dir: {}", e))?;
+
+    if model_name == "parakeet-v3" {
+        let folder = app_local_data.join("models").join("parakeet-v3");
+        if folder.exists() {
+            std::fs::remove_dir_all(&folder)
+                .map_err(|e| format!("Failed to delete parakeet directory: {}", e))?;
+        }
+        return Ok(());
+    }
+
+    let filename = format!("ggml-{}.bin", model_name.strip_prefix("ggml-").unwrap_or(&model_name).strip_suffix(".bin").unwrap_or(&model_name));
     let model_path = app_local_data.join("models").join(&filename);
     
     if model_path.exists() {
@@ -115,6 +133,14 @@ async fn get_downloaded_models(app_handle: tauri::AppHandle) -> Result<Vec<Strin
 
     let mut downloaded = Vec::new();
     if models_dir.exists() {
+        let parakeet_dir = models_dir.join("parakeet-v3");
+        if parakeet_dir.join("encoder.onnx").exists()
+            && parakeet_dir.join("decoder.onnx").exists()
+            && parakeet_dir.join("joiner.onnx").exists()
+            && parakeet_dir.join("tokens.txt").exists()
+        {
+            downloaded.push("parakeet-v3".to_string());
+        }
         if let Ok(entries) = std::fs::read_dir(models_dir) {
             for entry in entries.flatten() {
                 let path = entry.path();
@@ -228,6 +254,11 @@ async fn open_url(app_handle: tauri::AppHandle, url: String) -> Result<(), Strin
         .map_err(|e| e.to_string())
 }
 
+#[tauri::command]
+fn relaunch_app(app_handle: tauri::AppHandle) {
+    app_handle.restart();
+}
+
 fn sync_autostart(app_handle: &tauri::AppHandle, enabled: bool) {
     let manager = app_handle.autolaunch();
     let result = if enabled { manager.enable() } else { manager.disable() };
@@ -254,12 +285,6 @@ fn chunk_wav_path(gen: u64) -> std::path::PathBuf {
     std::env::temp_dir().join(format!("aura-chunk-{}-{}.wav", std::process::id(), gen))
 }
 
-fn rms(samples: &[f32]) -> f32 {
-    if samples.is_empty() {
-        return 0.0;
-    }
-    (samples.iter().map(|s| s * s).sum::<f32>() / samples.len() as f32).sqrt()
-}
 
 fn provider_from(settings: &settings::Settings) -> ai_client::ApiProvider {
     match settings.api_provider.as_str() {
@@ -559,11 +584,18 @@ async fn run_local_whisper_async(
     language: String,
     dictionary: String,
 ) -> Result<String, String> {
+    let settings = settings::load_settings(&app_handle).unwrap_or_default();
+    let engine = settings.local_engine.clone();
+
     tauri::async_runtime::spawn_blocking(move || {
-        whisper_runner::run_local_whisper(&app_handle, &model, &wav, &language, &dictionary)
+        if engine == "parakeet" {
+            whisper_runner::run_parakeet(&app_handle, &wav, &language, &dictionary)
+        } else {
+            whisper_runner::run_local_whisper(&app_handle, &model, &wav, &language, &dictionary)
+        }
     })
     .await
-    .map_err(|e| format!("Local whisper task failed: {e}"))?
+    .map_err(|e| format!("Local ASR task failed: {e}"))?
 }
 
 /// Types a streaming/final update via simulated keystrokes on a blocking thread.
@@ -646,6 +678,8 @@ fn categorize_error(err: &str) -> String {
         format!("No network: {}", truncated)
     } else if err_lower.contains("ggml") || err_lower.contains("model file") || err_lower.contains("not found") {
         "Local model not downloaded".to_string()
+    } else if err_lower.contains("sherpa") || err_lower.contains("parakeet") {
+        "Local Parakeet client failure".to_string()
     } else if err_lower.contains("whisper-sidecar") || err_lower.contains("sidecar") {
         "Local Whisper client failure".to_string()
     } else if err_lower.contains("rate limit") || err_lower.contains("429") {
@@ -863,7 +897,7 @@ async fn start_recording_session(app_handle: tauri::AppHandle) {
                 if let Ok((samples, sample_rate, channels)) = state.audio_recorder.get_recorded_samples() {
                     // VAD-lite: skip the API call when nothing new was said in this chunk
                     let new_start = last_len.min(samples.len());
-                    let has_new_speech = rms(&samples[new_start..]) > SILENCE_RMS_THRESHOLD;
+                    let has_new_speech = vad::has_speech(&samples[new_start..], sample_rate as i64);
 
                     // Ensure we have at least 0.5s of audio (8000 samples at 16kHz)
                     if samples.len() > 8000 && has_new_speech {
@@ -952,6 +986,7 @@ async fn finalize_recording(app_handle: tauri::AppHandle) {
     let Some(state) = app_handle.try_state::<AppState>() else { return };
     let state = state.inner();
 
+    let active_layout_lang = state.selected_language.lock().unwrap().clone();
     let my_gen = state.session_gen.load(Ordering::SeqCst);
     state.is_recording.store(false, Ordering::SeqCst);
     state.latched.store(false, Ordering::SeqCst);
@@ -974,6 +1009,11 @@ async fn finalize_recording(app_handle: tauri::AppHandle) {
 
         let temp_path = recording_wav_path(my_gen);
         let temp_path_str = temp_path.to_string_lossy().to_string();
+
+        // Trim silence using Silero VAD before transcribing
+        if let Err(e) = vad::trim_wav_file(&temp_path_str) {
+            eprintln!("Aura Dev Log: VAD trimming failed or skipped: {}", e);
+        }
 
         // Load settings
         let settings = match settings::load_settings(&app_handle_clone) {
@@ -1071,10 +1111,35 @@ async fn finalize_recording(app_handle: tauri::AppHandle) {
                 let trimmed = cleaned_text.trim().to_string();
                 eprintln!("Aura Dev Log: Final transcription success: '{}'", trimmed);
                 if !trimmed.is_empty() && !is_silence_hallucination(&trimmed) {
-                    let final_text = if settings.voice_punctuation {
+                    let text_after_voice_punc = if settings.voice_punctuation {
                         apply_voice_punctuation(&trimmed)
                     } else {
-                        trimmed
+                        trimmed.clone()
+                    };
+
+                    let final_text = if settings.voice_punctuation
+                        && (settings.transcription_mode == "local" || used_local_fallback)
+                        && (settings.local_engine == "parakeet" || settings.local_engine == "whisper")
+                    {
+                        let active_lang = if settings.language == "layout" || settings.language == "auto" {
+                            active_layout_lang.to_lowercase()
+                        } else {
+                            settings.language.to_lowercase()
+                        };
+                        let is_english = active_lang.starts_with("en");
+                        if is_english {
+                            match whisper_runner::run_punctuation(&app_handle_clone, &text_after_voice_punc) {
+                                Ok(punctuated) => punctuated,
+                                Err(e) => {
+                                    eprintln!("Aura Dev Log: Offline punctuation model failed or not found: {}", e);
+                                    text_after_voice_punc
+                                }
+                            }
+                        } else {
+                            text_after_voice_punc
+                        }
+                    } else {
+                        text_after_voice_punc
                     };
 
                     // Save to history and notify the settings UI
@@ -1160,6 +1225,7 @@ pub fn run() {
         }))
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_autostart::init(MacosLauncher::LaunchAgent, None))
+        .plugin(tauri_plugin_updater::Builder::new().build())
         .setup(|app| {
             #[cfg(target_os = "macos")]
             app.set_activation_policy(tauri::ActivationPolicy::Accessory);
@@ -1230,7 +1296,14 @@ pub fn run() {
                 latched: AtomicBool::new(false),
                 ignore_next_release: AtomicBool::new(false),
                 start_hwnd: Mutex::new(0),
+                parakeet_server: Mutex::new(None),
+                parakeet_port: std::sync::atomic::AtomicU16::new(3033),
             });
+
+            // Start Parakeet server if it is selected in settings
+            if let Ok(settings) = settings::load_settings(&app_handle) {
+                whisper_runner::ensure_parakeet_server_state(&app_handle, &settings);
+            }
 
             // Esc cancels an active recording
             let cancel_handle = app_handle.clone();
@@ -1314,13 +1387,19 @@ pub fn run() {
             copy_to_clipboard,
             check_for_update,
             open_url,
+            relaunch_app,
             minimize_window,
             close_window,
             start_dragging_command,
             hide_overlay_window
         ])
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+        .build(tauri::generate_context!())
+        .expect("error while building tauri application")
+        .run(|app_handle, event| {
+            if let tauri::RunEvent::Exit = event {
+                whisper_runner::stop_parakeet_server(app_handle);
+            }
+        });
 }
 
 #[cfg(test)]
@@ -1397,12 +1476,6 @@ mod tests {
         );
     }
 
-    #[test]
-    fn test_rms() {
-        assert_eq!(rms(&[]), 0.0);
-        assert!(rms(&[0.0, 0.0, 0.0]) < f32::EPSILON);
-        assert!((rms(&[0.5, -0.5, 0.5, -0.5]) - 0.5).abs() < 1e-6);
-    }
 
     #[test]
     fn test_is_cloud_unreachable() {

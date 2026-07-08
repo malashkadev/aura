@@ -1,7 +1,7 @@
 {
   "name": "aura-voice",
   "private": true,
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Aura — voice dictation for Windows (Whisper + LLM cleanup)",
   "license": "AGPL-3.0-only",
   "type": "module",

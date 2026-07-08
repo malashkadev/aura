@@ -127,9 +127,18 @@
           </div>
 
           <div class="card" id="card-local-model" style="display: none;">
-            <h2 class="card-title" data-i18n="local_model_title">Локальная модель Whisper</h2>
-            <p class="card-desc" data-i18n="local_model_desc">Скачайте модель для оффлайн-работы. Более крупные модели точнее, но требуют больше памяти.</p>
-            <div class="form-group">
+            <h2 class="card-title" data-i18n="local_model_title">Локальное распознавание</h2>
+            <p class="card-desc" data-i18n="local_model_desc">Настройте локальный движок распознавания речи для полной приватности.</p>
+            
+            <div class="form-group" style="margin-bottom: 20px;">
+              <label for="select-local-engine" class="field-label" data-i18n="local_engine_label">Движок распознавания</label>
+              <select id="select-local-engine" class="custom-select">
+                <option value="whisper" data-i18n="local_engine_whisper">Whisper.cpp (на базе OpenAI Whisper)</option>
+                <option value="parakeet" data-i18n="local_engine_parakeet">NVIDIA Parakeet (через sherpa-onnx)</option>
+              </select>
+            </div>
+
+            <div class="form-group" id="group-whisper-models">
               <label class="field-label" data-i18n="local_model_label">Размер модели</label>
               <div class="model-cards-group" id="model-cards-container" role="radiogroup" aria-label="Выберите модель">
                 <!-- Tiny -->
@@ -214,6 +223,25 @@
                   <div class="model-card-progress" id="progress-large-v3-turbo" style="display: none;">
                     <div class="progress-bar-bg"><div class="progress-bar-fill" id="fill-large-v3-turbo"></div></div>
                     <span class="progress-pct" id="pct-large-v3-turbo">0%</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-group" id="group-parakeet-models" style="display: none;">
+              <label class="field-label" data-i18n="parakeet_model_label">Модель Parakeet</label>
+              <div class="model-cards-group" role="radiogroup" aria-label="Выберите модель Parakeet">
+                <div class="model-card" data-model="parakeet-v3" role="radio" aria-checked="false" tabindex="0">
+                  <div class="model-card-main">
+                    <div class="model-card-info">
+                      <span class="model-name">Parakeet TDT 0.6b v3 (int8)</span>
+                      <span class="model-meta" data-i18n="model_meta_parakeet">~670 МБ — оптимизировано NVIDIA</span>
+                    </div>
+                    <div class="model-card-action" id="action-parakeet-v3"></div>
+                  </div>
+                  <div class="model-card-progress" id="progress-parakeet-v3" style="display: none;">
+                    <div class="progress-bar-bg"><div class="progress-bar-fill" id="fill-parakeet-v3"></div></div>
+                    <span class="progress-pct" id="pct-parakeet-v3">0%</span>
                   </div>
                 </div>
               </div>
@@ -402,7 +430,7 @@
               </svg>
             </div>
             <h2 class="about-app-title">Aura</h2>
-            <p class="about-version" data-i18n="about_version">v1.0.2</p>
+            <p class="about-version" data-i18n="about_version">v1.0.3</p>
             <button type="button" id="update-badge" class="update-badge" style="display: none;">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
               <span id="update-badge-text">Доступно обновление</span>

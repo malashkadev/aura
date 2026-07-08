@@ -19,7 +19,7 @@ const i18nDict = {
     engine_cloud: "Облачный ИИ",
     engine_cloud_meta: "Gemini / OpenAI / Groq (требуется API-ключ)",
     engine_local: "Локальный ИИ",
-    engine_local_meta: "Whisper.cpp (100% оффлайн и приватно)",
+    engine_local_meta: "Whisper / Parakeet (100% оффлайн)",
     lang_bias_title: "Язык распознавания",
     lang_bias_desc: "Выберите принудительный язык ввода или включите автоопределение.",
     lang_bias_label: "Выберите язык",
@@ -35,8 +35,8 @@ const i18nDict = {
     vocab_title: "Пользовательский словарь",
     vocab_desc: "Внесите термины, имена или брендовые названия через запятую, чтобы улучшить их распознавание.",
     vocab_placeholder: "Например: Аура, коммит, репозиторий...",
-    local_model_title: "Локальная модель Whisper",
-    local_model_desc: "Скачайте модель для оффлайн-работы. Более крупные модели точнее, но требуют больше памяти.",
+    local_model_title: "Локальное распознавание",
+    local_model_desc: "Настройте локальный движок распознавания речи для полной приватности.",
     local_model_label: "Размер модели",
     model_meta_tiny: "~75 МБ — сверхбыстрая",
     model_meta_base: "~145 МБ — рекомендуемая",
@@ -72,7 +72,7 @@ const i18nDict = {
     history_desc: "Последние надиктованные фразы хранятся локально.",
     history_empty: "История пуста. Ваши надиктованные тексты будут отображаться здесь.",
     about_app_title: "Голосовой ввод Aura",
-    about_version: "v1.0.2",
+    about_version: "v1.0.3",
     about_description: "Инструмент глобального голосового ввода для Windows. Программа переводит речь в текст и вставляет его в любое активное окно с автоматическим форматированием и расстановкой пунктуации.",
     status_ready: "Готово",
     btn_save: "Сохранить настройки",
@@ -105,7 +105,12 @@ const i18nDict = {
     confirm_clear_history_msg: "Вы действительно хотите очистить всю историю транскрипций?",
     general_ui_lang_title: "Язык интерфейса",
     general_ui_lang_desc: "Выберите язык для отображения настроек и уведомлений приложения.",
-    hotkey_reset_title: "Сбросить на Alt+V"
+    hotkey_reset_title: "Сбросить на Alt+V",
+    local_engine_label: "Движок распознавания",
+    local_engine_whisper: "Whisper.cpp (на базе OpenAI Whisper)",
+    local_engine_parakeet: "NVIDIA Parakeet (через sherpa-onnx)",
+    parakeet_model_label: "Модель Parakeet",
+    model_meta_parakeet: "~670 МБ — оптимизировано NVIDIA"
   },
   en: {
     title_settings: "Settings",
@@ -123,7 +128,7 @@ const i18nDict = {
     engine_cloud: "Cloud AI",
     engine_cloud_meta: "Gemini / OpenAI / Groq (API key required)",
     engine_local: "Local AI",
-    engine_local_meta: "Whisper.cpp (100% offline & private)",
+    engine_local_meta: "Whisper / Parakeet (100% offline & private)",
     lang_bias_title: "Speech Language",
     lang_bias_desc: "Forcibly set transcription language or use automatic detection.",
     lang_bias_label: "Select Language",
@@ -139,8 +144,8 @@ const i18nDict = {
     vocab_title: "Custom Vocabulary",
     vocab_desc: "Add specific terms, names, or jargon separated by commas to improve recognition.",
     vocab_placeholder: "e.g. Aura, commit, repository...",
-    local_model_title: "Local Whisper Model",
-    local_model_desc: "Download a model for offline use. Larger models are more accurate but consume more memory.",
+    local_model_title: "Local Recognition",
+    local_model_desc: "Configure a local speech-to-text engine for absolute privacy.",
     local_model_label: "Model Size",
     model_meta_tiny: "~75 MB — superfast",
     model_meta_base: "~145 MB — recommended",
@@ -176,7 +181,7 @@ const i18nDict = {
     history_desc: "Your latest transcribed phrases are cached locally.",
     history_empty: "History is empty. Dictated text fragments will appear here.",
     about_app_title: "Aura Voice Input",
-    about_version: "v1.0.2",
+    about_version: "v1.0.3",
     about_description: "Global voice input tool for Windows. The program transcribes speech to text and inserts it into any active window with automatic formatting and punctuation.",
     status_ready: "Ready",
     btn_save: "Save Settings",
@@ -209,7 +214,12 @@ const i18nDict = {
     confirm_clear_history_msg: "Are you sure you want to clear all transcription history?",
     general_ui_lang_title: "Interface Language",
     general_ui_lang_desc: "Select the language for settings and application notifications.",
-    hotkey_reset_title: "Reset to Alt+V"
+    hotkey_reset_title: "Reset to Alt+V",
+    local_engine_label: "ASR Engine",
+    local_engine_whisper: "Whisper.cpp (OpenAI Whisper)",
+    local_engine_parakeet: "NVIDIA Parakeet (via sherpa-onnx)",
+    parakeet_model_label: "Parakeet Model",
+    model_meta_parakeet: "~670 MB — optimized by NVIDIA"
   },
   de: {
     title_settings: "Einstellungen",
@@ -277,7 +287,7 @@ const i18nDict = {
     history_desc: "Die letzten aufgezeichneten Sätze werden lokal gespeichert.",
     history_empty: "Der Verlauf ist leer. Transkribierte Texte werden hier angezeigt.",
     about_app_title: "Aura Spracheingabe",
-    about_version: "v1.0.2",
+    about_version: "v1.0.3",
     about_description: "Globales Spracheingabe-Tool für Windows. Die Anwendung überträgt Sprache in Text und fügt ihn mit automatischer Formatierung und Zeichensetzung in jedes aktive Fenster ein.",
     status_ready: "Bereit",
     btn_save: "Einstellungen speichern",
@@ -378,7 +388,7 @@ const i18nDict = {
     history_desc: "Las últimas frases dictadas se guardan de forma local.",
     history_empty: "El historial está vacío. Los textos dictados se mostrarán aquí.",
     about_app_title: "Dictado por voz Aura",
-    about_version: "v1.0.2",
+    about_version: "v1.0.3",
     about_description: "Herramienta de entrada de voz global para Windows. El programa transcribe el habla en texto y lo inserta en cualquier ventana activa con formato y puntuación automáticos.",
     status_ready: "Listo",
     btn_save: "Guardar ajustes",
@@ -479,7 +489,7 @@ const i18nDict = {
     history_desc: "Les dernières phrases dictées sont enregistrées localement.",
     history_empty: "Historique vide. Vos textes transcrits s'afficheront ici.",
     about_app_title: "Dictée vocale Aura",
-    about_version: "v1.0.2",
+    about_version: "v1.0.3",
     about_description: "Outil de saisie vocale globale pour Windows. Le programme transcrit la parole en texte et l'insère dans n'importe quelle fenêtre active avec un formatage et une ponctuation automatiques.",
     status_ready: "Prêt",
     btn_save: "Enregistrer",
@@ -580,7 +590,7 @@ const i18nDict = {
     history_desc: "Le ultime frasi dettate vengono salvate in locale.",
     history_empty: "La cronologia è vuota. I testi dettati appariranno qui.",
     about_app_title: "Dettatura vocale Aura",
-    about_version: "v1.0.2",
+    about_version: "v1.0.3",
     about_description: "Strumento di inserimento vocale globale per Windows. Il programma trascrive la voce in testo e la inserisce in qualsiasi finestra attiva con formattazione e punteggiatura automatiche.",
     status_ready: "Pronto",
     btn_save: "Salva impostazioni",
@@ -681,7 +691,7 @@ const i18nDict = {
     history_desc: "您最近转换出的文字将缓存在本地。",
     history_empty: "历史记录为空。您听写的文字会显示在这里。",
     about_app_title: "Aura 智能语音输入",
-    about_version: "v1.0.2",
+    about_version: "v1.0.3",
     about_description: "适用于 Windows 的全局语音输入工具。本程序可以将语音转录为文本，并以自动格式和标点符号插入到任何活动窗口中。",
     status_ready: "就绪",
     btn_save: "保存设置",
@@ -782,7 +792,7 @@ const i18nDict = {
     history_desc: "As últimas frases ditadas são armazenadas localmente.",
     history_empty: "O histórico está vazio. Seus textos ditados aparecerão aqui.",
     about_app_title: "Ditado de voz Aura",
-    about_version: "v1.0.2",
+    about_version: "v1.0.3",
     about_description: "Ferramenta de entrada de voz global para Windows. O programa transcreve a fala em texto e a insere em qualquer janela ativa com formatação e pontuação automáticas.",
     status_ready: "Pronto",
     btn_save: "Salvar configurações",
@@ -883,7 +893,7 @@ const i18nDict = {
     history_desc: "Son sesli yazımlarınız yerel olarak saklanır.",
     history_empty: "Geçmiş boş. Yazdığınız metinler burada görünecektir.",
     about_app_title: "Aura Sesli Giriş",
-    about_version: "v1.0.2",
+    about_version: "v1.0.3",
     about_description: "Windows için genel sesli giriş aracı. Program, konuşmayı metne dönüştürür ve otomatik biçimlendirme ve noktalama işaretleriyle herhangi bir aktif pencereye ekler.",
     status_ready: "Hazır",
     btn_save: "Ayarları Kaydet",
@@ -975,13 +985,39 @@ document.addEventListener("DOMContentLoaded", () => {
   const radioCloud = document.getElementById("radio-cloud");
   const radioLocal = document.getElementById("radio-local");
   const localModelCard = document.getElementById("card-local-model");
+  const selectLocalEngine = document.getElementById("select-local-engine");
+  const groupWhisperModels = document.getElementById("group-whisper-models");
+  const groupParakeetModels = document.getElementById("group-parakeet-models");
 
   function updateEngineUI() {
     if (radioLocal.checked) {
       localModelCard.style.display = "flex";
+      updateLocalEngineUI();
     } else {
       localModelCard.style.display = "none";
     }
+  }
+
+  function updateLocalEngineUI() {
+    if (!selectLocalEngine || !groupWhisperModels || !groupParakeetModels) return;
+    if (selectLocalEngine.value === "parakeet") {
+      groupWhisperModels.style.display = "none";
+      groupParakeetModels.style.display = "block";
+      selectModelCard("parakeet-v3");
+    } else {
+      groupWhisperModels.style.display = "block";
+      groupParakeetModels.style.display = "none";
+      if (selectedModelName === "parakeet-v3") {
+        selectModelCard("base");
+      }
+    }
+  }
+
+  if (selectLocalEngine) {
+    selectLocalEngine.addEventListener("change", () => {
+      updateLocalEngineUI();
+      markSettingsModified();
+    });
   }
 
   radioCloud.addEventListener("change", updateEngineUI);
@@ -1179,7 +1215,7 @@ document.addEventListener("DOMContentLoaded", () => {
       radioCloud, radioLocal, selectProvider, apiKeyInput, selectHotkey,
       selectLanguage, textareaDictionary, checkboxToggle, checkboxPunctuation, checkboxCloudFallback,
       checkboxAutostart, checkboxStreaming, checkboxSounds, selectSoundTheme,
-      rangeVolume
+      rangeVolume, selectLocalEngine
     ];
     inputs.forEach(input => {
       if (input) {
@@ -1248,6 +1284,10 @@ document.addEventListener("DOMContentLoaded", () => {
         if (selectLanguage) {
           selectLanguage.value = settings.language || "auto";
         }
+        if (selectLocalEngine) {
+          selectLocalEngine.value = settings.local_engine || "whisper";
+        }
+        updateEngineUI();
         if (textareaDictionary) {
           textareaDictionary.value = settings.dictionary || "";
         }
@@ -1381,6 +1421,7 @@ document.addEventListener("DOMContentLoaded", () => {
         voice_punctuation: checkboxPunctuation ? checkboxPunctuation.checked : false,
         cloud_fallback_enabled: checkboxCloudFallback ? checkboxCloudFallback.checked : true,
         autostart: checkboxAutostart ? checkboxAutostart.checked : false,
+        local_engine: selectLocalEngine ? selectLocalEngine.value : "whisper",
         overlay_sounds: checkboxSounds ? checkboxSounds.checked : true,
         overlay_sound_theme: selectSoundTheme ? selectSoundTheme.value : "zen",
         overlay_sound_volume: soundVolFloat
@@ -1981,8 +2022,23 @@ document.addEventListener("DOMContentLoaded", () => {
           const label = getTranslation("update_available") || "Доступно обновление";
           badgeText.textContent = `${label} (v${info.latest})`;
           badge.style.display = "inline-flex";
-          badge.addEventListener("click", () => {
-            invoke("open_url", { url: info.url }).catch(e => console.error(e));
+          badge.addEventListener("click", async () => {
+            try {
+              showStatus("Скачивание и установка обновления...");
+              const { check } = window.__TAURI__.plugins.updater;
+              const update = await check();
+              if (update) {
+                await update.downloadAndInstall();
+                showStatus("Обновление установлено. Перезапуск...");
+                await invoke("relaunch_app");
+              } else {
+                showStatus("Обновление не найдено.");
+              }
+            } catch (e) {
+              console.error("Failed to install update via Tauri updater", e);
+              showStatus("Открытие страницы релиза в браузере...");
+              invoke("open_url", { url: info.url }).catch(err => console.error(err));
+            }
           });
           // Visible without opening the About tab: a dot on the nav item itself
           if (navDot) navDot.style.display = "inline-block";

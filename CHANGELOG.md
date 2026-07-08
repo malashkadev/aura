@@ -3,6 +3,13 @@
 All notable changes to Aura are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/), versions follow [SemVer](https://semver.org/).
 
+## [1.0.3] — 2026-07-07
+
+### Added
+- Integrated **Silero VAD (Voice Activity Detection)** to completely eliminate silence hallucinations.
+- Integrated **NVIDIA Parakeet** (TDT 0.6b v3) local offline speech-to-text option next to Whisper.cpp.
+- Implemented **Signed Tauri Auto-Updater** with secure cryptographic validation and automated CI pipeline.
+
 ## [1.0.2] — 2026-07-07
 
 ### Added

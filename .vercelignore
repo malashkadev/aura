@@ -1,0 +1,13 @@
+src-tauri/
+src/
+node_modules/
+.git/
+.agents/
+.impeccable/
+.superpowers/
+graphify-out/
+docs/
+*.exe
+*.pdb
+*.lib
+*.rlib

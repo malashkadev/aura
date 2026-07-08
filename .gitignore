@@ -31,3 +31,8 @@ PRODUCT.md
 
 .vercel
 .env*
+
+# Never commit signing private keys
+*.key
+*.pem
+minisign*

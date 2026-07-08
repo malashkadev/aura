@@ -24,6 +24,7 @@ pub struct Settings {
     pub overlay_sound_theme: String,
     pub overlay_sound_volume: f32,
     pub cloud_fallback_enabled: bool, // auto-retry locally when cloud is unreachable (VPN/network/region block)
+    pub local_engine: String,         // "whisper" or "parakeet"
 }
 
 impl Default for Settings {
@@ -47,6 +48,7 @@ impl Default for Settings {
             overlay_sound_theme: "zen".to_string(),
             overlay_sound_volume: 0.8,
             cloud_fallback_enabled: true,
+            local_engine: "whisper".to_string(),
         }
     }
 }
@@ -134,6 +136,7 @@ mod tests {
         assert_eq!(settings.overlay_sounds, true);
         assert_eq!(settings.overlay_sound_theme, "zen");
         assert_eq!(settings.overlay_sound_volume, 0.8);
+        assert_eq!(settings.local_engine, "whisper");
     }
 
     #[test]

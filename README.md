@@ -106,15 +106,19 @@ cargo test
 - **Cloud mode** sends the recorded audio to the provider you chose. Nothing else is collected; there is no telemetry.
 - Settings (including API keys) are stored locally in `%APPDATA%/com.aura.app/settings.json`; history in `%LOCALAPPDATA%/com.aura.app/history.json`. Known limitation: API keys are stored in plain text — see [issue tracker](https://github.com/malashkadev/aura/issues) for the Credential Manager migration plan.
 
+## Recently added
+
+- **Parakeet local engine** — offline NVIDIA Parakeet TDT v3 via [sherpa-onnx](https://github.com/k2-fsa/sherpa-onnx), running as a resident WebSocket server so the model loads once and recognition takes under a second (vs. ~12 s for a cold CLI call). Notes: the custom dictionary isn't applied on this engine (the daemon is started with fixed args), and the built-in offline punctuation model covers English — Russian uses the voice-command punctuation instead.
+- **Silero VAD** — replaces the old energy-based silence gate to trim pauses and cut silence hallucinations.
+- **Signed auto-updates** — releases are signed and the app checks for and can install updates in-app.
+
 ## Roadmap
 
 Planned, in rough priority order. Ideas and contributions are welcome — open an issue!
 
-- **Parakeet local model** — offline NVIDIA Parakeet TDT v3 (via [sherpa-onnx](https://github.com/k2-fsa/sherpa-onnx)) alongside Whisper: faster on CPU, built-in punctuation, and strong Russian/European accuracy.
-- **Proper VAD** — replace the energy-based silence gate with Silero voice-activity detection to trim pauses and cut hallucinations.
-- **macOS support** — the native port (global hotkeys via `CGEventTap`, CoreAudio capture) now lives in the main codebase and **compiles in CI**. Still needs a macOS Whisper sidecar, `.app` bundling, the Accessibility-permission flow and testing on real hardware before it's usable.
+- **macOS support** — the native port (global hotkeys via `CGEventTap`, CoreAudio capture) now lives in the main codebase and **compiles in CI**. Still needs a macOS speech-recognition sidecar, `.app` bundling, the Accessibility-permission flow and testing on real hardware before it's usable.
+- **Custom dictionary for Parakeet** — bias recognition via sherpa-onnx hotwords (needs a hotwords file baked in at server start + restart on change).
 - **Secure key storage** — move API keys from plain-text JSON into the OS credential manager.
-- **Auto-updates** — signed releases with an in-app updater.
 
 ## License
 

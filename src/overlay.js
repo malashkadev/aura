@@ -453,6 +453,18 @@ const errorTranslations = {
     ja: "ローカルWhisperクライアントの起動失敗",
     tr: "Yerel Whisper istemci hatası"
   },
+  "Local Parakeet client failure": {
+    ru: "Сбой локального Parakeet-клиента",
+    en: "Local Parakeet client failure",
+    de: "Fehler des lokalen Parakeet-Clients",
+    fr: "Échec du client Parakeet local",
+    it: "Errore del client Parakeet locale",
+    es: "Fallo del cliente Parakeet local",
+    pt: "Falha no cliente Parakeet local",
+    zh: "本地 Parakeet 客户端崩溃",
+    ja: "ローカルParakeetクライアントの起動失敗",
+    tr: "Yerel Parakeet istemci hatası"
+  },
   "API rate limit reached": {
     ru: "Лимит запросов API исчерпан",
     en: "API rate limit reached",
