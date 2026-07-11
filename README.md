@@ -50,7 +50,7 @@ Aura sits between minimalist local transcribers and paid AI dictation tools. If 
 |---|---|---|---|
 | Price | Free & open source | Free & open source | Paid (subscription) |
 | Platforms | Windows | Windows / macOS / Linux | Windows / macOS |
-| Local engine (private) | ✅ Whisper | ✅ Whisper / Parakeet | ❌ cloud only |
+| Local engine (private) | ✅ Whisper / Parakeet | ✅ Whisper / Parakeet | ❌ cloud only |
 | Cloud engine (no GPU needed) | ✅ Gemini / OpenAI / Groq | ❌ | ✅ |
 | AI cleanup (filler removal, grammar) | ✅ | ➖ basic punctuation only | ✅ |
 | Edit selected text by voice | ✅ | ❌ | ✅ |
