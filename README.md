@@ -14,7 +14,7 @@
   <a href="https://aura-beryl-five.vercel.app/"><img src="https://img.shields.io/badge/website-live-brightgreen.svg" alt="Website" /></a>
 </p>
 
-Hold a hotkey, speak, release — Aura transcribes your speech, cleans it up (punctuation, filler words) and types it into **any** Windows application. Works with cloud AI (Gemini / OpenAI / Groq) or fully offline with local Whisper.
+Hold a hotkey, speak, release — Aura transcribes your speech, cleans it up (punctuation, filler words) and types it into **any** Windows application. Works with cloud AI (Gemini / OpenAI / Groq) or fully offline with local Whisper / NVIDIA Parakeet.
 
 Think of it as a **free, open-source alternative to Wispr Flow** — not just a transcriber, but a dictation *and editing* assistant: it polishes what you say and can even rewrite selected text on voice command.
 
@@ -64,7 +64,7 @@ Aura sits between minimalist local transcribers and paid AI dictation tools. If 
 
 Download the latest installer from [Releases](https://github.com/malashkadev/aura/releases) and run it. You can explore the interactive settings mockup and watch the live demo on our [Official Website](https://aura-beryl-five.vercel.app/).
 
-For cloud mode you will need an API key — the free [Groq](https://console.groq.com/) tier works great. For local mode just download a Whisper model from the settings (base is a good start).
+For cloud mode you will need an API key — the free [Groq](https://console.groq.com/) tier works great. For local mode just download a Whisper or Parakeet model from the settings (base is a good start for Whisper).
 
 > **First launch — "Windows protected your PC"?** The installer isn't code-signed yet (a certificate costs a few hundred dollars a year), so Windows SmartScreen shows a warning for new open-source apps. Click **More info → Run anyway**. The source is fully open if you'd rather build it yourself.
 
@@ -117,8 +117,6 @@ cargo test
 Planned, in rough priority order. Ideas and contributions are welcome — open an issue!
 
 - **macOS support** — the native port (global hotkeys via `CGEventTap`, CoreAudio capture) now lives in the main codebase and **compiles in CI**. Still needs a macOS speech-recognition sidecar, `.app` bundling, the Accessibility-permission flow and testing on real hardware before it's usable.
-- **Secure key storage** — move API keys from plain-text JSON into the OS credential manager (investigated, Windows Credential Manager integration disabled due to instability on some OS builds; using optimized local JSON with automatic whitespace trimming).
-- **Custom dictionary for Parakeet** — bias recognition via sherpa-onnx hotwords (engine limitation: the used NeMo transducer model only supports `greedy_search` decoding, which is incompatible with hotwords in `sherpa-onnx`).
 
 ## License
 
