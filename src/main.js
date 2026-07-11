@@ -110,7 +110,10 @@ const i18nDict = {
     local_engine_whisper: "Whisper.cpp (на базе OpenAI Whisper)",
     local_engine_parakeet: "NVIDIA Parakeet (через sherpa-onnx)",
     parakeet_model_label: "Модель Parakeet",
-    model_meta_parakeet: "~670 МБ — оптимизировано NVIDIA"
+    model_meta_parakeet: "~670 МБ — оптимизировано NVIDIA",
+    fallback_title: "Автопереключение при недоступности облака",
+    fallback_desc: "Если облачный ИИ недоступен (VPN, блокировка региона, нет сети), автоматически использовать уже скачанную локальную модель для этой записи.",
+    fallback_checkbox: "Включить автопереключение на локальную модель"
   },
   en: {
     title_settings: "Settings",
@@ -219,7 +222,10 @@ const i18nDict = {
     local_engine_whisper: "Whisper.cpp (OpenAI Whisper)",
     local_engine_parakeet: "NVIDIA Parakeet (via sherpa-onnx)",
     parakeet_model_label: "Parakeet Model",
-    model_meta_parakeet: "~670 MB — optimized by NVIDIA"
+    model_meta_parakeet: "~670 MB — optimized by NVIDIA",
+    fallback_title: "Cloud Fallback",
+    fallback_desc: "If cloud AI is unavailable (VPN, region block, no network), automatically use the already downloaded local model for this recording.",
+    fallback_checkbox: "Enable automatic fallback to local model"
   },
   de: {
     title_settings: "Einstellungen",
@@ -237,7 +243,7 @@ const i18nDict = {
     engine_cloud: "Cloud-KI",
     engine_cloud_meta: "Gemini / OpenAI / Groq (API-Schlüssel erforderlich)",
     engine_local: "Lokale KI",
-    engine_local_meta: "Whisper.cpp (100% offline & privat)",
+    engine_local_meta: "Whisper / Parakeet (100% offline & privat)",
     lang_bias_title: "Sprache",
     lang_bias_desc: "Wählen Sie eine feste Sprache für das Diktat oder aktivieren Sie die Auto-Erkennung.",
     lang_bias_label: "Sprache auswählen",
@@ -320,7 +326,18 @@ const i18nDict = {
     confirm_clear_history_msg: "Möchten Sie den gesamten Transkriptionsverlauf wirklich löschen?",
     general_ui_lang_title: "Sprache der Benutzeroberfläche",
     general_ui_lang_desc: "Wählen Sie die Sprache für Einstellungen und Benachrichtigungen.",
-    hotkey_reset_title: "Auf Alt+V zurücksetzen"
+    hotkey_reset_title: "Auf Alt+V zurücksetzen",
+    local_engine_label: "Erkennungsmodul",
+    local_engine_whisper: "Whisper.cpp (OpenAI Whisper)",
+    local_engine_parakeet: "NVIDIA Parakeet (über sherpa-onnx)",
+    parakeet_model_label: "Parakeet-Modell",
+    model_meta_parakeet: "~670 MB — optimiert von NVIDIA",
+    model_cancel_download: "Download abbrechen",
+    model_download_cancelled: "Download abgebrochen",
+    update_available: "Update verfügbar",
+    fallback_title: "Cloud-Fallback",
+    fallback_desc: "Wenn die Cloud-KI nicht erreichbar ist (VPN, Regionssperre, kein Netzwerk), automatisch das bereits heruntergeladene lokale Modell für diese Aufnahme verwenden.",
+    fallback_checkbox: "Automatischen Fallback auf lokales Modell aktivieren"
   },
   es: {
     title_settings: "Ajustes",
@@ -338,7 +355,7 @@ const i18nDict = {
     engine_cloud: "IA en la nube",
     engine_cloud_meta: "Gemini / OpenAI / Groq (requiere clave API)",
     engine_local: "IA local",
-    engine_local_meta: "Whisper.cpp (100% offline y privado)",
+    engine_local_meta: "Whisper / Parakeet (100% offline y privado)",
     lang_bias_title: "Idioma de dictado",
     lang_bias_desc: "Forzar un idioma específico para la transcripción o usar detección automática.",
     lang_bias_label: "Seleccionar idioma",
@@ -421,7 +438,18 @@ const i18nDict = {
     confirm_clear_history_msg: "¿Está seguro de que desea limpiar todo el historial de transcripciones?",
     general_ui_lang_title: "Idioma de la interfaz",
     general_ui_lang_desc: "Seleccione el idioma para los ajustes y las notificaciones.",
-    hotkey_reset_title: "Restablecer a Alt+V"
+    hotkey_reset_title: "Restablecer a Alt+V",
+    local_engine_label: "Motor de reconocimiento",
+    local_engine_whisper: "Whisper.cpp (OpenAI Whisper)",
+    local_engine_parakeet: "NVIDIA Parakeet (vía sherpa-onnx)",
+    parakeet_model_label: "Modelo Parakeet",
+    model_meta_parakeet: "~670 MB — optimizado por NVIDIA",
+    model_cancel_download: "Cancelar descarga",
+    model_download_cancelled: "Descarga cancelada",
+    update_available: "Actualización disponible",
+    fallback_title: "Alternativa en la nube",
+    fallback_desc: "Si la IA en la nube no está disponible (VPN, bloqueo regional, sin red), usar automáticamente el modelo local ya descargado para esta grabación.",
+    fallback_checkbox: "Activar cambio automático al modelo local"
   },
   fr: {
     title_settings: "Paramètres",
@@ -439,7 +467,7 @@ const i18nDict = {
     engine_cloud: "IA Cloud",
     engine_cloud_meta: "Gemini / OpenAI / Groq (clé API requise)",
     engine_local: "IA Locale",
-    engine_local_meta: "Whisper.cpp (100% hors ligne et privé)",
+    engine_local_meta: "Whisper / Parakeet (100% hors ligne et privé)",
     lang_bias_title: "Langue de dictée",
     lang_bias_desc: "Forcer une langue spécifique pour la dictée ou utiliser la détection automatique.",
     lang_bias_label: "Sélectionner la langue",
@@ -522,7 +550,18 @@ const i18nDict = {
     confirm_clear_history_msg: "Voulez-vous vraiment effacer tout l'historique des transcriptions ?",
     general_ui_lang_title: "Langue de l'interface",
     general_ui_lang_desc: "Sélectionnez la langue pour les paramètres et les notifications de l'application.",
-    hotkey_reset_title: "Réinitialiser à Alt+V"
+    hotkey_reset_title: "Réinitialiser à Alt+V",
+    local_engine_label: "Moteur de reconnaissance",
+    local_engine_whisper: "Whisper.cpp (OpenAI Whisper)",
+    local_engine_parakeet: "NVIDIA Parakeet (via sherpa-onnx)",
+    parakeet_model_label: "Modèle Parakeet",
+    model_meta_parakeet: "~670 Mo — optimisé par NVIDIA",
+    model_cancel_download: "Annuler le téléchargement",
+    model_download_cancelled: "Téléchargement annulé",
+    update_available: "Mise à jour disponible",
+    fallback_title: "Basculement cloud",
+    fallback_desc: "Si l'IA cloud est indisponible (VPN, blocage régional, pas de réseau), utiliser automatiquement le modèle local déjà téléchargé pour cet enregistrement.",
+    fallback_checkbox: "Activer le basculement automatique vers le modèle local"
   },
   it: {
     title_settings: "Impostazioni",
@@ -540,7 +579,7 @@ const i18nDict = {
     engine_cloud: "IA Cloud",
     engine_cloud_meta: "Gemini / OpenAI / Groq (chiave API richiesta)",
     engine_local: "IA Locale",
-    engine_local_meta: "Whisper.cpp (100% offline e privato)",
+    engine_local_meta: "Whisper / Parakeet (100% offline e privato)",
     lang_bias_title: "Lingua dettatura",
     lang_bias_desc: "Imposta una lingua fissa per la transrizione o usa il rilevamento automatico.",
     lang_bias_label: "Seleziona lingua",
@@ -623,7 +662,18 @@ const i18nDict = {
     confirm_clear_history_msg: "Sei sicuro di voler cancellare tutta la cronologia delle trascrizioni?",
     general_ui_lang_title: "Lingua dell'interfaccia",
     general_ui_lang_desc: "Seleziona la lingua per le impostazioni e le notifiche dell'applicazione.",
-    hotkey_reset_title: "Ripristina ad Alt+V"
+    hotkey_reset_title: "Ripristina ad Alt+V",
+    local_engine_label: "Motore di riconoscimento",
+    local_engine_whisper: "Whisper.cpp (OpenAI Whisper)",
+    local_engine_parakeet: "NVIDIA Parakeet (via sherpa-onnx)",
+    parakeet_model_label: "Modello Parakeet",
+    model_meta_parakeet: "~670 MB — ottimizzato da NVIDIA",
+    model_cancel_download: "Annulla download",
+    model_download_cancelled: "Download annullato",
+    update_available: "Aggiornamento disponibile",
+    fallback_title: "Fallback cloud",
+    fallback_desc: "Se l'IA cloud non è disponibile (VPN, blocco regionale, nessuna rete), utilizza automaticamente il modello locale già scaricato per questa registrazione.",
+    fallback_checkbox: "Attiva il fallback automatico al modello locale"
   },
   zh: {
     title_settings: "设置",
@@ -641,7 +691,7 @@ const i18nDict = {
     engine_cloud: "云端智能 AI",
     engine_cloud_meta: "Gemini / OpenAI / Groq (需要 API 密钥)",
     engine_local: "本地 AI (离线)",
-    engine_local_meta: "Whisper.cpp (100% 离线和私密)",
+    engine_local_meta: "Whisper / Parakeet (100% 离线和私密)",
     lang_bias_title: "识别语言",
     lang_bias_desc: "强制设定特定的听写语言，或使用自动检测。",
     lang_bias_label: "选择语言",
@@ -724,7 +774,18 @@ const i18nDict = {
     confirm_clear_history_msg: "您确定要清空所有听写历史记录吗？",
     general_ui_lang_title: "界面语言",
     general_ui_lang_desc: "选择设置和应用程序通知的语言。",
-    hotkey_reset_title: "重置为 Alt+V"
+    hotkey_reset_title: "重置为 Alt+V",
+    local_engine_label: "识别引擎",
+    local_engine_whisper: "Whisper.cpp (OpenAI Whisper)",
+    local_engine_parakeet: "NVIDIA Parakeet (通过 sherpa-onnx)",
+    parakeet_model_label: "Parakeet 模型",
+    model_meta_parakeet: "~670 MB — NVIDIA 优化",
+    model_cancel_download: "取消下载",
+    model_download_cancelled: "下载已取消",
+    update_available: "有可用更新",
+    fallback_title: "云端回退",
+    fallback_desc: "当云端 AI 不可用时（VPN、地区限制、无网络），自动使用已下载的本地模型进行本次录音识别。",
+    fallback_checkbox: "启用自动回退至本地模型"
   },
   pt: {
     title_settings: "Configurações",
@@ -742,7 +803,7 @@ const i18nDict = {
     engine_cloud: "IA na Nuvem",
     engine_cloud_meta: "Gemini / OpenAI / Groq (chave API necessária)",
     engine_local: "IA Local",
-    engine_local_meta: "Whisper.cpp (100% offline e privado)",
+    engine_local_meta: "Whisper / Parakeet (100% offline e privado)",
     lang_bias_title: "Idioma do Diktat",
     lang_bias_desc: "Forçar um idioma específico para a transcrição ou usar detecção automática.",
     lang_bias_label: "Selecionar idioma",
@@ -825,7 +886,18 @@ const i18nDict = {
     confirm_clear_history_msg: "Tem certeza de que deseja limpar todo o histórico de transcrições?",
     general_ui_lang_title: "Idioma da interface",
     general_ui_lang_desc: "Selecione o idioma para as configurações e notificações do aplicativo.",
-    hotkey_reset_title: "Redefinir para Alt+V"
+    hotkey_reset_title: "Redefinir para Alt+V",
+    local_engine_label: "Motor de reconhecimento",
+    local_engine_whisper: "Whisper.cpp (OpenAI Whisper)",
+    local_engine_parakeet: "NVIDIA Parakeet (via sherpa-onnx)",
+    parakeet_model_label: "Modelo Parakeet",
+    model_meta_parakeet: "~670 MB — otimizado pela NVIDIA",
+    model_cancel_download: "Cancelar download",
+    model_download_cancelled: "Download cancelado",
+    update_available: "Atualização disponível",
+    fallback_title: "Fallback na nuvem",
+    fallback_desc: "Se a IA na nuvem estiver indisponível (VPN, bloqueio regional, sem rede), usar automaticamente o modelo local já baixado para esta gravação.",
+    fallback_checkbox: "Ativar fallback automático para modelo local"
   },
   tr: {
     title_settings: "Ayarlar",
@@ -843,7 +915,7 @@ const i18nDict = {
     engine_cloud: "Bulut Yapay Zekası",
     engine_cloud_meta: "Gemini / OpenAI / Groq (API anahtarı gerekli)",
     engine_local: "Yerel Yapay Zeka",
-    engine_local_meta: "Whisper.cpp (100% çevrimdışı ve gizli)",
+    engine_local_meta: "Whisper / Parakeet (100% çevrimdışı ve gizli)",
     lang_bias_title: "Yazım Dili",
     lang_bias_desc: "Transkripsiyon için belirli bir dili zorlayın veya otomatik algılamayı kullanın.",
     lang_bias_label: "Dil Seçin",
@@ -926,7 +998,18 @@ const i18nDict = {
     confirm_clear_history_msg: "Tüm transkripsiyon geçmişini temizlemek istediğinizden emin misiniz?",
     general_ui_lang_title: "Arayüz Dili",
     general_ui_lang_desc: "Ayarlar ve uygulama bildirimleri için dili seçin.",
-    hotkey_reset_title: "Alt+V'ye Sıfırla"
+    hotkey_reset_title: "Alt+V'ye Sıfırla",
+    local_engine_label: "Tanıma Motoru",
+    local_engine_whisper: "Whisper.cpp (OpenAI Whisper)",
+    local_engine_parakeet: "NVIDIA Parakeet (sherpa-onnx ile)",
+    parakeet_model_label: "Parakeet Modeli",
+    model_meta_parakeet: "~670 MB — NVIDIA tarafından optimize edildi",
+    model_cancel_download: "İndirmeyi iptal et",
+    model_download_cancelled: "İndirme iptal edildi",
+    update_available: "Güncelleme mevcut",
+    fallback_title: "Bulut Yedekleme",
+    fallback_desc: "Bulut yapay zekası kullanılamıyorsa (VPN, bölge engeli, ağ yok), bu kayıt için önceden indirilmiş yerel modeli otomatik olarak kullan.",
+    fallback_checkbox: "Yerel modele otomatik geçişi etkinleştir"
   }
 };
 
@@ -1799,8 +1882,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const elements = document.querySelectorAll("[data-i18n]");
     elements.forEach(el => {
       const key = el.getAttribute("data-i18n");
-      if (dict[key]) {
-        el.textContent = dict[key];
+      const text = dict[key] || i18nDict.ru[key];
+      if (text) {
+        el.textContent = text;
       }
     });
 
