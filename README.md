@@ -108,7 +108,7 @@ cargo test
 
 ## Recently added
 
-- **Parakeet local engine** — offline NVIDIA Parakeet TDT v3 via [sherpa-onnx](https://github.com/k2-fsa/sherpa-onnx), running as a resident WebSocket server so the model loads once and recognition takes under a second (vs. ~12 s for a cold CLI call). Notes: the custom dictionary isn't applied on this engine (the daemon is started with fixed args), and the built-in offline punctuation model covers English — Russian uses the voice-command punctuation instead.
+- **Parakeet local engine** — offline NVIDIA Parakeet TDT v3 via [sherpa-onnx](https://github.com/k2-fsa/sherpa-onnx), running as a resident WebSocket server so the model loads once and recognition takes under a second (vs. ~12 s for a cold CLI call). Notes: the custom dictionary isn't applied on this engine due to a model-level limitation (the NeMo transducer only supports greedy search, which is incompatible with hotwords in sherpa-onnx), and the built-in offline punctuation model covers English — Russian uses the voice-command punctuation instead.
 - **Silero VAD** — replaces the old energy-based silence gate to trim pauses and cut silence hallucinations.
 - **Signed auto-updates** — releases are signed and the app checks for and can install updates in-app.
 
