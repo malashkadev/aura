@@ -8,9 +8,13 @@ use tauri::Manager;
 pub struct Settings {
     pub transcription_mode: String, // "cloud" or "local"
     pub api_provider: String,       // "gemini" or "openai"
+    #[serde(default)]
     pub api_key: String,
+    #[serde(default)]
     pub api_key_gemini: String,
+    #[serde(default)]
     pub api_key_openai: String,
+    #[serde(default)]
     pub api_key_groq: String,
     pub model_name: String,         // "small", "base", etc.
     pub hotkey: String,             // "Alt+N"
@@ -38,7 +42,7 @@ impl Default for Settings {
             api_key_groq: "".to_string(),
             model_name: "base".to_string(),
             hotkey: "Alt+V".to_string(),
-            streaming_enabled: false, // Default to false for stable v1.0 mode
+            streaming_enabled: false,
             toggle_enabled: false,
             language: "auto".to_string(),
             dictionary: "".to_string(),
@@ -72,7 +76,7 @@ impl Settings {
     }
 }
 
-pub fn get_settings_path(app_handle: &tauri::AppHandle) -> Result<PathBuf, String> {
+pub fn get_settings_path<R: tauri::Runtime>(app_handle: &tauri::AppHandle<R>) -> Result<PathBuf, String> {
     let config_dir = app_handle
         .path()
         .app_config_dir()
@@ -80,13 +84,15 @@ pub fn get_settings_path(app_handle: &tauri::AppHandle) -> Result<PathBuf, Strin
     Ok(config_dir.join("settings.json"))
 }
 
-pub fn load_settings(app_handle: &tauri::AppHandle) -> Result<Settings, String> {
+pub fn load_settings<R: tauri::Runtime>(app_handle: &tauri::AppHandle<R>) -> Result<Settings, String> {
     let path = get_settings_path(app_handle)?;
     if !path.exists() {
         return Ok(Settings::default());
     }
+    
     let content = fs::read_to_string(&path)
         .map_err(|e| format!("Failed to read settings file: {}", e))?;
+        
     let mut settings: Settings = match serde_json::from_str(&content) {
         Ok(s) => s,
         Err(e) => {
@@ -96,11 +102,25 @@ pub fn load_settings(app_handle: &tauri::AppHandle) -> Result<Settings, String> 
     };
     
     settings.migrate_legacy_keys();
+    
+    settings.api_key = match settings.api_provider.as_str() {
+        "gemini" => settings.api_key_gemini.clone(),
+        "openai" => settings.api_key_openai.clone(),
+        "groq" => settings.api_key_groq.clone(),
+        _ => settings.api_key.clone(),
+    };
+    
     Ok(settings)
 }
 
-pub fn save_settings(app_handle: &tauri::AppHandle, settings: &Settings) -> Result<(), String> {
+pub fn save_settings<R: tauri::Runtime>(app_handle: &tauri::AppHandle<R>, settings: &Settings) -> Result<(), String> {
     let mut settings_clone = settings.clone();
+    
+    // Trim API keys before saving to prevent trailing newlines
+    settings_clone.api_key_gemini = settings_clone.api_key_gemini.trim().to_string();
+    settings_clone.api_key_openai = settings_clone.api_key_openai.trim().to_string();
+    settings_clone.api_key_groq = settings_clone.api_key_groq.trim().to_string();
+    
     settings_clone.api_key = match settings_clone.api_provider.as_str() {
         "gemini" => settings_clone.api_key_gemini.clone(),
         "openai" => settings_clone.api_key_openai.clone(),
@@ -113,10 +133,13 @@ pub fn save_settings(app_handle: &tauri::AppHandle, settings: &Settings) -> Resu
         fs::create_dir_all(parent)
             .map_err(|e| format!("Failed to create settings directory: {}", e))?;
     }
+    
     let content = serde_json::to_string_pretty(&settings_clone)
-        .map_err(|e| format!("Failed to serialize settings: {}", e))?;
+        .map_err(|e| format!("Failed to format settings JSON: {}", e))?;
+        
     fs::write(&path, content)
         .map_err(|e| format!("Failed to write settings file: {}", e))?;
+        
     Ok(())
 }
 
@@ -167,6 +190,7 @@ mod tests {
         assert_eq!(settings.api_key_openai, "");
         assert_eq!(settings.api_key_groq, "");
     }
+
 
     #[test]
     fn test_save_settings_sync_logic() {

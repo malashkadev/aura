@@ -1,14 +1,14 @@
 {
   "name": "aura-voice",
   "private": true,
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "Aura — voice dictation for Windows (Whisper + LLM cleanup)",
   "license": "AGPL-3.0-only",
   "type": "module",
   "scripts": {
     "tauri": "tauri",
     "dev": "tauri dev",
-    "build": "tauri build"
+    "build": "echo \"No frontend build step needed\""
   },
   "devDependencies": {
     "@tauri-apps/cli": "^2",

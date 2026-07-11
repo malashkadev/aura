@@ -117,8 +117,8 @@ cargo test
 Planned, in rough priority order. Ideas and contributions are welcome — open an issue!
 
 - **macOS support** — the native port (global hotkeys via `CGEventTap`, CoreAudio capture) now lives in the main codebase and **compiles in CI**. Still needs a macOS speech-recognition sidecar, `.app` bundling, the Accessibility-permission flow and testing on real hardware before it's usable.
-- **Custom dictionary for Parakeet** — bias recognition via sherpa-onnx hotwords (needs a hotwords file baked in at server start + restart on change).
-- **Secure key storage** — move API keys from plain-text JSON into the OS credential manager.
+- **Secure key storage** — move API keys from plain-text JSON into the OS credential manager (investigated, Windows Credential Manager integration disabled due to instability on some OS builds; using optimized local JSON with automatic whitespace trimming).
+- **Custom dictionary for Parakeet** — bias recognition via sherpa-onnx hotwords (engine limitation: the used NeMo transducer model only supports `greedy_search` decoding, which is incompatible with hotwords in `sherpa-onnx`).
 
 ## License
 

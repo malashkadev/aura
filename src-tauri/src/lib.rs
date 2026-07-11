@@ -698,6 +698,26 @@ fn categorize_error(err: &str) -> String {
 /// Shows the error state in the overlay for a moment, then hides it
 /// (unless a newer session already owns the overlay).
 async fn show_overlay_error(app_handle: &tauri::AppHandle, _my_gen: u64, error_msg: &str) {
+    if let Some(overlay) = app_handle.get_webview_window("overlay") {
+        if let Ok(Some(monitor)) = overlay.primary_monitor() {
+            let size = monitor.size();
+            let scale_factor = monitor.scale_factor();
+
+            let monitor_width = size.width as f64 / scale_factor;
+            let monitor_height = size.height as f64 / scale_factor;
+
+            let overlay_width = 160.0;
+            let overlay_height = 80.0;
+            const TASKBAR_MARGIN: f64 = 95.0;
+
+            let x = (monitor_width - overlay_width) / 2.0;
+            let y = monitor_height - overlay_height - TASKBAR_MARGIN;
+
+            let _ = overlay.set_position(tauri::Position::Logical(tauri::LogicalPosition::new(x, y)));
+        }
+        let _ = overlay.set_always_on_top(true);
+        let _ = overlay.show();
+    }
     let _ = app_handle.emit("recording-state", format!("error:{}", error_msg));
     // JS handles playing error sound and animating the hide after a 2.5s display timeout
 }

@@ -164,6 +164,19 @@ pub fn find_sidecar<R: Runtime>(app_handle: &tauri::AppHandle<R>) -> Result<Path
     ))
 }
 
+struct DeleteOnDrop {
+    path: std::path::PathBuf,
+    active: bool,
+}
+
+impl Drop for DeleteOnDrop {
+    fn drop(&mut self) {
+        if self.active && self.path.exists() {
+            let _ = std::fs::remove_file(&self.path);
+        }
+    }
+}
+
 /// Download a GGML model file from huggingface if it doesn't already exist on disk
 pub async fn download_model<R: Runtime>(
     app_handle: &tauri::AppHandle<R>,
@@ -208,7 +221,7 @@ pub async fn download_model<R: Runtime>(
         filename
     );
 
-    let client = crate::ai_client::build_http_client();
+    let client = crate::ai_client::build_download_client();
     let mut response = client
         .get(&url)
         .send()
@@ -229,14 +242,19 @@ pub async fn download_model<R: Runtime>(
         let _ = fs::remove_file(&temp_path);
     }
 
+    let mut delete_guard = DeleteOnDrop {
+        path: temp_path.clone(),
+        active: true,
+    };
+
     let mut file = tokio::fs::File::create(&temp_path)
         .await
         .map_err(|e| format!("Failed to create temp file: {}", e))?;
 
     let mut downloaded: u64 = 0;
-    while let Some(chunk) = response
-        .chunk()
+    while let Some(chunk) = tokio::time::timeout(std::time::Duration::from_secs(30), response.chunk())
         .await
+        .map_err(|_| "Download timed out".to_string())?
         .map_err(|e| format!("Error while downloading chunk: {}", e))?
     {
         // Abort promptly if the user pressed the cancel (×) button
@@ -276,6 +294,8 @@ pub async fn download_model<R: Runtime>(
         .await
         .map_err(|e| format!("Failed to flush temp file: {}", e))?;
     drop(file);
+
+    delete_guard.active = false;
 
     fs::rename(&temp_path, &dest_path)
         .map_err(|e| format!("Failed to rename temp file to destination: {}", e))?;
@@ -535,7 +555,7 @@ pub async fn download_parakeet_model<R: Runtime>(
     let total_estimated_size: u64 = 670_000_000;
     let mut total_downloaded: u64 = 0;
 
-    let client = crate::ai_client::build_http_client();
+    let client = crate::ai_client::build_download_client();
 
     for (remote_file, local_file) in &files {
         let url = format!(
@@ -563,13 +583,18 @@ pub async fn download_parakeet_model<R: Runtime>(
             let _ = fs::remove_file(&temp_path);
         }
 
+        let mut delete_guard = DeleteOnDrop {
+            path: temp_path.clone(),
+            active: true,
+        };
+
         let mut file = tokio::fs::File::create(&temp_path)
             .await
             .map_err(|e| format!("Failed to create temp file for {}: {}", local_file, e))?;
 
-        while let Some(chunk) = response
-            .chunk()
+        while let Some(chunk) = tokio::time::timeout(std::time::Duration::from_secs(30), response.chunk())
             .await
+            .map_err(|_| "Download timed out".to_string())?
             .map_err(|e| format!("Error while downloading chunk of {}: {}", remote_file, e))?
         {
             if is_cancel_requested("parakeet-v3") {
@@ -605,8 +630,10 @@ pub async fn download_parakeet_model<R: Runtime>(
             .map_err(|e| format!("Failed to flush temp file for {}: {}", local_file, e))?;
         drop(file);
 
+        delete_guard.active = false;
+
         fs::rename(&temp_path, &dest_path)
-            .map_err(|e| format!("Failed to rename temp file to destination: {}", e))?;
+            .map_err(|e| format!("Failed to rename temp file for {} to destination: {}", local_file, e))?;
     }
 
     clear_cancel("parakeet-v3");
@@ -750,7 +777,31 @@ pub fn start_parakeet_server<R: Runtime>(app_handle: &tauri::AppHandle<R>) -> Re
             let _ = std::fs::remove_file(&log_file_path);
         }
 
-        let args = [
+        let settings = crate::settings::load_settings(app_handle)
+            .unwrap_or_else(|_| crate::settings::Settings::default());
+
+        let dict = settings.dictionary.trim();
+        let hotwords_path = model_dir.join("hotwords.txt");
+
+
+        if !dict.is_empty() {
+            let hotwords: Vec<&str> = dict.split(',')
+                .map(|s| s.trim())
+                .filter(|s| !s.is_empty())
+                .collect();
+            if !hotwords.is_empty() {
+                let content = hotwords.join("\n");
+                if let Err(e) = std::fs::write(&hotwords_path, content) {
+                    eprintln!("Aura Dev Log ERROR: Failed to write hotwords.txt: {}", e);
+                }
+            } else {
+                let _ = std::fs::remove_file(&hotwords_path);
+            }
+        } else {
+            let _ = std::fs::remove_file(&hotwords_path);
+        }
+
+        let args = vec![
             format!("--encoder={}", short_encoder.to_string_lossy()),
             format!("--decoder={}", short_decoder.to_string_lossy()),
             format!("--joiner={}", short_joiner.to_string_lossy()),
@@ -760,6 +811,11 @@ pub fn start_parakeet_server<R: Runtime>(app_handle: &tauri::AppHandle<R>) -> Re
             format!("--num-work-threads={}", n_threads),
             format!("--log-file={}", log_file_path.to_string_lossy()),
         ];
+
+        // Note: We deliberately DO NOT pass --hotwords-file here.
+        // sherpa-onnx requires --decoding-method=modified_beam_search for hotwords,
+        // but the NeMo Parakeet transducer model ONLY supports greedy_search.
+        // Thus, hotwords are fundamentally incompatible with Parakeet in sherpa-onnx.
 
         let mut cmd = Command::new(&short_server_path);
         cmd.args(&args);
@@ -902,6 +958,9 @@ pub fn run_parakeet<R: Runtime>(
             transcript = t.trim().to_string();
         }
     }
+
+    // Workaround for Sherpa ONNX Nemo Parakeet model outputting <unk> instead of 'ё'
+    transcript = transcript.replace("<unk>", "ё");
 
     Ok(transcript)
 }

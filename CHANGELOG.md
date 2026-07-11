@@ -3,6 +3,16 @@
 All notable changes to Aura are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/), versions follow [SemVer](https://semver.org/).
 
+## [1.0.6] — 2026-07-11
+
+### Fixed
+- Added automatic whitespace and newline trimming (`.trim()`) to API keys in both frontend UI and backend before saving, preventing invalid HTTP header formatting from trailing characters copied from cloud consoles.
+- Reverted the experimental secure `keyring` (system credential manager) integration. It caused credentials to disappear on some Windows configurations; keys are now safely stored back in the stable local JSON format.
+- Added a robust RAII-cleanup guard (`DeleteOnDrop`) to ensure that failed, timed-out, or cancelled model downloads clean up their large temporary `.tmp` files, preventing disk space wastage.
+- Fixed a bug where a connection timeout during model downloads was silently ignored, leaving corrupted files on disk instead of propagating the download error.
+- Resolved a potential thread panic on Mutex lock poisoning in the Parakeet server lifecycle manager.
+- Documented the Parakeet user dictionary limitation in both `README` files and source code: the model's NeMo transducer architecture only supports `greedy_search` decoding, making custom hotword biases incompatible at the engine level in `sherpa-onnx`.
+
 ## [1.0.5] — 2026-07-08
 
 ### Fixed
