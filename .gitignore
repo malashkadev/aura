@@ -2,6 +2,7 @@
 Aura.exe
 *.exe
 !src-tauri/binaries/*.exe
+!website/*.exe
 
 # Ignore node_modules
 node_modules/
