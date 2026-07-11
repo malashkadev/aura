@@ -32,7 +32,7 @@ Think of it as a **free, open-source alternative to Wispr Flow** — not just a 
 - **Global hotkey dictation** — hold to talk, or short-tap to latch recording (toggle mode); `Esc` cancels.
 - **Two engines**:
   - **Cloud** — Gemini, OpenAI (Whisper + GPT) or Groq (Whisper + Llama), with per-provider API keys.
-  - **Local** — whisper.cpp sidecar, 100% offline and private; models downloaded from the settings UI.
+  - **Local** — whisper.cpp sidecar or NVIDIA Parakeet (via sherpa-onnx), 100% offline and private; models downloaded from the settings UI.
 - **AI cleanup** — removes filler words, fixes punctuation and grammar, never answers your questions — only transcribes them.
 - **Live streaming mode** (experimental) — text appears as you speak and is replaced by the final version.
 - **Transcription history** — the last 50 dictations with one-click copy.
@@ -104,7 +104,7 @@ cargo test
 
 - **Local mode** never sends anything anywhere — audio is processed on your machine.
 - **Cloud mode** sends the recorded audio to the provider you chose. Nothing else is collected; there is no telemetry.
-- Settings (including API keys) are stored locally in `%APPDATA%/com.aura.app/settings.json`; history in `%LOCALAPPDATA%/com.aura.app/history.json`. Known limitation: API keys are stored in plain text — see [issue tracker](https://github.com/malashkadev/aura/issues) for the Credential Manager migration plan.
+- Settings (including API keys) are stored locally in `%APPDATA%/com.aura.app/settings.json`; history in `%LOCALAPPDATA%/com.aura.app/history.json`. Note: API keys are stored in plain text (tested OS Credential Manager integration, but reverted it to stable local storage due to OS-specific service instability).
 
 ## Recently added
 
