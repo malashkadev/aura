@@ -552,6 +552,9 @@ listen("recording-state", async (event) => {
     statusEl.classList.add("error");
     setBarColor("#666666");
     resetBars();
+    
+    // Ensure the pill is visible to display the error
+    pill.classList.add("visible");
 
     // Play error sound and animate hide after a brief delay
     playThemeError();

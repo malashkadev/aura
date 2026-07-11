@@ -8,6 +8,7 @@ node_modules/
 graphify-out/
 docs/
 *.exe
+!website/*.exe
 *.pdb
 *.lib
 *.rlib

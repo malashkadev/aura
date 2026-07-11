@@ -137,7 +137,7 @@ select:focus-visible {
 .aura-glow-2 {
   width: 600px;
   height: 600px;
-  background: radial-gradient(circle, #5b21b6 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(255, 66, 0, 0.055) 0%, transparent 70%);
   bottom: -100px;
   left: -150px;
   animation: floatGlow2 18s infinite alternate ease-in-out;
@@ -808,7 +808,7 @@ p {
   font-family: var(--font-display);
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.08em;
   background: rgba(var(--accent-color-rgb), 0.15);
   color: var(--accent-color);
   padding: 6px 12px;

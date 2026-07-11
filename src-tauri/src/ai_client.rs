@@ -71,6 +71,21 @@ pub fn build_http_client() -> reqwest::Client {
     builder.build().unwrap_or_else(|_| reqwest::Client::new())
 }
 
+/// HTTP client strictly for downloading large files (like AI models).
+/// It preserves the 20s connection timeout but DOES NOT set a global `timeout`,
+/// allowing slow downloads to finish without being abruptly killed after 5 minutes.
+pub fn build_download_client() -> reqwest::Client {
+    let mut builder = reqwest::Client::builder()
+        .connect_timeout(std::time::Duration::from_secs(20));
+    if let Some(proxy_url) = windows_system_proxy() {
+        eprintln!("Aura Dev Log: Using Windows system proxy for downloads: {}", proxy_url);
+        if let Ok(proxy) = reqwest::Proxy::all(&proxy_url) {
+            builder = builder.proxy(proxy);
+        }
+    }
+    builder.build().unwrap_or_else(|_| reqwest::Client::new())
+}
+
 // --- Gemini Request / Response Schemas ---
 
 #[derive(Serialize)]
