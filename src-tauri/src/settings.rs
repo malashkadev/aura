@@ -29,6 +29,7 @@ pub struct Settings {
     pub overlay_sound_volume: f32,
     pub cloud_fallback_enabled: bool, // auto-retry locally when cloud is unreachable (VPN/network/region block)
     pub local_engine: String,         // "whisper" or "parakeet"
+    pub copy_context_on_start: bool,  // capture selected text via Ctrl+C when recording starts (disable for terminals)
 }
 
 impl Default for Settings {
@@ -53,6 +54,7 @@ impl Default for Settings {
             overlay_sound_volume: 0.8,
             cloud_fallback_enabled: true,
             local_engine: "whisper".to_string(),
+            copy_context_on_start: true,
         }
     }
 }

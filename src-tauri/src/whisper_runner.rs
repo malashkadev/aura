@@ -385,6 +385,12 @@ pub fn run_local_whisper<R: Runtime>(
         n_threads.to_string(),
         "-nt".to_string(),
         "-np".to_string(),
+        // Greedy decoding (beam_size=1): ~20-40% faster than default beam-search
+        // with negligible quality loss for real-time dictation use cases.
+        "--best-of".to_string(),
+        "1".to_string(),
+        "--beam-size".to_string(),
+        "-1".to_string(),
     ];
 
     let dict = dictionary.trim();
@@ -959,8 +965,17 @@ pub fn run_parakeet<R: Runtime>(
         }
     }
 
-    // Workaround for Sherpa ONNX Nemo Parakeet model outputting <unk> instead of 'ё'
-    transcript = transcript.replace("<unk>", "ё");
+    // Workaround for Sherpa ONNX Nemo Parakeet model outputting <unk> instead of 'ё'.
+    // Only replace with 'ё' when the transcript is in Cyrillic; otherwise just strip
+    // the tag, since <unk> in Latin/Chinese text signals a genuinely unknown token.
+    let has_cyrillic = transcript
+        .chars()
+        .any(|c| ('\u{0400}'..='\u{04FF}').contains(&c));
+    transcript = if has_cyrillic {
+        transcript.replace("<unk>", "ё")
+    } else {
+        transcript.replace("<unk>", "")
+    };
 
     Ok(transcript)
 }
@@ -1036,38 +1051,97 @@ pub async fn download_punctuation_model<R: Runtime>(app_handle: &tauri::AppHandl
     
     eprintln!("Aura Dev Log: Downloading local punctuation model...");
     let url = "https://github.com/k2-fsa/sherpa-onnx/releases/download/punctuation-models/sherpa-onnx-punct-ct-transformer-zh-en-vocab272727-2024-04-12-int8.tar.bz2";
-    
-    let response = reqwest::get(url).await.map_err(|e| format!("Failed to download punctuation model: {}", e))?;
-    let bytes = response.bytes().await.map_err(|e| format!("Failed to read punctuation bytes: {}", e))?;
-    
+
+    // Stream the archive to disk instead of buffering the whole thing in RAM —
+    // bz2 archives can be several hundred MB.
+    let client = crate::ai_client::build_download_client();
+    let mut response = client
+        .get(url)
+        .send()
+        .await
+        .map_err(|e| format!("Failed to download punctuation model: {}", e))?;
+
+    if !response.status().is_success() {
+        return Err(format!(
+            "Failed to download punctuation model: HTTP {}",
+            response.status()
+        ));
+    }
+
     let temp_tar_path = punc_dir.join("temp_punc.tar.bz2");
-    std::fs::write(&temp_tar_path, &bytes).map_err(|e| format!("Failed to write temp punctuation archive: {}", e))?;
-    
+
+    // Clean up any stale temp file from a previous interrupted download
+    if temp_tar_path.exists() {
+        let _ = std::fs::remove_file(&temp_tar_path);
+    }
+
+    {
+        use tokio::io::AsyncWriteExt;
+        let mut file = tokio::fs::File::create(&temp_tar_path)
+            .await
+            .map_err(|e| format!("Failed to create punctuation temp file: {}", e))?;
+
+        while let Some(chunk) = tokio::time::timeout(
+            std::time::Duration::from_secs(30),
+            response.chunk(),
+        )
+        .await
+        .map_err(|_| "Punctuation download timed out".to_string())?
+        .map_err(|e| format!("Error reading punctuation chunk: {}", e))?
+        {
+            file.write_all(&chunk)
+                .await
+                .map_err(|e| format!("Failed to write punctuation chunk: {}", e))?;
+        }
+
+        file.flush()
+            .await
+            .map_err(|e| format!("Failed to flush punctuation archive: {}", e))?;
+    }
+
+    // Extract — and propagate errors so a failed untar is not silently ignored.
     #[cfg(target_os = "windows")]
     {
         use std::os::windows::process::CommandExt;
         let mut cmd = Command::new("tar");
         cmd.args(&[
             "-xf",
-            temp_tar_path.to_str().unwrap(),
+            temp_tar_path.to_str().unwrap_or_default(),
             "-C",
-            punc_dir.to_str().unwrap(),
+            punc_dir.to_str().unwrap_or_default(),
         ]);
         cmd.creation_flags(0x08000000); // CREATE_NO_WINDOW
-        let _ = cmd.output();
+        let out = cmd.output().map_err(|e| format!("tar failed to run: {}", e))?;
+        if !out.status.success() {
+            let _ = std::fs::remove_file(&temp_tar_path);
+            return Err(format!(
+                "tar extraction failed (code {:?}): {}",
+                out.status.code(),
+                String::from_utf8_lossy(&out.stderr)
+            ));
+        }
     }
     #[cfg(not(target_os = "windows"))]
     {
-        let _ = Command::new("tar")
+        let out = Command::new("tar")
             .args(&[
                 "-xf",
-                temp_tar_path.to_str().unwrap(),
+                temp_tar_path.to_str().unwrap_or_default(),
                 "-C",
-                punc_dir.to_str().unwrap(),
+                punc_dir.to_str().unwrap_or_default(),
             ])
-            .output();
+            .output()
+            .map_err(|e| format!("tar failed to run: {}", e))?;
+        if !out.status.success() {
+            let _ = std::fs::remove_file(&temp_tar_path);
+            return Err(format!(
+                "tar extraction failed (code {:?}): {}",
+                out.status.code(),
+                String::from_utf8_lossy(&out.stderr)
+            ));
+        }
     }
-    
+
     let _ = std::fs::remove_file(&temp_tar_path);
     
     let ext_dir = punc_dir.join("sherpa-onnx-punct-ct-transformer-zh-en-vocab272727-2024-04-12-int8");
@@ -1086,6 +1160,19 @@ pub async fn download_punctuation_model<R: Runtime>(app_handle: &tauri::AppHandl
 }
 
 pub fn run_punctuation<R: Runtime>(app_handle: &tauri::AppHandle<R>, text: &str) -> Result<String, String> {
+    // Windows CreateProcess limit is ~32 767 chars; long dictations would silently fail.
+    // At >4 000 chars the marginal value of offline punctuation is also low (LLM/cloud
+    // mode handles its own punctuation), so return the text as-is for safety.
+    const MAX_CLI_CHARS: usize = 4_000;
+    if text.chars().count() > MAX_CLI_CHARS {
+        eprintln!(
+            "Aura Dev Log: run_punctuation skipped — text too long ({} chars > {})",
+            text.chars().count(),
+            MAX_CLI_CHARS
+        );
+        return Ok(text.to_string());
+    }
+
     let app_local_data = app_handle
         .path()
         .app_local_data_dir()

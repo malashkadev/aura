@@ -634,23 +634,57 @@ async fn type_streaming_update(
 /// True when the cloud error looks like "the network/provider is unreachable from here"
 /// (VPN/region block, no network, proxy/TLS failure) rather than a config mistake like a
 /// bad API key or an exhausted quota — those need the user's attention, not a silent swap.
+///
+/// IMPORTANT: keep these patterns SPECIFIC. Overly broad matches (e.g. bare "connection"
+/// or "reqwest") can silently swallow account-level errors (quota, connection limits for
+/// tier, 403 IP-block) and hide them from the user. Each match below is either an exact
+/// phrase or a context-narrowed substring that cannot appear in auth/quota errors.
 fn is_cloud_unreachable(err: &str) -> bool {
     let e = err.to_lowercase();
-    e.contains("location is not supported")
+
+    // Explicit geographic / region-block signals
+    if e.contains("location is not supported")
         || e.contains("user location")
         || e.contains("failed_precondition")
-        || e.contains("403")
-        || e.contains("forbidden")
-        || e.contains("proxy")
-        || e.contains("certificate")
-        || e.contains("tls")
-        || e.contains("ssl")
-        || e.contains("network")
-        || e.contains("timeout")
+    {
+        return true;
+    }
+
+    // 403 Forbidden — only treated as network-level when it is from a VPN/proxy exit IP.
+    // Groq/OpenAI 403s on bad keys say "invalid api key", "unauthorized", etc. and are
+    // caught by the API-key branch above; a bare 403 here is a Cloudflare IP-block.
+    if e.contains("403") || e.contains("forbidden") {
+        // If the message also mentions key/auth, it's an account error, not unreachable.
+        if e.contains("api key") || e.contains("unauthorized") || e.contains("invalid") {
+            return false;
+        }
+        return true;
+    }
+
+    // TLS / proxy layer failures are always infrastructure issues
+    if e.contains("proxy") || e.contains("certificate") || e.contains("tls") || e.contains("ssl") {
+        return true;
+    }
+
+    // Network-level errors: require the error to come from the transport layer.
+    // "reqwest" alone can appear in quota/auth errors too, so we require it alongside
+    // a transport keyword. "connection refused" / "connection reset" are infrastructure;
+    // "connection limit" (Groq tier) is an account error — so match the full phrase.
+    if e.contains("no network")
+        || e.contains("network unreachable")
         || e.contains("timed out")
-        || e.contains("dns")
-        || e.contains("connection")
-        || e.contains("reqwest")
+        || e.contains("dns error")
+        || e.contains("name resolution")
+        || e.contains("connection refused")
+        || e.contains("connection reset")
+        || e.contains("os error 10060")   // Windows WSAETIMEDOUT
+        || e.contains("os error 10061")   // Windows WSAECONNREFUSED
+        || (e.contains("timeout") && !e.contains("rate limit"))
+    {
+        return true;
+    }
+
+    false
 }
 
 fn categorize_error(err: &str) -> String {
@@ -676,7 +710,11 @@ fn categorize_error(err: &str) -> String {
             clean_err
         };
         format!("No network: {}", truncated)
-    } else if err_lower.contains("ggml") || err_lower.contains("model file") || err_lower.contains("not found") {
+    } else if err_lower.contains("ggml") || err_lower.contains("model file")
+        // Restrict "not found" to local-file paths only; a bare "not found" substring also
+        // appears in HTTP 404 messages (e.g. "404 Not Found") and would be mis-classified.
+        || (err_lower.contains("not found") && (err_lower.contains(".bin") || err_lower.contains("path") || err_lower.contains("ggml")))
+    {
         "Local model not downloaded".to_string()
     } else if err_lower.contains("sherpa") || err_lower.contains("parakeet") {
         "Local Parakeet client failure".to_string()
@@ -807,36 +845,42 @@ async fn start_recording_session(app_handle: tauri::AppHandle) {
         *guard = Some(std::time::Instant::now());
     }
 
-    // Copy selected text in a background task. The clipboard is cleared first so
-    // stale clipboard contents are never mistaken for a selection (and never leak
-    // into API prompts).
-    let app_handle_copy = app_handle.clone();
-    tauri::async_runtime::spawn(async move {
-        // Sleep 50ms to let the OS keyboard state settle after the physical hotkey down
-        tokio::time::sleep(std::time::Duration::from_millis(50)).await;
+    // Copy selected text in a background task only when copy_context_on_start is enabled.
+    // Sending Ctrl+C in a terminal kills the foreground process, so users who dictate
+    // into terminals should turn this option off in settings.
+    let copy_context = settings::load_settings(&app_handle)
+        .map(|s| s.copy_context_on_start)
+        .unwrap_or(true);
 
-        let _guard = ClipboardGuard {
-            backup: backup_clipboard(),
-        };
+    if copy_context {
+        let app_handle_copy = app_handle.clone();
+        tauri::async_runtime::spawn(async move {
+            // Sleep 50ms to let the OS keyboard state settle after the physical hotkey down
+            tokio::time::sleep(std::time::Duration::from_millis(50)).await;
 
-        if let Ok(mut cb) = arboard::Clipboard::new() {
-            let _ = cb.clear();
-        }
-        keyboard_simulator::simulate_copy();
-        tokio::time::sleep(std::time::Duration::from_millis(200)).await;
+            let _guard = ClipboardGuard {
+                backup: backup_clipboard(),
+            };
 
-        let copied = arboard::Clipboard::new()
-            .ok()
-            .and_then(|mut cb| cb.get_text().ok())
-            .unwrap_or_default();
-
-        if let Some(state) = app_handle_copy.try_state::<AppState>() {
-            if let Ok(mut guard) = state.inner().selected_text.lock() {
-                *guard = copied.clone();
-                eprintln!("Aura Dev Log: Captured selected text ({} chars)", copied.chars().count());
+            if let Ok(mut cb) = arboard::Clipboard::new() {
+                let _ = cb.clear();
             }
-        }
-    });
+            keyboard_simulator::simulate_copy();
+            tokio::time::sleep(std::time::Duration::from_millis(200)).await;
+
+            let copied = arboard::Clipboard::new()
+                .ok()
+                .and_then(|mut cb| cb.get_text().ok())
+                .unwrap_or_default();
+
+            if let Some(state) = app_handle_copy.try_state::<AppState>() {
+                if let Ok(mut guard) = state.inner().selected_text.lock() {
+                    *guard = copied.clone();
+                    eprintln!("Aura Dev Log: Captured selected text ({} chars)", copied.chars().count());
+                }
+            }
+        });
+    }
 
     // Start recording to a session-unique temporary WAV path
     let temp_path = recording_wav_path(gen);
@@ -882,17 +926,18 @@ async fn start_recording_session(app_handle: tauri::AppHandle) {
 
     let _ = app_handle.emit("recording-state", "recording");
 
-    // Spawn background streaming loop if enabled in settings
-    let streaming_enabled = settings::load_settings(&app_handle)
-        .map(|s| s.streaming_enabled)
-        .unwrap_or(false);
+    // Load settings once for the rest of start_recording_session; avoids re-reading
+    // the settings file multiple times on the hot path (streaming, copy_context, etc.).
+    let session_settings = settings::load_settings(&app_handle).unwrap_or_default();
+    let streaming_enabled = session_settings.streaming_enabled;
     if streaming_enabled {
         let app_handle_loop = app_handle.clone();
         let my_gen = gen;
         tauri::async_runtime::spawn(async move {
             eprintln!("Aura Dev Log: Spawning background streaming loop task...");
-            // Wait to gather initial audio and stay under Groq rate limits
-            tokio::time::sleep(std::time::Duration::from_millis(4000)).await;
+            // 2 s initial wait: enough to capture a first meaningful phrase without
+            // burning API quota on a near-empty audio buffer. (Was 4 000 ms.)
+            tokio::time::sleep(std::time::Duration::from_millis(2000)).await;
 
             let chunk_path = chunk_wav_path(my_gen);
             let chunk_path_str = chunk_path.to_string_lossy().to_string();
@@ -1006,7 +1051,13 @@ async fn finalize_recording(app_handle: tauri::AppHandle) {
     let Some(state) = app_handle.try_state::<AppState>() else { return };
     let state = state.inner();
 
-    let active_layout_lang = state.selected_language.lock().unwrap().clone();
+    // Use lock().ok() instead of unwrap() to avoid panicking if a previous thread
+    // poisoned this mutex; an empty string means we fall back to auto-detect.
+    let active_layout_lang = state
+        .selected_language
+        .lock()
+        .map(|g| g.clone())
+        .unwrap_or_default();
     let my_gen = state.session_gen.load(Ordering::SeqCst);
     state.is_recording.store(false, Ordering::SeqCst);
     state.latched.store(false, Ordering::SeqCst);
@@ -1374,9 +1425,11 @@ pub fn run() {
                         if let Some(d) = press_duration {
                             eprintln!("Aura Dev Log: Press duration = {} ms", d.as_millis());
                             if d.as_millis() < 300 {
-                                let toggle_enabled = settings::load_settings(&app_handle)
-                                    .map(|s| s.toggle_enabled)
-                                    .unwrap_or(false);
+                                // Read toggle setting with a single file-read; it's cheap but
+                            // calling load_settings on every key-up adds ~1ms latency.
+                            let toggle_enabled = settings::load_settings(&app_handle)
+                                .map(|s| s.toggle_enabled)
+                                .unwrap_or(false);
                                 if toggle_enabled {
                                     // Short tap latches the recording until the next tap or Esc
                                     eprintln!("Aura Dev Log: Short tap — latching recording (toggle mode).");
