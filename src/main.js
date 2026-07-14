@@ -113,7 +113,10 @@ const i18nDict = {
     model_meta_parakeet: "~670 МБ — оптимизировано NVIDIA",
     fallback_title: "Автопереключение при недоступности облака",
     fallback_desc: "Если облачный ИИ недоступен (VPN, блокировка региона, нет сети), автоматически использовать уже скачанную локальную модель для этой записи.",
-    fallback_checkbox: "Включить автопереключение на локальную модель"
+    fallback_checkbox: "Включить автопереключение на локальную модель",
+    copy_context_title: "Захват выделенного текста",
+    copy_context_desc: "При старте записи Aura отправляет Ctrl+C, чтобы захватить выделенный текст как контекст для AI. Отключите, если работаете в терминале — там Ctrl+C прерывает процесс.",
+    copy_context_checkbox: "Захватывать выделение через Ctrl+C"
   },
   en: {
     title_settings: "Settings",
@@ -225,7 +228,10 @@ const i18nDict = {
     model_meta_parakeet: "~670 MB — optimized by NVIDIA",
     fallback_title: "Cloud Fallback",
     fallback_desc: "If cloud AI is unavailable (VPN, region block, no network), automatically use the already downloaded local model for this recording.",
-    fallback_checkbox: "Enable automatic fallback to local model"
+    fallback_checkbox: "Enable automatic fallback to local model",
+    copy_context_title: "Capture Selected Text",
+    copy_context_desc: "When recording starts, Aura sends Ctrl+C to capture selected text as AI context. Disable this if you dictate into terminals — Ctrl+C kills processes there.",
+    copy_context_checkbox: "Capture selection via Ctrl+C"
   },
   de: {
     title_settings: "Einstellungen",
@@ -337,7 +343,10 @@ const i18nDict = {
     update_available: "Update verfügbar",
     fallback_title: "Cloud-Fallback",
     fallback_desc: "Wenn die Cloud-KI nicht erreichbar ist (VPN, Regionssperre, kein Netzwerk), automatisch das bereits heruntergeladene lokale Modell für diese Aufnahme verwenden.",
-    fallback_checkbox: "Automatischen Fallback auf lokales Modell aktivieren"
+    fallback_checkbox: "Automatischen Fallback auf lokales Modell aktivieren",
+    copy_context_title: "Auswahl erfassen",
+    copy_context_desc: "Beim Starten der Aufnahme sendet Aura Strg+C, um ausgewählten Text als KI-Kontext zu erfassen. Deaktivieren, wenn Sie in Terminals diktieren — dort beendet Strg+C Prozesse.",
+    copy_context_checkbox: "Auswahl per Strg+C erfassen"
   },
   es: {
     title_settings: "Ajustes",
@@ -449,7 +458,10 @@ const i18nDict = {
     update_available: "Actualización disponible",
     fallback_title: "Alternativa en la nube",
     fallback_desc: "Si la IA en la nube no está disponible (VPN, bloqueo regional, sin red), usar automáticamente el modelo local ya descargado para esta grabación.",
-    fallback_checkbox: "Activar cambio automático al modelo local"
+    fallback_checkbox: "Activar cambio automático al modelo local",
+    copy_context_title: "Capturar texto seleccionado",
+    copy_context_desc: "Al iniciar la grabación, Aura envía Ctrl+C para capturar el texto seleccionado como contexto. Desactívalo si dictas en terminales — allí Ctrl+C interrumpe procesos.",
+    copy_context_checkbox: "Capturar selección con Ctrl+C"
   },
   fr: {
     title_settings: "Paramètres",
@@ -561,7 +573,10 @@ const i18nDict = {
     update_available: "Mise à jour disponible",
     fallback_title: "Basculement cloud",
     fallback_desc: "Si l'IA cloud est indisponible (VPN, blocage régional, pas de réseau), utiliser automatiquement le modèle local déjà téléchargé pour cet enregistrement.",
-    fallback_checkbox: "Activer le basculement automatique vers le modèle local"
+    fallback_checkbox: "Activer le basculement automatique vers le modèle local",
+    copy_context_title: "Capturer le texte sélectionné",
+    copy_context_desc: "Au démarrage de l'enregistrement, Aura envoie Ctrl+C pour capturer le texte sélectionné comme contexte IA. Désactiver si vous dictez dans un terminal — Ctrl+C y interrompt les processus.",
+    copy_context_checkbox: "Capturer la sélection via Ctrl+C"
   },
   it: {
     title_settings: "Impostazioni",
@@ -673,7 +688,10 @@ const i18nDict = {
     update_available: "Aggiornamento disponibile",
     fallback_title: "Fallback cloud",
     fallback_desc: "Se l'IA cloud non è disponibile (VPN, blocco regionale, nessuna rete), utilizza automaticamente il modello locale già scaricato per questa registrazione.",
-    fallback_checkbox: "Attiva il fallback automatico al modello locale"
+    fallback_checkbox: "Attiva il fallback automatico al modello locale",
+    copy_context_title: "Acquisire testo selezionato",
+    copy_context_desc: "All'avvio della registrazione, Aura invia Ctrl+C per acquisire il testo selezionato come contesto AI. Disattiva se detti in un terminale — lì Ctrl+C termina i processi.",
+    copy_context_checkbox: "Acquisisci selezione con Ctrl+C"
   },
   zh: {
     title_settings: "设置",
@@ -784,8 +802,11 @@ const i18nDict = {
     model_download_cancelled: "下载已取消",
     update_available: "有可用更新",
     fallback_title: "云端回退",
-    fallback_desc: "当云端 AI 不可用时（VPN、地区限制、无网络），自动使用已下载的本地模型进行本次录音识别。",
-    fallback_checkbox: "启用自动回退至本地模型"
+    fallback_desc: "当云端 AI 不可用时（VPN、地区限制、无网络），自动使用已下载的本��模型进行本次录音识别。",
+    fallback_checkbox: "启用自动回退至本地模型",
+    copy_context_title: "捕获选中文本",
+    copy_context_desc: "开始录音时，Aura 发送 Ctrl+C 以捕获选中文本作为 AI 上下文。如果在终端中听写请禁用此功能——终端中 Ctrl+C 会中断进程。",
+    copy_context_checkbox: "通过 Ctrl+C 捕获选中内容"
   },
   pt: {
     title_settings: "Configurações",
@@ -897,7 +918,10 @@ const i18nDict = {
     update_available: "Atualização disponível",
     fallback_title: "Fallback na nuvem",
     fallback_desc: "Se a IA na nuvem estiver indisponível (VPN, bloqueio regional, sem rede), usar automaticamente o modelo local já baixado para esta gravação.",
-    fallback_checkbox: "Ativar fallback automático para modelo local"
+    fallback_checkbox: "Ativar fallback automático para modelo local",
+    copy_context_title: "Capturar texto selecionado",
+    copy_context_desc: "Ao iniciar a gravação, Aura envia Ctrl+C para capturar o texto selecionado como contexto da IA. Desative se ditar em terminais — lá Ctrl+C interrompe processos.",
+    copy_context_checkbox: "Capturar seleção via Ctrl+C"
   },
   tr: {
     title_settings: "Ayarlar",
@@ -1009,7 +1033,10 @@ const i18nDict = {
     update_available: "Güncelleme mevcut",
     fallback_title: "Bulut Yedekleme",
     fallback_desc: "Bulut yapay zekası kullanılamıyorsa (VPN, bölge engeli, ağ yok), bu kayıt için önceden indirilmiş yerel modeli otomatik olarak kullan.",
-    fallback_checkbox: "Yerel modele otomatik geçişi etkinleştir"
+    fallback_checkbox: "Yerel modele otomatik geçişi etkinleştir",
+    copy_context_title: "Seçili metni yakala",
+    copy_context_desc: "Kayıt başladığında Aura, seçili metni AI bağlamı olarak yakalamak için Ctrl+C gönderir. Terminalde dikte ediyorsanız devre dışı bırakın — terminalde Ctrl+C işlemleri sonlandırır.",
+    copy_context_checkbox: "Ctrl+C ile seçimi yakala"
   }
 };
 
@@ -1134,6 +1161,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const btnSaveSettings = document.getElementById("btn-save-settings");
   
   const checkboxSounds = document.getElementById("checkbox-sounds");
+const checkboxCopyContext = document.getElementById("checkbox-copy-context");
   const selectSoundTheme = document.getElementById("select-sound-theme");
   const rangeVolume = document.getElementById("range-sound-volume");
   const volumeLabel = document.getElementById("volume-value-label");
@@ -1297,8 +1325,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const inputs = [
       radioCloud, radioLocal, selectProvider, apiKeyInput, selectHotkey,
       selectLanguage, textareaDictionary, checkboxToggle, checkboxPunctuation, checkboxCloudFallback,
-      checkboxAutostart, checkboxStreaming, checkboxSounds, selectSoundTheme,
-      rangeVolume, selectLocalEngine
+  checkboxAutostart, checkboxStreaming, checkboxSounds, selectSoundTheme,
+  rangeVolume, selectLocalEngine, checkboxCopyContext
     ];
     inputs.forEach(input => {
       if (input) {
@@ -1392,9 +1420,13 @@ document.addEventListener("DOMContentLoaded", () => {
           checkboxStreaming.checked = !!settings.streaming_enabled;
         }
  
-        if (checkboxSounds) {
-          checkboxSounds.checked = settings.overlay_sounds !== false;
-        }
+  if (checkboxSounds) {
+    checkboxSounds.checked = settings.overlay_sounds !== false;
+  }
+  if (checkboxCopyContext) {
+    // Default true: most users benefit from context capture
+    checkboxCopyContext.checked = settings.copy_context_on_start !== false;
+  }
         if (selectSoundTheme) {
           selectSoundTheme.value = settings.overlay_sound_theme || "zen";
         }
@@ -1505,10 +1537,11 @@ document.addEventListener("DOMContentLoaded", () => {
         cloud_fallback_enabled: checkboxCloudFallback ? checkboxCloudFallback.checked : true,
         autostart: checkboxAutostart ? checkboxAutostart.checked : false,
         local_engine: selectLocalEngine ? selectLocalEngine.value : "whisper",
-        overlay_sounds: checkboxSounds ? checkboxSounds.checked : true,
-        overlay_sound_theme: selectSoundTheme ? selectSoundTheme.value : "zen",
-        overlay_sound_volume: soundVolFloat
-      };
+    overlay_sounds: checkboxSounds ? checkboxSounds.checked : true,
+    overlay_sound_theme: selectSoundTheme ? selectSoundTheme.value : "zen",
+    overlay_sound_volume: soundVolFloat,
+    copy_context_on_start: checkboxCopyContext ? checkboxCopyContext.checked : true
+  };
 
       await invoke("set_settings", { settings });
       settingsModified = false;
