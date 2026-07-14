@@ -385,6 +385,12 @@ pub fn run_local_whisper<R: Runtime>(
         n_threads.to_string(),
         "-nt".to_string(),
         "-np".to_string(),
+        // Greedy decoding (beam_size=1): ~20-40% faster than default beam-search
+        // with negligible quality loss for real-time dictation use cases.
+        "--best-of".to_string(),
+        "1".to_string(),
+        "--beam-size".to_string(),
+        "-1".to_string(),
     ];
 
     let dict = dictionary.trim();
@@ -959,8 +965,17 @@ pub fn run_parakeet<R: Runtime>(
         }
     }
 
-    // Workaround for Sherpa ONNX Nemo Parakeet model outputting <unk> instead of 'ё'
-    transcript = transcript.replace("<unk>", "ё");
+    // Workaround for Sherpa ONNX Nemo Parakeet model outputting <unk> instead of 'ё'.
+    // Only replace with 'ё' when the transcript is in Cyrillic; otherwise just strip
+    // the tag, since <unk> in Latin/Chinese text signals a genuinely unknown token.
+    let has_cyrillic = transcript
+        .chars()
+        .any(|c| ('\u{0400}'..='\u{04FF}').contains(&c));
+    transcript = if has_cyrillic {
+        transcript.replace("<unk>", "ё")
+    } else {
+        transcript.replace("<unk>", "")
+    };
 
     Ok(transcript)
 }
@@ -1086,6 +1101,19 @@ pub async fn download_punctuation_model<R: Runtime>(app_handle: &tauri::AppHandl
 }
 
 pub fn run_punctuation<R: Runtime>(app_handle: &tauri::AppHandle<R>, text: &str) -> Result<String, String> {
+    // Windows CreateProcess limit is ~32 767 chars; long dictations would silently fail.
+    // At >4 000 chars the marginal value of offline punctuation is also low (LLM/cloud
+    // mode handles its own punctuation), so return the text as-is for safety.
+    const MAX_CLI_CHARS: usize = 4_000;
+    if text.chars().count() > MAX_CLI_CHARS {
+        eprintln!(
+            "Aura Dev Log: run_punctuation skipped — text too long ({} chars > {})",
+            text.chars().count(),
+            MAX_CLI_CHARS
+        );
+        return Ok(text.to_string());
+    }
+
     let app_local_data = app_handle
         .path()
         .app_local_data_dir()

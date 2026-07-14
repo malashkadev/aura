@@ -188,6 +188,64 @@ impl Default for AudioRecorder {
     }
 }
 
+/// Applies a windowed-sinc (Blackman) anti-aliasing low-pass filter before downsampling.
+/// Cutoff is set at the Nyquist of the target (output) sample rate so that aliasing artefacts
+/// on sibilants and high-frequency speech are removed before decimation.
+/// The filter has 64 taps which gives ~74 dB of stopband attenuation at ~-74 dBFS.
+fn antialiasing_lowpass(samples: &[f32], input_rate: u32, output_rate: u32) -> Vec<f32> {
+    // Nothing to do if we are not downsampling
+    if input_rate <= output_rate || samples.is_empty() {
+        return samples.to_vec();
+    }
+
+    use std::f64::consts::PI;
+
+    // Normalized cutoff frequency: 0.0 = DC, 1.0 = input Nyquist
+    let cutoff = output_rate as f64 / input_rate as f64;
+
+    // 64-tap FIR (even N so there is no center tap; keeps the filter causal)
+    const TAPS: usize = 64;
+    let half = TAPS / 2;
+    let mut h = [0.0f64; TAPS];
+
+    for i in 0..TAPS {
+        let n = i as f64 - half as f64;
+        // Ideal sinc kernel (ideal low-pass impulse response)
+        let sinc = if n.abs() < 1e-9 {
+            2.0 * cutoff
+        } else {
+            (2.0 * PI * cutoff * n).sin() / (PI * n)
+        };
+        // Blackman window: ~-74 dB first sidelobe
+        let w = 0.42
+            - 0.5 * (2.0 * PI * i as f64 / (TAPS - 1) as f64).cos()
+            + 0.08 * (4.0 * PI * i as f64 / (TAPS - 1) as f64).cos();
+        h[i] = sinc * w;
+    }
+
+    // Normalise to unity DC gain so the signal level is preserved
+    let sum: f64 = h.iter().sum();
+    if sum.abs() > 1e-12 {
+        for coef in h.iter_mut() {
+            *coef /= sum;
+        }
+    }
+
+    // Direct-form FIR convolution with zero-padding at boundaries
+    let mut out = Vec::with_capacity(samples.len());
+    for i in 0..samples.len() {
+        let mut acc = 0.0f64;
+        for (k, &coef) in h.iter().enumerate() {
+            let j = i as isize + k as isize - half as isize;
+            if j >= 0 && (j as usize) < samples.len() {
+                acc += coef * samples[j as usize] as f64;
+            }
+        }
+        out.push(acc as f32);
+    }
+    out
+}
+
 /// Downmixes raw samples to mono, resamples to 16kHz, converts to 16-bit PCM, and writes to a WAV file.
 pub fn process_and_write_wav(
     raw_samples: &[f32],
@@ -207,7 +265,16 @@ pub fn process_and_write_wav(
         mono.push(sum / channels as f32);
     }
 
-    // 2. Resample from input_sample_rate to 16000Hz using linear interpolation
+    // 2. Anti-aliasing: remove frequencies above the output Nyquist (8 kHz) before downsampling.
+    //    Without this filter, linear interpolation aliases high-frequency speech energy
+    //    (especially sibilants like "с", "ш", "ch") into the passband and degrades accuracy.
+    let mono = if input_sample_rate > 16000 {
+        antialiasing_lowpass(&mono, input_sample_rate, 16000)
+    } else {
+        mono
+    };
+
+    // 3. Resample from input_sample_rate to 16000Hz using linear interpolation
     let ratio = input_sample_rate as f64 / 16000.0;
     let output_len = (mono.len() as f64 / ratio).floor() as usize;
     let mut resampled = Vec::with_capacity(output_len);
@@ -225,7 +292,7 @@ pub fn process_and_write_wav(
         }
     }
 
-    // 3. Convert resampled f32 to i16 PCM, clamping to range
+    // 4. Convert resampled f32 to i16 PCM, clamping to range
     let mut i16_samples = Vec::with_capacity(resampled.len());
     for &sample in &resampled {
         let clamped = sample.clamp(-1.0, 1.0);
@@ -237,12 +304,12 @@ pub fn process_and_write_wav(
         i16_samples.push(s);
     }
 
-    // 4. Ensure the parent directory exists
+    // 5. Ensure the parent directory exists
     if let Some(parent) = Path::new(output_path).parent() {
         std::fs::create_dir_all(parent).map_err(|e| format!("Failed to create directories for output path: {}", e))?;
     }
 
-    // 5. Write to WAV file using hound
+    // 6. Write to WAV file using hound
     let spec = hound::WavSpec {
         channels: 1,
         sample_rate: 16000,
