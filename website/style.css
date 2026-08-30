@@ -3714,7 +3714,7 @@ body.modal-open {
 .download-modal-mirror-row {
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 8px;
   margin-top: 0.85rem;
   padding-top: 0.75rem;

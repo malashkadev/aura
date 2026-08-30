@@ -66,11 +66,7 @@ Aura combines the speed and privacy of local neural networks with the flexibilit
 
 Download the installer from [GitHub Releases](https://github.com/malashkadev/aura/releases) or via [SourceForge Mirror](https://sourceforge.net/projects/aura-voice-typing/files/latest/download) and run it. You can explore the interactive settings mockup and live demo on our [Official Website](https://aura-beryl-five.vercel.app/).
 
-<p align="center">
-  <a href="https://sourceforge.net/projects/aura-voice-typing/files/latest/download">
-    <img alt="Download Aura on SourceForge" src="https://a.fsdn.com/con/app/sf-download-button" width="276" height="48" />
-  </a>
-</p>
+[![Download Aura on SourceForge](https://a.fsdn.com/con/app/sf-download-button)](https://sourceforge.net/projects/aura-voice-typing/files/latest/download)
 
 For local mode, download a model from the "Speech" tab in Settings (the `Base` model is a great starting point for fast CPU inference). For cloud mode, provide an API key for your chosen provider (Groq and Google Gemini offer free tiers).
 

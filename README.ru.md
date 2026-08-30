@@ -66,11 +66,7 @@ Aura сочетает автономную скорость локальных �
 
 Скачайте установщик из [GitHub Releases](https://github.com/malashkadev/aura/releases) или через зеркало [SourceForge](https://sourceforge.net/projects/aura-voice-typing/files/latest/download) и запустите. Ознакомиться с интерактивным макетом настроек и посмотреть демонстрацию работы можно на [Официальном сайте](https://aura-beryl-five.vercel.app/).
 
-<p align="center">
-  <a href="https://sourceforge.net/projects/aura-voice-typing/files/latest/download">
-    <img alt="Скачать Aura на SourceForge" src="https://a.fsdn.com/con/app/sf-download-button" width="276" height="48" />
-  </a>
-</p>
+[![Скачать Aura на SourceForge](https://a.fsdn.com/con/app/sf-download-button)](https://sourceforge.net/projects/aura-voice-typing/files/latest/download)
 
 Для локального режима скачайте подходящую модель прямо из вкладки «Голос» в настройках программы (модель `Base` — отличный старт для быстрого CPU-распознавания). Для облачного режима укажите API-ключ выбранного сервиса (у Groq и Google Gemini доступны бесплатные лимиты).
 
