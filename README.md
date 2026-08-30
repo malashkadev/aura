@@ -2,23 +2,29 @@
   <img src="docs/logo.svg?v=5" width="120" height="120" alt="Aura Logo" />
 </p>
 
-<h1 align="center"><a href="https://aura-beryl-five.vercel.app/" style="text-decoration: none; color: inherit;">Aura — Voice Typing for Windows</a></h1>
+<h1 align="center">Aura — Voice Typing for Windows</h1>
+
 <p align="center">
-  <a href="https://aura-beryl-five.vercel.app/"><b>🌐 Official Website: aura-beryl-five.vercel.app</b></a>
+  <b>Instant offline & cloud voice-to-text dictation directly under your cursor.</b><br />
+  <a href="https://aura-beryl-five.vercel.app/">🌐 Official Website & Live Demo</a>
 </p>
 
 <p align="center">
   <a href="https://github.com/malashkadev/aura/actions/workflows/ci.yml"><img src="https://github.com/malashkadev/aura/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
+  <a href="https://github.com/malashkadev/aura/releases"><img src="https://img.shields.io/github/v/release/malashkadev/aura?color=10b981&label=release" alt="Release" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-AGPL_v3-blue.svg" alt="License: AGPL v3" /></a>
   <img src="https://img.shields.io/badge/platform-Windows%2010%2F11-blue" alt="Platform" />
-  <a href="https://aura-beryl-five.vercel.app/"><img src="https://img.shields.io/badge/website-live-brightgreen.svg" alt="Website" /></a>
+</p>
+
+<p align="center">
+  <a href="https://github.com/malashkadev/aura/releases/latest"><b>📥 Download for Windows (.msi)</b></a> •
+  <a href="https://aura-beryl-five.vercel.app/"><b>🌐 Web Demo</b></a> •
+  <a href="README.ru.md"><b>🇷🇺 Документация на русском</b></a>
 </p>
 
 Press and hold the hotkey, speak, and release — Aura instantly transcribes your speech and types the text right under your cursor in **any** Windows application. Works completely offline and privately using local AI models (Whisper, NVIDIA Parakeet with CUDA GPU acceleration) or via cloud providers (Gemini, Groq, OpenAI, Hugging Face, Custom API).
 
 **100% Free & Open Source (AGPL-3.0)** — no subscriptions, paywalls, telemetry, or advertisements.
-
-> 🇷🇺 [Документация на русском](README.ru.md)
 
 <p align="center">
   <img src="docs/Aura.gif" width="49%" alt="Aura Dictation Demo" />

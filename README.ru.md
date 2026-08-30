@@ -2,23 +2,29 @@
   <img src="docs/logo.svg?v=5" width="120" height="120" alt="Aura Logo" />
 </p>
 
-<h1 align="center"><a href="https://aura-beryl-five.vercel.app/" style="text-decoration: none; color: inherit;">Aura — голосовой ввод для Windows</a></h1>
+<h1 align="center">Aura — голосовой ввод для Windows</h1>
+
 <p align="center">
-  <a href="https://aura-beryl-five.vercel.app/"><b>🌐 Официальный сайт: aura-beryl-five.vercel.app</b></a>
+  <b>Мгновенная офлайн и облачная голосовая печать прямо под курсором.</b><br />
+  <a href="https://aura-beryl-five.vercel.app/">🌐 Официальный сайт и веб-демо</a>
 </p>
 
 <p align="center">
   <a href="https://github.com/malashkadev/aura/actions/workflows/ci.yml"><img src="https://github.com/malashkadev/aura/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
+  <a href="https://github.com/malashkadev/aura/releases"><img src="https://img.shields.io/github/v/release/malashkadev/aura?color=10b981&label=релиз" alt="Релиз" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-AGPL_v3-blue.svg" alt="Лицензия: AGPL v3" /></a>
   <img src="https://img.shields.io/badge/platform-Windows%2010%2F11-blue" alt="Платформа" />
-  <a href="https://aura-beryl-five.vercel.app/"><img src="https://img.shields.io/badge/website-live-brightgreen.svg" alt="Сайт проекта" /></a>
+</p>
+
+<p align="center">
+  <a href="https://github.com/malashkadev/aura/releases/latest"><b>📥 Скачать для Windows (.msi)</b></a> •
+  <a href="https://aura-beryl-five.vercel.app/"><b>🌐 Веб-демо</b></a> •
+  <a href="README.md"><b>🇬🇧 English Documentation</b></a>
 </p>
 
 Зажмите горячую клавишу, надиктуйте текст и отпустите — Aura мгновенно расшифрует речь и напечатает готовый текст прямо под курсором в **любом** приложении Windows. Работает автономно и приватно на локальных нейросетях (Whisper, NVIDIA Parakeet с аппаратным ускорением на GPU CUDA) или через облачные сервисы (Gemini, Groq, OpenAI, Hugging Face, Custom API).
 
 **100% бесплатно и с открытым исходным кодом (AGPL-3.0)** — без подписок, скрытых ограничений, встроенной рекламы и телеметрии.
-
-> 🇬🇧 [English documentation](README.md)
 
 <p align="center">
   <img src="docs/Aura.gif" width="49%" alt="Демонстрация работы Aura" />
