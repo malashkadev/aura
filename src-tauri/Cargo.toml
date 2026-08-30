@@ -1,6 +1,6 @@
 [package]
 name = "aura-app"
-version = "1.0.9"
+version = "1.0.10"
 description = "Aura — fast, private voice typing for Windows: hold a hotkey, speak, and type directly under the cursor (Local Whisper & Parakeet CUDA / Cloud AI)"
 authors = ["Aura contributors"]
 license = "AGPL-3.0-only"

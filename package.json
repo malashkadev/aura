@@ -1,7 +1,7 @@
 {
   "name": "aura-voice",
   "private": true,
-  "version": "1.0.9",
+  "version": "1.0.10",
   "description": "Aura — fast, private voice typing for Windows (Whisper & Parakeet CUDA / Cloud AI)",
   "license": "AGPL-3.0-only",
   "type": "module",

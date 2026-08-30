@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "version": "1.0.10",
+  "published": false,
+  "authenticodeSigned": false,
+  "artifacts": [
+    {
+      "kind": "nsis",
+      "file": "Aura_1.0.10_x64-setup.exe",
+      "bytes": 23380063,
+      "sha256": "C194B2804F196F69B0D489195A04F1DF4A111A56AA55AF583CD33EA7A24A2EDC"
+    }
+  ]
+}
