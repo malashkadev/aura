@@ -129,12 +129,19 @@ mod windows_impl {
         WM_SYSKEYDOWN, WM_SYSKEYUP,
     };
 
-    /// The configured hotkey packed into one word: (modifier_vk << 16) | key_vk.
+    const MOD_CTRL: u32 = 1 << 0;
+    const MOD_ALT: u32 = 1 << 1;
+    const MOD_SHIFT: u32 = 1 << 2;
+    const MOD_WIN: u32 = 1 << 3;
+
+    /// The configured hotkey packed into one word: (modifier_mask << 16) | key_vk.
+    /// A zero key means the hotkey consists only of one or more modifiers.
     /// A single store/load means the hook thread can never observe a torn
     /// pair while settings are being saved (C14).
-    static HOTKEY_PAIR: AtomicU32 = AtomicU32::new((18 << 16) | 0x56); // Alt+V
+    static HOTKEY_PAIR: AtomicU32 = AtomicU32::new((MOD_ALT << 16) | 0x56); // Alt+V
+    static SUPPRESSED_MODIFIERS: AtomicU32 = AtomicU32::new(0);
 
-    /// Packed (modifier_vk << 16) | key_vk waiting to be applied once an
+    /// Packed (modifier_mask << 16) | key_vk waiting to be applied once an
     /// in-flight recording releases; u32::MAX means "nothing pending".
     static PENDING_HOTKEY: AtomicU32 = AtomicU32::new(u32::MAX);
 
@@ -167,7 +174,7 @@ mod windows_impl {
         }
     }
 
-    fn send_disarmed_alt_up(kbd: &KBDLLHOOKSTRUCT) {
+    fn send_disarmed_modifier_up(kbd: &KBDLLHOOKSTRUCT) {
         let ext = if (kbd.flags & 0x01) != 0 {
             KEYEVENTF_EXTENDEDKEY
         } else {
@@ -191,13 +198,41 @@ mod windows_impl {
         }
     }
 
-    fn is_modifier_key(vk_code: u32, target_modifier_vk: u32) -> bool {
-        match target_modifier_vk {
-            18 => vk_code == 18 || vk_code == 164 || vk_code == 165, // Alt / LAlt / RAlt
-            17 => vk_code == 17 || vk_code == 162 || vk_code == 163, // Ctrl / LCtrl / RCtrl
-            16 => vk_code == 16 || vk_code == 160 || vk_code == 161, // Shift / LShift / RShift
+    fn modifier_bit(vk_code: u32) -> Option<u32> {
+        match vk_code {
+            17 | 162 | 163 => Some(MOD_CTRL),  // Ctrl / LCtrl / RCtrl
+            18 | 164 | 165 => Some(MOD_ALT),   // Alt / LAlt / RAlt
+            16 | 160 | 161 => Some(MOD_SHIFT), // Shift / LShift / RShift
+            91 | 92 => Some(MOD_WIN),          // LWin / RWin
+            _ => None,
+        }
+    }
+
+    fn modifier_is_down(modifier: u32) -> bool {
+        let key_is_down = |vk: i32| {
+            let state = unsafe { GetAsyncKeyState(vk) };
+            (state as u16 & 0x8000) != 0
+        };
+        match modifier {
+            MOD_CTRL => key_is_down(17),
+            MOD_ALT => key_is_down(18),
+            MOD_SHIFT => key_is_down(16),
+            MOD_WIN => key_is_down(91) || key_is_down(92),
             _ => false,
         }
+    }
+
+    fn modifiers_satisfied(mask: u32, event_vk: u32, event_is_down: bool) -> bool {
+        [MOD_CTRL, MOD_ALT, MOD_SHIFT, MOD_WIN]
+            .into_iter()
+            .filter(|modifier| mask & modifier != 0)
+            .all(|modifier| {
+                if modifier_bit(event_vk) == Some(modifier) {
+                    event_is_down
+                } else {
+                    modifier_is_down(modifier)
+                }
+            })
     }
 
     fn is_any_modifier_key(vk_code: u32) -> bool {
@@ -208,26 +243,35 @@ mod windows_impl {
     }
 
     fn parse_hotkey(hotkey_str: &str) -> Option<(u32, u32)> {
-        let mut modifier = None;
+        let mut modifier_mask = 0;
         let mut key = None;
 
         for part in hotkey_str.split('+') {
             let clean = part.trim().to_lowercase();
             match clean.as_str() {
                 "alt" => {
-                    if modifier.replace(18).is_some() {
+                    if modifier_mask & MOD_ALT != 0 {
                         return None;
                     }
+                    modifier_mask |= MOD_ALT;
                 }
                 "ctrl" | "control" => {
-                    if modifier.replace(17).is_some() {
+                    if modifier_mask & MOD_CTRL != 0 {
                         return None;
                     }
+                    modifier_mask |= MOD_CTRL;
                 }
                 "shift" => {
-                    if modifier.replace(16).is_some() {
+                    if modifier_mask & MOD_SHIFT != 0 {
                         return None;
                     }
+                    modifier_mask |= MOD_SHIFT;
+                }
+                "win" | "windows" | "super" | "meta" => {
+                    if modifier_mask & MOD_WIN != 0 {
+                        return None;
+                    }
+                    modifier_mask |= MOD_WIN;
                 }
                 other => {
                     let parsed = if let [byte] = other.as_bytes() {
@@ -260,7 +304,11 @@ mod windows_impl {
             }
         }
 
-        key.map(|key| (modifier.unwrap_or(0), key))
+        if key.is_none() && modifier_mask.count_ones() < 2 {
+            None
+        } else {
+            Some((modifier_mask, key.unwrap_or(0)))
+        }
     }
 
     pub fn validate_hotkey(hotkey_str: &str) -> Result<(), String> {
@@ -270,9 +318,9 @@ mod windows_impl {
     }
 
     pub fn update_hotkey(hotkey_str: &str) -> Result<(), String> {
-        let (modifier, key) =
+        let (modifier_mask, key) =
             parse_hotkey(hotkey_str).ok_or_else(|| format!("Unsupported hotkey: {hotkey_str}"))?;
-        let packed = (modifier << 16) | key;
+        let packed = (modifier_mask << 16) | key;
 
         if SHORTCUT_ACTIVE.load(Ordering::SeqCst) {
             // A live session still holds the old key: resetting SHORTCUT_ACTIVE
@@ -291,6 +339,8 @@ mod windows_impl {
 
         HOTKEY_PAIR.store(packed, Ordering::SeqCst);
         PENDING_HOTKEY.store(u32::MAX, Ordering::SeqCst);
+        SUPPRESSED_MODIFIERS.store(0, Ordering::SeqCst);
+        SHORTCUT_ACTIVE.store(false, Ordering::SeqCst);
         KEY_SUPPRESSED.store(false, Ordering::SeqCst);
         Ok(())
     }
@@ -301,6 +351,7 @@ mod windows_impl {
         let packed = PENDING_HOTKEY.swap(u32::MAX, Ordering::SeqCst);
         if packed != u32::MAX {
             HOTKEY_PAIR.store(packed, Ordering::SeqCst);
+            SUPPRESSED_MODIFIERS.store(0, Ordering::SeqCst);
             KEY_SUPPRESSED.store(false, Ordering::SeqCst);
             crate::logger::log(
                 "INFO",
@@ -415,46 +466,91 @@ mod windows_impl {
             }
 
             let packed_hotkey = HOTKEY_PAIR.load(Ordering::SeqCst);
-            let modifier_vk = packed_hotkey >> 16;
+            let modifier_mask = packed_hotkey >> 16;
             let key_vk = packed_hotkey & 0xFFFF;
 
-            let is_modifier = is_modifier_key(vk_code, modifier_vk);
-            let is_target_key = vk_code == key_vk;
+            let event_modifier = modifier_bit(vk_code);
+            let is_required_modifier = event_modifier
+                .map(|modifier| modifier_mask & modifier != 0)
+                .unwrap_or(false);
+            let is_target_key = key_vk != 0 && vk_code == key_vk;
 
-            if modifier_vk != 0 && is_modifier {
+            if key_vk == 0 && is_required_modifier {
+                let event_modifier = event_modifier.expect("required modifiers have a bit");
+                if is_down {
+                    let already_active = SHORTCUT_ACTIVE.load(Ordering::SeqCst);
+                    if !already_active && modifiers_satisfied(modifier_mask, vk_code, true) {
+                        SUPPRESSED_MODIFIERS.fetch_or(event_modifier, Ordering::SeqCst);
+                        SHORTCUT_ACTIVE.store(true, Ordering::SeqCst);
+                        notify_hotkey(true);
+                    }
+                    if SUPPRESSED_MODIFIERS.load(Ordering::SeqCst) & event_modifier != 0 {
+                        return 1;
+                    }
+                } else if is_up {
+                    let suppressed_modifiers = SUPPRESSED_MODIFIERS.load(Ordering::SeqCst);
+                    let was_suppressed = SUPPRESSED_MODIFIERS
+                        .fetch_and(!event_modifier, Ordering::SeqCst)
+                        & event_modifier
+                        != 0;
+                    let was_active = SHORTCUT_ACTIVE.swap(false, Ordering::SeqCst);
+                    let mut suppress_event = was_suppressed;
+                    if was_active {
+                        // Prevent a visible Alt or Win prefix from becoming a
+                        // standalone OS action when its partner was suppressed.
+                        let ctrl_was_visible =
+                            modifier_mask & MOD_CTRL != 0 && suppressed_modifiers & MOD_CTRL == 0;
+                        let visible_os_modifiers =
+                            modifier_mask & (MOD_ALT | MOD_WIN) & !suppressed_modifiers;
+                        if !ctrl_was_visible && visible_os_modifiers != 0 {
+                            if visible_os_modifiers & event_modifier != 0 {
+                                send_disarmed_modifier_up(&kbd_struct);
+                                suppress_event = true;
+                            } else {
+                                send_dummy_ctrl_tap();
+                            }
+                        }
+                        notify_hotkey(false);
+                        apply_pending_hotkey();
+                    }
+                    if suppress_event {
+                        return 1;
+                    }
+                }
+            } else if is_required_modifier {
                 // Releasing the *modifier* while the target key is still
                 // physically held must not finalize the session: the release
                 // order "Alt up, V still down" is a natural way to end a
                 // press, and treating it as the session end would cut the
                 // dictation short and let V-repeat leak through as stray
                 // keystrokes. Defer the release until the target key's own
-                // key-up clears the shortcut state; disarming the Alt menu
-                // still needs to happen now while Alt is truly released.
+                // key-up clears the shortcut state; disarming an Alt/Win OS
+                // action still needs to happen while that modifier is released.
                 if is_up {
                     let target_still_held = {
                         let state = GetAsyncKeyState(key_vk as i32);
                         (state as u16 & 0x8000) != 0
                     };
                     if target_still_held {
-                        if modifier_vk == 18 {
-                            send_disarmed_alt_up(&kbd_struct);
+                        if matches!(event_modifier, Some(MOD_ALT) | Some(MOD_WIN))
+                            && modifier_mask & MOD_CTRL == 0
+                        {
+                            send_disarmed_modifier_up(&kbd_struct);
+                            return 1; // Suppress the physical modifier up we replaced
                         }
-                        return 1; // Suppress; finalize happens on target key-up
-                    }
-                    if SHORTCUT_ACTIVE.swap(false, Ordering::SeqCst) {
+                    } else if SHORTCUT_ACTIVE.swap(false, Ordering::SeqCst) {
                         notify_hotkey(false);
                         apply_pending_hotkey();
-                        if modifier_vk == 18 {
-                            send_disarmed_alt_up(&kbd_struct);
+                        if matches!(event_modifier, Some(MOD_ALT) | Some(MOD_WIN))
+                            && modifier_mask & MOD_CTRL == 0
+                        {
+                            send_disarmed_modifier_up(&kbd_struct);
+                            return 1;
                         }
-                        return 1;
                     }
                 }
             } else if is_target_key {
-                let modifier_satisfied = modifier_vk == 0 || {
-                    let state = GetAsyncKeyState(modifier_vk as i32);
-                    (state as u16 & 0x8000) != 0
-                };
+                let modifier_satisfied = modifiers_satisfied(modifier_mask, vk_code, is_down);
 
                 if is_down {
                     if modifier_satisfied || SHORTCUT_ACTIVE.load(Ordering::SeqCst) {
@@ -472,7 +568,10 @@ mod windows_impl {
                     if was_active {
                         notify_hotkey(false);
                         apply_pending_hotkey();
-                        if modifier_vk == 18 && modifier_satisfied {
+                        if modifier_mask & (MOD_ALT | MOD_WIN) != 0
+                            && modifier_mask & MOD_CTRL == 0
+                            && modifier_satisfied
+                        {
                             send_dummy_ctrl_tap();
                         }
                     }
@@ -495,25 +594,34 @@ mod windows_impl {
 
     #[cfg(test)]
     mod tests {
-        use super::{is_any_modifier_key, parse_hotkey};
+        use super::{is_any_modifier_key, parse_hotkey, MOD_ALT, MOD_CTRL, MOD_SHIFT, MOD_WIN};
 
         #[test]
         fn test_parse_hotkey_combinations() {
-            assert_eq!(parse_hotkey("Alt+V"), Some((18, 0x56)));
-            assert_eq!(parse_hotkey("Ctrl+Space"), Some((17, 0x20)));
+            assert_eq!(parse_hotkey("Alt+V"), Some((MOD_ALT, 0x56)));
+            assert_eq!(parse_hotkey("Ctrl+Space"), Some((MOD_CTRL, 0x20)));
             assert_eq!(parse_hotkey("F8"), Some((0, 0x77)));
             assert_eq!(parse_hotkey("F12"), Some((0, 0x7B)));
             assert_eq!(parse_hotkey("Caps Lock"), Some((0, 0x14)));
-            assert_eq!(parse_hotkey("Shift+Tab"), Some((16, 0x09)));
+            assert_eq!(parse_hotkey("Shift+Tab"), Some((MOD_SHIFT, 0x09)));
+            assert_eq!(parse_hotkey("Win+V"), Some((MOD_WIN, 0x56)));
+            assert_eq!(parse_hotkey("Ctrl+Win"), Some((MOD_CTRL | MOD_WIN, 0)));
+            assert_eq!(parse_hotkey("Alt+Super"), Some((MOD_ALT | MOD_WIN, 0)));
+            assert_eq!(
+                parse_hotkey("Ctrl+Alt+Shift+Meta+V"),
+                Some((MOD_CTRL | MOD_ALT | MOD_SHIFT | MOD_WIN, 0x56))
+            );
         }
 
         #[test]
         fn test_parse_hotkey_invalid() {
             assert_eq!(parse_hotkey(""), None);
             assert_eq!(parse_hotkey("Alt"), None);
+            assert_eq!(parse_hotkey("Win"), None);
             assert_eq!(parse_hotkey("Alt+Unknown"), None);
             assert_eq!(parse_hotkey("Alt+V+Unknown"), None);
-            assert_eq!(parse_hotkey("Ctrl+Shift+V"), None);
+            assert_eq!(parse_hotkey("Ctrl+Control"), None);
+            assert_eq!(parse_hotkey("Win+Super"), None);
         }
 
         #[test]
@@ -600,12 +708,12 @@ mod macos_impl {
 
     struct HotkeyConfig {
         modifier_mask: u64,
-        key_code: u32,
+        key_code: Option<u32>,
     }
 
     static HOTKEY_CONFIG: Mutex<HotkeyConfig> = Mutex::new(HotkeyConfig {
         modifier_mask: kCGEventFlagMaskAlternate, // Option (Alt)
-        key_code: 9,                              // V key
+        key_code: Some(9),                        // V key
     });
 
     /// A hotkey change deferred because a recording was mid-flight when
@@ -614,7 +722,7 @@ mod macos_impl {
 
     const VK_ESCAPE: u32 = 53;
 
-    fn parse_hotkey(hotkey_str: &str) -> Option<(u64, u32)> {
+    fn parse_hotkey(hotkey_str: &str) -> Option<(u64, Option<u32>)> {
         let mut modifier_mask = 0;
         let mut key = None;
 
@@ -624,7 +732,9 @@ mod macos_impl {
                 "alt" | "option" => modifier_mask |= kCGEventFlagMaskAlternate,
                 "ctrl" | "control" => modifier_mask |= kCGEventFlagMaskControl,
                 "shift" => modifier_mask |= kCGEventFlagMaskShift,
-                "cmd" | "command" | "win" => modifier_mask |= kCGEventFlagMaskCommand,
+                "cmd" | "command" | "win" | "windows" | "super" | "meta" => {
+                    modifier_mask |= kCGEventFlagMaskCommand
+                }
                 other => {
                     let parsed = if let [byte] = other.as_bytes() {
                         match byte.to_ascii_uppercase() {
@@ -683,7 +793,11 @@ mod macos_impl {
             }
         }
 
-        key.map(|key| (modifier_mask, key))
+        if key.is_none() && modifier_mask.count_ones() < 2 {
+            None
+        } else {
+            Some((modifier_mask, key))
+        }
     }
 
     pub fn validate_hotkey(hotkey_str: &str) -> Result<(), String> {
@@ -920,7 +1034,7 @@ mod macos_impl {
 
         let modifier_satisfied = modifier_mask == 0 || (flags & modifier_mask) == modifier_mask;
 
-        if keycode == target_keycode {
+        if target_keycode == Some(keycode) {
             if type_ == kCGEventKeyDown {
                 if modifier_satisfied || SHORTCUT_ACTIVE.load(Ordering::SeqCst) {
                     KEY_SUPPRESSED.store(true, Ordering::SeqCst);
@@ -943,8 +1057,11 @@ mod macos_impl {
                 }
             }
         } else if type_ == kCGEventFlagsChanged && modifier_mask != 0 {
-            // If the modifier mask is active and was released logical-wise
-            if !modifier_satisfied && SHORTCUT_ACTIVE.swap(false, Ordering::SeqCst) {
+            if target_keycode.is_none() && modifier_satisfied {
+                if !SHORTCUT_ACTIVE.swap(true, Ordering::SeqCst) {
+                    notify_hotkey(true);
+                }
+            } else if !modifier_satisfied && SHORTCUT_ACTIVE.swap(false, Ordering::SeqCst) {
                 notify_hotkey(false);
                 apply_pending_hotkey();
             }

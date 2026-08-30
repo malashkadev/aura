@@ -186,6 +186,17 @@ test("settings UI exposes native accessible controls and responsive motion-safe 
   assert.equal(existsSync(new URL("../src/ui-accessibility.js", import.meta.url)), true);
 });
 
+test("hotkey recorder supports Windows and modifier-only combinations", () => {
+  const main = read("src/main.js");
+
+  assert.match(main, /"MetaLeft": "Win"/);
+  assert.match(main, /"OSRight": "Win"/);
+  assert.match(main, /if \(e\.metaKey\) recordedHotkeyModifiers\.add\("Win"\)/);
+  assert.match(main, /selectHotkey\.addEventListener\("keyup"/);
+  assert.match(main, /recordedHotkeyModifiers\.size >= 2/);
+  assert.match(main, /orderedHotkeyModifiers\(\)\.join\("\+"\)/);
+});
+
 test("package scripts provide reproducible lint, type, test and build gates", () => {
   const pkg = json("package.json");
   const lock = json("package-lock.json");

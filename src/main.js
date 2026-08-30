@@ -2047,17 +2047,37 @@ const btnSaveSettings = document.getElementById("btn-save-settings");
   const btnResetHotkey = document.getElementById("btn-reset-hotkey");
   let isRecordingHotkey = false;
   let hasRecordedThisSession = false;
+  const recordedHotkeyModifiers = new Set();
+  const hotkeyModifierOrder = ["Ctrl", "Alt", "Shift", "Win"];
+
+  const hotkeyModifierName = (event) => {
+    const modifierCodes = {
+      "ControlLeft": "Ctrl", "ControlRight": "Ctrl",
+      "AltLeft": "Alt", "AltRight": "Alt",
+      "ShiftLeft": "Shift", "ShiftRight": "Shift",
+      "MetaLeft": "Win", "MetaRight": "Win",
+      "OSLeft": "Win", "OSRight": "Win"
+    };
+    return modifierCodes[event.code] || {
+      "Control": "Ctrl", "Alt": "Alt", "Shift": "Shift", "Meta": "Win", "OS": "Win"
+    }[event.key] || null;
+  };
+
+  const orderedHotkeyModifiers = () =>
+    hotkeyModifierOrder.filter(modifier => recordedHotkeyModifiers.has(modifier));
 
   if (selectHotkey) {
     selectHotkey.addEventListener("focus", () => {
       isRecordingHotkey = true;
       hasRecordedThisSession = false;
+      recordedHotkeyModifiers.clear();
       selectHotkey.value = getTranslation("hotkey_prompt") || "Press keys...";
       selectHotkey.classList.add("recording");
     });
 
     selectHotkey.addEventListener("blur", () => {
       isRecordingHotkey = false;
+      recordedHotkeyModifiers.clear();
       selectHotkey.classList.remove("recording");
       // Restore current settings value on blur ONLY if user didn't record a new combination
       if (!hasRecordedThisSession) {
@@ -2079,18 +2099,17 @@ const btnSaveSettings = document.getElementById("btn-save-settings");
       const key = e.key;
       const code = e.code;
 
-      // Ignore modifiers themselves
-      if (key === "Control" || key === "Alt" || key === "Shift" || key === "Meta" ||
-          code === "ControlLeft" || code === "ControlRight" ||
-          code === "AltLeft" || code === "AltRight" ||
-          code === "ShiftLeft" || code === "ShiftRight") {
+      const modifierName = hotkeyModifierName(e);
+      if (modifierName) {
+        recordedHotkeyModifiers.add(modifierName);
+        selectHotkey.value = orderedHotkeyModifiers().join("+");
         return;
       }
 
-      let modifier = "";
-      if (e.ctrlKey) modifier = "Ctrl";
-      else if (e.altKey) modifier = "Alt";
-      else if (e.shiftKey) modifier = "Shift";
+      if (e.ctrlKey) recordedHotkeyModifiers.add("Ctrl");
+      if (e.altKey) recordedHotkeyModifiers.add("Alt");
+      if (e.shiftKey) recordedHotkeyModifiers.add("Shift");
+      if (e.metaKey) recordedHotkeyModifiers.add("Win");
 
       let keyName = "";
       if (code.startsWith("Key")) {
@@ -2121,7 +2140,7 @@ const btnSaveSettings = document.getElementById("btn-save-settings");
         }
       }
 
-      const hotkeyStr = modifier ? `${modifier}+${keyName}` : keyName;
+      const hotkeyStr = [...orderedHotkeyModifiers(), keyName].join("+");
       hasRecordedThisSession = true; // Mark as successfully recorded
       selectHotkey.value = hotkeyStr;
       isRecordingHotkey = false;
@@ -2130,6 +2149,24 @@ const btnSaveSettings = document.getElementById("btn-save-settings");
 
       // Trigger modified state
       selectHotkey.dispatchEvent(new Event("change", { bubbles: true }));
+    });
+
+    selectHotkey.addEventListener("keyup", (e) => {
+      if (!isRecordingHotkey || !hotkeyModifierName(e) || recordedHotkeyModifiers.size === 0) return;
+      e.preventDefault();
+      e.stopPropagation();
+
+      if (recordedHotkeyModifiers.size >= 2) {
+        hasRecordedThisSession = true;
+        selectHotkey.value = orderedHotkeyModifiers().join("+");
+        isRecordingHotkey = false;
+        selectHotkey.classList.remove("recording");
+        selectHotkey.blur();
+        selectHotkey.dispatchEvent(new Event("change", { bubbles: true }));
+      } else {
+        recordedHotkeyModifiers.delete(hotkeyModifierName(e));
+        selectHotkey.value = getTranslation("hotkey_prompt") || "Press keys...";
+      }
     });
   }
 
