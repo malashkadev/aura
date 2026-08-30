@@ -16,11 +16,7 @@
   <img src="https://img.shields.io/badge/platform-Windows%2010%2F11-blue" alt="Platform" />
 </p>
 
-<p align="center">
-  <a href="https://github.com/malashkadev/aura/releases/latest"><b>📥 Download for Windows (.msi)</b></a> •
-  <a href="https://aura-beryl-five.vercel.app/"><b>🌐 Web Demo</b></a> •
-  <a href="README.ru.md"><b>🇷🇺 Документация на русском</b></a>
-</p>
+> 🇷🇺 [Документация на русском](README.ru.md)
 
 Press and hold the hotkey, speak, and release — Aura instantly transcribes your speech and types the text right under your cursor in **any** Windows application. Works completely offline and privately using local AI models (Whisper, NVIDIA Parakeet with CUDA GPU acceleration) or via cloud providers (Gemini, Groq, OpenAI, Hugging Face, Custom API).
 
@@ -114,7 +110,7 @@ cargo test
 
 ## Recently added
 
-- **NVIDIA CUDA GPU Acceleration** — offload local Parakeet model inference to NVIDIA GPUs with on-demand runtime downloading and auto CPU fallback. CUDA setup reuses a complete CUDA 11/cuDNN 8 runtime available through `PATH`; otherwise it downloads pinned private copies. Setup downloads up to 1.52 GiB of archives and installs up to 2.33 GiB of runtime files, including proprietary NVIDIA components covered by the terms in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+- **NVIDIA CUDA GPU Acceleration** — high-performance hardware acceleration for local models (Whisper and Parakeet) with 1-click on-demand runtime setup and automatic CPU fallback.
 - **Audio Device Selection & VU Meter** — select physical microphone devices directly in Settings with a real-time input level meter and Silero VAD detection.
 - **Post-Release Audio Grace Buffer (Tail Hold)** — 160ms tail buffer and expanded VAD margin to completely prevent trailing word and syllable clipping.
 - **Context Editing & Safe Clipboard Handoff** — AI sparkle indicator for selection editing; if target window focus shifts during transcription, text is safely copied to the clipboard with an overlay notification.
