@@ -3490,7 +3490,7 @@ body.modal-open {
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: var(--radius-lg);
   box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.08);
-  padding: 1.75rem;
+  padding: 1.65rem 1.75rem 1.15rem 1.75rem;
   position: relative;
   overflow: hidden;
   transform: scale(0.95) translateY(12px);
@@ -3711,9 +3711,41 @@ body.modal-open {
   justify-content: center;
 }
 
+.download-modal-mirror-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 0.85rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.download-modal-mirror-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-secondary);
+  font-weight: 500;
+  text-decoration: none;
+  transition: color 0.18s ease;
+}
+
+.download-modal-mirror-link:hover {
+  color: #ff9466;
+  text-decoration: underline;
+}
+
+.download-modal-mirror-link .sf-icon {
+  color: #ff7a28;
+  flex-shrink: 0;
+}
+
 @media (max-width: 480px) {
   .download-modal-card {
-    padding: 1.35rem;
+    padding: 1.35rem 1.35rem 1rem 1.35rem;
   }
   .download-modal-actions {
     flex-direction: column-reverse;

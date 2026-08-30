@@ -12,6 +12,7 @@
 <p align="center">
   <a href="https://github.com/malashkadev/aura/actions/workflows/ci.yml"><img src="https://github.com/malashkadev/aura/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
   <a href="https://github.com/malashkadev/aura/releases"><img src="https://img.shields.io/github/v/release/malashkadev/aura?color=10b981&label=release" alt="Release" /></a>
+  <a href="https://sourceforge.net/projects/aura-voice-typing/files/latest/download"><img src="https://img.shields.io/sourceforge/dt/aura-voice-typing.svg" alt="Download on SourceForge" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-AGPL_v3-blue.svg" alt="License: AGPL v3" /></a>
   <img src="https://img.shields.io/badge/platform-Windows%2010%2F11-blue" alt="Platform" />
 </p>
@@ -63,7 +64,13 @@ Aura combines the speed and privacy of local neural networks with the flexibilit
 
 ## Installation
 
-Download the installer from [Releases](https://github.com/malashkadev/aura/releases) and run it. You can explore the interactive settings mockup and live demo on our [Official Website](https://aura-beryl-five.vercel.app/).
+Download the installer from [GitHub Releases](https://github.com/malashkadev/aura/releases) or via [SourceForge Mirror](https://sourceforge.net/projects/aura-voice-typing/files/latest/download) and run it. You can explore the interactive settings mockup and live demo on our [Official Website](https://aura-beryl-five.vercel.app/).
+
+<p align="center">
+  <a href="https://sourceforge.net/projects/aura-voice-typing/files/latest/download">
+    <img alt="Download Aura on SourceForge" src="https://a.fsdn.com/con/app/sf-download-button" width="276" height="48" />
+  </a>
+</p>
 
 For local mode, download a model from the "Speech" tab in Settings (the `Base` model is a great starting point for fast CPU inference). For cloud mode, provide an API key for your chosen provider (Groq and Google Gemini offer free tiers).
 
