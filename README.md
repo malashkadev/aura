@@ -18,7 +18,7 @@
 
 > 🇷🇺 [Документация на русском](README.ru.md)
 
-Press and hold the hotkey, speak, and release — Aura instantly transcribes your speech and types the text right under your cursor in **any** Windows application. Works completely offline and privately using local AI models (Whisper, NVIDIA Parakeet with CUDA GPU acceleration) or via cloud providers (Gemini, Groq, OpenAI, Hugging Face, Custom API).
+Press and hold the hotkey, speak, and release — Aura instantly transcribes your speech and types the text right under your cursor in **any** Windows application. Runs 100% offline via local models (Whisper, NVIDIA Parakeet with CUDA GPU acceleration) or connects to cloud providers (Gemini, Groq, OpenAI, Hugging Face, Custom API).
 
 **100% Free & Open Source (AGPL-3.0)** — no subscriptions, paywalls, telemetry, or advertisements.
 
@@ -31,17 +31,17 @@ Press and hold the hotkey, speak, and release — Aura instantly transcribes you
 
 - **Global hotkey dictation** — hold to talk (`Alt+V`), or short-tap to latch recording (toggle mode); `Esc` cancels.
 - **Two recognition modes**:
-  - **Local (100% offline & private)** — whisper.cpp or NVIDIA Parakeet TDT v3 (sherpa-onnx) on CPU or NVIDIA CUDA GPU. Audio never leaves your computer; models are downloaded in a single click directly from settings.
+  - **Local (100% offline & private)** — whisper.cpp or NVIDIA Parakeet TDT v3 (sherpa-onnx) on CPU or NVIDIA CUDA GPU. Audio never leaves your computer; download models in one click directly from settings.
   - **Cloud** — Google Gemini, Groq, OpenAI, Hugging Face, or your custom OpenAI-compatible server.
 - **NVIDIA CUDA GPU acceleration** — hardware GPU acceleration for Whisper and Parakeet models with 1-click on-demand runtime downloading and automatic CPU fallback.
 - **Real-time streaming input** — smooth word-level streaming into active fields without flickering or text duplicates.
 - **Focus Guard & Context Editing** — ensures transcribed text is never typed into the wrong window if focus shifts (with safe clipboard handoff), and provides 1-click text editing on selected text with a visual AI sparkle indicator.
-- **Audio device selection & tail hold** — choose physical microphone input device with intelligent 160ms post-release grace buffer and Silero VAD silence trimming so final words are never clipped.
+- **Audio device selection & tail hold** — choose physical microphone input device with a 160ms post-release grace buffer and Silero VAD silence trimming to prevent clipped endings.
 - **Transcription history** — last 50 dictations with a live search bar, source filters (`All` / `Local` / `Cloud`), and one-click copy.
 - **Custom dictionary** — bias recognition towards your names, brands, and technical terms.
 - **11 language options** — auto-detect, keyboard-layout detection, or fixed selection (ru, en, de, es, fr, it, zh, pt, tr).
 - **Polished overlay** — microphone VU meter, recording timer, sound themes (Zen, Rhodes, Sci-Fi, Classic), and display customization.
-- **Quality of life & security** — autostart with Windows, system tray menu, Windows DPAPI credential encryption, and one-click diagnostic reports.
+- **System integration & security** — autostart with Windows, system tray menu, Windows DPAPI credential encryption, and one-click diagnostic reports.
 
 ## How Aura compares
 
@@ -59,7 +59,7 @@ Aura combines the speed and privacy of local neural networks with the flexibilit
 | **Custom Term Dictionary** | **✅** | ❌ | ✅ |
 | **History with Search & Filters** | **✅** | ❌ | ✅ |
 
-> Honest trade-offs: Official builds currently target Windows 10 & 11 (macOS port is compiling in CI). Handy is a mature cross-platform choice for raw offline dictation. Wispr Flow offers a polished UI, but operates strictly via a paid subscription and proprietary cloud.
+> Official builds target Windows 10 & 11 (macOS port compiles in CI). Handy is a mature cross-platform choice for offline dictation. Wispr Flow offers a polished UI, but requires a paid subscription and proprietary cloud.
 
 ## Installation
 
@@ -67,7 +67,7 @@ Download the installer from [Releases](https://github.com/malashkadev/aura/relea
 
 For local mode, download a model from the "Speech" tab in Settings (the `Base` model is a great starting point for fast CPU inference). For cloud mode, provide an API key for your chosen provider (Groq and Google Gemini offer free tiers).
 
-> **First launch — "Windows protected your PC"?** The installer is not signed with an expensive commercial Authenticode certificate yet, so Windows SmartScreen warns about new open-source binaries. Click **More info → Run anyway**. The codebase is fully open-source for independent audit and self-compilation.
+> **First launch — "Windows protected your PC"?** The installer is not yet signed with an Authenticode certificate, so Windows SmartScreen displays a standard warning for new open-source binaries. Click **More info → Run anyway**. The entire codebase is open-source for independent audit and self-compilation.
 
 ## Usage
 
@@ -112,11 +112,11 @@ cargo test
 
 - **NVIDIA CUDA GPU Acceleration** — high-performance hardware acceleration for local models (Whisper and Parakeet) with 1-click on-demand runtime setup and automatic CPU fallback.
 - **Audio Device Selection & VU Meter** — select physical microphone devices directly in Settings with a real-time input level meter and Silero VAD detection.
-- **Post-Release Audio Grace Buffer (Tail Hold)** — 160ms tail buffer and expanded VAD margin to completely prevent trailing word and syllable clipping.
+- **Post-Release Audio Grace Buffer (Tail Hold)** — 160ms tail buffer and expanded VAD margin to prevent trailing word and syllable clipping.
 - **Context Editing & Safe Clipboard Handoff** — AI sparkle indicator for selection editing; if target window focus shifts during transcription, text is safely copied to the clipboard with an overlay notification.
 - **Google Gemini 3.6 Flash Integration** — upgraded cloud provider integration to multimodal Gemini 3.6 Flash for instant recognition and voice editing.
 - **Overlay Display Customization & Topmost Guard** — toggle timer and status messages to show a minimal acoustic wave capsule, with `HWND_TOPMOST` z-order protection against fullscreen apps.
-- **Instant Overlay Dismissal** — eliminated visual lag by triggering chime and overlay hide immediately upon text insertion.
+- **Instant Overlay Dismissal** — sound chime and overlay hide trigger immediately upon text insertion.
 
 ## Roadmap
 
