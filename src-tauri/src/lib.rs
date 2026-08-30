@@ -4104,6 +4104,7 @@ pub fn run() {
             cancel_gpu_download,
             delete_gpu_binaries,
             check_gpu_downloaded,
+            check_nvidia_runtime_on_path,
             get_diagnostic_report,
             get_engine_health,
             log_frontend_event,
@@ -4142,13 +4143,71 @@ const CUDA_ARCHIVE_URL: &str = "https://github.com/k2-fsa/sherpa-onnx/releases/d
 const CUDA_ARCHIVE_SIZE: u64 = 221_905_418;
 const CUDA_ARCHIVE_SHA256: &str =
     "9cc16169fb073ab0acd304ae144ccad21af03e8360921a12285105599f0f692a";
-const CUDA_ARCHIVE_ROOT: &str = "sherpa-onnx-v1.13.4-win-x64-cuda";
 
 const WHISPER_CUDA_ARCHIVE_URL: &str = "https://github.com/ggml-org/whisper.cpp/releases/download/v1.9.1/whisper-cublas-11.8.0-bin-x64.zip";
 const WHISPER_CUDA_ARCHIVE_SIZE: u64 = 278_557_654;
 const WHISPER_CUDA_ARCHIVE_SHA256: &str =
     "aecdce0e4d4bb758a7c72a31f3f9f19a7b6d861405fd2da743cd86398633c963";
-const TOTAL_CUDA_ARCHIVE_SIZE: u64 = CUDA_ARCHIVE_SIZE + WHISPER_CUDA_ARCHIVE_SIZE;
+
+const CUBLAS_ARCHIVE_URL: &str = "https://developer.download.nvidia.com/compute/cuda/redist/libcublas/windows-x86_64/libcublas-windows-x86_64-11.11.3.6-archive.zip";
+const CUBLAS_ARCHIVE_SIZE: u64 = 420_850_025;
+const CUBLAS_ARCHIVE_SHA256: &str =
+    "67b0934a6359e4ee26fff823c356021589d392c4fd49ca12624f570edc08e2b9";
+const CUFFT_ARCHIVE_URL: &str = "https://developer.download.nvidia.com/compute/cuda/redist/libcufft/windows-x86_64/libcufft-windows-x86_64-10.9.0.58-archive.zip";
+const CUFFT_ARCHIVE_SIZE: u64 = 168_982_770;
+const CUFFT_ARCHIVE_SHA256: &str =
+    "a4071a85e3983bf42ea7a2e9bebe3b0b3c9ac258668580adc32ee1c385f7556f";
+const CUDNN_ARCHIVE_URL: &str = "https://developer.download.nvidia.com/compute/cudnn/redist/cudnn/windows-x86_64/cudnn-windows-x86_64-8.5.0.96_cuda11-archive.zip";
+const CUDNN_ARCHIVE_SIZE: u64 = 542_516_637;
+const CUDNN_ARCHIVE_SHA256: &str =
+    "bf277ed350addb8f97e0ab6a20b6fad869abe49ea24277d38ca79f5f23fbec6b";
+
+const TOTAL_CUDA_ARCHIVE_SIZE: u64 = CUDA_ARCHIVE_SIZE
+    + WHISPER_CUDA_ARCHIVE_SIZE
+    + CUBLAS_ARCHIVE_SIZE
+    + CUFFT_ARCHIVE_SIZE
+    + CUDNN_ARCHIVE_SIZE;
+const SYSTEM_CUDA_ARCHIVE_SIZE: u64 = CUDA_ARCHIVE_SIZE + WHISPER_CUDA_ARCHIVE_SIZE;
+
+const SHERPA_CUDA_RUNTIME_FILES: &[&str] = &[
+    "sherpa-onnx-offline-websocket-server.exe",
+    "onnxruntime.dll",
+    "onnxruntime_providers_cuda.dll",
+    "onnxruntime_providers_shared.dll",
+];
+const WHISPER_CUDA_RUNTIME_FILES: &[&str] = &[
+    "cudart64_110.dll",
+    "ggml.dll",
+    "ggml-base.dll",
+    "ggml-cpu-alderlake.dll",
+    "ggml-cpu-cannonlake.dll",
+    "ggml-cpu-cascadelake.dll",
+    "ggml-cpu-haswell.dll",
+    "ggml-cpu-icelake.dll",
+    "ggml-cpu-sandybridge.dll",
+    "ggml-cpu-skylakex.dll",
+    "ggml-cpu-sse42.dll",
+    "ggml-cpu-x64.dll",
+    "ggml-cuda.dll",
+    "whisper.dll",
+];
+const CUBLAS_RUNTIME_FILES: &[&str] = &["cublas64_11.dll", "cublasLt64_11.dll"];
+const CUFFT_RUNTIME_FILES: &[&str] = &["cufft64_10.dll"];
+const CUDNN_RUNTIME_FILES: &[&str] = &[
+    "cudnn64_8.dll",
+    "cudnn_adv_infer64_8.dll",
+    "cudnn_cnn_infer64_8.dll",
+    "cudnn_ops_infer64_8.dll",
+];
+const NVIDIA_CUDA_RUNTIME_FILES: &[&str] = &[
+    "cublas64_11.dll",
+    "cublasLt64_11.dll",
+    "cufft64_10.dll",
+    "cudnn64_8.dll",
+    "cudnn_adv_infer64_8.dll",
+    "cudnn_cnn_infer64_8.dll",
+    "cudnn_ops_infer64_8.dll",
+];
 
 fn lock_active_gpu_downloads() -> std::sync::MutexGuard<'static, std::collections::HashSet<String>>
 {
@@ -4233,80 +4292,248 @@ fn unique_gpu_install_directory(parent: &std::path::Path, provider: &str) -> std
     ))
 }
 
-fn gpu_bin_is_complete(bin_dir: &std::path::Path, provider: &str) -> bool {
-    if provider != "cuda" {
+fn runtime_files_are_present(bin_dir: &std::path::Path, files: &[&str]) -> bool {
+    files
+        .iter()
+        .all(|name| runtime_file_is_present(&bin_dir.join(name)))
+}
+
+fn runtime_file_is_present(path: &std::path::Path) -> bool {
+    path.metadata()
+        .map(|metadata| metadata.is_file() && metadata.len() > 0)
+        .unwrap_or(false)
+}
+
+fn aura_cuda_runtime_is_complete(bin_dir: &std::path::Path) -> bool {
+    SHERPA_CUDA_RUNTIME_FILES
+        .iter()
+        .chain(WHISPER_CUDA_RUNTIME_FILES)
+        .all(|name| runtime_file_is_present(&bin_dir.join(name)))
+}
+
+fn nvidia_runtime_is_on_path(path: Option<&std::ffi::OsStr>) -> bool {
+    let Some(path) = path else {
         return false;
-    }
-    let exe_name = if cfg!(target_os = "windows") {
-        "sherpa-onnx-offline-websocket-server.exe"
-    } else {
-        "sherpa-onnx-offline-websocket-server"
     };
-    let mut required = vec![exe_name, "onnxruntime.dll"];
-    if cfg!(target_os = "windows") {
-        required.extend(["onnxruntime_providers_cuda.dll", "ggml-cuda.dll"]);
-    }
-    required.into_iter().all(|name| {
-        bin_dir
-            .join(name)
-            .metadata()
-            .map(|metadata| metadata.is_file() && metadata.len() > 0)
-            .unwrap_or(false)
+    let directories = std::env::split_paths(path)
+        .filter(|directory| directory.is_absolute())
+        .collect::<Vec<_>>();
+    NVIDIA_CUDA_RUNTIME_FILES.iter().all(|name| {
+        directories
+            .iter()
+            .any(|directory| runtime_file_is_present(&directory.join(name)))
     })
+}
+
+fn require_nvidia_terms(
+    use_system_nvidia: bool,
+    accepted_nvidia_terms: bool,
+) -> Result<(), String> {
+    if use_system_nvidia || accepted_nvidia_terms {
+        Ok(())
+    } else {
+        Err("NVIDIA license terms must be accepted before downloading CUDA".to_string())
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum NvidiaRuntimeSource {
+    Managed,
+    SystemPath,
+    Missing,
+}
+
+fn nvidia_runtime_source(
+    bin_dir: &std::path::Path,
+    path: Option<&std::ffi::OsStr>,
+) -> NvidiaRuntimeSource {
+    if runtime_files_are_present(bin_dir, NVIDIA_CUDA_RUNTIME_FILES) {
+        NvidiaRuntimeSource::Managed
+    } else if nvidia_runtime_is_on_path(path) {
+        NvidiaRuntimeSource::SystemPath
+    } else {
+        NvidiaRuntimeSource::Missing
+    }
+}
+
+fn gpu_bin_is_complete_with_path(
+    bin_dir: &std::path::Path,
+    provider: &str,
+    path: Option<&std::ffi::OsStr>,
+) -> bool {
+    provider == "cuda"
+        && aura_cuda_runtime_is_complete(bin_dir)
+        && nvidia_runtime_source(bin_dir, path) != NvidiaRuntimeSource::Missing
+}
+
+fn gpu_bin_is_complete(bin_dir: &std::path::Path, provider: &str) -> bool {
+    let path = std::env::var_os("PATH");
+    gpu_bin_is_complete_with_path(bin_dir, provider, path.as_deref())
+}
+
+pub(crate) fn cuda_runtime_source_label(bin_dir: &std::path::Path) -> &'static str {
+    if !aura_cuda_runtime_is_complete(bin_dir) {
+        return "Incomplete/Missing";
+    }
+    let path = std::env::var_os("PATH");
+    match nvidia_runtime_source(bin_dir, path.as_deref()) {
+        NvidiaRuntimeSource::Managed => "Aura-managed NVIDIA runtime",
+        NvidiaRuntimeSource::SystemPath => "System NVIDIA runtime (PATH)",
+        NvidiaRuntimeSource::Missing => "Missing NVIDIA dependencies",
+    }
+}
+
+fn extract_selected_tar_bz2_files(
+    archive_path: &std::path::Path,
+    target_dir: &std::path::Path,
+    required_parent: &str,
+    required_files: &[&str],
+) -> Result<(), String> {
+    let archive_file = std::fs::File::open(archive_path)
+        .map_err(|error| format!("Failed to open verified CUDA archive: {error}"))?;
+    let decoder = bzip2::read::BzDecoder::new(archive_file);
+    let mut archive = tar::Archive::new(decoder);
+    let mut extracted = std::collections::HashSet::new();
+
+    for entry in archive
+        .entries()
+        .map_err(|error| format!("Failed to inspect CUDA archive: {error}"))?
+    {
+        let mut entry = entry.map_err(|error| format!("Failed to read CUDA archive: {error}"))?;
+        let path = entry
+            .path()
+            .map_err(|error| format!("Failed to read CUDA archive path: {error}"))?;
+        let Some(file_name) = path
+            .file_name()
+            .and_then(|name| name.to_str())
+            .map(str::to_string)
+        else {
+            continue;
+        };
+        if path
+            .parent()
+            .and_then(|parent| parent.file_name())
+            .and_then(|name| name.to_str())
+            != Some(required_parent)
+        {
+            continue;
+        }
+        if !required_files.contains(&file_name.as_str()) {
+            continue;
+        }
+        if !extracted.insert(file_name.clone()) {
+            return Err(format!(
+                "CUDA archive contains duplicate runtime file '{file_name}'"
+            ));
+        }
+        entry.unpack(target_dir.join(&file_name)).map_err(|error| {
+            format!("Failed to extract CUDA runtime file '{file_name}': {error}")
+        })?;
+    }
+
+    ensure_runtime_files_extracted(required_files, &extracted)
+}
+
+fn extract_selected_zip_files(
+    archive_path: &std::path::Path,
+    target_dir: &std::path::Path,
+    required_files: &[&str],
+) -> Result<(), String> {
+    let archive_file = std::fs::File::open(archive_path)
+        .map_err(|error| format!("Failed to open verified runtime archive: {error}"))?;
+    let mut archive = zip::ZipArchive::new(archive_file)
+        .map_err(|error| format!("Failed to read runtime archive: {error}"))?;
+    let mut extracted = std::collections::HashSet::new();
+
+    for index in 0..archive.len() {
+        let mut entry = archive
+            .by_index(index)
+            .map_err(|error| format!("Failed to read runtime archive entry {index}: {error}"))?;
+        if !entry.is_file() {
+            continue;
+        }
+        let Some(file_name) = entry
+            .enclosed_name()
+            .and_then(|path| path.file_name().map(|name| name.to_owned()))
+        else {
+            continue;
+        };
+        let Some(file_name) = file_name.to_str() else {
+            continue;
+        };
+        if !required_files.contains(&file_name) {
+            continue;
+        }
+        if !extracted.insert(file_name.to_string()) {
+            return Err(format!(
+                "Runtime archive contains duplicate file '{file_name}'"
+            ));
+        }
+        let output_path = target_dir.join(file_name);
+        let mut output = std::fs::File::create(&output_path).map_err(|error| {
+            format!(
+                "Failed to create runtime file {}: {error}",
+                output_path.display()
+            )
+        })?;
+        std::io::copy(&mut entry, &mut output)
+            .map_err(|error| format!("Failed to extract runtime file '{file_name}': {error}"))?;
+    }
+
+    ensure_runtime_files_extracted(required_files, &extracted)
+}
+
+fn ensure_runtime_files_extracted(
+    required_files: &[&str],
+    extracted: &std::collections::HashSet<String>,
+) -> Result<(), String> {
+    let missing = required_files
+        .iter()
+        .filter(|name| !extracted.contains(**name))
+        .copied()
+        .collect::<Vec<_>>();
+    if missing.is_empty() {
+        Ok(())
+    } else {
+        Err(format!(
+            "Verified runtime archive is missing required files: {}",
+            missing.join(", ")
+        ))
+    }
 }
 
 fn install_cuda_archive(
     parakeet_archive_path: &std::path::Path,
     whisper_archive_path: &std::path::Path,
+    nvidia_archive_paths: Option<[&std::path::Path; 3]>,
+    runtime_path: Option<&std::ffi::OsStr>,
     extraction_dir: &std::path::Path,
     gpu_dir: &std::path::Path,
 ) -> Result<(), String> {
-    std::fs::create_dir_all(extraction_dir)
+    let source_bin = extraction_dir.join("bin");
+    std::fs::create_dir_all(&source_bin)
         .map_err(|error| format!("Failed to create extraction directory: {error}"))?;
 
-    // 1. Unpack Sherpa-ONNX Parakeet CUDA bundle
-    let archive_file = std::fs::File::open(parakeet_archive_path)
-        .map_err(|error| format!("Failed to open verified CUDA archive: {error}"))?;
-    let decoder = bzip2::read::BzDecoder::new(archive_file);
-    let mut archive = tar::Archive::new(decoder);
-    archive
-        .unpack(extraction_dir)
-        .map_err(|error| format!("Failed to extract CUDA archive safely: {error}"))?;
-
-    let source_bin = extraction_dir.join(CUDA_ARCHIVE_ROOT).join("bin");
-
-    // 2. Extract Whisper cuBLAS components (ggml-cuda.dll and server/dlls)
-    let whisper_zip_file = std::fs::File::open(whisper_archive_path)
-        .map_err(|error| format!("Failed to open verified Whisper CUDA archive: {error}"))?;
-    let mut zip_archive = zip::ZipArchive::new(whisper_zip_file)
-        .map_err(|error| format!("Failed to read Whisper CUDA zip archive: {error}"))?;
-
-    for i in 0..zip_archive.len() {
-        let mut file = zip_archive
-            .by_index(i)
-            .map_err(|error| format!("Failed to read zip entry {i}: {error}"))?;
-        let name = match file.enclosed_name() {
-            Some(path) => path.to_owned(),
-            None => continue,
-        };
-        let file_name = match name.file_name().and_then(|n| n.to_str()) {
-            Some(n) => n.to_string(),
-            None => continue,
-        };
-        if file.is_file() && (file_name.ends_with(".dll") || file_name == "whisper-server.exe") {
-            let outpath = source_bin.join(&file_name);
-            let mut outfile = std::fs::File::create(&outpath).map_err(|error| {
-                format!(
-                    "Failed to create extracted file {}: {error}",
-                    outpath.display()
-                )
-            })?;
-            std::io::copy(&mut file, &mut outfile)
-                .map_err(|error| format!("Failed to extract {}: {error}", outpath.display()))?;
-        }
+    extract_selected_tar_bz2_files(
+        parakeet_archive_path,
+        &source_bin,
+        "bin",
+        SHERPA_CUDA_RUNTIME_FILES,
+    )?;
+    extract_selected_zip_files(
+        whisper_archive_path,
+        &source_bin,
+        WHISPER_CUDA_RUNTIME_FILES,
+    )?;
+    if let Some([cublas_archive_path, cufft_archive_path, cudnn_archive_path]) =
+        nvidia_archive_paths
+    {
+        extract_selected_zip_files(cublas_archive_path, &source_bin, CUBLAS_RUNTIME_FILES)?;
+        extract_selected_zip_files(cufft_archive_path, &source_bin, CUFFT_RUNTIME_FILES)?;
+        extract_selected_zip_files(cudnn_archive_path, &source_bin, CUDNN_RUNTIME_FILES)?;
     }
 
-    if !gpu_bin_is_complete(&source_bin, "cuda") {
+    if !gpu_bin_is_complete_with_path(&source_bin, "cuda", runtime_path) {
         return Err(
             "Verified CUDA archive does not contain the required runtime files".to_string(),
         );
@@ -4330,7 +4557,6 @@ fn install_cuda_archive(
         }
         return Err(format!("Failed to install CUDA runtime: {error}"));
     }
-    copy_supplemental_cuda_dlls(&target_bin);
     if had_previous {
         if let Err(error) = std::fs::remove_dir_all(&backup_bin) {
             crate::logger::log(
@@ -4342,30 +4568,6 @@ fn install_cuda_archive(
         }
     }
     Ok(())
-}
-
-fn copy_supplemental_cuda_dlls(target_bin: &std::path::Path) {
-    let candidate_dirs = [
-        std::path::PathBuf::from("src-tauri/binaries/cuda/sherpa-onnx-v1.13.4-win-x64-cuda/bin"),
-        std::path::PathBuf::from("binaries/cuda/sherpa-onnx-v1.13.4-win-x64-cuda/bin"),
-        std::path::PathBuf::from("src-tauri/binaries"),
-        std::path::PathBuf::from("binaries"),
-    ];
-    for dir in &candidate_dirs {
-        if let Ok(entries) = std::fs::read_dir(dir) {
-            for entry in entries.flatten() {
-                let path = entry.path();
-                if let Some(name) = path.file_name().and_then(|n| n.to_str()) {
-                    if name.ends_with(".dll") || name.ends_with(".exe") {
-                        let dest = target_bin.join(name);
-                        if !dest.exists() {
-                            let _ = std::fs::copy(&path, &dest);
-                        }
-                    }
-                }
-            }
-        }
-    }
 }
 
 #[tauri::command]
@@ -4385,6 +4587,12 @@ async fn check_gpu_downloaded(
         .map_err(|e| format!("Failed to get app local data: {}", e))?;
     let bin_dir = app_local_data.join("binaries").join(&provider).join("bin");
     Ok(gpu_bin_is_complete(&bin_dir, &provider))
+}
+
+#[tauri::command]
+fn check_nvidia_runtime_on_path() -> bool {
+    let path = std::env::var_os("PATH");
+    nvidia_runtime_is_on_path(path.as_deref())
 }
 
 #[tauri::command]
@@ -4438,12 +4646,113 @@ async fn cancel_gpu_download(provider: String) -> Result<(), String> {
     Ok(())
 }
 
+struct GpuArchiveSpec {
+    label: &'static str,
+    url: &'static str,
+    expected_size: u64,
+    sha256: &'static str,
+    staging_filename: &'static str,
+}
+
+const CUDA_ARCHIVES: &[GpuArchiveSpec] = &[
+    GpuArchiveSpec {
+        label: "Sherpa ONNX CUDA runtime",
+        url: CUDA_ARCHIVE_URL,
+        expected_size: CUDA_ARCHIVE_SIZE,
+        sha256: CUDA_ARCHIVE_SHA256,
+        staging_filename: "sherpa-runtime.tar.bz2",
+    },
+    GpuArchiveSpec {
+        label: "Whisper CUDA runtime",
+        url: WHISPER_CUDA_ARCHIVE_URL,
+        expected_size: WHISPER_CUDA_ARCHIVE_SIZE,
+        sha256: WHISPER_CUDA_ARCHIVE_SHA256,
+        staging_filename: "whisper-cuda.zip",
+    },
+    GpuArchiveSpec {
+        label: "NVIDIA cuBLAS runtime",
+        url: CUBLAS_ARCHIVE_URL,
+        expected_size: CUBLAS_ARCHIVE_SIZE,
+        sha256: CUBLAS_ARCHIVE_SHA256,
+        staging_filename: "nvidia-cublas.zip",
+    },
+    GpuArchiveSpec {
+        label: "NVIDIA cuFFT runtime",
+        url: CUFFT_ARCHIVE_URL,
+        expected_size: CUFFT_ARCHIVE_SIZE,
+        sha256: CUFFT_ARCHIVE_SHA256,
+        staging_filename: "nvidia-cufft.zip",
+    },
+    GpuArchiveSpec {
+        label: "NVIDIA cuDNN runtime",
+        url: CUDNN_ARCHIVE_URL,
+        expected_size: CUDNN_ARCHIVE_SIZE,
+        sha256: CUDNN_ARCHIVE_SHA256,
+        staging_filename: "nvidia-cudnn.zip",
+    },
+];
+
+fn cuda_archives_for_install(use_system_nvidia: bool) -> &'static [GpuArchiveSpec] {
+    if use_system_nvidia {
+        &CUDA_ARCHIVES[..2]
+    } else {
+        CUDA_ARCHIVES
+    }
+}
+
+async fn download_verified_gpu_archive(
+    client: &reqwest::Client,
+    app_handle: &tauri::AppHandle,
+    cancel_key: &str,
+    spec: &GpuArchiveSpec,
+    destination: &std::path::Path,
+    downloaded_before: u64,
+    download_total: u64,
+) -> Result<(), String> {
+    crate::logger::log(
+        "INFO",
+        "GPU",
+        None,
+        &format!("Downloading pinned {}", spec.label),
+    );
+    artifact_download::download_verified_artifact(
+        client,
+        artifact_download::ArtifactSpec {
+            label: spec.label,
+            url: spec.url,
+            expected_size: spec.expected_size,
+            sha256: spec.sha256,
+        },
+        destination,
+        artifact_download::DEFAULT_STALL_TIMEOUT,
+        || whisper_runner::is_cancel_requested(cancel_key),
+        |progress| {
+            let combined_downloaded = downloaded_before + progress.downloaded;
+            let percentage = (combined_downloaded as f64 / download_total as f64 * 100.0).min(99.9);
+            let _ = app_handle.emit(
+                "gpu-download-progress",
+                GpuDownloadProgress {
+                    provider: "cuda".to_string(),
+                    downloaded: combined_downloaded,
+                    total: Some(download_total),
+                    percentage,
+                    done: false,
+                    status: None,
+                },
+            );
+        },
+    )
+    .await
+    .map(|_| ())
+}
+
 #[tauri::command]
 async fn download_gpu_binaries(
     app_handle: tauri::AppHandle,
     provider: String,
+    accepted_nvidia_terms: bool,
 ) -> Result<(), String> {
-    let res = download_gpu_binaries_inner(app_handle, provider).await;
+    let res = download_gpu_binaries_inner(app_handle, provider, accepted_nvidia_terms).await;
     if let Err(ref error) = res {
         crate::logger::log(
             "ERROR",
@@ -4458,6 +4767,7 @@ async fn download_gpu_binaries(
 async fn download_gpu_binaries_inner(
     app_handle: tauri::AppHandle,
     provider: String,
+    accepted_nvidia_terms: bool,
 ) -> Result<(), String> {
     if provider == "directml" {
         return Err(
@@ -4471,6 +4781,9 @@ async fn download_gpu_binaries_inner(
     if !cfg!(target_os = "windows") {
         return Err("The CUDA runtime downloader is available only on Windows".to_string());
     }
+    let path = std::env::var_os("PATH");
+    let use_system_nvidia = nvidia_runtime_is_on_path(path.as_deref());
+    require_nvidia_terms(use_system_nvidia, accepted_nvidia_terms)?;
 
     let cancel_key = format!("gpu-{provider}");
     {
@@ -4508,103 +4821,59 @@ async fn download_gpu_binaries_inner(
     tokio::fs::create_dir_all(&archives_dir)
         .await
         .map_err(|e| format!("Failed to create CUDA archives directory: {e}"))?;
-    let parakeet_archive_path = archives_dir.join("sherpa-runtime.tar.bz2");
-    let whisper_archive_path = archives_dir.join("whisper-cublas.zip");
-
+    let archives = cuda_archives_for_install(use_system_nvidia);
+    let download_total = if use_system_nvidia {
+        SYSTEM_CUDA_ARCHIVE_SIZE
+    } else {
+        TOTAL_CUDA_ARCHIVE_SIZE
+    };
+    debug_assert_eq!(
+        download_total,
+        archives
+            .iter()
+            .map(|archive| archive.expected_size)
+            .sum::<u64>()
+    );
+    crate::logger::log(
+        "INFO",
+        "GPU",
+        None,
+        if use_system_nvidia {
+            "All required NVIDIA CUDA/cuDNN DLLs were found on PATH; reusing the system runtime"
+        } else {
+            "A complete NVIDIA CUDA/cuDNN runtime was not found on PATH; installing pinned private copies"
+        },
+    );
     let client = crate::ai_client::build_download_client();
-
-    let parakeet_spec = artifact_download::ArtifactSpec {
-        label: "Sherpa ONNX CUDA runtime",
-        url: CUDA_ARCHIVE_URL,
-        expected_size: CUDA_ARCHIVE_SIZE,
-        sha256: CUDA_ARCHIVE_SHA256,
-    };
-    let whisper_spec = artifact_download::ArtifactSpec {
-        label: "Whisper cuBLAS CUDA runtime",
-        url: WHISPER_CUDA_ARCHIVE_URL,
-        expected_size: WHISPER_CUDA_ARCHIVE_SIZE,
-        sha256: WHISPER_CUDA_ARCHIVE_SHA256,
-    };
-
-    // 1. Download Parakeet Sherpa-ONNX CUDA bundle (resume-capable)
-    crate::logger::log(
-        "INFO",
-        "GPU",
-        None,
-        "Downloading pinned Sherpa ONNX CUDA runtime",
-    );
-    artifact_download::download_verified_artifact(
-        &client,
-        parakeet_spec,
-        &parakeet_archive_path,
-        artifact_download::DEFAULT_STALL_TIMEOUT,
-        || whisper_runner::is_cancel_requested(&cancel_key),
-        |progress| {
-            let percentage =
-                (progress.downloaded as f64 / TOTAL_CUDA_ARCHIVE_SIZE as f64 * 100.0).min(99.9);
-            let _ = app_handle.emit(
-                "gpu-download-progress",
-                GpuDownloadProgress {
-                    provider: provider.clone(),
-                    downloaded: progress.downloaded,
-                    total: Some(TOTAL_CUDA_ARCHIVE_SIZE),
-                    percentage,
-                    done: false,
-                    status: None,
-                },
-            );
-        },
-    )
-    .await?;
-
-    // 2. Download Whisper cuBLAS runtime bundle (resume-capable)
-    crate::logger::log(
-        "INFO",
-        "GPU",
-        None,
-        "Downloading pinned Whisper cuBLAS runtime",
-    );
-    artifact_download::download_verified_artifact(
-        &client,
-        whisper_spec,
-        &whisper_archive_path,
-        artifact_download::DEFAULT_STALL_TIMEOUT,
-        || whisper_runner::is_cancel_requested(&cancel_key),
-        |progress| {
-            let combined_downloaded = CUDA_ARCHIVE_SIZE + progress.downloaded;
-            let percentage =
-                (combined_downloaded as f64 / TOTAL_CUDA_ARCHIVE_SIZE as f64 * 100.0).min(99.9);
-            let _ = app_handle.emit(
-                "gpu-download-progress",
-                GpuDownloadProgress {
-                    provider: provider.clone(),
-                    downloaded: combined_downloaded,
-                    total: Some(TOTAL_CUDA_ARCHIVE_SIZE),
-                    percentage,
-                    done: false,
-                    status: None,
-                },
-            );
-        },
-    )
-    .await?;
+    let mut downloaded = 0u64;
+    for spec in archives {
+        let destination = archives_dir.join(spec.staging_filename);
+        download_verified_gpu_archive(
+            &client,
+            &app_handle,
+            &cancel_key,
+            spec,
+            &destination,
+            downloaded,
+            download_total,
+        )
+        .await?;
+        downloaded = downloaded
+            .checked_add(spec.expected_size)
+            .ok_or_else(|| "CUDA download byte count overflow".to_string())?;
+    }
 
     if whisper_runner::is_cancel_requested(&cancel_key) {
         return Err("Download cancelled".to_string());
     }
 
-    crate::logger::log(
-        "INFO",
-        "GPU",
-        None,
-        "Verifying and installing complete CUDA runtime",
-    );
+    crate::logger::log("INFO", "GPU", None, "Installing complete CUDA runtime");
     let _ = app_handle.emit(
         "gpu-download-progress",
         GpuDownloadProgress {
             provider: provider.clone(),
-            downloaded: TOTAL_CUDA_ARCHIVE_SIZE,
-            total: Some(TOTAL_CUDA_ARCHIVE_SIZE),
+            downloaded: download_total,
+            total: Some(download_total),
             percentage: 100.0,
             done: false,
             status: Some("installing".to_string()),
@@ -4612,36 +4881,49 @@ async fn download_gpu_binaries_inner(
     );
 
     let extraction_dir = staging_dir.join("extract");
-    let worker_parakeet = parakeet_archive_path.clone();
-    let worker_whisper = whisper_archive_path.clone();
+    let worker_parakeet = archives_dir.join(CUDA_ARCHIVES[0].staging_filename);
+    let worker_whisper = archives_dir.join(CUDA_ARCHIVES[1].staging_filename);
+    let worker_cublas = archives_dir.join(CUDA_ARCHIVES[2].staging_filename);
+    let worker_cufft = archives_dir.join(CUDA_ARCHIVES[3].staging_filename);
+    let worker_cudnn = archives_dir.join(CUDA_ARCHIVES[4].staging_filename);
     let worker_gpu_dir = gpu_dir.clone();
     let worker_handle = app_handle.clone();
+    let worker_path = path;
     tauri::async_runtime::spawn_blocking(move || {
-        whisper_runner::stop_parakeet_server(&worker_handle);
+        whisper_runner::stop_parakeet_server_and_watchdog(&worker_handle);
         whisper_runner::stop_whisper_server(&worker_handle);
-        install_cuda_archive(
+        let install_result = install_cuda_archive(
             &worker_parakeet,
             &worker_whisper,
+            (!use_system_nvidia).then_some([
+                worker_cublas.as_path(),
+                worker_cufft.as_path(),
+                worker_cudnn.as_path(),
+            ]),
+            worker_path.as_deref(),
             &extraction_dir,
             &worker_gpu_dir,
-        )
+        );
+        if let Ok(settings) = settings::load_settings(&worker_handle) {
+            whisper_runner::ensure_parakeet_server_state(&worker_handle, &settings);
+            whisper_runner::ensure_whisper_server_state(&worker_handle, &settings);
+        }
+        install_result
     })
     .await
     .map_err(|error| format!("CUDA install worker failed: {error}"))??;
 
-    for archive_path in [&parakeet_archive_path, &whisper_archive_path] {
-        if let Err(error) = tokio::fs::remove_file(archive_path).await {
-            if error.kind() != std::io::ErrorKind::NotFound {
-                crate::logger::log(
-                    "WARN",
-                    "GPU",
-                    None,
-                    &format!(
-                        "Failed to remove downloaded CUDA archive {}: {error}",
-                        archive_path.display()
-                    ),
-                );
-            }
+    if let Err(error) = tokio::fs::remove_dir_all(&archives_dir).await {
+        if error.kind() != std::io::ErrorKind::NotFound {
+            crate::logger::log(
+                "WARN",
+                "GPU",
+                None,
+                &format!(
+                    "Failed to remove downloaded CUDA archives {}: {error}",
+                    archives_dir.display()
+                ),
+            );
         }
     }
 
@@ -4667,8 +4949,8 @@ async fn download_gpu_binaries_inner(
         "gpu-download-progress",
         GpuDownloadProgress {
             provider: provider.clone(),
-            downloaded: TOTAL_CUDA_ARCHIVE_SIZE,
-            total: Some(TOTAL_CUDA_ARCHIVE_SIZE),
+            downloaded: download_total,
+            total: Some(download_total),
             percentage: 100.0,
             done: true,
             status: Some("done".to_string()),
@@ -4680,6 +4962,338 @@ async fn download_gpu_binaries_inner(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::io::Write;
+
+    #[test]
+    fn cuda_archive_sizes_match_progress_total() {
+        assert_eq!(
+            CUDA_ARCHIVES
+                .iter()
+                .map(|archive| archive.expected_size)
+                .sum::<u64>(),
+            TOTAL_CUDA_ARCHIVE_SIZE
+        );
+        assert_eq!(
+            cuda_archives_for_install(true)
+                .iter()
+                .map(|archive| archive.expected_size)
+                .sum::<u64>(),
+            SYSTEM_CUDA_ARCHIVE_SIZE
+        );
+        assert_eq!(cuda_archives_for_install(true).len(), 2);
+        assert_eq!(cuda_archives_for_install(false).len(), 5);
+    }
+
+    #[test]
+    fn cuda_runtime_allowlist_excludes_unused_payloads() {
+        let runtime_files = SHERPA_CUDA_RUNTIME_FILES
+            .iter()
+            .chain(WHISPER_CUDA_RUNTIME_FILES)
+            .chain(CUBLAS_RUNTIME_FILES)
+            .chain(CUFFT_RUNTIME_FILES)
+            .chain(CUDNN_RUNTIME_FILES)
+            .copied()
+            .collect::<std::collections::HashSet<_>>();
+        let archived_nvidia_files = CUBLAS_RUNTIME_FILES
+            .iter()
+            .chain(CUFFT_RUNTIME_FILES)
+            .chain(CUDNN_RUNTIME_FILES)
+            .copied()
+            .collect::<std::collections::HashSet<_>>();
+        assert_eq!(
+            archived_nvidia_files,
+            NVIDIA_CUDA_RUNTIME_FILES.iter().copied().collect()
+        );
+
+        for required in [
+            "sherpa-onnx-offline-websocket-server.exe",
+            "ggml-cuda.dll",
+            "cublas64_11.dll",
+            "cublasLt64_11.dll",
+            "cufft64_10.dll",
+            "cudnn64_8.dll",
+            "cudnn_adv_infer64_8.dll",
+            "cudnn_cnn_infer64_8.dll",
+            "cudnn_ops_infer64_8.dll",
+        ] {
+            assert!(runtime_files.contains(required), "missing {required}");
+        }
+        for unused in [
+            "onnxruntime_providers_tensorrt.dll",
+            "whisper-server.exe",
+            "sherpa-onnx-offline-tts.exe",
+            "nvblas64_11.dll",
+            "cufftw64_10.dll",
+            "cudnn_adv_train64_8.dll",
+            "cudnn_cnn_train64_8.dll",
+            "cudnn_ops_train64_8.dll",
+            "nvrtc64_112_0.dll",
+        ] {
+            assert!(!runtime_files.contains(unused), "retained unused {unused}");
+        }
+    }
+
+    #[test]
+    fn cuda_install_check_requires_complete_runtime() {
+        let test_dir = std::env::temp_dir().join(format!(
+            "aura-cuda-completeness-{}-{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .expect("system clock after epoch")
+                .as_nanos()
+        ));
+        std::fs::create_dir(&test_dir).expect("create CUDA completeness test directory");
+        let required_files = SHERPA_CUDA_RUNTIME_FILES
+            .iter()
+            .chain(WHISPER_CUDA_RUNTIME_FILES)
+            .chain(CUBLAS_RUNTIME_FILES)
+            .chain(CUFFT_RUNTIME_FILES)
+            .chain(CUDNN_RUNTIME_FILES);
+        for name in required_files {
+            std::fs::write(test_dir.join(name), b"runtime").expect("write placeholder runtime");
+        }
+
+        assert!(gpu_bin_is_complete_with_path(&test_dir, "cuda", None));
+        std::fs::remove_file(test_dir.join("cublasLt64_11.dll"))
+            .expect("remove required CUDA dependency");
+        assert!(!gpu_bin_is_complete_with_path(&test_dir, "cuda", None));
+        std::fs::remove_dir_all(&test_dir).expect("remove CUDA completeness test directory");
+    }
+
+    #[test]
+    fn cuda_install_check_accepts_nvidia_runtime_across_path_directories() {
+        let test_dir = std::env::temp_dir().join(format!(
+            "aura-cuda-system-runtime-{}-{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .expect("system clock after epoch")
+                .as_nanos()
+        ));
+        let bin_dir = test_dir.join("aura-bin");
+        let cuda_dir = test_dir.join("cuda-bin");
+        let cudnn_dir = test_dir.join("cudnn-bin");
+        for directory in [&bin_dir, &cuda_dir, &cudnn_dir] {
+            std::fs::create_dir_all(directory).expect("create CUDA PATH test directory");
+        }
+        for name in SHERPA_CUDA_RUNTIME_FILES
+            .iter()
+            .chain(WHISPER_CUDA_RUNTIME_FILES)
+        {
+            std::fs::write(bin_dir.join(name), b"runtime")
+                .expect("write Aura CUDA runtime placeholder");
+        }
+        for name in CUBLAS_RUNTIME_FILES.iter().chain(CUFFT_RUNTIME_FILES) {
+            std::fs::write(cuda_dir.join(name), b"runtime")
+                .expect("write system CUDA runtime placeholder");
+        }
+        for name in CUDNN_RUNTIME_FILES {
+            std::fs::write(cudnn_dir.join(name), b"runtime")
+                .expect("write system cuDNN runtime placeholder");
+        }
+        let path = std::env::join_paths([&cuda_dir, &cudnn_dir]).expect("build test PATH");
+
+        assert!(nvidia_runtime_is_on_path(Some(&path)));
+        assert_eq!(
+            nvidia_runtime_source(&bin_dir, Some(&path)),
+            NvidiaRuntimeSource::SystemPath
+        );
+        assert!(gpu_bin_is_complete_with_path(&bin_dir, "cuda", Some(&path)));
+
+        std::fs::remove_file(cudnn_dir.join("cudnn_ops_infer64_8.dll"))
+            .expect("remove system cuDNN dependency");
+        assert!(!gpu_bin_is_complete_with_path(
+            &bin_dir,
+            "cuda",
+            Some(&path)
+        ));
+        std::fs::remove_dir_all(&test_dir).expect("remove CUDA PATH test directory");
+    }
+
+    #[test]
+    fn nvidia_terms_are_required_only_when_a_download_is_needed() {
+        assert!(require_nvidia_terms(true, false).is_ok());
+        assert!(require_nvidia_terms(false, true).is_ok());
+        assert!(require_nvidia_terms(false, false).is_err());
+    }
+
+    #[test]
+    fn cuda_installer_reuses_system_nvidia_runtime_without_copying_it() {
+        let test_dir = std::env::temp_dir().join(format!(
+            "aura-cuda-system-install-{}-{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .expect("system clock after epoch")
+                .as_nanos()
+        ));
+        let sherpa_archive_path = test_dir.join("sherpa.tar.bz2");
+        let whisper_archive_path = test_dir.join("whisper.zip");
+        let system_dir = test_dir.join("system-cuda");
+        let extraction_dir = test_dir.join("extract");
+        let gpu_dir = test_dir.join("gpu");
+        for directory in [&system_dir, &extraction_dir, &gpu_dir] {
+            std::fs::create_dir_all(directory).expect("create system install test directory");
+        }
+
+        let sherpa_file =
+            std::fs::File::create(&sherpa_archive_path).expect("create synthetic Sherpa archive");
+        let encoder = bzip2::write::BzEncoder::new(sherpa_file, bzip2::Compression::best());
+        let mut sherpa_archive = tar::Builder::new(encoder);
+        for name in SHERPA_CUDA_RUNTIME_FILES {
+            let contents = b"runtime";
+            let mut header = tar::Header::new_gnu();
+            header.set_size(contents.len() as u64);
+            header.set_mode(0o644);
+            header.set_cksum();
+            sherpa_archive
+                .append_data(
+                    &mut header,
+                    format!("runtime/bin/{name}"),
+                    contents.as_slice(),
+                )
+                .expect("add synthetic Sherpa runtime file");
+        }
+        sherpa_archive
+            .into_inner()
+            .expect("finish synthetic Sherpa archive")
+            .finish()
+            .expect("finish compressed Sherpa archive");
+
+        let whisper_file =
+            std::fs::File::create(&whisper_archive_path).expect("create synthetic Whisper archive");
+        let mut whisper_archive = zip::ZipWriter::new(whisper_file);
+        let options = zip::write::SimpleFileOptions::default();
+        for name in WHISPER_CUDA_RUNTIME_FILES {
+            whisper_archive
+                .start_file(format!("runtime/{name}"), options)
+                .expect("add synthetic Whisper runtime file");
+            whisper_archive
+                .write_all(b"runtime")
+                .expect("write synthetic Whisper runtime file");
+        }
+        whisper_archive
+            .finish()
+            .expect("finish synthetic Whisper archive");
+
+        for name in NVIDIA_CUDA_RUNTIME_FILES {
+            std::fs::write(system_dir.join(name), b"runtime")
+                .expect("write system NVIDIA runtime placeholder");
+        }
+        let path = std::env::join_paths([&system_dir]).expect("build system runtime PATH");
+
+        install_cuda_archive(
+            &sherpa_archive_path,
+            &whisper_archive_path,
+            None,
+            Some(&path),
+            &extraction_dir,
+            &gpu_dir,
+        )
+        .expect("install CUDA runtime backed by system NVIDIA DLLs");
+
+        let installed_bin = gpu_dir.join("bin");
+        assert!(gpu_bin_is_complete_with_path(
+            &installed_bin,
+            "cuda",
+            Some(&path)
+        ));
+        assert_eq!(
+            std::fs::read_dir(&installed_bin)
+                .expect("read installed CUDA runtime")
+                .count(),
+            SHERPA_CUDA_RUNTIME_FILES.len() + WHISPER_CUDA_RUNTIME_FILES.len()
+        );
+        assert!(!installed_bin.join("cublas64_11.dll").exists());
+
+        std::fs::remove_dir_all(&test_dir).expect("remove system install test directory");
+    }
+
+    #[test]
+    fn selective_zip_extraction_ignores_unused_payloads() {
+        let test_dir = std::env::temp_dir().join(format!(
+            "aura-cuda-extraction-{}-{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .expect("system clock after epoch")
+                .as_nanos()
+        ));
+        let archive_path = test_dir.join("runtime.zip");
+        let output_dir = test_dir.join("output");
+        std::fs::create_dir_all(&output_dir).expect("create extraction test directory");
+
+        let archive_file = std::fs::File::create(&archive_path).expect("create test archive");
+        let mut archive = zip::ZipWriter::new(archive_file);
+        let options = zip::write::SimpleFileOptions::default();
+        archive
+            .start_file("nested/required.dll", options)
+            .expect("add required runtime file");
+        archive.write_all(b"required").expect("write required file");
+        archive
+            .start_file("nested/unused.exe", options)
+            .expect("add unused runtime file");
+        archive.write_all(b"unused").expect("write unused file");
+        archive.finish().expect("finish test archive");
+
+        extract_selected_zip_files(&archive_path, &output_dir, &["required.dll"])
+            .expect("extract required runtime file");
+        assert_eq!(
+            std::fs::read(output_dir.join("required.dll")).expect("read extracted file"),
+            b"required"
+        );
+        assert!(!output_dir.join("unused.exe").exists());
+
+        std::fs::remove_dir_all(&test_dir).expect("remove extraction test directory");
+    }
+
+    #[test]
+    fn selective_tar_extraction_uses_required_parent_directory() {
+        let test_dir = std::env::temp_dir().join(format!(
+            "aura-cuda-tar-extraction-{}-{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .expect("system clock after epoch")
+                .as_nanos()
+        ));
+        let archive_path = test_dir.join("runtime.tar.bz2");
+        let output_dir = test_dir.join("output");
+        std::fs::create_dir_all(&output_dir).expect("create tar extraction test directory");
+
+        let archive_file = std::fs::File::create(&archive_path).expect("create test archive");
+        let encoder = bzip2::write::BzEncoder::new(archive_file, bzip2::Compression::best());
+        let mut archive = tar::Builder::new(encoder);
+        for (path, contents) in [
+            ("runtime/bin/required.dll", b"bin".as_slice()),
+            ("runtime/lib/required.dll", b"lib".as_slice()),
+            ("runtime/bin/unused.exe", b"unused".as_slice()),
+        ] {
+            let mut header = tar::Header::new_gnu();
+            header.set_size(contents.len() as u64);
+            header.set_mode(0o644);
+            header.set_cksum();
+            archive
+                .append_data(&mut header, path, contents)
+                .expect("add tar archive entry");
+        }
+        archive
+            .into_inner()
+            .expect("finish tar archive")
+            .finish()
+            .expect("finish compressed archive");
+
+        extract_selected_tar_bz2_files(&archive_path, &output_dir, "bin", &["required.dll"])
+            .expect("extract selected bin runtime");
+        assert_eq!(
+            std::fs::read(output_dir.join("required.dll")).expect("read extracted file"),
+            b"bin"
+        );
+        assert!(!output_dir.join("unused.exe").exists());
+
+        std::fs::remove_dir_all(&test_dir).expect("remove tar extraction test directory");
+    }
 
     #[test]
     fn canonical_model_name_accepts_punctuation_and_parakeet() {

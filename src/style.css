@@ -1903,6 +1903,33 @@ body {
   margin: 0;
 }
 
+.modal-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.modal-links[hidden] {
+  display: none;
+}
+
+.modal-link-button {
+  appearance: none;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: var(--accent-color);
+  font: inherit;
+  font-size: 0.85rem;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.modal-link-button:focus-visible {
+  outline: 2px solid var(--accent-color);
+  outline-offset: 3px;
+}
+
 .modal-actions {
   display: flex;
   justify-content: flex-end;

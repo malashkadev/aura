@@ -207,6 +207,7 @@ pub fn generate_diagnostic_report<R: tauri::Runtime>(
     let cuda_exe = cuda_bin_dir
         .join("sherpa-onnx-offline-websocket-server.exe")
         .exists();
+    let cuda_runtime_source = crate::cuda_runtime_source_label(&cuda_bin_dir);
 
     let mut whisper_models = Vec::new();
     let models_dir = app_local_data.join("models");
@@ -237,6 +238,7 @@ pub fn generate_diagnostic_report<R: tauri::Runtime>(
         &settings.local_engine,
         &settings.model_name,
         &settings.local_acceleration,
+        cuda_runtime_source,
         settings.streaming_enabled,
         settings.voice_punctuation,
         settings.cloud_fallback_enabled,
@@ -309,6 +311,7 @@ pub fn format_diagnostic_report(
     local_engine: &str,
     model_name: &str,
     acceleration: &str,
+    cuda_runtime_source: &str,
     streaming_enabled: bool,
     voice_punctuation: bool,
     cloud_fallback: bool,
@@ -347,6 +350,7 @@ pub fn format_diagnostic_report(
         - **Engine Status**: {}\n\
         - **Selected Model**: {}\n\
         - **Acceleration**: {}\n\
+        - **CUDA Runtime Source**: {}\n\
         - **Real-time Streaming**: {}\n\
         - **Voice Punctuation**: {}\n\
         - **Cloud Fallback**: {}\n\n\
@@ -373,6 +377,7 @@ pub fn format_diagnostic_report(
         engine_status,
         model_name,
         acceleration,
+        cuda_runtime_source,
         streaming_enabled,
         voice_punctuation,
         cloud_fallback,
@@ -500,6 +505,7 @@ mod tests {
             "parakeet",
             "parakeet-v3",
             "cuda",
+            "System NVIDIA runtime (PATH)",
             true,
             true,
             true,
@@ -523,6 +529,7 @@ mod tests {
         assert!(report.contains("- **App Version**: 1.0.8"));
         assert!(report.contains("- **Engine Status**: Running (provider: cuda, port: 3033)"));
         assert!(report.contains("- **Selected Model**: parakeet-v3"));
+        assert!(report.contains("- **CUDA Runtime Source**: System NVIDIA runtime (PATH)"));
         assert!(report.contains("- **Real-time Streaming**: true"));
         assert!(report.contains("Test log line 1"));
         assert!(report.contains("Test log line 2"));

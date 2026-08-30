@@ -20,6 +20,7 @@
     "allow-delete-gpu-binaries",
     "allow-cancel-gpu-download",
     "allow-check-gpu-downloaded",
+    "allow-check-nvidia-runtime-on-path",
     "allow-get-history",
     "allow-clear-history",
     "allow-copy-to-clipboard",

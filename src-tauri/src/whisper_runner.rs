@@ -1165,13 +1165,20 @@ fn is_benign_websocket_shutdown_line(line: &str) -> bool {
 }
 
 fn is_routine_parakeet_status_line(line: &str) -> bool {
-    if !line.contains("offline-websocket-server-impl.cc:") {
-        return false;
+    if line.trim().is_empty() || line.contains("parse-options.cc:Read:") {
+        return true;
     }
 
-    (line.contains(":Decode:") && line.contains(" size: "))
-        || (line.contains(":OnOpen:") && line.contains("Number of active connections:"))
-        || (line.contains(":OnClose:") && line.contains("Number of active connections:"))
+    if line.contains("offline-websocket-server.cc:main:") {
+        return line.ends_with(" Started!")
+            || line.contains(" Listening on: ")
+            || line.contains(" Number of work threads: ");
+    }
+
+    line.contains("offline-websocket-server-impl.cc:")
+        && ((line.contains(":Decode:") && line.contains(" size: "))
+            || (line.contains(":OnOpen:") && line.contains("Number of active connections:"))
+            || (line.contains(":OnClose:") && line.contains("Number of active connections:")))
 }
 
 /// Owns the two pipe-reader threads of a sidecar plus the diagnostics buffer.
@@ -1740,6 +1747,15 @@ pub fn stop_parakeet_server<R: Runtime>(app_handle: &tauri::AppHandle<R>) {
         );
         stop_owned_server(server);
     }
+}
+
+/// Stops automatic Parakeet restarts before replacing sidecar runtime files.
+pub fn stop_parakeet_server_and_watchdog<R: Runtime>(app_handle: &tauri::AppHandle<R>) {
+    let watchdog = app_handle
+        .try_state::<crate::AppState>()
+        .and_then(|state| recover_lock(&state.parakeet_watchdog, "Parakeet watchdog").take());
+    drop(watchdog);
+    stop_parakeet_server(app_handle);
 }
 
 /// One watchdog per app lifetime: it resurrects a sidecar that died while the
@@ -3408,6 +3424,11 @@ mod tests {
     #[test]
     fn only_known_parakeet_status_lines_are_suppressed_from_unified_log() {
         for routine in [
+            "",
+            "parse-options.cc:Read:374 'server.exe' --provider=cuda",
+            "offline-websocket-server.cc:main:91 Started!",
+            "offline-websocket-server.cc:main:92 Listening on: 61709",
+            "offline-websocket-server.cc:main:93 Number of work threads: 16",
             "offline-websocket-server-impl.cc:Decode:68 size: 1",
             "offline-websocket-server-impl.cc:OnOpen:172 Number of active connections: 1",
             "offline-websocket-server-impl.cc:OnClose:180 Number of active connections: 0",
@@ -3418,6 +3439,7 @@ mod tests {
         for warning in [
             "offline-websocket-server-impl.cc:Decode:68 CUDA provider failed",
             "offline-websocket-server-impl.cc:OnOpen:172 bind failed",
+            "offline-websocket-server.cc:main:93 CUDA provider failed",
             "CUDA provider failed to initialize",
         ] {
             assert!(!is_routine_parakeet_status_line(warning), "{warning}");

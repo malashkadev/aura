@@ -12,3 +12,8 @@ commands.allow = ["delete_gpu_binaries"]
 identifier = "allow-check-gpu-downloaded"
 description = "Enables the check_gpu_downloaded command."
 commands.allow = ["check_gpu_downloaded"]
+
+[[permission]]
+identifier = "allow-check-nvidia-runtime-on-path"
+description = "Enables checking whether the required NVIDIA runtime is available on PATH."
+commands.allow = ["check_nvidia_runtime_on_path"]

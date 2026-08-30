@@ -156,6 +156,11 @@ const i18nDict = {
     "gpu_accel_cpu_desc": "Стандартный режим. Надёжен, но нагружает процессор.",
     "gpu_accel_cuda_title": "NVIDIA CUDA (максимальная скорость)",
     "gpu_accel_cuda_desc": "Для видеокарт GeForce RTX/GTX. Использует тензорные ядра.",
+    "cuda_license_title": "Условия NVIDIA CUDA",
+    "cuda_license_message": "Aura загрузит до 1,52 ГиБ архивов ускорения и установит до 2,33 ГиБ файлов. Совместимые компоненты NVIDIA, уже установленные на этом компьютере, будут использованы повторно; иначе Aura загрузит проприетарные компоненты CUDA и cuDNN непосредственно с серверов NVIDIA на условиях NVIDIA.",
+    "cuda_license_cuda_link": "Лицензия CUDA Toolkit",
+    "cuda_license_cudnn_link": "Лицензия cuDNN",
+    "cuda_license_accept": "Принять и скачать",
     "gpu_accel_dml_title": "DirectML (универсальный)",
     "gpu_accel_dml_desc": "Для видеокарт AMD, Intel и NVIDIA. Базовое ускорение.",
     "btn_copy_diagnostics": "Скопировать отчет диагностики",
@@ -184,7 +189,7 @@ const i18nDict = {
     "history_filter_all": "Все",
     "history_filter_cloud": "Облако",
     "history_filter_local": "Локально",
-    "gpu_status_installing": "Проверка и установка..."
+    "gpu_status_installing": "Установка..."
   },
   "en": {
     "title_settings": "Settings",
@@ -331,6 +336,11 @@ const i18nDict = {
     "gpu_accel_cpu_desc": "Standard mode. Reliable, but uses more CPU.",
     "gpu_accel_cuda_title": "NVIDIA CUDA (maximum speed)",
     "gpu_accel_cuda_desc": "For GeForce RTX/GTX GPUs. Uses Tensor Cores.",
+    "cuda_license_title": "NVIDIA CUDA terms",
+    "cuda_license_message": "Aura will download up to 1.52 GiB of acceleration archives and install up to 2.33 GiB of files. Compatible NVIDIA components already installed on this PC are reused; otherwise Aura downloads proprietary CUDA and cuDNN components directly from NVIDIA under NVIDIA's terms.",
+    "cuda_license_cuda_link": "CUDA Toolkit license",
+    "cuda_license_cudnn_link": "cuDNN license",
+    "cuda_license_accept": "Accept and download",
     "gpu_accel_dml_title": "DirectML (universal)",
     "gpu_accel_dml_desc": "For AMD, Intel, and NVIDIA GPUs. Basic acceleration.",
     "btn_copy_diagnostics": "Copy Diagnostic Report",
@@ -359,7 +369,7 @@ const i18nDict = {
     "history_filter_all": "All",
     "history_filter_cloud": "Cloud",
     "history_filter_local": "Local",
-    "gpu_status_installing": "Checking and installing..."
+    "gpu_status_installing": "Installing..."
   },
   "de": {
     "gpu_accel_label": "Lokale Hardware-Beschleunigung",
@@ -367,6 +377,11 @@ const i18nDict = {
     "gpu_accel_cpu_desc": "Standardmodus. Zuverlässig, beansprucht aber die CPU.",
     "gpu_accel_cuda_title": "NVIDIA CUDA (maximale Geschwindigkeit)",
     "gpu_accel_cuda_desc": "Für GeForce RTX/GTX-Grafikkarten. Nutzt Tensor Cores.",
+    "cuda_license_title": "NVIDIA-CUDA-Bedingungen",
+    "cuda_license_message": "Aura lädt bis zu 1,52 GiB Beschleunigungsarchive herunter und installiert bis zu 2,33 GiB Dateien. Bereits installierte kompatible NVIDIA-Komponenten werden wiederverwendet; andernfalls lädt Aura proprietäre CUDA- und cuDNN-Komponenten gemäß den NVIDIA-Bedingungen direkt von NVIDIA herunter.",
+    "cuda_license_cuda_link": "CUDA-Toolkit-Lizenz",
+    "cuda_license_cudnn_link": "cuDNN-Lizenz",
+    "cuda_license_accept": "Akzeptieren und herunterladen",
     "gpu_accel_dml_title": "DirectML (universell)",
     "gpu_accel_dml_desc": "Für AMD-, Intel- und NVIDIA-Grafikkarten. Basisbeschleunigung.",
     "title_settings": "Einstellungen",
@@ -534,7 +549,7 @@ const i18nDict = {
     "history_filter_all": "Alle",
     "history_filter_cloud": "Cloud",
     "history_filter_local": "Lokal",
-    "gpu_status_installing": "Überprüfen und Installieren..."
+    "gpu_status_installing": "Installieren..."
   },
   "es": {
     "title_settings": "Ajustes",
@@ -666,6 +681,11 @@ const i18nDict = {
     "gpu_accel_cpu_desc": "Modo estándar. Es fiable, pero aumenta la carga del procesador.",
     "gpu_accel_cuda_title": "NVIDIA CUDA (velocidad máxima)",
     "gpu_accel_cuda_desc": "Para GPU GeForce RTX/GTX. Utiliza Tensor Cores.",
+    "cuda_license_title": "Términos de NVIDIA CUDA",
+    "cuda_license_message": "Aura descargará hasta 1,52 GiB de archivos de aceleración e instalará hasta 2,33 GiB de archivos. Se reutilizarán los componentes NVIDIA compatibles ya instalados; de lo contrario, Aura descargará componentes propietarios de CUDA y cuDNN directamente de NVIDIA bajo sus términos.",
+    "cuda_license_cuda_link": "Licencia de CUDA Toolkit",
+    "cuda_license_cudnn_link": "Licencia de cuDNN",
+    "cuda_license_accept": "Aceptar y descargar",
     "gpu_accel_dml_title": "DirectML (universal)",
     "gpu_accel_dml_desc": "Para GPU AMD, Intel y NVIDIA. Aceleración básica.",
     "hotkey_reset_title": "Restablecer a Alt+V",
@@ -709,7 +729,7 @@ const i18nDict = {
     "history_filter_all": "Todos",
     "history_filter_cloud": "Nube",
     "history_filter_local": "Local",
-    "gpu_status_installing": "Verificando e instalando..."
+    "gpu_status_installing": "Instalando..."
   },
   "fr": {
     "title_settings": "Paramètres",
@@ -841,6 +861,11 @@ const i18nDict = {
     "gpu_accel_cpu_desc": "Mode standard. Fiable, mais sollicite le processeur.",
     "gpu_accel_cuda_title": "NVIDIA CUDA (vitesse maximale)",
     "gpu_accel_cuda_desc": "Pour les GPU GeForce RTX/GTX. Utilise les Tensor Cores.",
+    "cuda_license_title": "Conditions NVIDIA CUDA",
+    "cuda_license_message": "Aura téléchargera jusqu'à 1,52 Gio d'archives d'accélération et installera jusqu'à 2,33 Gio de fichiers. Les composants NVIDIA compatibles déjà installés seront réutilisés ; sinon, Aura téléchargera les composants propriétaires CUDA et cuDNN directement depuis NVIDIA selon ses conditions.",
+    "cuda_license_cuda_link": "Licence CUDA Toolkit",
+    "cuda_license_cudnn_link": "Licence cuDNN",
+    "cuda_license_accept": "Accepter et télécharger",
     "gpu_accel_dml_title": "DirectML (universel)",
     "gpu_accel_dml_desc": "Pour les GPU AMD, Intel et NVIDIA. Accélération de base.",
     "hotkey_reset_title": "Réinitialiser à Alt+V",
@@ -884,7 +909,7 @@ const i18nDict = {
     "history_filter_all": "Tous",
     "history_filter_cloud": "Nuage",
     "history_filter_local": "Local",
-    "gpu_status_installing": "Vérification et installation..."
+    "gpu_status_installing": "Installation..."
   },
   "it": {
     "title_settings": "Impostazioni",
@@ -1016,6 +1041,11 @@ const i18nDict = {
     "gpu_accel_cpu_desc": "Modalità standard. Affidabile, ma utilizza maggiormente la CPU.",
     "gpu_accel_cuda_title": "NVIDIA CUDA (velocità massima)",
     "gpu_accel_cuda_desc": "Per GPU GeForce RTX/GTX. Usa i Tensor Core.",
+    "cuda_license_title": "Condizioni NVIDIA CUDA",
+    "cuda_license_message": "Aura scaricherà fino a 1,52 GiB di archivi di accelerazione e installerà fino a 2,33 GiB di file. I componenti NVIDIA compatibili già installati verranno riutilizzati; altrimenti Aura scaricherà componenti CUDA e cuDNN proprietari direttamente da NVIDIA secondo i relativi termini.",
+    "cuda_license_cuda_link": "Licenza CUDA Toolkit",
+    "cuda_license_cudnn_link": "Licenza cuDNN",
+    "cuda_license_accept": "Accetta e scarica",
     "gpu_accel_dml_title": "DirectML (universale)",
     "gpu_accel_dml_desc": "Per GPU AMD, Intel e NVIDIA. Accelerazione di base.",
     "hotkey_reset_title": "Ripristina ad Alt+V",
@@ -1059,7 +1089,7 @@ const i18nDict = {
     "history_filter_all": "Tutti",
     "history_filter_cloud": "Cloud",
     "history_filter_local": "Locale",
-    "gpu_status_installing": "Verifica e installazione..."
+    "gpu_status_installing": "Installazione..."
   },
   "zh": {
     "title_settings": "设置",
@@ -1191,6 +1221,11 @@ const i18nDict = {
     "gpu_accel_cpu_desc": "标准模式。稳定可靠，但会占用更多处理器资源。",
     "gpu_accel_cuda_title": "NVIDIA CUDA（最高速度）",
     "gpu_accel_cuda_desc": "适用于 GeForce RTX/GTX 显卡。使用 Tensor Core。",
+    "cuda_license_title": "NVIDIA CUDA 条款",
+    "cuda_license_message": "Aura 将下载最多 1.52 GiB 的加速组件包，并安装最多 2.33 GiB 的文件。系统中已有的兼容 NVIDIA 组件将被重复使用；否则 Aura 将根据 NVIDIA 条款直接下载其专有 CUDA 和 cuDNN 组件。",
+    "cuda_license_cuda_link": "CUDA Toolkit 许可证",
+    "cuda_license_cudnn_link": "cuDNN 许可证",
+    "cuda_license_accept": "接受并下载",
     "gpu_accel_dml_title": "DirectML（通用）",
     "gpu_accel_dml_desc": "适用于 AMD、Intel 和 NVIDIA 显卡。基础加速。",
     "hotkey_reset_title": "重置为 Alt+V",
@@ -1234,7 +1269,7 @@ const i18nDict = {
     "history_filter_all": "全部",
     "history_filter_cloud": "云端",
     "history_filter_local": "本地",
-    "gpu_status_installing": "正在验证和安装..."
+    "gpu_status_installing": "正在安装..."
   },
   "pt": {
     "title_settings": "Configurações",
@@ -1366,6 +1401,11 @@ const i18nDict = {
     "gpu_accel_cpu_desc": "Modo padrão. Seguro, mas exige mais do processador.",
     "gpu_accel_cuda_title": "NVIDIA CUDA (velocidade máxima)",
     "gpu_accel_cuda_desc": "Para GPUs GeForce RTX/GTX. Usa Tensor Cores.",
+    "cuda_license_title": "Termos do NVIDIA CUDA",
+    "cuda_license_message": "O Aura baixará até 1,52 GiB de arquivos de aceleração e instalará até 2,33 GiB de arquivos. Componentes NVIDIA compatíveis já instalados serão reutilizados; caso contrário, o Aura baixará componentes CUDA e cuDNN proprietários diretamente da NVIDIA sob os termos da NVIDIA.",
+    "cuda_license_cuda_link": "Licença do CUDA Toolkit",
+    "cuda_license_cudnn_link": "Licença do cuDNN",
+    "cuda_license_accept": "Aceitar e baixar",
     "gpu_accel_dml_title": "DirectML (universal)",
     "gpu_accel_dml_desc": "Para GPUs AMD, Intel e NVIDIA. Aceleração básica.",
     "hotkey_reset_title": "Redefinir para Alt+V",
@@ -1409,7 +1449,7 @@ const i18nDict = {
     "history_filter_all": "Todos",
     "history_filter_cloud": "Nuvem",
     "history_filter_local": "Local",
-    "gpu_status_installing": "Verificando e instalando..."
+    "gpu_status_installing": "Instalando..."
   },
   "tr": {
     "title_settings": "Ayarlar",
@@ -1541,6 +1581,11 @@ const i18nDict = {
     "gpu_accel_cpu_desc": "Standart mod. Güvenlidir ancak işlemciyi daha fazla kullanır.",
     "gpu_accel_cuda_title": "NVIDIA CUDA (en yüksek hız)",
     "gpu_accel_cuda_desc": "GeForce RTX/GTX ekran kartları için. Tensor çekirdeklerini kullanır.",
+    "cuda_license_title": "NVIDIA CUDA koşulları",
+    "cuda_license_message": "Aura en fazla 1,52 GiB hızlandırma arşivi indirecek ve en fazla 2,33 GiB dosya kuracaktır. Bilgisayarda yüklü uyumlu NVIDIA bileşenleri yeniden kullanılır; aksi halde Aura tescilli CUDA ve cuDNN bileşenlerini NVIDIA koşulları kapsamında doğrudan NVIDIA'dan indirir.",
+    "cuda_license_cuda_link": "CUDA Toolkit lisansı",
+    "cuda_license_cudnn_link": "cuDNN lisansı",
+    "cuda_license_accept": "Kabul et ve indir",
     "gpu_accel_dml_title": "DirectML (evrensel)",
     "gpu_accel_dml_desc": "AMD, Intel ve NVIDIA ekran kartları için. Temel hızlandırma.",
     "hotkey_reset_title": "Alt+V'ye Sıfırla",
@@ -1584,7 +1629,7 @@ const i18nDict = {
     "history_filter_all": "Tümü",
     "history_filter_cloud": "Bulut",
     "history_filter_local": "Yerel",
-    "gpu_status_installing": "Doğrulanıyor ve yükleniyor..."
+    "gpu_status_installing": "Yükleniyor..."
   }
 };
 
@@ -2832,7 +2877,7 @@ showStatus(getTranslation("model_deleted_success"));
       if (payload.status === "installing" || (percent >= 100 && !payload.done)) {
         if (progressEl) progressEl.classList.add("installing");
         fillEl.style.width = "100%";
-        const installText = getTranslation("gpu_status_installing") || "Проверка и установка...";
+        const installText = getTranslation("gpu_status_installing") || "Установка...";
         pctEl.innerHTML = `<span class="spinner-inline" aria-hidden="true"></span> ${installText}`;
       } else {
         if (progressEl) progressEl.classList.remove("installing");
@@ -2934,6 +2979,36 @@ showStatus(getTranslation("model_deleted_success"));
       return;
     }
 
+    let acceptedNvidiaTerms = false;
+    if (provider === "cuda") {
+      let nvidiaRuntimeOnPath = false;
+      try {
+        nvidiaRuntimeOnPath = await invoke("check_nvidia_runtime_on_path");
+      } catch (error) {
+        console.error("Failed to check NVIDIA runtime on PATH", error);
+      }
+      if (!nvidiaRuntimeOnPath) {
+        const dict = i18nDict[currentLanguage] || i18nDict.ru;
+        acceptedNvidiaTerms = await showConfirm(
+          dict.cuda_license_title,
+          dict.cuda_license_message,
+          dict.cuda_license_accept,
+          dict.confirm_cancel,
+          [
+            {
+              label: dict.cuda_license_cuda_link,
+              url: "https://docs.nvidia.com/cuda/archive/11.8.0/eula/index.html"
+            },
+            {
+              label: dict.cuda_license_cudnn_link,
+              url: "https://docs.nvidia.com/deeplearning/cudnn/archives/cudnn-850/sla/index.html"
+            }
+          ]
+        );
+        if (!acceptedNvidiaTerms) return;
+      }
+    }
+
     const actionEl = document.getElementById(`action-gpu-${provider}`);
     const progressEl = document.getElementById(`progress-gpu-${provider}`);
     const fillEl = document.getElementById(`fill-gpu-${provider}`);
@@ -2967,7 +3042,7 @@ cancelBtn.addEventListener("click", (e) => {
 
     try {
       showStatus(getTranslation("model_downloading_pattern", { model: provider.toUpperCase() }));
-      await invoke("download_gpu_binaries", { provider });
+      await invoke("download_gpu_binaries", { provider, acceptedNvidiaTerms });
     } catch (err) {
       console.error(err);
       const errStr = String(err).toLowerCase();
@@ -3017,7 +3092,7 @@ cancelBtn.addEventListener("click", (e) => {
       if (progress.status === "installing") {
         if (progressEl) progressEl.classList.add("installing");
         fillEl.style.width = "100%";
-        const installText = getTranslation("gpu_status_installing") || "Верификация и установка...";
+        const installText = getTranslation("gpu_status_installing") || "Установка...";
         percentEl.innerHTML = `<span class="spinner-inline" aria-hidden="true"></span> ${installText}`;
       } else {
         if (progressEl) progressEl.classList.remove("installing");
@@ -3101,14 +3176,15 @@ card.addEventListener("keydown", async (e) => {
   });
 
   // --- Asynchronous native confirmation dialog ---
-  function showConfirm(title, message, confirmText = "ОК", cancelText = "Отмена") {
+  function showConfirm(title, message, confirmText = "ОК", cancelText = "Отмена", links = []) {
     return new Promise((resolve) => {
       const modal = document.getElementById("custom-confirm-modal");
       const titleEl = document.getElementById("confirm-modal-title");
       const msgEl = document.getElementById("confirm-modal-message");
+      const linksEl = document.getElementById("confirm-modal-links");
       const btnOk = document.getElementById("btn-confirm-ok");
       const btnCancel = document.getElementById("btn-confirm-cancel");
-      if (!(modal instanceof HTMLDialogElement) || !titleEl || !msgEl || !btnOk || !btnCancel) {
+      if (!(modal instanceof HTMLDialogElement) || !titleEl || !msgEl || !linksEl || !btnOk || !btnCancel) {
         resolve(false);
         return;
       }
@@ -3117,6 +3193,18 @@ card.addEventListener("keydown", async (e) => {
       msgEl.textContent = message;
       btnOk.textContent = confirmText;
       btnCancel.textContent = cancelText;
+      linksEl.replaceChildren();
+      linksEl.hidden = links.length === 0;
+      links.forEach(({ label, url }) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "modal-link-button";
+        button.textContent = label;
+        button.addEventListener("click", () => {
+          invoke("open_url", { url }).catch(console.error);
+        });
+        linksEl.appendChild(button);
+      });
       if (modal.open) modal.close();
       modal.showModal();
       requestAnimationFrame(() => modal.classList.add("active"));
@@ -3129,6 +3217,8 @@ card.addEventListener("keydown", async (e) => {
         btnOk.removeEventListener("click", onOk);
         btnCancel.removeEventListener("click", onCancel);
         modal.removeEventListener("cancel", onDialogCancel);
+        linksEl.replaceChildren();
+        linksEl.hidden = true;
         setTimeout(() => {
           if (modal.open) modal.close();
           resolve(result);

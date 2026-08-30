@@ -68,6 +68,31 @@ test("offline frontend neither loads Google Fonts nor performs an unconditional 
   assert.doesNotMatch(main, /invoke\("check_for_update"\)/);
 });
 
+test("CUDA setup requires NVIDIA terms only when the system runtime is missing", () => {
+  const html = read("src/index.html");
+  const main = read("src/main.js");
+
+  assert.match(html, /id="confirm-modal-links"/);
+  assert.match(main, /nvidiaRuntimeOnPath = await invoke\("check_nvidia_runtime_on_path"\)/);
+  assert.match(main, /if \(!nvidiaRuntimeOnPath\) \{/);
+  assert.match(main, /acceptedNvidiaTerms = await showConfirm/);
+  assert.match(main, /Compatible NVIDIA components already installed on this PC are reused/);
+  assert.match(main, /if \(!acceptedNvidiaTerms\) return/);
+  assert.match(main, /invoke\("download_gpu_binaries", \{ provider, acceptedNvidiaTerms \}\)/);
+  assert.match(main, /https:\/\/docs\.nvidia\.com\/cuda\/archive\/11\.8\.0\/eula\/index\.html/);
+  assert.match(
+    main,
+    /https:\/\/docs\.nvidia\.com\/deeplearning\/cudnn\/archives\/cudnn-850\/sla\/index\.html/,
+  );
+});
+
+test("GPU installation progress uses a compact label", () => {
+  const main = read("src/main.js");
+
+  assert.match(main, /"gpu_status_installing": "Installing\.\.\."/);
+  assert.doesNotMatch(main, /Checking and installing/);
+});
+
 test("frontend uses redacted key metadata and write-only provider-key IPC", () => {
   const html = read("src/index.html");
   const main = read("src/main.js");

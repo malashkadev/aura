@@ -107,7 +107,8 @@ cargo test
 - **Update checks** run only on demand or when explicitly enabled in settings.
 
 ## Recently added
- 
+
+- **NVIDIA CUDA GPU Acceleration** — offload local Parakeet model inference to NVIDIA GPUs with on-demand runtime downloading and auto CPU fallback. CUDA setup reuses a complete CUDA 11/cuDNN 8 runtime available through `PATH`; otherwise it downloads pinned private copies. Setup downloads up to 1.52 GiB of archives and installs up to 2.33 GiB of runtime files, including proprietary NVIDIA components covered by the terms in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 - **Audio Device Selection & VU Meter** — select physical microphone devices directly in Settings with a real-time input level meter and Silero VAD detection.
 - **Post-Release Audio Grace Buffer (Tail Hold)** — 160ms tail buffer and expanded VAD margin to completely prevent trailing word and syllable clipping.
 - **Context Editing & Safe Clipboard Handoff** — AI sparkle indicator for selection editing; if target window focus shifts during transcription, text is safely copied to the clipboard with an overlay notification.
