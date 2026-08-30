@@ -11,7 +11,7 @@
 
 <p align="center">
   <a href="https://github.com/malashkadev/aura/actions/workflows/ci.yml"><img src="https://github.com/malashkadev/aura/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
-  <a href="https://github.com/malashkadev/aura/releases"><img src="https://img.shields.io/github/v/release/malashkadev/aura?color=10b981&label=релиз" alt="Релиз" /></a>
+  <a href="https://github.com/malashkadev/aura/releases"><img src="https://img.shields.io/github/v/release/malashkadev/aura?color=10b981&label=release" alt="Релиз" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-AGPL_v3-blue.svg" alt="Лицензия: AGPL v3" /></a>
   <img src="https://img.shields.io/badge/platform-Windows%2010%2F11-blue" alt="Платформа" />
 </p>
