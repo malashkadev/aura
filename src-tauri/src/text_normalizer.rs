@@ -778,6 +778,11 @@ pub fn strip_hallucinated_prefixes(text: &str) -> String {
         "спасибо за просмотр",
         "подписывайтесь на канал",
         "ставьте лайки",
+        "terms",
+        "термины",
+        "vocabulary",
+        "glossary",
+        "словарь",
         "thank you for watching",
         "thanks for watching",
         "to be continued",
@@ -786,6 +791,31 @@ pub fn strip_hallucinated_prefixes(text: &str) -> String {
 
     if standalone_hallucinations.iter().any(|&s| clean_punct == s) {
         return String::new();
+    }
+
+    let mut current_text = trimmed.to_string();
+
+    // Strip leaked prompt metadata labels (e.g., "Terms:", "Термины:", "Vocabulary:", "Glossary:", "Словарь:")
+    let prompt_metadata_labels = ["terms", "термины", "vocabulary", "glossary", "словарь"];
+
+    for label in &prompt_metadata_labels {
+        let current_lower = current_text.to_lowercase();
+        if current_lower.starts_with(label) {
+            let remainder = current_text[label.len()..].trim_start();
+            if let Some(first_char) = remainder.chars().next() {
+                if matches!(first_char, ':' | '-' | '—') {
+                    let after_sep = remainder
+                        .trim_start_matches([':', '-', '—', ' ', '\t'])
+                        .trim();
+                    if after_sep.is_empty() {
+                        return String::new();
+                    } else {
+                        current_text = after_sep.to_string();
+                        break;
+                    }
+                }
+            }
+        }
     }
 
     // List of known hallucinated prefix stems.
@@ -818,8 +848,6 @@ pub fn strip_hallucinated_prefixes(text: &str) -> String {
         "movie text",
         "video text",
     ];
-
-    let mut current_text = trimmed.to_string();
 
     for stem in &prefix_stems {
         let current_lower = current_text.to_lowercase();
@@ -895,6 +923,212 @@ pub fn normalize_transcription_text(raw_text: &str, language: &str) -> String {
     let formatted = collapse_number_and_version_spacings(&final_spaced);
 
     formatted.trim().to_string()
+}
+
+/// Smooths speech boundaries between committed left text and newly decoded right text in streaming mode.
+/// Prevents awkward periods and capitalized words when user stutters or pauses before conjunctions (e.g. "и", "но", "что").
+pub fn smooth_conjunction_boundary(left: &str, right: &str) -> String {
+    let left = left.trim();
+    let right = right.trim();
+    if left.is_empty() {
+        return right.to_string();
+    }
+    if right.is_empty() {
+        return left.to_string();
+    }
+
+    // Check if left ends with a single period (not ellipsis "...")
+    let left_ends_with_period = left.ends_with('.') && !left.ends_with("..");
+    if !left_ends_with_period {
+        return format!("{left} {right}");
+    }
+
+    let (first_token, remainder) = match right.split_once(char::is_whitespace) {
+        Some((w, r)) => (w, r),
+        None => (right, ""),
+    };
+
+    let clean_first = first_token
+        .trim_matches(|c: char| !c.is_alphabetic())
+        .to_lowercase();
+
+    // Conjunctions requiring comma in Russian / English
+    const COMMA_CONJUNCTIONS: &[&str] = &[
+        "а",
+        "но",
+        "что",
+        "чтобы",
+        "чтоб",
+        "хотя",
+        "когда",
+        "если",
+        "потому",
+        "оттого",
+        "зато",
+        "однако",
+        "поскольку",
+        "причем",
+        "причём",
+        "то",
+        "but",
+        "because",
+        "although",
+        "though",
+        "whereas",
+        "while",
+        "since",
+    ];
+
+    // Conjunctions without comma in Russian / English (connectors)
+    const NO_COMMA_CONJUNCTIONS: &[&str] = &["и", "или", "либо", "да", "and", "or", "nor", "so"];
+
+    let is_comma = COMMA_CONJUNCTIONS.contains(&clean_first.as_str());
+    let is_no_comma = NO_COMMA_CONJUNCTIONS.contains(&clean_first.as_str());
+
+    if !is_comma && !is_no_comma {
+        return format!("{left} {right}");
+    }
+
+    // Strip trailing period from left
+    let left_stripped = left.strip_suffix('.').unwrap_or(left).trim_end();
+
+    // Lowercase the first token of right
+    let lower_first = first_token
+        .chars()
+        .next()
+        .map(|c| c.to_lowercase().collect::<String>() + &first_token[c.len_utf8()..])
+        .unwrap_or_else(|| first_token.to_string());
+
+    let right_rest = if remainder.is_empty() {
+        lower_first
+    } else {
+        format!("{lower_first} {remainder}")
+    };
+
+    if is_comma {
+        if left_stripped.ends_with(|c: char| ",;:-—".contains(c)) {
+            format!("{left_stripped} {right_rest}")
+        } else {
+            format!("{left_stripped}, {right_rest}")
+        }
+    } else {
+        format!("{left_stripped} {right_rest}")
+    }
+}
+
+fn get_current_local_datetime() -> (String, String, String, String) {
+    #[cfg(target_os = "windows")]
+    {
+        use windows_sys::Win32::Foundation::SYSTEMTIME;
+        use windows_sys::Win32::System::SystemInformation::GetLocalTime;
+        let mut st: SYSTEMTIME = unsafe { std::mem::zeroed() };
+        unsafe { GetLocalTime(&mut st) };
+        let date_iso = format!("{:04}-{:02}-{:02}", st.wYear, st.wMonth, st.wDay);
+        let date_ru = format!("{:02}.{:02}.{:04}", st.wDay, st.wMonth, st.wYear);
+        let time_str = format!("{:02}:{:02}", st.wHour, st.wMinute);
+        let datetime_str = format!("{} {}", date_iso, time_str);
+        (date_iso, date_ru, time_str, datetime_str)
+    }
+    #[cfg(not(target_os = "windows"))]
+    {
+        let now = std::time::SystemTime::now();
+        let secs = now
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap_or_default()
+            .as_secs();
+        let days = secs / 86400;
+        let rem_secs = secs % 86400;
+        let hours = rem_secs / 3600;
+        let minutes = (rem_secs % 3600) / 60;
+        let date_iso = format!("day-{days}");
+        let date_ru = format!("day-{days}");
+        let time_str = format!("{:02}:{:02}", hours, minutes);
+        let datetime_str = format!("{date_iso} {time_str}");
+        (date_iso, date_ru, time_str, datetime_str)
+    }
+}
+
+/// Applies user-configured custom replacements and dynamic macros (e.g. {date}, {time})
+/// across the text with whole-token boundary checking and case-insensitivity.
+pub fn apply_text_replacements(
+    text: &str,
+    replacements: &[crate::settings::TextReplacement],
+) -> String {
+    if text.trim().is_empty() || replacements.is_empty() {
+        return text.to_string();
+    }
+
+    let (date_iso, date_ru, time_str, datetime_str) = get_current_local_datetime();
+    let mut result = text.to_string();
+
+    for rule in replacements {
+        let trigger = rule.trigger.trim();
+        if trigger.is_empty() {
+            continue;
+        }
+
+        // Expand dynamic macros in replacement
+        let mut expanded_replacement = rule.replacement.clone();
+        if expanded_replacement.contains("{date}") {
+            expanded_replacement = expanded_replacement.replace("{date}", &date_iso);
+        }
+        if expanded_replacement.contains("{date_ru}") {
+            expanded_replacement = expanded_replacement.replace("{date_ru}", &date_ru);
+        }
+        if expanded_replacement.contains("{time}") {
+            expanded_replacement = expanded_replacement.replace("{time}", &time_str);
+        }
+        if expanded_replacement.contains("{datetime}") {
+            expanded_replacement = expanded_replacement.replace("{datetime}", &datetime_str);
+        }
+
+        result = replace_case_insensitive_boundary(&result, trigger, &expanded_replacement);
+    }
+
+    result
+}
+
+fn replace_case_insensitive_boundary(haystack: &str, trigger: &str, replacement: &str) -> String {
+    if haystack.is_empty() || trigger.is_empty() {
+        return haystack.to_string();
+    }
+
+    let orig_chars: Vec<char> = haystack.chars().collect();
+    let trigger_chars: Vec<char> = trigger.chars().collect();
+    let trigger_len = trigger_chars.len();
+
+    if trigger_len == 0 || trigger_len > orig_chars.len() {
+        return haystack.to_string();
+    }
+
+    let mut output = String::with_capacity(haystack.len());
+    let mut i = 0;
+
+    while i < orig_chars.len() {
+        if i + trigger_len <= orig_chars.len() {
+            let matches = (0..trigger_len).all(|j| {
+                orig_chars[i + j]
+                    .to_lowercase()
+                    .eq(trigger_chars[j].to_lowercase())
+            });
+
+            if matches {
+                let left_ok = i == 0 || !orig_chars[i - 1].is_alphanumeric();
+                let right_ok = (i + trigger_len == orig_chars.len())
+                    || !orig_chars[i + trigger_len].is_alphanumeric();
+
+                if left_ok && right_ok {
+                    output.push_str(replacement);
+                    i += trigger_len;
+                    continue;
+                }
+            }
+        }
+        output.push(orig_chars[i]);
+        i += 1;
+    }
+
+    output
 }
 
 #[cfg(test)]
@@ -1017,6 +1251,22 @@ mod tests {
             normalize_transcription_text("Субтитры: студия дубляжа", "ru"),
             "Студия дубляжа"
         );
+        assert_eq!(
+            normalize_transcription_text("Terms: вот пример моей диктовки", "ru"),
+            "Вот пример моей диктовки"
+        );
+        assert_eq!(
+            normalize_transcription_text("Термины: проверка качества записи", "ru"),
+            "Проверка качества записи"
+        );
+        assert_eq!(
+            normalize_transcription_text("Vocabulary: clean speech dictation", "en"),
+            "Clean speech dictation"
+        );
+        assert_eq!(
+            normalize_transcription_text("Terms and conditions apply.", "en"),
+            "Terms and conditions apply."
+        );
     }
 
     #[test]
@@ -1061,5 +1311,61 @@ mod tests {
         let input = "слово ,еще слово .И следующее слово";
         let output = normalize_transcription_text(input, "ru");
         assert_eq!(output, "Слово, еще слово. И следующее слово");
+    }
+
+    #[test]
+    fn test_smooth_conjunction_boundary() {
+        // "И" connector removes period
+        let res1 = smooth_conjunction_boundary("Мы пошли в магазин.", "И купили хлеб.");
+        assert_eq!(res1, "Мы пошли в магазин и купили хлеб.");
+
+        // "А" / "Но" / "Что" replaces period with comma
+        let res2 = smooth_conjunction_boundary("Мы пошли в магазин.", "А потом в кино.");
+        assert_eq!(res2, "Мы пошли в магазин, а потом в кино.");
+
+        let res3 = smooth_conjunction_boundary("Я думал.", "Что всё готово.");
+        assert_eq!(res3, "Я думал, что всё готово.");
+
+        // English conjunctions
+        let res4 = smooth_conjunction_boundary("We arrived home.", "And went to bed.");
+        assert_eq!(res4, "We arrived home and went to bed.");
+
+        let res5 = smooth_conjunction_boundary("We arrived home.", "Because we were tired.");
+        assert_eq!(res5, "We arrived home, because we were tired.");
+
+        // Regular sentence boundaries remain intact
+        let res6 = smooth_conjunction_boundary("Первое предложение.", "Второе предложение.");
+        assert_eq!(res6, "Первое предложение. Второе предложение.");
+    }
+
+    #[test]
+    fn test_apply_text_replacements() {
+        let replacements = vec![
+            crate::settings::TextReplacement {
+                trigger: "кубернетис".to_string(),
+                replacement: "Kubernetes".to_string(),
+            },
+            crate::settings::TextReplacement {
+                trigger: "мой имейл".to_string(),
+                replacement: "admin@aura.app".to_string(),
+            },
+            crate::settings::TextReplacement {
+                trigger: "сегодня".to_string(),
+                replacement: "{date}".to_string(),
+            },
+        ];
+
+        let text1 = "Мы развернули кубернетис на сервере.";
+        let res1 = apply_text_replacements(text1, &replacements);
+        assert_eq!(res1, "Мы развернули Kubernetes на сервере.");
+
+        let text2 = "Напиши на Мой Имейл прямо сейчас.";
+        let res2 = apply_text_replacements(text2, &replacements);
+        assert_eq!(res2, "Напиши на admin@aura.app прямо сейчас.");
+
+        let text3 = "Дата релиза сегодня.";
+        let res3 = apply_text_replacements(text3, &replacements);
+        assert!(!res3.contains("{date}"));
+        assert!(res3.starts_with("Дата релиза 20"));
     }
 }

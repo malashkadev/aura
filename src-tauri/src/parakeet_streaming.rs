@@ -507,11 +507,17 @@ fn merge_transcripts(left: &str, right: &str) -> (String, usize) {
 
     match overlap {
         Some(count) if count == right_tokens.len() => (left.to_string(), count),
-        Some(count) => (
-            format!("{} {}", left, right_tokens[count..].join(" ")),
-            count,
+        Some(count) => {
+            let right_suffix = right_tokens[count..].join(" ");
+            (
+                crate::text_normalizer::smooth_conjunction_boundary(left, &right_suffix),
+                count,
+            )
+        }
+        None => (
+            crate::text_normalizer::smooth_conjunction_boundary(left, right),
+            0,
         ),
-        None => (format!("{left} {right}"), 0),
     }
 }
 

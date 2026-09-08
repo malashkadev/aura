@@ -23,15 +23,17 @@ const parseOverlayNotices = () => {
 };
 
 
-test("Tauri capabilities isolate main and overlay with least privilege", () => {
+test("Tauri capabilities isolate main, overlay, and tray-menu with least privilege", () => {
   assert.equal(existsSync(new URL("../src-tauri/capabilities/default.json", import.meta.url)), false);
 
   const main = json("src-tauri/capabilities/main.json");
   const overlay = json("src-tauri/capabilities/overlay.json");
+  const trayMenu = json("src-tauri/capabilities/tray-menu.json");
 
   assert.deepEqual(main.windows, ["main"]);
   assert.deepEqual(overlay.windows, ["overlay"]);
-  for (const capability of [main, overlay]) {
+  assert.deepEqual(trayMenu.windows, ["tray-menu"]);
+  for (const capability of [main, overlay, trayMenu]) {
     assert.equal(capability.permissions.includes("core:default"), false);
     assert.equal(capability.permissions.includes("opener:default"), false);
     assert.equal(capability.permissions.includes("updater:default"), false);
@@ -46,11 +48,47 @@ test("Tauri capabilities isolate main and overlay with least privilege", () => {
     overlay.permissions.toSorted(),
     ["allow-hide-overlay-window", "core:event:allow-listen", "core:event:allow-unlisten"].toSorted(),
   );
+  assert.deepEqual(
+    trayMenu.permissions.toSorted(),
+    [
+      "allow-close-window",
+      "allow-exit-app",
+      "allow-get-gaming-mode-state",
+      "allow-get-settings",
+      "allow-set-settings",
+      "allow-show-settings-window",
+      "allow-toggle-gaming-mode",
+      "core:event:allow-listen",
+      "core:event:allow-unlisten",
+    ].toSorted(),
+  );
 
   const build = read("src-tauri/build.rs");
   assert.match(build, /AppManifest::new\(\)\.commands/);
   assert.match(build, /"set_provider_key"/);
   assert.match(build, /"hide_overlay_window"/);
+  assert.match(build, /"show_settings_window"/);
+});
+
+test("tray menu geometry and CSS prevent letterboxing and black bars", () => {
+  const config = json("src-tauri/tauri.conf.json");
+  const trayWin = config.app.windows.find((w) => w.label === "tray-menu");
+  assert.ok(trayWin, "tray-menu window must be declared in tauri.conf.json");
+  assert.equal(trayWin.width, 270);
+  assert.equal(trayWin.height, 196);
+  assert.equal(trayWin.transparent, true);
+  assert.equal(trayWin.decorations, false);
+  assert.equal(trayWin.shadow, false);
+
+  const rustLib = read("src-tauri/src/lib.rs");
+  assert.match(rustLib, /let logical_w = 270\.0;/);
+  assert.match(rustLib, /let logical_h = 196\.0;/);
+
+  const css = read("src/tray-menu.css");
+  assert.match(css, /html,\s*body\s*\{[^}]*align-items:\s*stretch;/);
+  assert.match(css, /\.aura-tray-menu\s*\{[^}]*width:\s*100%;/);
+  assert.match(css, /\.aura-tray-menu\s*\{[^}]*height:\s*100%;/);
+  assert.match(css, /\.lang-list-container\s*\{[^}]*max-height:\s*142px;/);
 });
 
 test("offline frontend neither loads Google Fonts nor performs an unconditional update request", () => {
@@ -137,6 +175,8 @@ test("settings translations cover every supported locale without fallback gaps",
     "gpu_accel_cuda_title", "gpu_accel_cuda_desc", "gpu_accel_dml_title", "gpu_accel_dml_desc",
     "update_current", "update_available_pattern", "update_check_error_pattern",
     "update_installing", "update_installed_restarting", "update_install_error_open_release",
+    "window_minimize", "window_close", "history_copy_title", "history_search_clear",
+    "api_key_toggle_visibility", "history_filters_label",
   ];
   for (const locale of expectedLocales.slice(1)) {
     for (const key of newlyLocalizedSettings) {

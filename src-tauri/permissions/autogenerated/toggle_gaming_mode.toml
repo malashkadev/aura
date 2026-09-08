@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-toggle-gaming-mode"
+description = "Enables the toggle_gaming_mode command without any pre-configured scope."
+commands.allow = ["toggle_gaming_mode"]
+
+[[permission]]
+identifier = "deny-toggle-gaming-mode"
+description = "Denies the toggle_gaming_mode command without any pre-configured scope."
+commands.deny = ["toggle_gaming_mode"]

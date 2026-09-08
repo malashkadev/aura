@@ -18,9 +18,8 @@ pub mod whisper_runner;
 
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::{mpsc, Arc, Mutex};
-use tauri::menu::{CheckMenuItem, Menu, MenuItem, PredefinedMenuItem, Submenu};
-use tauri::tray::{MouseButton, TrayIconBuilder, TrayIconEvent};
-use tauri::{Emitter, Listener, Manager};
+use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
+use tauri::{Emitter, Manager};
 use tauri_plugin_autostart::MacosLauncher;
 use tauri_plugin_autostart::ManagerExt;
 use tauri_plugin_updater::UpdaterExt;
@@ -66,6 +65,9 @@ struct AppState {
     whisper_server: Mutex<Option<whisper_runner::RunningWhisperServer>>,
     whisper_port: std::sync::atomic::AtomicU16,
     whisper_watchdog: Mutex<Option<whisper_runner::WhisperWatchdog>>,
+    last_activity_time: Mutex<std::time::Instant>,
+    gaming_mode_active: AtomicBool,
+    last_audio_devices: Mutex<Vec<String>>,
 }
 
 #[tauri::command]
@@ -75,7 +77,28 @@ fn minimize_window(window: tauri::WebviewWindow) {
 
 #[tauri::command]
 fn close_window(window: tauri::WebviewWindow) {
-    let _ = window.close();
+    if window.label() == "tray-menu" {
+        let _ = window.hide();
+    } else {
+        let _ = window.close();
+    }
+}
+
+#[tauri::command]
+fn show_settings_window(app_handle: tauri::AppHandle) {
+    if let Some(tray_win) = app_handle.get_webview_window("tray-menu") {
+        let _ = tray_win.hide();
+    }
+    if let Some(window) = app_handle.get_webview_window("main") {
+        let _ = window.show();
+        let _ = window.unminimize();
+        let _ = window.set_focus();
+    }
+}
+
+#[tauri::command]
+fn exit_app(app_handle: tauri::AppHandle) {
+    app_handle.exit(0);
 }
 
 #[tauri::command]
@@ -109,6 +132,7 @@ struct OverlayPreferences {
     overlay_sound_theme: String,
     overlay_sound_volume: f32,
     overlay_show_timer: bool,
+    ui_language: String,
 }
 
 impl From<&settings::Settings> for OverlayPreferences {
@@ -118,6 +142,7 @@ impl From<&settings::Settings> for OverlayPreferences {
             overlay_sound_theme: settings.overlay_sound_theme.clone(),
             overlay_sound_volume: settings.overlay_sound_volume,
             overlay_show_timer: settings.overlay_show_timer,
+            ui_language: settings.ui_language.clone(),
         }
     }
 }
@@ -193,15 +218,18 @@ async fn set_ui_language(app_handle: tauri::AppHandle, ui_language: String) -> R
     Ok(())
 }
 
+#[allow(dead_code)]
 #[derive(Clone, Copy)]
 struct TrayTranslations {
     show: &'static str,
     recognition_mode: &'static str,
     cloud: &'static str,
     local: &'static str,
+    gaming_mode: &'static str,
     quit: &'static str,
 }
 
+#[allow(dead_code)]
 fn tray_translations(language: &str) -> TrayTranslations {
     match language {
         "ru" => TrayTranslations {
@@ -209,6 +237,7 @@ fn tray_translations(language: &str) -> TrayTranslations {
             recognition_mode: "Способ распознавания",
             cloud: "Облачный ИИ",
             local: "Локальный ИИ (Whisper / Parakeet)",
+            gaming_mode: "Игровой режим",
             quit: "Выход",
         },
         "de" => TrayTranslations {
@@ -216,6 +245,7 @@ fn tray_translations(language: &str) -> TrayTranslations {
             recognition_mode: "Erkennungsmodus",
             cloud: "Cloud-KI",
             local: "Lokale KI (Whisper / Parakeet)",
+            gaming_mode: "Spielemodus",
             quit: "Beenden",
         },
         "es" => TrayTranslations {
@@ -223,6 +253,7 @@ fn tray_translations(language: &str) -> TrayTranslations {
             recognition_mode: "Modo de reconocimiento",
             cloud: "IA en la nube",
             local: "IA local (Whisper / Parakeet)",
+            gaming_mode: "Modo de juego",
             quit: "Salir",
         },
         "fr" => TrayTranslations {
@@ -230,6 +261,7 @@ fn tray_translations(language: &str) -> TrayTranslations {
             recognition_mode: "Mode de reconnaissance",
             cloud: "IA cloud",
             local: "IA locale (Whisper / Parakeet)",
+            gaming_mode: "Mode jeu",
             quit: "Quitter",
         },
         "it" => TrayTranslations {
@@ -237,6 +269,7 @@ fn tray_translations(language: &str) -> TrayTranslations {
             recognition_mode: "Modalità di riconoscimento",
             cloud: "IA cloud",
             local: "IA locale (Whisper / Parakeet)",
+            gaming_mode: "Modalità gioco",
             quit: "Esci",
         },
         "zh" => TrayTranslations {
@@ -244,6 +277,7 @@ fn tray_translations(language: &str) -> TrayTranslations {
             recognition_mode: "识别模式",
             cloud: "云端 AI",
             local: "本地 AI (Whisper / Parakeet)",
+            gaming_mode: "游戏模式",
             quit: "退出",
         },
         "pt" => TrayTranslations {
@@ -251,6 +285,7 @@ fn tray_translations(language: &str) -> TrayTranslations {
             recognition_mode: "Modo de reconhecimento",
             cloud: "IA na nuvem",
             local: "IA local (Whisper / Parakeet)",
+            gaming_mode: "Modo de Jogo",
             quit: "Sair",
         },
         "tr" => TrayTranslations {
@@ -258,15 +293,53 @@ fn tray_translations(language: &str) -> TrayTranslations {
             recognition_mode: "Tanıma modu",
             cloud: "Bulut AI",
             local: "Yerel AI (Whisper / Parakeet)",
+            gaming_mode: "Oyun Modu",
             quit: "Çıkış",
+        },
+        "en" => TrayTranslations {
+            show: "Open settings",
+            recognition_mode: "Recognition mode",
+            cloud: "Cloud AI",
+            local: "Local AI (Whisper / Parakeet)",
+            gaming_mode: "Gaming Mode",
+            quit: "Quit",
         },
         _ => TrayTranslations {
             show: "Open settings",
             recognition_mode: "Recognition mode",
             cloud: "Cloud AI",
             local: "Local AI (Whisper / Parakeet)",
+            gaming_mode: "Gaming Mode",
             quit: "Quit",
         },
+    }
+}
+
+#[allow(dead_code)]
+trait SetTextMock {
+    fn set_text(&self, text: &str) -> Result<(), ()>;
+}
+
+#[allow(dead_code)]
+fn sync_tray_translations_fallback<T: SetTextMock>(show_sync: &T, text: &TrayTranslations) {
+    let _ = show_sync.set_text(text.show);
+}
+
+fn tray_tooltip(gaming_mode: bool, language: &str) -> &'static str {
+    if gaming_mode {
+        match language {
+            "en" => "Aura — 🎮 Gaming Mode active",
+            "de" => "Aura — 🎮 Spielmodus aktiv",
+            "fr" => "Aura — 🎮 Mode jeu actif",
+            "es" => "Aura — 🎮 Modo de juego activo",
+            "it" => "Aura — 🎮 Modalità gioco attiva",
+            "zh" => "Aura — 🎮 游戏模式已开启",
+            "pt" => "Aura — 🎮 Modo de Jogo ativo",
+            "tr" => "Aura — 🎮 Oyun Modu aktif",
+            _ => "Aura — 🎮 Игровой режим активен",
+        }
+    } else {
+        "Aura"
     }
 }
 
@@ -478,6 +551,11 @@ async fn get_audio_input_devices() -> Result<Vec<String>, String> {
 
 #[tauri::command]
 async fn start_mic_meter(app_handle: tauri::AppHandle) -> Result<(), String> {
+    if let Some(state) = app_handle.try_state::<AppState>() {
+        if state.is_recording.load(Ordering::SeqCst) {
+            return Err("Cannot start mic meter while dictation recording is active".to_string());
+        }
+    }
     let settings = load_settings_async(app_handle.clone())
         .await
         .unwrap_or_default();
@@ -509,17 +587,15 @@ async fn reprocess_history_text(
         &language
     };
 
-    if settings.transcription_mode == "cloud" && !settings.api_key.trim().is_empty() {
-        ai_client::clean_text_with_llm(
-            provider,
-            &settings.api_key,
-            &text,
-            lang,
-            &settings.dictionary,
-        )
-        .await
+    let api_key = settings.active_api_key();
+    if settings.transcription_mode == "cloud" && !api_key.trim().is_empty() {
+        ai_client::clean_text_with_llm(provider, api_key, &text, lang, &settings.dictionary).await
     } else {
-        Ok(text_normalizer::normalize_transcription_text(&text, lang))
+        let normalized = text_normalizer::normalize_transcription_text(&text, lang);
+        Ok(text_normalizer::apply_text_replacements(
+            &normalized,
+            &settings.text_replacements,
+        ))
     }
 }
 
@@ -602,11 +678,17 @@ struct EngineHealth {
     running: bool,
     provider: Option<String>,
     port: Option<u16>,
+    gaming_mode: bool,
 }
 
 #[tauri::command]
 fn get_engine_health(app_handle: tauri::AppHandle) -> EngineHealth {
     let settings = settings::load_settings(&app_handle).unwrap_or_default();
+    let gaming_mode = app_handle
+        .try_state::<AppState>()
+        .map(|s| s.gaming_mode_active.load(Ordering::Acquire))
+        .unwrap_or(false);
+
     if settings.local_engine == "whisper" {
         return match whisper_runner::whisper_server_status(&app_handle) {
             Some((provider, port)) => EngineHealth {
@@ -614,12 +696,14 @@ fn get_engine_health(app_handle: tauri::AppHandle) -> EngineHealth {
                 running: true,
                 provider: Some(provider),
                 port: Some(port),
+                gaming_mode,
             },
             None => EngineHealth {
                 engine: "whisper".to_string(),
                 running: false,
                 provider: None,
                 port: None,
+                gaming_mode,
             },
         };
     }
@@ -629,6 +713,7 @@ fn get_engine_health(app_handle: tauri::AppHandle) -> EngineHealth {
             running: true,
             provider: None,
             port: None,
+            gaming_mode,
         };
     }
     match whisper_runner::parakeet_server_status(&app_handle) {
@@ -637,12 +722,14 @@ fn get_engine_health(app_handle: tauri::AppHandle) -> EngineHealth {
             running: true,
             provider: Some(provider),
             port: Some(port),
+            gaming_mode,
         },
         None => EngineHealth {
             engine: "parakeet".to_string(),
             running: false,
             provider: None,
             port: None,
+            gaming_mode,
         },
     }
 }
@@ -2837,6 +2924,28 @@ async fn start_recording_session(app_handle: tauri::AppHandle) {
         });
     }
 
+    if let Some(state) = app_handle.try_state::<AppState>() {
+        if let Ok(mut guard) = state.last_activity_time.lock() {
+            *guard = std::time::Instant::now();
+        }
+    }
+
+    if session_settings.transcription_mode == "local" {
+        if session_settings.local_engine == "whisper" && session_settings.whisper_keep_in_memory {
+            let prewarm_handle = app_handle.clone();
+            let prewarm_settings = session_settings.clone();
+            tauri::async_runtime::spawn_blocking(move || {
+                whisper_runner::ensure_whisper_server_state(&prewarm_handle, &prewarm_settings);
+            });
+        } else if session_settings.local_engine == "parakeet" {
+            let prewarm_handle = app_handle.clone();
+            let prewarm_settings = session_settings.clone();
+            tauri::async_runtime::spawn_blocking(move || {
+                whisper_runner::ensure_parakeet_server_state(&prewarm_handle, &prewarm_settings);
+            });
+        }
+    }
+
     // Start recording to a session-unique temporary WAV path
     let temp_path = recording_wav_path(gen);
     let temp_path_str = temp_path.to_string_lossy().to_string();
@@ -2898,9 +3007,19 @@ async fn start_recording_session(app_handle: tauri::AppHandle) {
         return;
     }
 
-    if !state.is_recording.load(Ordering::SeqCst) || state.session_gen.load(Ordering::SeqCst) != gen
-    {
+    let current_gen = state.session_gen.load(Ordering::SeqCst);
+    if current_gen != gen {
+        // A newer session has already begun. Do not touch audio_recorder or keyboard_hook,
+        // as they now belong to the newer generation!
         finish_live_target_monitoring(&app_handle, gen);
+        return;
+    }
+
+    if !state.is_recording.load(Ordering::SeqCst) {
+        // Recording was cancelled before overlay initialization completed.
+        finish_live_target_monitoring(&app_handle, gen);
+        let _ = state.audio_recorder.cancel_recording();
+        keyboard_hook::set_recording_active(false);
         return;
     }
 
@@ -3367,7 +3486,7 @@ async fn finalize_recording(app_handle: tauri::AppHandle) {
             let gate_path = temp_path_str.clone();
             let gate_tag = session_tag_clone.clone();
             let has_speech = tauri::async_runtime::spawn_blocking(move || {
-                vad::gate_and_trim_wav_file(&gate_path, Some(&gate_tag))
+                vad::gate_wav_file(&gate_path, Some(&gate_tag))
             })
             .await
             .map_err(|error| format!("VAD gate worker failed: {error}"))
@@ -3502,7 +3621,11 @@ async fn finalize_recording(app_handle: tauri::AppHandle) {
             Ok(text) => {
                 let normalized_text =
                     text_normalizer::normalize_transcription_text(&text, &language);
-                let trimmed = normalized_text.trim().to_string();
+                let replaced_text = text_normalizer::apply_text_replacements(
+                    &normalized_text,
+                    &settings.text_replacements,
+                );
+                let trimmed = replaced_text.trim().to_string();
                 crate::logger::log(
                     "INFO",
                     "ASR",
@@ -3822,106 +3945,188 @@ pub fn run() {
                 }
             }
 
-            // 2. Build system tray menu
-            let tray_text = tray_translations(&startup_settings.ui_language);
-            let show_i = MenuItem::with_id(app, "show", tray_text.show, true, None::<&str>)?;
-            let sep1 = PredefinedMenuItem::separator(app)?;
+            // 2. Setup custom tray menu popup window
+            let last_opened = Arc::new(Mutex::new(
+                std::time::Instant::now() - std::time::Duration::from_secs(10),
+            ));
+            let last_blurred = Arc::new(Mutex::new(
+                std::time::Instant::now() - std::time::Duration::from_secs(10),
+            ));
 
-            let is_cloud = startup_settings.transcription_mode == "cloud";
-            let mode_cloud_i = CheckMenuItem::with_id(app, "tray_mode_cloud", tray_text.cloud, true, is_cloud, None::<&str>)?;
-            let mode_local_i = CheckMenuItem::with_id(app, "tray_mode_local", tray_text.local, true, !is_cloud, None::<&str>)?;
-            let mode_sub = Submenu::with_items(app, tray_text.recognition_mode, true, &[&mode_cloud_i, &mode_local_i])?;
+            if let Some(tray_window) = app.get_webview_window("tray-menu") {
+                let tw = tray_window.clone();
+                let last_opened_blur = Arc::clone(&last_opened);
+                let last_blurred_blur = Arc::clone(&last_blurred);
+                tray_window.on_window_event(move |event| {
+                    if let tauri::WindowEvent::Focused(false) = event {
+                        let is_recent_open = {
+                            let lo = last_opened_blur
+                                .lock()
+                                .unwrap_or_else(|p| p.into_inner());
+                            lo.elapsed() < std::time::Duration::from_millis(300)
+                        };
+                        if !is_recent_open {
+                            if let Ok(mut lb) = last_blurred_blur.lock() {
+                                *lb = std::time::Instant::now();
+                            }
+                            let _ = tw.hide();
+                        }
+                    }
+                });
+            }
 
-            let sep2 = PredefinedMenuItem::separator(app)?;
-            let quit_i = MenuItem::with_id(app, "quit", tray_text.quit, true, None::<&str>)?;
-
-            let menu = Menu::with_items(app, &[
-                &show_i,
-                &sep1,
-                &mode_sub,
-                &sep2,
-                &quit_i,
-            ])?;
-
-            let mode_cloud_handle = mode_cloud_i.clone();
-            let mode_local_handle = mode_local_i.clone();
-
-            // 3. Build tray icon
+            // 3. Build system tray icon with custom popup menu
             if let Some(tray_icon) = app.default_window_icon().cloned() {
-                let _tray = TrayIconBuilder::new()
-                    .icon(tray_icon)
-                    .menu(&menu)
-                    .on_menu_event(move |app, event| match event.id.as_ref() {
-                        "quit" => {
-                            app.exit(0);
-                        }
-                        "show" => {
-                            if let Some(window) = app.get_webview_window("main") {
-                                let _ = window.show();
-                                let _ = window.set_focus();
-                            }
-                        }
-                        "tray_mode_cloud" => {
-                            let _ = mode_cloud_handle.set_checked(true);
-                            let _ = mode_local_handle.set_checked(false);
-                            let app_handle = app.clone();
-                            tauri::async_runtime::spawn(async move {
-                                if let Ok(mut settings) = settings::load_settings(&app_handle) {
-                                    settings.transcription_mode = "cloud".to_string();
-                                    let _ = settings::save_settings(&app_handle, &settings);
-                                    let _ = app_handle.emit("settings-changed", ());
+                let initial_tooltip = tray_tooltip(
+                    startup_settings.gaming_mode_enabled,
+                    &startup_settings.ui_language,
+                );
+
+                let initial_icon = if startup_settings.gaming_mode_enabled {
+                    tauri::image::Image::from_bytes(include_bytes!("../icons/32x32_gaming.png"))
+                        .unwrap_or(tray_icon)
+                } else {
+                    tray_icon
+                };
+
+                let last_opened_tray = Arc::clone(&last_opened);
+                let last_blurred_tray = Arc::clone(&last_blurred);
+
+                let _tray = TrayIconBuilder::with_id("main-tray")
+                    .icon(initial_icon)
+                    .tooltip(initial_tooltip)
+                    .on_tray_icon_event(move |tray, event| {
+                        match event {
+                            TrayIconEvent::Click {
+                                button: MouseButton::Left,
+                                button_state: MouseButtonState::Up,
+                                ..
+                            } => {
+                                let app = tray.app_handle();
+                                if let Some(tray_win) = app.get_webview_window("tray-menu") {
+                                    let _ = tray_win.hide();
                                 }
-                            });
-                        }
-                        "tray_mode_local" => {
-                            let _ = mode_cloud_handle.set_checked(false);
-                            let _ = mode_local_handle.set_checked(true);
-                            let app_handle = app.clone();
-                            tauri::async_runtime::spawn(async move {
-                                if let Ok(mut settings) = settings::load_settings(&app_handle) {
-                                    settings.transcription_mode = "local".to_string();
-                                    let _ = settings::save_settings(&app_handle, &settings);
-                                    let _ = app_handle.emit("settings-changed", ());
+                                if let Some(window) = app.get_webview_window("main") {
+                                    let _ = window.show();
+                                    let _ = window.unminimize();
+                                    let _ = window.set_focus();
                                 }
-                            });
-                        }
-                        _ => {}
-                    })
-                    .on_tray_icon_event(|tray, event| {
-                        if let TrayIconEvent::Click {
-                            button: MouseButton::Left,
-                            ..
-                        } = event
-                        {
-                            let app = tray.app_handle();
-                            if let Some(window) = app.get_webview_window("main") {
-                                let _ = window.show();
-                                let _ = window.set_focus();
                             }
+                            TrayIconEvent::Click {
+                                button: MouseButton::Right,
+                                button_state: MouseButtonState::Up,
+                                ..
+                            } => {
+                                let app = tray.app_handle();
+                                if let Some(tray_win) = app.get_webview_window("tray-menu") {
+                                    let is_vis = tray_win.is_visible().unwrap_or(false);
+                                    let just_blurred = {
+                                        let lb = last_blurred_tray
+                                            .lock()
+                                            .unwrap_or_else(|p| p.into_inner());
+                                        lb.elapsed() < std::time::Duration::from_millis(300)
+                                    };
+
+                                    if is_vis || just_blurred {
+                                        let _ = tray_win.hide();
+                                    } else {
+                                        #[cfg(target_os = "windows")]
+                                        {
+                                            use windows_sys::Win32::UI::WindowsAndMessaging::GetCursorPos;
+                                            use windows_sys::Win32::Graphics::Gdi::{
+                                                MonitorFromPoint, GetMonitorInfoW, MONITORINFO, MONITOR_DEFAULTTONEAREST,
+                                            };
+                                            use windows_sys::Win32::Foundation::{POINT, RECT};
+
+                                            let mut pt = POINT { x: 0, y: 0 };
+                                            unsafe {
+                                                GetCursorPos(&mut pt);
+                                            }
+
+                                            // 1. Find monitor under cursor to get exact physical work area
+                                            let mut work_area: RECT = unsafe { std::mem::zeroed() };
+                                            let mut has_work_area = false;
+
+                                            unsafe {
+                                                let hmonitor = MonitorFromPoint(pt, MONITOR_DEFAULTTONEAREST);
+                                                if hmonitor != 0 {
+                                                    let mut mi: MONITORINFO = std::mem::zeroed();
+                                                    mi.cbSize = std::mem::size_of::<MONITORINFO>() as u32;
+                                                    if GetMonitorInfoW(hmonitor, &mut mi) != 0 {
+                                                        work_area = mi.rcWork;
+                                                        has_work_area = true;
+                                                    }
+                                                }
+                                            }
+
+                                            // Fallback if monitor info failed
+                                            if !has_work_area {
+                                                use windows_sys::Win32::UI::WindowsAndMessaging::{SystemParametersInfoW, SPI_GETWORKAREA};
+                                                unsafe {
+                                                    SystemParametersInfoW(
+                                                        SPI_GETWORKAREA,
+                                                        0,
+                                                        &mut work_area as *mut _ as *mut _,
+                                                        0,
+                                                    );
+                                                }
+                                            }
+
+                                            // 2. Determine scaling factor of the active screen
+                                            let scale_factor = tray_win.scale_factor().unwrap_or(1.0);
+
+                                            // Explicitly enforce logical dimensions for WebView2 rendering
+                                            let logical_w = 270.0;
+                                            let logical_h = 196.0;
+                                            let _ = tray_win.set_size(tauri::Size::Logical(tauri::LogicalSize::new(logical_w, logical_h)));
+
+                                            // Physical sizes for precise cursor offset and boundary clamping
+                                            let phys_w = (logical_w * scale_factor).round() as i32;
+                                            let phys_h = (logical_h * scale_factor).round() as i32;
+                                            let margin = (10.0 * scale_factor).round() as i32;
+                                            let bottom_offset = (20.0 * scale_factor).round() as i32;
+
+                                            // Default: position popup directly above cursor
+                                            let mut x = pt.x - (phys_w / 2);
+                                            let mut y = pt.y - phys_h - margin;
+
+                                            // Clamp inside active screen work area (physical coordinates)
+                                            if x + phys_w > work_area.right {
+                                                x = work_area.right - phys_w - margin;
+                                            }
+                                            if x < work_area.left {
+                                                x = work_area.left + margin;
+                                            }
+                                            if y < work_area.top {
+                                                y = pt.y + bottom_offset;
+                                            }
+
+                                            let _ = tray_win.set_position(tauri::Position::Physical(
+                                                tauri::PhysicalPosition { x, y },
+                                            ));
+                                        }
+                                        let _ = tray_win.show();
+                                        let _ = tray_win.set_focus();
+                                        #[cfg(target_os = "windows")]
+                                        {
+                                            use windows_sys::Win32::UI::WindowsAndMessaging::SetForegroundWindow;
+                                            if let Ok(hwnd) = tray_win.hwnd() {
+                                                unsafe {
+                                                    SetForegroundWindow(hwnd.0 as _);
+                                                }
+                                            }
+                                        }
+                                        if let Ok(mut lo) = last_opened_tray.lock() {
+                                            *lo = std::time::Instant::now();
+                                        }
+                                    }
+                                }
+                            }
+                            _ => {}
                         }
                     })
                     .build(app)?;
             }
-
-            let mode_cloud_sync = mode_cloud_i.clone();
-            let mode_local_sync = mode_local_i.clone();
-            let show_sync = show_i.clone();
-            let mode_sub_sync = mode_sub.clone();
-            let quit_sync = quit_i.clone();
-            let app_for_sync = app_handle.clone();
-            app.listen("settings-changed", move |_| {
-                if let Ok(s) = settings::load_settings(&app_for_sync) {
-                    let is_c = s.transcription_mode == "cloud";
-                    let _ = mode_cloud_sync.set_checked(is_c);
-                    let _ = mode_local_sync.set_checked(!is_c);
-                    let text = tray_translations(&s.ui_language);
-                    let _ = show_sync.set_text(text.show);
-                    let _ = mode_sub_sync.set_text(text.recognition_mode);
-                    let _ = mode_cloud_sync.set_text(text.cloud);
-                    let _ = mode_local_sync.set_text(text.local);
-                    let _ = quit_sync.set_text(text.quit);
-                }
-            });
 
             app.manage(AppState {
                 audio_recorder: audio_recorder::AudioRecorder::new(),
@@ -3947,28 +4152,46 @@ pub fn run() {
                 whisper_server: Mutex::new(None),
                 whisper_port: std::sync::atomic::AtomicU16::new(0),
                 whisper_watchdog: Mutex::new(None),
+                last_activity_time: Mutex::new(std::time::Instant::now()),
+                gaming_mode_active: AtomicBool::new(startup_settings.gaming_mode_enabled),
+                last_audio_devices: Mutex::new(audio_recorder::list_audio_input_devices()),
             });
 
-            // Start Parakeet or Whisper server based on validated startup snapshot.
-            if startup_settings.local_engine == "parakeet" {
-                let sidecar_handle = app_handle.clone();
-                let sidecar_settings = startup_settings.clone();
-                tauri::async_runtime::spawn_blocking(move || {
-                    whisper_runner::ensure_parakeet_server_state(
-                        &sidecar_handle,
-                        &sidecar_settings,
-                    );
-                });
-            } else if startup_settings.local_engine == "whisper" {
-                let whisper_handle = app_handle.clone();
-                let whisper_settings = startup_settings.clone();
-                tauri::async_runtime::spawn_blocking(move || {
-                    whisper_runner::ensure_whisper_server_state(
-                        &whisper_handle,
-                        &whisper_settings,
-                    );
-                });
+            if startup_settings.gaming_mode_enabled {
+                keyboard_hook::set_hook_paused(true);
+            } else {
+                // Start Parakeet or Whisper server based on validated startup snapshot.
+                if startup_settings.local_engine == "parakeet" {
+                    let sidecar_handle = app_handle.clone();
+                    let sidecar_settings = startup_settings.clone();
+                    tauri::async_runtime::spawn_blocking(move || {
+                        whisper_runner::ensure_parakeet_server_state(
+                            &sidecar_handle,
+                            &sidecar_settings,
+                        );
+                    });
+                } else if startup_settings.local_engine == "whisper" {
+                    let whisper_handle = app_handle.clone();
+                    let whisper_settings = startup_settings.clone();
+                    tauri::async_runtime::spawn_blocking(move || {
+                        whisper_runner::ensure_whisper_server_state(
+                            &whisper_handle,
+                            &whisper_settings,
+                        );
+                    });
+                }
             }
+
+            // Standby Unloader, Gaming Mode & Audio Hotplug background monitor
+            let standby_handle = app_handle.clone();
+            tauri::async_runtime::spawn(async move {
+                let mut interval = tokio::time::interval(std::time::Duration::from_secs(3));
+                loop {
+                    interval.tick().await;
+                    check_vram_standby_and_gaming(&standby_handle).await;
+                    check_audio_devices_hotplug(&standby_handle);
+                }
+            });
             // Esc cancels an active recording
             let cancel_handle = app_handle.clone();
             keyboard_hook::set_cancel_callback(move || {
@@ -4111,7 +4334,11 @@ pub fn run() {
             get_audio_input_devices,
             start_mic_meter,
             stop_mic_meter,
-            reprocess_history_text
+            reprocess_history_text,
+            toggle_gaming_mode,
+            get_gaming_mode_state,
+            show_settings_window,
+            exit_app
         ])
         .build(tauri::generate_context!());
     let application = match application {
@@ -4124,6 +4351,7 @@ pub fn run() {
     };
     application.run(|app_handle, event| {
         if let tauri::RunEvent::Exit = event {
+            whisper_runner::stop_whisper_server(app_handle);
             whisper_runner::stop_parakeet_server(app_handle);
         }
     });
@@ -4593,6 +4821,252 @@ async fn check_gpu_downloaded(
 fn check_nvidia_runtime_on_path() -> bool {
     let path = std::env::var_os("PATH");
     nvidia_runtime_is_on_path(path.as_deref())
+}
+
+async fn apply_gaming_mode_state(app: &tauri::AppHandle, enabled: bool, auto_triggered: bool) {
+    if let Some(state) = app.try_state::<AppState>() {
+        let prev = state.gaming_mode_active.swap(enabled, Ordering::SeqCst);
+        if prev == enabled {
+            return;
+        }
+        keyboard_hook::set_hook_paused(enabled);
+
+        // Dynamic Tray Icon & Tooltip update
+        if let Some(tray) = app.tray_by_id("main-tray") {
+            let settings = settings::load_settings(app).ok();
+            let lang = settings
+                .as_ref()
+                .map(|s| s.ui_language.as_str())
+                .unwrap_or("ru");
+            let tooltip = tray_tooltip(enabled, lang);
+            let _ = tray.set_tooltip(Some(tooltip));
+            if enabled {
+                let icon_bytes = include_bytes!("../icons/32x32_gaming.png");
+                if let Ok(img) = tauri::image::Image::from_bytes(icon_bytes) {
+                    let _ = tray.set_icon(Some(img));
+                }
+            } else {
+                if let Some(default_icon) = app.default_window_icon().cloned() {
+                    let _ = tray.set_icon(Some(default_icon));
+                }
+            }
+        }
+
+        if enabled {
+            whisper_runner::stop_whisper_server(app);
+            whisper_runner::stop_parakeet_server(app);
+            crate::logger::log(
+                "INFO",
+                "GamingMode",
+                None,
+                if auto_triggered {
+                    "Auto-engaged Gaming Mode: VRAM model servers unloaded and keyboard hook paused"
+                } else {
+                    "Manual Gaming Mode enabled: VRAM model servers unloaded and keyboard hook paused"
+                },
+            );
+        } else {
+            if let Ok(settings) = settings::load_settings(app) {
+                if settings.transcription_mode == "local" && settings.whisper_keep_in_memory {
+                    if settings.local_engine == "whisper" {
+                        whisper_runner::ensure_whisper_server_state(app, &settings);
+                    } else if settings.local_engine == "parakeet" {
+                        whisper_runner::ensure_parakeet_server_state(app, &settings);
+                    }
+                }
+            }
+            crate::logger::log(
+                "INFO",
+                "GamingMode",
+                None,
+                if auto_triggered {
+                    "Auto-disengaged Gaming Mode: keyboard hook resumed and resident servers restored"
+                } else {
+                    "Manual Gaming Mode disabled: keyboard hook resumed and resident servers restored"
+                },
+            );
+        }
+        let _ = app.emit("gaming-mode-changed", enabled);
+    }
+}
+
+#[cfg(target_os = "windows")]
+fn is_foreground_window_fullscreen() -> bool {
+    use windows_sys::Win32::Foundation::RECT;
+    use windows_sys::Win32::Graphics::Gdi::{
+        GetMonitorInfoW, MonitorFromWindow, MONITORINFO, MONITOR_DEFAULTTONEAREST,
+    };
+    use windows_sys::Win32::UI::WindowsAndMessaging::{
+        GetClassNameW, GetForegroundWindow, GetWindowLongW, GetWindowRect, GWL_STYLE, WS_CAPTION,
+    };
+
+    unsafe {
+        let hwnd = GetForegroundWindow();
+        if hwnd == 0 {
+            return false;
+        }
+
+        let mut class_name = [0u16; 256];
+        let len = GetClassNameW(hwnd, class_name.as_mut_ptr(), 256);
+        if len > 0 {
+            let name = String::from_utf16_lossy(&class_name[..len as usize]);
+            if name == "Progman" || name == "WorkerW" || name == "Shell_TrayWnd" || name == "Aura" {
+                return false;
+            }
+        }
+
+        let style = GetWindowLongW(hwnd, GWL_STYLE) as u32;
+        if (style & WS_CAPTION) == WS_CAPTION {
+            return false;
+        }
+
+        let mut win_rect: RECT = std::mem::zeroed();
+        if GetWindowRect(hwnd, &mut win_rect) == 0 {
+            return false;
+        }
+
+        let hmonitor = MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST);
+        if hmonitor == 0 {
+            return false;
+        }
+
+        let mut mi: MONITORINFO = std::mem::zeroed();
+        mi.cbSize = std::mem::size_of::<MONITORINFO>() as u32;
+        if GetMonitorInfoW(hmonitor, &mut mi) == 0 {
+            return false;
+        }
+
+        let mon_w = mi.rcMonitor.right - mi.rcMonitor.left;
+        let mon_h = mi.rcMonitor.bottom - mi.rcMonitor.top;
+
+        let width = win_rect.right - win_rect.left;
+        let height = win_rect.bottom - win_rect.top;
+
+        width >= mon_w && height >= mon_h
+    }
+}
+
+async fn check_vram_standby_and_gaming(app: &tauri::AppHandle) {
+    let Some(state) = app.try_state::<AppState>() else {
+        return;
+    };
+    let Ok(settings) = settings::load_settings(app) else {
+        return;
+    };
+
+    // 1. Auto-detect full-screen 3D games if enabled
+    if settings.gaming_mode_auto_detect && !settings.gaming_mode_enabled {
+        #[cfg(target_os = "windows")]
+        let is_d3d_fullscreen = {
+            use windows_sys::Win32::UI::Shell::{
+                SHQueryUserNotificationState, QUNS_RUNNING_D3D_FULL_SCREEN,
+            };
+            let mut query_state = 0;
+            let hr = unsafe { SHQueryUserNotificationState(&mut query_state) };
+            (hr == 0 && query_state == QUNS_RUNNING_D3D_FULL_SCREEN)
+                || is_foreground_window_fullscreen()
+        };
+        #[cfg(not(target_os = "windows"))]
+        let is_d3d_fullscreen = false;
+
+        let currently_active = state.gaming_mode_active.load(Ordering::Acquire);
+        if is_d3d_fullscreen && !currently_active && !state.is_recording.load(Ordering::SeqCst) {
+            apply_gaming_mode_state(app, true, true).await;
+        } else if !is_d3d_fullscreen && currently_active {
+            apply_gaming_mode_state(app, false, true).await;
+        }
+    }
+
+    // 2. VRAM Standby Unloader
+    if !state.gaming_mode_active.load(Ordering::Acquire)
+        && settings.vram_standby_timeout_mins > 0
+        && !state.is_recording.load(Ordering::SeqCst)
+    {
+        let last_activity = state
+            .last_activity_time
+            .lock()
+            .map(|t| *t)
+            .unwrap_or_else(|p| **p.get_ref());
+        let timeout = std::time::Duration::from_secs(
+            u64::from(settings.vram_standby_timeout_mins).saturating_mul(60),
+        );
+        if last_activity.elapsed() >= timeout {
+            let whisper_running = state.whisper_port.load(Ordering::SeqCst) > 0;
+            let parakeet_running = state
+                .parakeet_server
+                .lock()
+                .map(|s| s.is_some())
+                .unwrap_or(false);
+
+            if whisper_running || parakeet_running {
+                whisper_runner::stop_whisper_server(app);
+                whisper_runner::stop_parakeet_server(app);
+                crate::logger::log(
+                    "INFO",
+                    "Standby",
+                    None,
+                    &format!(
+                        "VRAM Standby: Unloaded resident model servers after {} minutes of inactivity",
+                        settings.vram_standby_timeout_mins
+                    ),
+                );
+            }
+        }
+    }
+}
+
+fn check_audio_devices_hotplug(app: &tauri::AppHandle) {
+    let Some(state) = app.try_state::<AppState>() else {
+        return;
+    };
+    let current_devices = audio_recorder::list_audio_input_devices();
+    let changed = {
+        let mut guard = state
+            .last_audio_devices
+            .lock()
+            .unwrap_or_else(|p| p.into_inner());
+        if *guard != current_devices {
+            *guard = current_devices.clone();
+            true
+        } else {
+            false
+        }
+    };
+    if changed {
+        let _ = app.emit("audio-devices-changed", &current_devices);
+        crate::logger::log(
+            "INFO",
+            "Audio",
+            None,
+            &format!(
+                "Audio input devices hotplug detected: {} device(s) currently available",
+                current_devices.len()
+            ),
+        );
+    }
+}
+
+#[tauri::command]
+async fn toggle_gaming_mode(app_handle: tauri::AppHandle) -> Result<bool, String> {
+    let current_active = app_handle
+        .try_state::<AppState>()
+        .map(|s| s.gaming_mode_active.load(Ordering::Acquire))
+        .unwrap_or(false);
+    let new_state = !current_active;
+    if let Ok(mut settings) = settings::load_settings(&app_handle) {
+        settings.gaming_mode_enabled = new_state;
+        let _ = settings::save_settings(&app_handle, &settings);
+    }
+    apply_gaming_mode_state(&app_handle, new_state, false).await;
+    Ok(new_state)
+}
+
+#[tauri::command]
+fn get_gaming_mode_state(app_handle: tauri::AppHandle) -> bool {
+    app_handle
+        .try_state::<AppState>()
+        .map(|s| s.gaming_mode_active.load(Ordering::Acquire))
+        .unwrap_or(false)
 }
 
 #[tauri::command]
@@ -5809,6 +6283,9 @@ mod tests {
             whisper_server: Mutex::new(None),
             whisper_port: std::sync::atomic::AtomicU16::new(0),
             whisper_watchdog: Mutex::new(None),
+            last_activity_time: Mutex::new(std::time::Instant::now()),
+            gaming_mode_active: AtomicBool::new(false),
+            last_audio_devices: Mutex::new(Vec::new()),
         }
     }
 
@@ -5839,5 +6316,15 @@ mod tests {
         restore_clipboard_guarded(&state, 1, ClipboardBackup::Empty, None);
         // No panic, no clobber — session 1 was rejected because gen became 2.
         assert!(state.session_gen.load(Ordering::SeqCst) == 2);
+    }
+
+    #[test]
+    fn tray_tooltip_displays_aura_without_voice_input_suffix() {
+        assert_eq!(tray_tooltip(false, "en"), "Aura");
+        assert_eq!(tray_tooltip(false, "ru"), "Aura");
+        assert_eq!(tray_tooltip(false, "de"), "Aura");
+
+        assert_eq!(tray_tooltip(true, "en"), "Aura — 🎮 Gaming Mode active");
+        assert_eq!(tray_tooltip(true, "ru"), "Aura — 🎮 Игровой режим активен");
     }
 }

@@ -1,0 +1,32 @@
+# yaml-language-server: $schema=https://aka.ms/winget-manifest.defaultLocale.1.6.0.schema.json
+
+PackageIdentifier: Malashka.Aura
+PackageVersion: 1.0.11
+PackageLocale: en-US
+Publisher: Malashka
+PublisherUrl: https://github.com/Malashka
+PublisherSupportUrl: https://github.com/Malashka/Aura/issues
+Author: Malashka
+PackageName: Aura
+PackageUrl: https://aura-voice.com
+License: AGPL-3.0
+LicenseUrl: https://github.com/Malashka/Aura/blob/main/LICENSE
+Copyright: (c) 2026 Malashka
+ShortDescription: Private global voice typing for Windows with NVIDIA CUDA and Whisper/Parakeet resident engines.
+Description: |-
+  Aura is a fast, offline-first global speech-to-text input application for Windows.
+  It supports resident Whisper.cpp and NVIDIA Parakeet STT engines with CPU and NVIDIA CUDA GPU acceleration,
+  real-time streaming input, automatic 3D-game detection (Gaming Mode), VRAM idle standby, and custom text replacements.
+Moniker: aura
+Tags:
+  - voice-typing
+  - speech-to-text
+  - transcription
+  - dictation
+  - whisper
+  - parakeet
+  - ai
+  - cuda
+ReleaseNotesUrl: https://github.com/Malashka/Aura/releases/tag/v1.0.11
+ManifestType: defaultLocale
+ManifestVersion: 1.6.0

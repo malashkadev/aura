@@ -3,6 +3,21 @@
 All notable changes to Aura are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/), versions follow [SemVer](https://semver.org/).
 
+## [1.1.0] — 2026-09-08
+
+### Added
+- **DirectX / Vulkan Gaming Mode**: Added automatic detection of fullscreen 3D games via Win32 `SHQueryUserNotificationState` and `MonitorFromWindow`. Automatically unloads resident Whisper/Parakeet processes to free 100% VRAM and pauses low-level keyboard hooks (`HOOK_PAUSED`) to ensure zero input latency. Includes dedicated orange tray icon (`32x32_gaming.png`) and manual override toggle.
+- **Standby VRAM Unloader**: Automatic model unloading and VRAM release after configurable idle timeout (15, 30, 60 minutes or disabled), with instant background warm-up on next dictation hotkey press.
+- **Dedicated Text Replacements & Dynamic Macros Tab**: Added 6th settings tab «Text» featuring user-defined replacement rules and live dynamic macros (`{date}`, `{date_ru}`, `{time}`, `{datetime}`). Text substitution uses atomic Win32 queue flushing to eliminate character dropouts across all applications.
+- **300-Entry History Journal & Day Grouping**: Expanded history storage to 300 entries with date grouping («Сегодня», «Вчера», calendar dates), live search, and cloud/local source filters.
+- **WASAPI Audio Device Hotplug**: Automatic recovery and seamless reconnection when USB or Bluetooth headsets/microphones are plugged in or disconnected during operation.
+- **Custom High-DPI Tray Menu**: Custom drill-down tray menu with engine switching, Gaming Mode toggle, and 11 recognition languages, dynamically positioned via Win32 `MonitorFromPoint` and `GetMonitorInfoW` to eliminate clipping across 4K displays and mixed-DPI multi-monitor arrangements.
+
+### Fixed
+- Fixed tray menu positioning and coordinate clipping on secondary displays with differing Windows scaling factors.
+- Cleaned up obsolete CSS classes and reinstated the strict Zero Shadows design invariant across all application components.
+- Extended audio recording tail buffer to 450ms, eliminating trailing word truncation on natural speech pauses.
+
 ## [1.0.9] — 2026-08-29
 
 ### Added

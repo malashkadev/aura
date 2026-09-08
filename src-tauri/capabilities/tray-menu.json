@@ -1,0 +1,17 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "tray-menu",
+  "description": "Minimalist tray context menu permissions.",
+  "windows": ["tray-menu"],
+  "permissions": [
+    "core:event:allow-listen",
+    "core:event:allow-unlisten",
+    "allow-get-settings",
+    "allow-set-settings",
+    "allow-toggle-gaming-mode",
+    "allow-get-gaming-mode-state",
+    "allow-show-settings-window",
+    "allow-exit-app",
+    "allow-close-window"
+  ]
+}

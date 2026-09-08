@@ -254,19 +254,19 @@ fn trim_samples_with_frames(samples: &[f32], sample_rate: i64, frame_speech: &[b
     samples[start_sample..end_sample].to_vec()
 }
 
-/// One-pass WAV gate + trim: reads the file a single time, runs Silero VAD a
-/// single time over the same samples, then derives BOTH answers from those
-/// frames — whether any speech is present and, if it is, writes the
-/// silence-trimmed audio back to `path`.
+/// One-pass WAV speech gate: reads the file, runs Silero VAD over the
+/// samples to check whether ANY speech is present.
+///
+/// Crucially, this function is non-destructive: it does NOT truncate or overwrite
+/// the WAV file, preserving all natural human pauses, soft onsets, and quiet trailing
+/// words for the downstream speech recognition model.
 ///
 /// Fail-open semantics:
 /// - an unreadable/non-16k-mono file or a VAD builder failure returns
-///   `Ok(true)` so real dictation is never dropped because of a probe problem;
-/// - a write failure after successful analysis logs nothing here but still
-///   reports `Ok(has_speech)` — transcription proceeds on the untrimmed file.
-pub fn gate_and_trim_wav_file(path: &str, session_tag: Option<&str>) -> Result<bool, String> {
+///   `Ok(true)` so real dictation is never dropped because of a probe problem.
+pub fn gate_wav_file(path: &str, session_tag: Option<&str>) -> Result<bool, String> {
     let mut reader = hound::WavReader::open(path)
-        .map_err(|e| format!("Failed to open WAV file for VAD gate: {}", e))?;
+        .map_err(|e| format!("Failed to open WAV file for VAD gate: {e}"))?;
     let spec = reader.spec();
     if spec.sample_rate != 16000 || spec.channels != 1 {
         return Err(format!(
@@ -277,49 +277,26 @@ pub fn gate_and_trim_wav_file(path: &str, session_tag: Option<&str>) -> Result<b
     let samples_i16: Vec<i16> = reader
         .samples::<i16>()
         .collect::<Result<Vec<i16>, hound::Error>>()
-        .map_err(|e| format!("Failed to read WAV samples for VAD gate: {}", e))?;
+        .map_err(|e| format!("Failed to read WAV samples for VAD gate: {e}"))?;
     drop(reader);
     let samples_f32: Vec<f32> = samples_i16.iter().map(|&s| s as f32 / 32768.0).collect();
 
     let Some(frame_speech) = predict_vad_frames(&samples_f32, 16000) else {
-        eprintln!("Aura Dev Log ERROR: Failed to build VAD in gate_and_trim_wav_file");
-        return Ok(true);
-    };
-    let has_speech = frame_speech.iter().any(|&is_speech| is_speech);
-    if !has_speech {
-        return Ok(false);
-    }
-
-    let trimmed_f32 = trim_samples_with_frames(&samples_f32, 16000, &frame_speech);
-
-    let write_result = (|| -> Result<(), String> {
-        let mut writer = hound::WavWriter::create(path, spec)
-            .map_err(|e| format!("Failed to create WAV writer for VAD trimming: {}", e))?;
-        for &sample in &trimmed_f32 {
-            let clamped = sample.clamp(-1.0, 1.0);
-            let s = if clamped >= 0.0 {
-                (clamped * i16::MAX as f32) as i16
-            } else {
-                (clamped * 32768.0) as i16
-            };
-            writer
-                .write_sample(s)
-                .map_err(|e| format!("Failed to write trimmed sample: {}", e))?;
-        }
-        writer
-            .finalize()
-            .map_err(|e| format!("Failed to finalize trimmed WAV file: {}", e))
-    })();
-    if let Err(error) = write_result {
         crate::logger::log(
             "WARN",
             "VAD",
             session_tag,
-            &format!("VAD trimming failed or skipped: {error}"),
+            "Failed to build VAD in gate_wav_file; proceeding to transcribe",
         );
-    }
+        return Ok(true);
+    };
+    let has_speech = frame_speech.iter().any(|&is_speech| is_speech);
+    Ok(has_speech)
+}
 
-    Ok(true)
+/// Backwards-compatible alias for `gate_wav_file`.
+pub fn gate_and_trim_wav_file(path: &str, session_tag: Option<&str>) -> Result<bool, String> {
+    gate_wav_file(path, session_tag)
 }
 
 #[cfg(test)]
@@ -465,14 +442,14 @@ mod tests {
     }
 
     #[test]
-    fn wav_gate_and_trim_rejects_silence_trims_speech_errors_on_missing_file() {
+    fn wav_gate_rejects_silence_preserves_speech_errors_on_missing_file() {
         let dir = std::env::temp_dir();
         let silence = dir.join("aura-vad-gate-silence-test.wav");
         let _ = std::fs::remove_file(&silence);
 
         let silent_samples = vec![0.0f32; 16_000];
         write_test_wav(&silence, silent_samples.as_slice());
-        assert!(!gate_and_trim_wav_file(&silence.to_string_lossy(), None).unwrap());
+        assert!(!gate_wav_file(&silence.to_string_lossy(), None).unwrap());
         let untouched_len = std::fs::metadata(&silence).unwrap().len();
         assert!(untouched_len >= 44 + silent_samples.len() as u64 * 2);
 
@@ -480,17 +457,21 @@ mod tests {
         let _ = std::fs::remove_file(&speech);
         let chirp = chirp_samples();
         write_test_wav(&speech, chirp.as_slice());
-        assert!(gate_and_trim_wav_file(&speech.to_string_lossy(), None).unwrap());
-        let reopened = hound::WavReader::open(&speech).expect("reopen trimmed wav");
+        let len_before = std::fs::metadata(&speech).unwrap().len();
+        assert!(gate_wav_file(&speech.to_string_lossy(), None).unwrap());
+        let reopened = hound::WavReader::open(&speech).expect("reopen untrimmed wav");
         let duration = reopened.duration() as usize;
-        assert!(
-            duration > 0 && duration <= chirp.len(),
-            "rewritten WAV must stay valid and non-growing"
+        let len_after = std::fs::metadata(&speech).unwrap().len();
+        assert_eq!(
+            duration,
+            chirp.len(),
+            "WAV audio must stay untouched and not trimmed"
         );
+        assert_eq!(len_before, len_after, "WAV file length must not be mutated");
 
         let missing = dir.join("aura-vad-does-not-exist-test.wav");
         let _ = std::fs::remove_file(&missing);
-        assert!(gate_and_trim_wav_file(&missing.to_string_lossy(), None).is_err());
+        assert!(gate_wav_file(&missing.to_string_lossy(), None).is_err());
 
         let _ = std::fs::remove_file(&speech);
         let _ = std::fs::remove_file(&silence);

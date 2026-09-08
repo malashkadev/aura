@@ -221,21 +221,26 @@ function startTypingSimulator() {
 }
 
 /* ==========================================================================
-   Interface Showcase Mockup Interactivity (5 Tabs, Mic Test, History, Toggles)
+   Interface Showcase Mockup Interactivity (Authentic Desktop UI)
    ========================================================================== */
 let micTestInterval = null;
 let isMicTesting = false;
 
 function initInterfaceShowcase() {
-  const tabs = document.querySelectorAll('.showcase-tab[data-showcase-tab]');
-  const panels = document.querySelectorAll('.showcase-panel');
+  const showcase = document.querySelector('.app-showcase-window');
+  if (!showcase) return;
+
+  const tabs = showcase.querySelectorAll('.nav-tab[data-tab]');
+  const panels = showcase.querySelectorAll('.tab-panel');
   if (!tabs.length || !panels.length) return;
+
+  const isRu = (document.documentElement.lang || 'ru') === 'ru';
 
   // 1. Tab Switching
   tabs.forEach(tab => {
     tab.addEventListener('click', (e) => {
       e.preventDefault();
-      const targetTab = tab.getAttribute('data-showcase-tab');
+      const targetTab = tab.getAttribute('data-tab');
 
       tabs.forEach(t => {
         t.classList.remove('active');
@@ -249,7 +254,7 @@ function initInterfaceShowcase() {
       tab.classList.add('active');
       tab.setAttribute('aria-selected', 'true');
 
-      const targetPanel = document.getElementById(`showcase-panel-${targetTab}`);
+      const targetPanel = showcase.querySelector(`#panel-${targetTab}`);
       if (targetPanel) {
         targetPanel.classList.add('active');
         targetPanel.style.display = 'flex';
@@ -257,225 +262,278 @@ function initInterfaceShowcase() {
     });
   });
 
-  // 2. Microphone Test Button
-  const btnMicTest = document.getElementById('showcase-btn-mic-test');
-  const micFill = document.getElementById('showcase-mic-fill');
-  const vadDot = document.getElementById('showcase-vad-dot');
-  const vadText = document.getElementById('showcase-vad-text');
+  // 2. Microphone VU Meter & VAD Test Button
+  const btnMicTest = showcase.querySelector('#btn-toggle-mic-meter');
+  const micFill = showcase.querySelector('#mic-meter-fill');
+  const micPeak = showcase.querySelector('#mic-meter-peak');
+  const vadIndicator = showcase.querySelector('#mic-vad-indicator');
+  const vadText = showcase.querySelector('#mic-vad-text');
 
-  if (btnMicTest && micFill && vadDot && vadText) {
+  if (btnMicTest && micFill) {
     btnMicTest.addEventListener('click', (e) => {
       e.preventDefault();
-      const isRu = (document.documentElement.lang || 'ru') === 'ru';
-      
+      const currentLangRu = (document.documentElement.lang || 'ru') === 'ru';
+
       if (isMicTesting) {
         // Stop test
         isMicTesting = false;
         if (micTestInterval) clearInterval(micTestInterval);
         micTestInterval = null;
         micFill.style.width = '0%';
-        vadDot.classList.remove('is-active');
-        vadText.textContent = isRu ? 'Тишина' : 'Silence';
-        btnMicTest.textContent = isRu ? 'Запустить тест' : 'Test Audio';
-        btnMicTest.classList.remove('btn-active-recording');
+        if (micPeak) micPeak.style.opacity = '0';
+        if (vadIndicator) vadIndicator.classList.remove('speaking');
+        if (vadText) vadText.textContent = currentLangRu ? 'Тишина' : 'Silence';
+        btnMicTest.textContent = currentLangRu ? 'Запустить тест' : 'Test Audio';
+        btnMicTest.classList.remove('active');
       } else {
         // Start test
         isMicTesting = true;
-        btnMicTest.textContent = isRu ? 'Остановить тест' : 'Stop Test';
-        btnMicTest.classList.add('btn-active-recording');
-        vadDot.classList.add('is-active');
+        btnMicTest.textContent = currentLangRu ? 'Остановить тест' : 'Stop Test';
+        btnMicTest.classList.add('active');
 
         let micPhase = 0;
         micTestInterval = setInterval(() => {
-          micPhase += 0.2;
-          const level = Math.max(12, Math.min(92, 45 + Math.sin(micPhase) * 35 + (Math.random() * 18 - 9)));
+          micPhase += 0.25;
+          const level = Math.max(8, Math.min(92, 45 + Math.sin(micPhase) * 35 + (Math.random() * 20 - 10)));
           micFill.style.width = `${level.toFixed(0)}%`;
 
-          if (level > 28) {
-            vadDot.classList.add('is-active');
-            vadText.textContent = isRu ? 'Обнаружен голос' : 'Voice detected';
-          } else {
-            vadDot.classList.remove('is-active');
-            vadText.textContent = isRu ? 'Тишина' : 'Silence';
+          if (micPeak) {
+            micPeak.style.opacity = '0.9';
+            micPeak.style.left = `${Math.min(98, level + 4).toFixed(0)}%`;
           }
-        }, 80);
+
+          if (level > 28) {
+            if (vadIndicator) vadIndicator.classList.add('speaking');
+            if (vadText) vadText.textContent = currentLangRu ? 'Обнаружен голос' : 'Voice detected';
+          } else {
+            if (vadIndicator) vadIndicator.classList.remove('speaking');
+            if (vadText) vadText.textContent = currentLangRu ? 'Тишина' : 'Silence';
+          }
+        }, 75);
       }
     });
   }
 
-  // 3. Engine Mode Cards (Local vs Cloud)
-  const engineCards = document.querySelectorAll('.showcase-engine-card');
-  engineCards.forEach(card => {
+  // 3. Engine Mode Toggle (Cloud vs Local)
+  const engineRadios = showcase.querySelectorAll('input[name="transcription_mode"]');
+  const localSection = showcase.querySelector('#local-engine-section');
+  if (engineRadios.length && localSection) {
+    engineRadios.forEach(radio => {
+      radio.addEventListener('change', () => {
+        localSection.style.display = (radio.value === 'local' && radio.checked) ? 'flex' : 'none';
+      });
+    });
+  }
+
+  // 4. GPU Acceleration & Model Cards Selection
+  const gpuCards = showcase.querySelectorAll('.model-card[data-gpu]');
+  gpuCards.forEach(card => {
     card.addEventListener('click', () => {
-      engineCards.forEach(c => c.classList.remove('active'));
+      gpuCards.forEach(c => {
+        c.classList.remove('active');
+        c.setAttribute('aria-checked', 'false');
+      });
       card.classList.add('active');
+      card.setAttribute('aria-checked', 'true');
     });
   });
 
-  // 4. Hardware Items (CPU vs CUDA)
-  const hwItems = document.querySelectorAll('.showcase-hw-item');
-  hwItems.forEach(item => {
-    item.addEventListener('click', () => {
-      hwItems.forEach(h => h.classList.remove('active'));
-      item.classList.add('active');
+  const whisperCards = showcase.querySelectorAll('.model-card[data-model]');
+  whisperCards.forEach(card => {
+    card.addEventListener('click', () => {
+      whisperCards.forEach(c => {
+        c.classList.remove('active');
+        c.setAttribute('aria-checked', 'false');
+      });
+      card.classList.add('active');
+      card.setAttribute('aria-checked', 'true');
     });
   });
 
-  // 5. Volume Slider Interaction
-  const sliderTrack = document.querySelector('.showcase-slider-track');
-  const sliderFill = document.querySelector('.showcase-slider-fill');
-  const sliderThumb = document.querySelector('.showcase-slider-thumb');
-  const volumeVal = document.querySelector('.showcase-volume-val');
-
-  if (sliderTrack && sliderFill && sliderThumb && volumeVal) {
-    function setVolumeFromEvent(e) {
-      const rect = sliderTrack.getBoundingClientRect();
-      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-      const offsetX = Math.max(0, Math.min(rect.width, clientX - rect.left));
-      const pct = Math.round((offsetX / rect.width) * 100);
-      sliderFill.style.width = `${pct}%`;
-      sliderThumb.style.left = `${pct}%`;
-      volumeVal.textContent = `${pct}%`;
-    }
-
-    let isDraggingSlider = false;
-    sliderTrack.addEventListener('mousedown', (e) => {
-      isDraggingSlider = true;
-      setVolumeFromEvent(e);
+  // 5. Sound Volume Slider
+  const volumeSlider = showcase.querySelector('#range-sound-volume');
+  const volumeLabel = showcase.querySelector('#volume-value-label');
+  if (volumeSlider && volumeLabel) {
+    volumeSlider.addEventListener('input', () => {
+      volumeLabel.textContent = `${volumeSlider.value}%`;
     });
-
-    window.addEventListener('mousemove', (e) => {
-      if (isDraggingSlider) setVolumeFromEvent(e);
-    });
-
-    window.addEventListener('mouseup', () => {
-      isDraggingSlider = false;
-    });
-
-    sliderTrack.addEventListener('touchstart', (e) => {
-      setVolumeFromEvent(e);
-    }, { passive: true });
-
-    sliderTrack.addEventListener('touchmove', (e) => {
-      setVolumeFromEvent(e);
-    }, { passive: true });
   }
 
   // 6. History Filter Buttons & Live Search
-  const filterBtns = document.querySelectorAll('.showcase-filter-btn');
-  const historyItems = document.querySelectorAll('.showcase-history-item');
-  const historyList = document.querySelector('.showcase-history-list');
+  const filterBtns = showcase.querySelectorAll('.history-filter-btn[data-filter]');
+  const searchInput = showcase.querySelector('#input-history-search');
+  const historyItems = showcase.querySelectorAll('.history-item');
+  const dayHeaders = showcase.querySelectorAll('.history-day-header');
+  let activeHistoryFilter = 'all';
+
+  function applyHistoryFilter() {
+    const query = (searchInput ? searchInput.value.toLowerCase().trim() : '');
+
+    historyItems.forEach(item => {
+      const itemType = item.getAttribute('data-type') || '';
+      const textEl = item.querySelector('.history-item-text');
+      const text = textEl ? textEl.textContent.toLowerCase() : '';
+
+      const matchesFilter = activeHistoryFilter === 'all' || itemType === activeHistoryFilter;
+      const matchesSearch = !query || text.includes(query);
+
+      if (matchesFilter && matchesSearch) {
+        item.style.display = 'flex';
+      } else {
+        item.style.display = 'none';
+      }
+    });
+
+    // Update day headers visibility
+    dayHeaders.forEach(header => {
+      let sibling = header.nextElementSibling;
+      let hasVisible = false;
+      while (sibling && !sibling.classList.contains('history-day-header')) {
+        if (sibling.classList.contains('history-item') && sibling.style.display !== 'none') {
+          hasVisible = true;
+          break;
+        }
+        sibling = sibling.nextElementSibling;
+      }
+      header.style.display = hasVisible ? 'flex' : 'none';
+    });
+  }
 
   filterBtns.forEach(btn => {
     btn.addEventListener('click', () => {
       filterBtns.forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
-      const filter = btn.getAttribute('data-history-filter') || 'all';
-
-      historyItems.forEach(item => {
-        const itemType = item.getAttribute('data-history-type');
-        if (filter === 'all' || itemType === filter) {
-          item.style.display = 'flex';
-        } else {
-          item.style.display = 'none';
-        }
-      });
+      activeHistoryFilter = btn.getAttribute('data-filter') || 'all';
+      applyHistoryFilter();
     });
   });
 
-  // Copy Buttons on History Items
-  const copyButtons = document.querySelectorAll('.showcase-history-item .showcase-icon-btn');
+  if (searchInput) {
+    searchInput.addEventListener('input', applyHistoryFilter);
+  }
+
+  // 7. Copy Buttons on History Items
+  const copyButtons = showcase.querySelectorAll('.btn-copy-history');
   copyButtons.forEach(btn => {
     btn.addEventListener('click', async (e) => {
       e.stopPropagation();
-      const item = btn.closest('.showcase-history-item');
-      const textEl = item ? item.querySelector('.showcase-history-text') : null;
+      const item = btn.closest('.history-item');
+      const textEl = item ? item.querySelector('.history-item-text') : null;
       if (textEl) {
         const text = textEl.textContent.trim();
         try {
           await navigator.clipboard.writeText(text);
         } catch (err) {}
-        
+
         btn.classList.add('is-copied');
         const oldTitle = btn.getAttribute('title');
-        const isRu = (document.documentElement.lang || 'ru') === 'ru';
-        btn.setAttribute('title', isRu ? 'Скопировано!' : 'Copied!');
+        const currentLangRu = (document.documentElement.lang || 'ru') === 'ru';
+        btn.setAttribute('title', currentLangRu ? 'Скопировано!' : 'Copied!');
         setTimeout(() => {
           btn.classList.remove('is-copied');
-          btn.setAttribute('title', oldTitle || (isRu ? 'Копировать' : 'Copy'));
+          btn.setAttribute('title', oldTitle || (currentLangRu ? 'Копировать' : 'Copy'));
         }, 1400);
       }
     });
   });
 
-  // Clear & Restore History Button
-  const btnClearHist = document.querySelector('.showcase-btn-clear');
+  // 8. Clear & Restore History Button
+  const btnClearHist = showcase.querySelector('#btn-clear-history');
+  const historyContainer = showcase.querySelector('#history-items-container');
   let isHistoryCleared = false;
-  if (btnClearHist && historyList) {
-    const originalHistoryHtml = historyList.innerHTML;
+  if (btnClearHist && historyContainer) {
+    const originalHistoryHtml = historyContainer.innerHTML;
     btnClearHist.addEventListener('click', () => {
-      const isRu = (document.documentElement.lang || 'ru') === 'ru';
+      const currentLangRu = (document.documentElement.lang || 'ru') === 'ru';
       if (!isHistoryCleared) {
         isHistoryCleared = true;
-        historyList.innerHTML = `<div class="showcase-history-empty" style="padding: 24px; text-align: center; color: var(--text-muted); font-size: 13px;">${isRu ? 'История очищена' : 'History cleared'} &bull; <button type="button" class="btn-history-restore" style="background: none; border: none; color: var(--accent-primary); cursor: pointer; text-decoration: underline; font-size: 13px;">${isRu ? 'Восстановить' : 'Restore'}</button></div>`;
-        btnClearHist.textContent = isRu ? 'Восстановить' : 'Restore';
-
-        const btnRestore = historyList.querySelector('.btn-history-restore');
-        if (btnRestore) {
-          btnRestore.addEventListener('click', () => {
-            isHistoryCleared = false;
-            historyList.innerHTML = originalHistoryHtml;
-            btnClearHist.textContent = isRu ? 'Очистить историю' : 'Clear History';
-            initInterfaceShowcase();
-          });
-        }
+        historyContainer.innerHTML = `<div class="history-empty-state">${currentLangRu ? 'История транскрипций очищена' : 'Transcription history cleared'}</div>`;
+        btnClearHist.textContent = currentLangRu ? 'Восстановить' : 'Restore';
       } else {
         isHistoryCleared = false;
-        historyList.innerHTML = originalHistoryHtml;
-        btnClearHist.textContent = isRu ? 'Очистить историю' : 'Clear History';
+        historyContainer.innerHTML = originalHistoryHtml;
+        btnClearHist.textContent = currentLangRu ? 'Очистить историю' : 'Clear History';
         initInterfaceShowcase();
       }
     });
   }
 
-  // 7. Check Updates Action Button
-  const btnUpdates = document.querySelector('.showcase-action-btn[data-i18n="showcase_btn_updates"]');
+  // 9. Gaming Mode Manual Toggle in Showcase
+  const btnToggleGaming = showcase.querySelector('#btn-toggle-gaming-mode');
+  const gamingDot = showcase.querySelector('#gaming-status-dot');
+  const gamingText = showcase.querySelector('#gaming-status-text');
+  if (btnToggleGaming && gamingDot && gamingText) {
+    let isGamingActive = false;
+    btnToggleGaming.addEventListener('click', () => {
+      const currentLangRu = (document.documentElement.lang || 'ru') === 'ru';
+      isGamingActive = !isGamingActive;
+      if (isGamingActive) {
+        gamingDot.classList.add('active');
+        gamingText.classList.add('active');
+        gamingText.textContent = currentLangRu ? 'Активен' : 'Active';
+        btnToggleGaming.textContent = currentLangRu ? 'Выключить вручную' : 'Disable Manually';
+      } else {
+        gamingDot.classList.remove('active');
+        gamingText.classList.remove('active');
+        gamingText.textContent = currentLangRu ? 'Не активен' : 'Inactive';
+        btnToggleGaming.textContent = currentLangRu ? 'Включить вручную' : 'Enable Manually';
+      }
+    });
+  }
+
+  // 10. Check Updates Action Button
+  const btnUpdates = showcase.querySelector('#btn-check-updates');
   if (btnUpdates) {
     btnUpdates.addEventListener('click', () => {
-      const isRu = (document.documentElement.lang || 'ru') === 'ru';
-      btnUpdates.textContent = isRu ? 'Проверка…' : 'Checking…';
+      const currentLangRu = (document.documentElement.lang || 'ru') === 'ru';
+      const originalText = btnUpdates.textContent;
+      btnUpdates.textContent = currentLangRu ? 'Проверка…' : 'Checking…';
       btnUpdates.disabled = true;
 
       setTimeout(() => {
-        btnUpdates.textContent = isRu ? '✓ Актуальная версия v1.0.8' : '✓ Aura is up to date (v1.0.8)';
+        btnUpdates.textContent = currentLangRu ? '✓ Актуальная версия v1.1.0' : '✓ Aura is up to date (v1.1.0)';
         setTimeout(() => {
-          btnUpdates.textContent = isRu ? 'Проверить обновления' : 'Check for Updates';
+          btnUpdates.textContent = originalText;
           btnUpdates.disabled = false;
         }, 2200);
       }, 700);
     });
   }
 
-  // 8. Copy Diagnostics Report Button
-  const btnDiag = document.querySelector('.showcase-action-btn[data-i18n="showcase_btn_diag"]');
+  // 11. Copy Diagnostics Report Button
+  const btnDiag = showcase.querySelector('#btn-copy-diagnostics');
   if (btnDiag) {
     btnDiag.addEventListener('click', async () => {
-      const isRu = (document.documentElement.lang || 'ru') === 'ru';
-      const report = `Aura System Diagnostic Report\nVersion: 1.0.8 (x64)\nOS: Windows 10/11 x64\nEngine: Whisper.cpp / NVIDIA Parakeet (CUDA Active)\nVRAM: NVIDIA GeForce RTX (Detected)\nDPAPI Storage: Encrypted\nStatus: Nominal (Ready)`;
+      const currentLangRu = (document.documentElement.lang || 'ru') === 'ru';
+      const originalText = btnDiag.textContent;
+      const report = `Aura System Diagnostic Report\nVersion: 1.1.0 (x64)\nOS: Windows 10/11 x64\nEngine: Whisper.cpp / NVIDIA Parakeet (CUDA Active)\nVRAM: NVIDIA GeForce RTX (Detected)\nDPAPI Storage: Encrypted\nStatus: Nominal (Ready)`;
       try {
         await navigator.clipboard.writeText(report);
       } catch (err) {}
-      
-      btnDiag.textContent = isRu ? '✓ Отчет скопирован!' : '✓ Report Copied!';
+
+      btnDiag.textContent = currentLangRu ? '✓ Отчет скопирован!' : '✓ Report Copied!';
       btnDiag.classList.add('is-success');
       setTimeout(() => {
-        btnDiag.textContent = isRu ? 'Скопировать отчет диагностики' : 'Copy Diagnostic Report';
+        btnDiag.textContent = originalText;
         btnDiag.classList.remove('is-success');
       }, 1800);
     });
   }
-}
 
+  // 12. Save Settings Mock Button
+  const btnSave = showcase.querySelector('#btn-save-settings');
+  const footerStatusText = showcase.querySelector('#footer-status-text');
+  if (btnSave && footerStatusText) {
+    btnSave.addEventListener('click', () => {
+      const currentLangRu = (document.documentElement.lang || 'ru') === 'ru';
+      const originalText = footerStatusText.textContent;
+      footerStatusText.textContent = currentLangRu ? 'Сохранено' : 'Saved';
+      setTimeout(() => {
+        footerStatusText.textContent = originalText;
+      }, 1500);
+    });
+  }
+}
 /* ==========================================================================
    Engine Matrix Tab Switcher with Sliding Indicator
    ========================================================================== */

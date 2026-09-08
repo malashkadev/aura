@@ -1553,6 +1553,14 @@ fn start_parakeet_server_unlocked<R: Runtime>(
     app_handle: &tauri::AppHandle<R>,
     state: &crate::AppState,
 ) -> Result<(), String> {
+    if state
+        .gaming_mode_active
+        .load(std::sync::atomic::Ordering::Acquire)
+    {
+        return Err(
+            "Cannot start resident Parakeet server while Gaming Mode is active".to_string(),
+        );
+    }
     // Lazily spawn the watchdog that resurrects a crashed daemon while the app
     // idles. Its stop flag doubles as the shutdown signal for warm-ups, so an
     // in-flight restart never delays app exit for the full warm-up timeout.
@@ -1830,6 +1838,37 @@ fn watchdog_sleep_interruptible(stop: &std::sync::atomic::AtomicBool, secs: u64)
     }
 }
 
+/// Returns true if background resident servers should remain stopped/unloaded
+/// according to active power or gaming policies:
+/// 1. Gaming Mode: User or fullscreen 3D game has engaged gaming mode (free VRAM & pause hook).
+/// 2. VRAM Standby: Server was unloaded after configured minutes of inactivity.
+fn is_server_suspended_by_policy<R: Runtime>(
+    app_handle: &tauri::AppHandle<R>,
+    state: &crate::AppState,
+) -> bool {
+    use std::sync::atomic::Ordering;
+    if state.gaming_mode_active.load(Ordering::Acquire) {
+        return true;
+    }
+    crate::settings::load_settings(app_handle)
+        .map(|settings| {
+            if settings.vram_standby_timeout_mins > 0 {
+                let last_activity = state
+                    .last_activity_time
+                    .lock()
+                    .map(|t| *t)
+                    .unwrap_or_else(|p| **p.get_ref());
+                let timeout = std::time::Duration::from_secs(
+                    u64::from(settings.vram_standby_timeout_mins).saturating_mul(60),
+                );
+                last_activity.elapsed() >= timeout
+            } else {
+                false
+            }
+        })
+        .unwrap_or(false)
+}
+
 fn parakeet_watchdog_main<R: Runtime>(
     app_handle: &tauri::AppHandle<R>,
     stop: std::sync::Arc<std::sync::atomic::AtomicBool>,
@@ -1844,6 +1883,10 @@ fn parakeet_watchdog_main<R: Runtime>(
             std::thread::sleep(std::time::Duration::from_secs(1));
             continue;
         };
+        if is_server_suspended_by_policy(app_handle, &state) {
+            watchdog_sleep_interruptible(&stop, 2);
+            continue;
+        }
         let status = {
             let mut slot = recover_lock(&state.parakeet_server, "Parakeet server");
             match slot.as_mut() {
@@ -1898,6 +1941,9 @@ fn watchdog_restart_parakeet<R: Runtime>(
     app_handle: &tauri::AppHandle<R>,
     state: &crate::AppState,
 ) {
+    if is_server_suspended_by_policy(app_handle, state) {
+        return;
+    }
     let _lifecycle = recover_lock(&state.parakeet_lifecycle, "Parakeet lifecycle");
     let wants_parakeet = crate::settings::load_settings(app_handle)
         .map(|settings| {
@@ -1990,6 +2036,10 @@ fn whisper_watchdog_main<R: Runtime>(
             std::thread::sleep(std::time::Duration::from_secs(1));
             continue;
         };
+        if is_server_suspended_by_policy(app_handle, &state) {
+            watchdog_sleep_interruptible(&stop, 2);
+            continue;
+        }
         let status = {
             let mut slot = recover_lock(&state.whisper_server, "Whisper server");
             match slot.as_mut() {
@@ -2042,6 +2092,9 @@ fn whisper_watchdog_main<R: Runtime>(
 }
 
 fn watchdog_restart_whisper<R: Runtime>(app_handle: &tauri::AppHandle<R>, state: &crate::AppState) {
+    if is_server_suspended_by_policy(app_handle, state) {
+        return;
+    }
     let _lifecycle = recover_lock(&state.whisper_lifecycle, "Whisper lifecycle");
     let wanted_model = crate::settings::load_settings(app_handle)
         .ok()
@@ -2087,6 +2140,15 @@ pub fn ensure_parakeet_server_state<R: Runtime>(
     app_handle: &tauri::AppHandle<R>,
     settings: &crate::settings::Settings,
 ) {
+    if let Some(state) = app_handle.try_state::<crate::AppState>() {
+        if state
+            .gaming_mode_active
+            .load(std::sync::atomic::Ordering::Acquire)
+        {
+            stop_parakeet_server(app_handle);
+            return;
+        }
+    }
     if settings.transcription_mode == "local" && settings.local_engine == "parakeet" {
         if let Err(error) = start_parakeet_server(app_handle) {
             crate::logger::log(
@@ -2387,6 +2449,12 @@ fn start_whisper_server_unlocked<R: Runtime>(
     state: &crate::AppState,
     model_name: &str,
 ) -> Result<(), String> {
+    if state
+        .gaming_mode_active
+        .load(std::sync::atomic::Ordering::Acquire)
+    {
+        return Err("Cannot start resident Whisper server while Gaming Mode is active".to_string());
+    }
     let server_path = find_whisper_server(app_handle)?;
     let short_server_path = get_short_path(&server_path)?;
     let sidecar_dir = server_path
@@ -2481,7 +2549,6 @@ fn start_whisper_server_unlocked<R: Runtime>(
         "1".to_string(),
         "-bs".to_string(),
         "-1".to_string(),
-        "-nt".to_string(),
         "-nf".to_string(),
         "-sow".to_string(),
     ];
@@ -2649,6 +2716,15 @@ pub fn ensure_whisper_server_state<R: Runtime>(
     app_handle: &tauri::AppHandle<R>,
     settings: &crate::settings::Settings,
 ) {
+    if let Some(state) = app_handle.try_state::<crate::AppState>() {
+        if state
+            .gaming_mode_active
+            .load(std::sync::atomic::Ordering::Acquire)
+        {
+            stop_whisper_server(app_handle);
+            return;
+        }
+    }
     if settings.transcription_mode == "local" && settings.local_engine == "whisper" {
         let model = settings.model_name.clone();
         let app_handle_clone = app_handle.clone();
@@ -2699,11 +2775,7 @@ pub fn build_whisper_prompt(language: &str, user_dictionary: &str) -> String {
     if dict.is_empty() {
         base_prompt.to_string()
     } else {
-        match language {
-            "ru" => format!("{base_prompt} Термины: {dict}."),
-            "en" => format!("{base_prompt} Vocabulary: {dict}."),
-            _ => format!("{base_prompt} Terms: {dict}."),
-        }
+        format!("{base_prompt} {dict}.")
     }
 }
 

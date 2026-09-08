@@ -17,7 +17,7 @@
   <link rel="alternate" hreflang="x-default" href="index.html">
 
   <!-- Styles -->
-  <link rel="stylesheet" href="style.css?v=6.8.8">
+  <link rel="stylesheet" href="style.css?v=6.9.0">
 </head>
 <body>
 
@@ -55,7 +55,7 @@
           <a href="https://github.com/malashkadev/aura" target="_blank" rel="noopener noreferrer" class="btn-icon-github" aria-label="Репозиторий GitHub" title="GitHub">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg>
           </a>
-          <a href="Aura_1.0.10_x64-setup.exe" class="btn btn-primary btn-sm" data-download-trigger download>
+          <a href="Aura_1.1.0_x64-setup.exe" class="btn btn-primary btn-sm" data-download-trigger download>
             <svg class="icon-download" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path class="dl-tray" d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><g class="dl-arrow"><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></g></svg>
             <span data-i18n="header_download_btn">Download</span>
           </a>
@@ -78,7 +78,7 @@
           <p class="hero-subtext" data-i18n="hero_subtext">Free voice typing for writing and&nbsp;coding. Speak as&nbsp;you think&nbsp;— directly into any editor, browser, and&nbsp;messenger.</p>
 
           <div class="hero-cta-group">
-            <a href="Aura_1.0.10_x64-setup.exe" class="btn btn-primary btn-lg" data-download-trigger download>
+            <a href="Aura_1.1.0_x64-setup.exe" class="btn btn-primary btn-lg" data-download-trigger download>
               <svg class="icon-download" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path class="dl-tray" d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><g class="dl-arrow"><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></g></svg>
               <span data-i18n="hero_btn_download">Download for&nbsp;Windows</span>
             </a>
@@ -430,344 +430,596 @@
       </div>
 
       <div class="app-showcase-window">
-        <div class="showcase-window-frame" role="region" aria-label="Демонстрация интерфейса Aura">
-          <!-- Window Header -->
-          <div class="showcase-window-header">
-            <div class="showcase-window-brand">
-              <svg class="showcase-app-logo" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <div class="glass-container" role="region" aria-label="Aura Interface Demonstration">
+          <header class="app-header">
+            <div class="logo-container">
+              <svg class="app-logo" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path class="logo-outer" d="M398.114 421C445.533 380.876 474.714 322.514 474.714 256.857C474.714 136.486 376.229 38 255.857 38C135.486 38 37 136.486 37 256.857C37 322.514 66.1809 380.876 113.6 421" stroke="currentColor" stroke-width="73.1573"/>
                 <path class="logo-outer-ripple" d="M398.114 421C445.533 380.876 474.714 322.514 474.714 256.857C474.714 136.486 376.229 38 255.857 38C135.486 38 37 136.486 37 256.857C37 322.514 66.1809 380.876 113.6 421" stroke="currentColor" stroke-width="73.1573"/>
                 <path class="logo-inner" d="M181.963 176.024L42.0293 511.651H142.825L200.192 352.952L247.909 233.927C250.769 226.064 253.45 222.132 255.952 222.132C258.096 222.132 260.598 226.064 263.458 233.927L311.175 352.952L368.542 511.651H469.874L329.404 176.024C322.255 158.867 312.783 147.25 300.988 141.174C289.55 135.098 274.538 132.06 255.952 132.06C234.148 132.06 217.885 135.455 207.162 142.246C196.797 149.038 188.397 160.297 181.963 176.024Z" fill="currentColor"/>
               </svg>
-              <span class="showcase-logo-text">AURA</span>
+              <span class="logo-text">AURA</span>
             </div>
-            <div class="showcase-window-controls">
-              <span class="showcase-win-btn showcase-win-minimize" aria-hidden="true" title="Minimize">
-                <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-              </span>
-              <span class="showcase-win-btn showcase-win-close" aria-hidden="true" title="Close">
-                <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-              </span>
-            </div>
-          </div>
 
-          <!-- Window Body: Nav + Content -->
-          <div class="showcase-window-body">
-            <!-- Sidebar -->
-            <aside class="showcase-sidebar">
-              <div class="showcase-nav-title" data-i18n="showcase_nav_title">Settings</div>
-              <nav class="showcase-nav-list" role="tablist" aria-label="Settings Tabs">
-                <button type="button" class="showcase-tab active" data-showcase-tab="general" role="tab" aria-selected="true" aria-controls="showcase-panel-general">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="showcase-tab-icon"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
-                  <span data-i18n="showcase_tab_general">General</span>
+            <div class="header-right">
+              <div class="window-controls">
+                <button type="button" class="window-control-btn" id="btn-window-minimize" title="Minimize">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="control-icon"><line x1="5" y1="12" x2="19" y2="12"></line></svg>
                 </button>
-                <button type="button" class="showcase-tab" data-showcase-tab="speech" role="tab" aria-selected="false" aria-controls="showcase-panel-speech">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="showcase-tab-icon"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
-                  <span data-i18n="showcase_tab_speech">Speech</span>
+                <button type="button" class="window-control-btn btn-close" id="btn-window-close" title="Close">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="control-icon"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                 </button>
-                <button type="button" class="showcase-tab" data-showcase-tab="hotkeys" role="tab" aria-selected="false" aria-controls="showcase-panel-hotkeys">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="showcase-tab-icon"><rect x="2" y="4" width="20" height="16" rx="2" ry="2"></rect><line x1="6" y1="8" x2="6" y2="8"></line><line x1="10" y1="8" x2="10" y2="8"></line><line x1="14" y1="8" x2="14" y2="8"></line><line x1="18" y1="8" x2="18" y2="8"></line><line x1="6" y1="12" x2="6" y2="12"></line><line x1="18" y1="12" x2="18" y2="12"></line><line x1="7" y1="16" x2="17" y2="16"></line></svg>
-                  <span data-i18n="showcase_tab_hotkeys">Hotkeys</span>
-                </button>
-                <button type="button" class="showcase-tab" data-showcase-tab="history" role="tab" aria-selected="false" aria-controls="showcase-panel-history">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="showcase-tab-icon"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                  <span data-i18n="showcase_tab_history">History</span>
-                </button>
-                <button type="button" class="showcase-tab" data-showcase-tab="about" role="tab" aria-selected="false" aria-controls="showcase-panel-about">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="showcase-tab-icon"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
-                  <span data-i18n="showcase_tab_about">About</span>
-                </button>
-              </nav>
-            </aside>
+              </div>
+            </div>
+          </header>
+
+          <div class="main-layout">
+            <!-- Sidebar Navigation -->
+            <nav class="settings-nav" role="tablist" aria-label="Settings Categories">
+              <div class="nav-title" data-i18n="title_settings">Settings</div>
+              <button type="button" class="nav-tab active" id="tab-btn-general" data-tab="general" role="tab" aria-selected="true" aria-controls="panel-general">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="nav-icon"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83-2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                <span data-i18n="tab_general">General</span>
+              </button>
+              <button type="button" class="nav-tab" id="tab-btn-speech" data-tab="speech" role="tab" aria-selected="false" aria-controls="panel-speech">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="nav-icon"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
+                <span data-i18n="tab_speech">Speech</span>
+              </button>
+              <button type="button" class="nav-tab" id="tab-btn-text" data-tab="text" role="tab" aria-selected="false" aria-controls="panel-text">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="nav-icon"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                <span data-i18n="tab_text">Text</span>
+              </button>
+              <button type="button" class="nav-tab" id="tab-btn-hotkeys" data-tab="hotkeys" role="tab" aria-selected="false" aria-controls="panel-hotkeys">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="nav-icon"><rect x="2" y="4" width="20" height="16" rx="2" ry="2"></rect><line x1="6" y1="8" x2="6" y2="8"></line><line x1="10" y1="8" x2="10" y2="8"></line><line x1="14" y1="8" x2="14" y2="8"></line><line x1="18" y1="8" x2="18" y2="8"></line><line x1="6" y1="12" x2="6" y2="12"></line><line x1="18" y1="12" x2="18" y2="12"></line><line x1="7" y1="16" x2="17" y2="16"></line></svg>
+                <span data-i18n="tab_hotkeys">Hotkeys</span>
+              </button>
+              <button type="button" class="nav-tab" id="tab-btn-history" data-tab="history" role="tab" aria-selected="false" aria-controls="panel-history">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="nav-icon"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                <span data-i18n="tab_history">History</span>
+              </button>
+              <button type="button" class="nav-tab" id="tab-btn-about" data-tab="about" role="tab" aria-selected="false" aria-controls="panel-about">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="nav-icon"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                <span data-i18n="tab_about">About</span>
+              </button>
+            </nav>
 
             <!-- Main Content Area -->
-            <main class="showcase-content">
-              <!-- Panel 1: General -->
-              <section class="showcase-panel active" id="showcase-panel-general" role="tabpanel">
-                <div class="showcase-card">
-                  <h3 class="showcase-card-title" data-i18n="showcase_card_autostart_title">Aura Autostart</h3>
-                  <p class="showcase-card-desc" data-i18n="showcase_card_autostart_desc">Launch application automatically when signing into Windows.</p>
-                  <label class="showcase-toggle">
-                    <input type="checkbox" checked />
-                    <span class="showcase-toggle-track"><span class="showcase-toggle-thumb"></span></span>
-                    <span class="showcase-toggle-label" data-i18n="showcase_toggle_autostart">Launch Aura on Windows startup</span>
+            <main class="settings-content" id="settings-main-content">
+              <!-- 1. GENERAL PANEL -->
+              <section class="tab-panel active" id="panel-general" role="tabpanel" tabindex="0" aria-labelledby="tab-btn-general">
+                <div class="card">
+                  <h2 class="card-title" data-i18n="general_autostart_title">Aura Autostart</h2>
+                  <p class="card-desc" data-i18n="general_autostart_desc">Launch the app automatically when starting Windows.</p>
+                  <label class="toggle-switch">
+                    <input type="checkbox" id="checkbox-autostart" checked />
+                    <span class="toggle-track">
+                      <span class="toggle-thumb"></span>
+                    </span>
+                    <span class="toggle-label" data-i18n="general_autostart_checkbox">Start Aura at system boot</span>
                   </label>
                 </div>
 
-                <div class="showcase-card">
-                  <h3 class="showcase-card-title" data-i18n="showcase_card_lang_title">Interface Language</h3>
-                  <p class="showcase-card-desc" data-i18n="showcase_card_lang_desc">Choose language for app settings and system notifications.</p>
-                  <div class="showcase-field-group">
-                    <span class="showcase-field-label" data-i18n="showcase_label_lang">Interface language</span>
-                    <div class="showcase-select-box">
-                      <span data-i18n="showcase_val_lang">English</span>
-                      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                <div class="card">
+                  <h2 class="card-title" data-i18n="general_ui_lang_title">Interface Language</h2>
+                  <p class="card-desc" data-i18n="general_ui_lang_desc">Select the language for settings and application notifications.</p>
+                  <div class="form-group">
+                    <label for="select-ui-lang" class="field-label" data-i18n="general_ui_lang_title">Interface Language</label>
+                    <div class="select-wrap">
+                      <select id="select-ui-lang" class="custom-select" aria-haspopup="listbox" aria-expanded="false">
+                        <option value="en" selected>English</option>
+                        <option value="ru">Русский</option>
+                        <option value="de">Deutsch</option>
+                        <option value="es">Español</option>
+                        <option value="fr">Français</option>
+                        <option value="it">Italiano</option>
+                        <option value="zh">中文</option>
+                        <option value="pt">Português</option>
+                        <option value="tr">Türkçe</option>
+                      </select>
                     </div>
                   </div>
                 </div>
 
-                <div class="showcase-card">
-                  <h3 class="showcase-card-title" data-i18n="showcase_card_timer_title">Timer and Overlay Status</h3>
-                  <p class="showcase-card-desc" data-i18n="showcase_card_timer_desc">Display elapsed time and processing status beneath the mic pill. Errors are always visible.</p>
-                  <label class="showcase-toggle">
-                    <input type="checkbox" checked />
-                    <span class="showcase-toggle-track"><span class="showcase-toggle-thumb"></span></span>
-                    <span class="showcase-toggle-label" data-i18n="showcase_toggle_timer">Show timer and status in overlay</span>
+                <div class="card" id="card-gaming-mode">
+                  <h2 class="card-title" data-i18n="gaming_title">Gaming Mode</h2>
+                  <p class="card-desc" data-i18n="gaming_desc">Automatically pauses hotkey hooks and unloads models from video memory for maximum FPS in games.</p>
+                  
+                  <label class="toggle-switch">
+                    <input type="checkbox" id="checkbox-gaming-mode-auto-detect" checked />
+                    <span class="toggle-track">
+                      <span class="toggle-thumb"></span>
+                    </span>
+                    <span class="toggle-label" data-i18n="gaming_auto_label">Automatic Gaming Mode (D3D/Vulkan)</span>
                   </label>
+
+                  <div class="gaming-status-card">
+                    <div class="gaming-status-info">
+                      <span class="field-label" data-i18n="gaming_status_label">Current status</span>
+                      <div class="gaming-status-value-wrap">
+                        <span class="gaming-status-dot" id="gaming-status-dot"></span>
+                        <span class="gaming-status-badge" id="gaming-status-text" data-i18n="gaming_status_inactive">Inactive</span>
+                      </div>
+                    </div>
+                    <button type="button" class="btn btn-secondary btn-toggle-gaming" id="btn-toggle-gaming-mode" data-i18n="gaming_btn_toggle_on">Enable manually</button>
+                  </div>
+                  <p class="field-hint" data-i18n="gaming_tray_hint">Manual toggle is also available via the Aura system tray menu.</p>
                 </div>
 
-                <div class="showcase-card">
-                  <h3 class="showcase-card-title" data-i18n="showcase_card_updates_title">Check for Updates</h3>
-                  <p class="showcase-card-desc" data-i18n="showcase_card_updates_desc">Aura connects to GitHub only during manual checks or when auto-check is enabled.</p>
-                  <label class="showcase-toggle">
-                    <input type="checkbox" />
-                    <span class="showcase-toggle-track"><span class="showcase-toggle-thumb"></span></span>
-                    <span class="showcase-toggle-label" data-i18n="showcase_toggle_updates">Automatically check for updates on launch</span>
+                <div class="card" id="card-vram-standby">
+                  <h2 class="card-title" data-i18n="standby_title">Standby Model Unloader (Sleep)</h2>
+                  <p class="card-desc" data-i18n="standby_desc">Releases video memory (VRAM) when voice typing is unused for the selected duration.</p>
+                  <div class="form-group">
+                    <label for="select-vram-standby" class="field-label" data-i18n="standby_timeout_label">Idle timeout before sleep</label>
+                    <div class="select-wrap">
+                      <select id="select-vram-standby" class="custom-select" aria-haspopup="listbox" aria-expanded="false">
+                        <option value="15" data-i18n="standby_15m">After 15 minutes</option>
+                        <option value="30" data-i18n="standby_30m" selected>After 30 minutes (recommended)</option>
+                        <option value="60" data-i18n="standby_60m">After 1 hour</option>
+                        <option value="0" data-i18n="standby_never">Never (keep in VRAM)</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="card">
+                  <h2 class="card-title" data-i18n="update_checks_title">Update checks</h2>
+                  <p class="card-desc" data-i18n="update_checks_desc">Aura contacts GitHub only when you check manually or enable automatic checks.</p>
+                  <label class="toggle-switch">
+                    <input type="checkbox" id="checkbox-automatic-update-checks" />
+                    <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                    <span class="toggle-label" data-i18n="update_checks_checkbox">Check for updates automatically at startup</span>
                   </label>
-                  <div class="showcase-btn-row">
-                    <button type="button" class="btn btn-secondary btn-sm showcase-action-btn" data-i18n="showcase_btn_updates">Check for Updates</button>
+                  <div>
+                    <button type="button" class="btn btn-secondary" id="btn-check-updates" data-i18n="update_check_now">Check for updates</button>
                   </div>
                 </div>
               </section>
 
-              <!-- Panel 2: Speech -->
-              <section class="showcase-panel" id="showcase-panel-speech" role="tabpanel" style="display: none;">
-                <div class="showcase-card">
-                  <div class="showcase-mic-header">
-                    <div>
-                      <h3 class="showcase-card-title" data-i18n="showcase_card_mic_title">Microphone Check</h3>
-                      <p class="showcase-card-desc" data-i18n="showcase_card_mic_desc">Test input audio level and voice activity detection in real time.</p>
+              <!-- 2. SPEECH PANEL -->
+              <section class="tab-panel" id="panel-speech" role="tabpanel" tabindex="0" aria-labelledby="tab-btn-speech" style="display: none;">
+                <div class="card" id="card-mic-meter">
+                  <div class="mic-meter-header">
+                    <div class="mic-meter-title-wrap">
+                      <h2 class="card-title" data-i18n="mic_meter_title">Microphone Check</h2>
+                      <p class="card-desc" data-i18n="mic_meter_desc">Test input signal level and real-time voice detection.</p>
                     </div>
-                    <button type="button" class="btn btn-secondary btn-sm" id="showcase-btn-mic-test" data-i18n="showcase_btn_mic_test">Test Audio</button>
+                    <button type="button" class="btn btn-secondary btn-mic-test" id="btn-toggle-mic-meter" data-i18n="mic_meter_test_btn_start">Start Test</button>
                   </div>
-                  <div class="showcase-field-group">
-                    <span class="showcase-field-label" data-i18n="showcase_label_mic_device">Microphone (Input Device)</span>
-                    <div class="showcase-select-box">
-                      <span data-i18n="showcase_val_mic_device">Default (System Default)</span>
-                      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                  <div class="form-group" style="margin-top: 12px; margin-bottom: 12px;">
+                    <label for="select-audio-device" class="field-label" data-i18n="audio_device_label">Microphone (input device)</label>
+                    <div class="select-wrap">
+                      <select id="select-audio-device" class="custom-select" aria-haspopup="listbox" aria-expanded="false">
+                        <option value="default" data-i18n="audio_device_default">Default (system)</option>
+                      </select>
                     </div>
                   </div>
-                  <div class="showcase-mic-meter-bar">
-                    <div class="showcase-mic-fill" id="showcase-mic-fill"></div>
-                  </div>
-                  <div class="showcase-mic-status">
-                    <span class="showcase-vad-dot" id="showcase-vad-dot"></span>
-                    <span class="showcase-vad-text" id="showcase-vad-text" data-i18n="showcase_vad_silence">Silence</span>
-                  </div>
-                </div>
-
-                <div class="showcase-card">
-                  <h3 class="showcase-card-title" data-i18n="showcase_card_mode_title">Recognition Mode</h3>
-                  <p class="showcase-card-desc" data-i18n="showcase_card_mode_desc">Choose between high-speed cloud providers or fully autonomous offline local speech recognition.</p>
-                  <div class="showcase-engine-toggle">
-                    <div class="showcase-engine-card active" data-engine-mode="local">
-                      <span class="showcase-engine-name" data-i18n="showcase_mode_local_name">Local AI</span>
-                      <span class="showcase-engine-meta" data-i18n="showcase_mode_local_meta">Whisper / Parakeet (100% offline)</span>
+                  <div class="mic-meter-display">
+                    <div class="mic-meter-bar-track">
+                      <div class="mic-meter-bar-fill" id="mic-meter-fill"></div>
+                      <div class="mic-meter-peak" id="mic-meter-peak"></div>
                     </div>
-                    <div class="showcase-engine-card" data-engine-mode="cloud">
-                      <span class="showcase-engine-name" data-i18n="showcase_mode_cloud_name">Cloud AI</span>
-                      <span class="showcase-engine-meta" data-i18n="showcase_mode_cloud_meta">Gemini / OpenAI / Groq (API key required)</span>
+                    <div class="mic-meter-status">
+                      <span class="mic-vad-indicator" id="mic-vad-indicator">
+                        <span class="mic-vad-dot"></span>
+                        <span class="mic-vad-text" id="mic-vad-text" data-i18n="mic_meter_silence">Silence</span>
+                      </span>
                     </div>
                   </div>
                 </div>
 
-                <div class="showcase-card">
-                  <h3 class="showcase-card-title" data-i18n="showcase_card_recog_title">Local Speech Recognition</h3>
-                  <p class="showcase-card-desc" data-i18n="showcase_card_recog_desc">Configure local speech engine for complete privacy.</p>
-                  <div class="showcase-field-group">
-                    <span class="showcase-field-label" data-i18n="showcase_label_recog_engine">Recognition Engine</span>
-                    <div class="showcase-select-box">
-                      <span>Whisper.cpp</span>
-                      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
-                    </div>
+                <div class="card">
+                  <h2 class="card-title" data-i18n="engine_title">Processing Type</h2>
+                  <p class="card-desc" data-i18n="engine_desc">Choose between high-quality cloud transcription or fully local speech recognition.</p>
+                  
+                  <div class="engine-toggle-group">
+                    <label class="engine-option" id="label-cloud">
+                      <input type="radio" name="transcription_mode" value="cloud" id="radio-cloud" />
+                      <span class="engine-card">
+                        <span class="engine-name" data-i18n="engine_cloud">Cloud AI</span>
+                        <span class="engine-meta" data-i18n="engine_cloud_meta">Gemini / OpenAI / Groq / Hugging Face (API key required)</span>
+                      </span>
+                    </label>
+                    <label class="engine-option" id="label-local">
+                      <input type="radio" name="transcription_mode" value="local" checked id="radio-local" />
+                      <span class="engine-card">
+                        <span class="engine-name" data-i18n="engine_local">Local AI</span>
+                        <span class="engine-meta" data-i18n="engine_local_meta">Whisper / Parakeet (100% offline & private)</span>
+                      </span>
+                    </label>
                   </div>
-                  <div class="showcase-subgroup">
-                    <span class="showcase-field-label" data-i18n="showcase_label_hw_accel">Local Hardware Acceleration</span>
-                    <div class="showcase-hardware-grid">
-                      <div class="showcase-hw-item">
-                        <div class="showcase-hw-info">
-                          <span class="showcase-hw-name" data-i18n="showcase_hw_cpu_name">CPU (No Acceleration)</span>
-                          <span class="showcase-hw-desc" data-i18n="showcase_hw_cpu_desc">Standard mode. Compatible with any PC, utilizes CPU cores.</span>
+                </div>
+
+                <div id="local-engine-section">
+                  <div class="card" id="card-local-model">
+                    <h2 class="card-title" data-i18n="local_model_title">Local Recognition</h2>
+                    <p class="card-desc" data-i18n="local_model_desc">Configure a local speech-to-text engine for complete privacy.</p>
+                  
+                    <div class="form-group">
+                      <label for="select-local-engine" class="field-label" data-i18n="local_engine_label">ASR Engine</label>
+                      <div class="select-wrap">
+                        <select id="select-local-engine" class="custom-select" aria-haspopup="listbox" aria-expanded="false">
+                          <option value="whisper" data-i18n="local_engine_whisper" selected>Whisper.cpp</option>
+                          <option value="parakeet" data-i18n="local_engine_parakeet">NVIDIA Parakeet</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div class="form-group" id="gpu-acceleration-settings">
+                      <label class="field-label" data-i18n="gpu_accel_label">Local hardware acceleration</label>
+                      <div class="model-cards-group" role="radiogroup" aria-label="Select GPU mode">
+                        <!-- CPU Card -->
+                        <div class="model-card" data-gpu="cpu" role="radio" aria-checked="false" tabindex="0">
+                          <div class="model-card-main">
+                            <div class="model-card-info">
+                              <span class="model-name" data-i18n="gpu_accel_cpu_title">CPU (no acceleration)</span>
+                              <span class="model-meta" data-i18n="gpu_accel_cpu_desc">Standard mode. Reliable, but uses more CPU.</span>
+                            </div>
+                            <div class="model-card-action">
+                              <span class="status-ready-badge">
+                                <svg class="status-ready-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                <span data-i18n="model_status_ready">Installed</span>
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                        <!-- CUDA Card -->
+                        <div class="model-card active" data-gpu="cuda" role="radio" aria-checked="true" tabindex="0">
+                          <div class="model-card-main">
+                            <div class="model-card-info">
+                              <span class="model-name" data-i18n="gpu_accel_cuda_title">NVIDIA CUDA (maximum speed)</span>
+                              <span class="model-meta" data-i18n="gpu_accel_cuda_desc">For GeForce RTX/GTX GPUs. Uses Tensor Cores for instant response.</span>
+                            </div>
+                            <div class="model-card-action">
+                              <span class="status-ready-badge">
+                                <svg class="status-ready-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                <span data-i18n="model_status_ready">Installed</span>
+                              </span>
+                            </div>
+                          </div>
                         </div>
                       </div>
-                      <div class="showcase-hw-item active">
-                        <div class="showcase-hw-info">
-                          <span class="showcase-hw-name" data-i18n="showcase_hw_gpu_name">NVIDIA CUDA (Max Speed)</span>
-                          <span class="showcase-hw-desc" data-i18n="showcase_hw_gpu_desc">For GeForce GPUs. Uses dedicated VRAM for instant response.</span>
+                    </div>
+
+                    <div class="form-group" id="group-whisper-models">
+                      <label class="field-label" data-i18n="local_model_label">Model Size</label>
+                      <div class="model-cards-group" id="model-cards-container" role="radiogroup" aria-label="Select model">
+                        <!-- Tiny -->
+                        <div class="model-card" data-model="tiny" role="radio" aria-checked="false" tabindex="0">
+                          <div class="model-card-main">
+                            <div class="model-card-info">
+                              <span class="model-name">Tiny</span>
+                              <span class="model-meta" data-i18n="model_meta_tiny">~75 MB — superfast</span>
+                            </div>
+                            <div class="model-card-action"></div>
+                          </div>
+                        </div>
+                        <!-- Base -->
+                        <div class="model-card" data-model="base" role="radio" aria-checked="false" tabindex="0">
+                          <div class="model-card-main">
+                            <div class="model-card-info">
+                              <span class="model-name">Base</span>
+                              <span class="model-meta" data-i18n="model_meta_base">~145 MB — recommended</span>
+                            </div>
+                            <div class="model-card-action"></div>
+                          </div>
+                        </div>
+                        <!-- Small -->
+                        <div class="model-card" data-model="small" role="radio" aria-checked="false" tabindex="0">
+                          <div class="model-card-main">
+                            <div class="model-card-info">
+                              <span class="model-name">Small</span>
+                              <span class="model-meta" data-i18n="model_meta_small">~465 MB — accurate</span>
+                            </div>
+                            <div class="model-card-action"></div>
+                          </div>
+                        </div>
+                        <!-- Medium -->
+                        <div class="model-card" data-model="medium" role="radio" aria-checked="false" tabindex="0">
+                          <div class="model-card-main">
+                            <div class="model-card-info">
+                              <span class="model-name">Medium</span>
+                              <span class="model-meta" data-i18n="model_meta_medium">~1.5 GB — advanced</span>
+                            </div>
+                            <div class="model-card-action"></div>
+                          </div>
+                        </div>
+                        <!-- Large v3 Turbo (Quantized) -->
+                        <div class="model-card active" data-model="large-v3-turbo-q5_0" role="radio" aria-checked="true" tabindex="0">
+                          <div class="model-card-main">
+                            <div class="model-card-info">
+                              <span class="model-name">Large v3 Turbo (Q5)</span>
+                              <span class="model-meta" data-i18n="model_meta_turbo_q5">~550 MB — near-Turbo, half the size</span>
+                            </div>
+                            <div class="model-card-action">
+                              <span class="status-ready-badge">
+                                <svg class="status-ready-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                <span data-i18n="model_status_ready">Installed</span>
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                        <!-- Large v3 Turbo -->
+                        <div class="model-card" data-model="large-v3-turbo" role="radio" aria-checked="false" tabindex="0">
+                          <div class="model-card-main">
+                            <div class="model-card-info">
+                              <span class="model-name">Large v3 Turbo</span>
+                              <span class="model-meta" data-i18n="model_meta_turbo">~1.6 GB — best accuracy for RU/EN</span>
+                            </div>
+                            <div class="model-card-action"></div>
+                          </div>
                         </div>
                       </div>
                     </div>
                   </div>
-                </div>
-
-                <div class="showcase-card">
-                  <h3 class="showcase-card-title" data-i18n="showcase_card_speech_lang_title">Speech Language</h3>
-                  <p class="showcase-card-desc" data-i18n="showcase_card_speech_lang_desc">Choose recognition language or enable auto-detection.</p>
-                  <div class="showcase-field-group">
-                    <span class="showcase-field-label" data-i18n="showcase_label_speech_lang">Select Language</span>
-                    <div class="showcase-select-box">
-                      <span data-i18n="showcase_val_speech_lang">Auto-detect</span>
-                      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="showcase-card">
-                  <h3 class="showcase-card-title" data-i18n="showcase_card_dict_title">Custom Vocabulary</h3>
-                  <p class="showcase-card-desc" data-i18n="showcase_card_dict_desc">Add domain terms, names, or code identifiers separated by commas to improve accuracy.</p>
-                  <div class="showcase-textarea-mock" data-i18n="showcase_mock_dict">For example: Aura, commit, repository...</div>
                 </div>
               </section>
 
-              <!-- Panel 3: Hotkeys -->
-              <section class="showcase-panel" id="showcase-panel-hotkeys" role="tabpanel" style="display: none;">
-                <div class="showcase-card">
-                  <h3 class="showcase-card-title" data-i18n="showcase_card_hotkey_title">Global Hotkey</h3>
-                  <p class="showcase-card-desc" data-i18n="showcase_card_hotkey_desc">Hold down hotkey to record audio, release to transcribe and type.</p>
-                  <div class="showcase-field-group">
-                    <span class="showcase-field-label" data-i18n="showcase_label_hotkey">Shortcut</span>
-                    <div class="showcase-hotkey-input-row">
-                      <div class="showcase-hotkey-input">Alt + V</div>
-                      <button type="button" class="showcase-icon-btn" title="Reset to Alt+V">
-                        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><polyline points="3 3 3 8 8 8"></polyline></svg>
+              <!-- 3. TEXT PANEL -->
+              <section class="tab-panel" id="panel-text" role="tabpanel" tabindex="0" aria-labelledby="tab-btn-text" style="display: none;">
+                <div class="card" id="card-language">
+                  <h2 class="card-title" data-i18n="lang_bias_title">Speech Language</h2>
+                  <p class="card-desc" data-i18n="lang_bias_desc">Forcibly set transcription language or use automatic detection.</p>
+                  <div class="form-group">
+                    <label for="select-language" class="field-label" data-i18n="lang_bias_label">Select Language</label>
+                    <div class="select-wrap">
+                      <select id="select-language" class="custom-select" aria-haspopup="listbox" aria-expanded="false">
+                        <option value="auto" data-i18n="lang_opt_auto" selected>Auto-detect</option>
+                        <option value="layout" data-i18n="lang_opt_layout">Follow Keyboard Layout</option>
+                        <option value="en">English</option>
+                        <option value="ru">Русский</option>
+                        <option value="de">Deutsch</option>
+                        <option value="es">Español</option>
+                        <option value="fr">Français</option>
+                        <option value="it">Italiano</option>
+                        <option value="zh">中文</option>
+                        <option value="pt">Português</option>
+                        <option value="tr">Türkçe</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="card" id="card-vocabulary">
+                  <h2 class="card-title" data-i18n="vocab_title">Custom Vocabulary</h2>
+                  <p class="card-desc" data-i18n="vocab_desc">Add specific terms, names, or jargon separated by commas to improve recognition.</p>
+                  <div class="form-group">
+                    <textarea id="textarea-dictionary" class="custom-textarea" placeholder="e.g. Aura, commit, repository..." autocomplete="off">Aura, repository, commit, WebSockets</textarea>
+                  </div>
+                </div>
+
+                <div class="card" id="card-replacements">
+                  <h2 class="card-title" data-i18n="replacements_title">Auto-replacements</h2>
+                  <p class="card-desc" data-i18n="replacements_desc">Automatically replaces dictated words and phrases with exact terms, email addresses, or custom text.</p>
+                  <div class="replacements-list" id="replacements-list">
+                    <div class="replacement-item">
+                      <div class="replacement-info">
+                        <span class="replacement-trigger">email</span>
+                        <span class="replacement-arrow">&rarr;</span>
+                        <span class="replacement-value">name@example.com</span>
+                      </div>
+                      <button type="button" class="replacement-delete" title="Delete" aria-label="Delete replacement">
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                      </button>
+                    </div>
+                    <div class="replacement-item">
+                      <div class="replacement-info">
+                        <span class="replacement-trigger">meeting</span>
+                        <span class="replacement-arrow">&rarr;</span>
+                        <span class="replacement-value">https://meet.google.com/abc-defg-hij</span>
+                      </div>
+                      <button type="button" class="replacement-delete" title="Delete" aria-label="Delete replacement">
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                       </button>
                     </div>
                   </div>
-                  <label class="showcase-toggle">
-                    <input type="checkbox" />
-                    <span class="showcase-toggle-track"><span class="showcase-toggle-thumb"></span></span>
-                    <span class="showcase-toggle-label" data-i18n="showcase_toggle_hotkey_mode">Toggle Mode (Short Press)</span>
+                  <div class="replacement-add-row">
+                    <input type="text" id="input-rep-trigger" class="custom-input" placeholder="Word or phrase (e.g. email)" data-i18n-placeholder="replacements_trigger_ph" autocomplete="off" />
+                    <input type="text" id="input-rep-value" class="custom-input" placeholder="Replace with (e.g. name@mail.com)" data-i18n-placeholder="replacements_value_ph" autocomplete="off" />
+                    <button type="button" id="btn-add-replacement" class="btn btn-secondary btn-add-replacement" data-i18n="btn_add">Add</button>
+                  </div>
+                </div>
+              </section>
+
+              <!-- 4. HOTKEYS PANEL -->
+              <section class="tab-panel" id="panel-hotkeys" role="tabpanel" tabindex="0" aria-labelledby="tab-btn-hotkeys" style="display: none;">
+                <div class="card">
+                  <h2 class="card-title" data-i18n="hotkey_title">Global Hotkey</h2>
+                  <p class="card-desc" data-i18n="hotkey_desc">Hold down the selected hotkey to record, release to transcribe.</p>
+                  <div class="form-group">
+                    <label for="input-hotkey" class="field-label" data-i18n="hotkey_label">Combination</label>
+                    <div class="hotkey-field-wrapper">
+                      <input type="text" id="input-hotkey" class="custom-input hotkey-input" readonly value="Alt + V" />
+                      <button type="button" id="btn-reset-hotkey" class="btn-reset-icon" title="Reset to Alt+V">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><polyline points="3 3 3 8 8 8"></polyline></svg>
+                      </button>
+                    </div>
+                  </div>
+                  <label class="toggle-switch">
+                    <input type="checkbox" id="checkbox-toggle" />
+                    <span class="toggle-track">
+                      <span class="toggle-thumb"></span>
+                    </span>
+                    <span class="toggle-label" data-i18n="hotkey_toggle_mode">Toggle mode (short tap)</span>
                   </label>
-                  <p class="showcase-switch-subdesc" data-i18n="showcase_desc_hotkey_mode">Press briefly to start recording without holding. Press again to stop.</p>
+                  <p class="switch-desc" data-i18n="hotkey_toggle_mode_desc">
+                    Short tap starts/stops recording without holding key down.
+                  </p>
                 </div>
 
-                <div class="showcase-card">
-                  <h3 class="showcase-card-title" data-i18n="showcase_card_sound_title">Audio Feedback</h3>
-                  <p class="showcase-card-desc" data-i18n="showcase_card_sound_desc">Overlay sound effects during recording.</p>
-                  <label class="showcase-toggle">
-                    <input type="checkbox" checked />
-                    <span class="showcase-toggle-track"><span class="showcase-toggle-thumb"></span></span>
-                    <span class="showcase-toggle-label" data-i18n="showcase_toggle_sound">Enable overlay sounds</span>
+                <div class="card" id="card-overlay-timer">
+                  <h2 class="card-title" data-i18n="overlay_timer_title">Overlay Timer and Status</h2>
+                  <p class="card-desc" data-i18n="overlay_timer_desc">Show duration timer and processing status below voice indicator. Errors are always displayed.</p>
+                  <label class="toggle-switch">
+                    <input type="checkbox" id="checkbox-overlay-show-timer" checked />
+                    <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                    <span class="toggle-label" data-i18n="overlay_timer_checkbox">Show timer and status on overlay</span>
                   </label>
-                  <div class="showcase-field-group">
-                    <div class="showcase-volume-row">
-                      <span class="showcase-field-label" data-i18n="showcase_label_sound_vol">Sound Volume</span>
-                      <span class="showcase-volume-val">80%</span>
-                    </div>
-                    <div class="showcase-slider-track">
-                      <div class="showcase-slider-fill" style="width: 80%;"></div>
-                      <div class="showcase-slider-thumb" style="left: 80%;"></div>
+                </div>
+
+                <div class="card">
+                  <h2 class="card-title" data-i18n="sound_title">Overlay Audio Feedback</h2>
+                  <p class="card-desc" data-i18n="sound_desc">Audio sound effects when recording states change.</p>
+                  <label class="toggle-switch">
+                    <input type="checkbox" id="checkbox-sounds" checked />
+                    <span class="toggle-track">
+                      <span class="toggle-thumb"></span>
+                    </span>
+                    <span class="toggle-label" data-i18n="sound_enable">Enable overlay sounds</span>
+                  </label>
+                  <div class="form-group" id="sound-volume-group" style="margin-top: 10px;">
+                    <label for="range-sound-volume" class="field-label" data-i18n="sound_volume_label">Sound Volume</label>
+                    <div class="volume-slider-container">
+                      <input type="range" id="range-sound-volume" min="0" max="100" value="80" class="custom-slider" />
+                      <span id="volume-value-label" class="volume-value-text">80%</span>
                     </div>
                   </div>
-                  <div class="showcase-field-group">
-                    <span class="showcase-field-label" data-i18n="showcase_label_sound_theme">Sound Theme</span>
-                    <div class="showcase-select-box">
-                      <span data-i18n="showcase_val_sound_theme">Zen</span>
-                      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                  <div class="form-group" id="sound-theme-group" style="margin-top: 10px;">
+                    <label for="select-sound-theme" class="field-label" data-i18n="sound_theme_label">Sound Theme</label>
+                    <div class="select-wrap">
+                      <select id="select-sound-theme" class="custom-select" aria-haspopup="listbox" aria-expanded="false">
+                        <option value="zen" data-i18n="sound_theme_zen" selected>Zen</option>
+                        <option value="rhodes" data-i18n="sound_theme_rhodes">Rhodes</option>
+                        <option value="scifi" data-i18n="sound_theme_scifi">Sci-Fi</option>
+                        <option value="classic" data-i18n="sound_theme_classic">Bell</option>
+                        <option value="bubble" data-i18n="sound_theme_bubble">Water Drop</option>
+                        <option value="haptic" data-i18n="sound_theme_haptic">Haptic Switch</option>
+                      </select>
                     </div>
                   </div>
                 </div>
               </section>
 
-              <!-- Panel 4: History -->
-              <section class="showcase-panel" id="showcase-panel-history" role="tabpanel" style="display: none;">
-                <div class="showcase-card">
-                  <div class="showcase-history-head">
-                    <div>
-                      <h3 class="showcase-card-title" data-i18n="showcase_card_hist_title">Transcription History</h3>
-                      <p class="showcase-card-desc" data-i18n="showcase_card_hist_desc">Recent voice dictations stored locally on your PC.</p>
+              <!-- 5. HISTORY PANEL -->
+              <section class="tab-panel" id="panel-history" role="tabpanel" tabindex="0" aria-labelledby="tab-btn-history" style="display: none;">
+                <div class="card card-history">
+                  <div class="history-header">
+                    <h2 class="card-title" data-i18n="history_title">Transcription History</h2>
+                    <button type="button" class="btn-clear-history" id="btn-clear-history" data-i18n="history_clear">Clear History</button>
+                  </div>
+                  <p class="card-desc" data-i18n="history_desc">Your latest transcribed phrases are cached locally.</p>
+
+                  <!-- History Search and Filter Controls -->
+                  <div class="history-controls">
+                    <div class="history-search-wrap">
+                      <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                      </svg>
+                      <input type="text" id="input-history-search" class="history-search-input" placeholder="Search history..." data-i18n="history_search_placeholder" autocomplete="off" />
                     </div>
-                    <button type="button" class="showcase-btn-clear" data-i18n="showcase_btn_hist_clear">Clear History</button>
+                    <div class="history-filters" role="group" aria-label="History Filters">
+                      <button type="button" class="history-filter-btn active" data-filter="all" id="btn-history-filter-all" data-i18n="history_filter_all">All</button>
+                      <button type="button" class="history-filter-btn" data-filter="cloud" id="btn-history-filter-cloud" data-i18n="history_filter_cloud">Cloud</button>
+                      <button type="button" class="history-filter-btn" data-filter="local" id="btn-history-filter-local" data-i18n="history_filter_local">Local</button>
+                    </div>
                   </div>
 
-                  <div class="showcase-history-controls">
-                    <div class="showcase-search-wrap">
-                      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-                      <span class="showcase-search-placeholder" data-i18n="showcase_hist_search_placeholder">Search history...</span>
+                  <div class="history-list" id="history-items-container">
+                    <div class="history-day-header">
+                      <span class="history-day-title" data-i18n="history_group_today">Today</span>
+                      <span class="history-day-line"></span>
                     </div>
-                    <div class="showcase-history-filters">
-                      <button type="button" class="showcase-filter-btn active" data-history-filter="all" data-i18n="showcase_hist_filter_all">All</button>
-                      <button type="button" class="showcase-filter-btn" data-history-filter="cloud" data-i18n="showcase_hist_filter_cloud">Cloud</button>
-                      <button type="button" class="showcase-filter-btn" data-history-filter="local" data-i18n="showcase_hist_filter_local">Local</button>
-                    </div>
-                  </div>
-
-                  <div class="showcase-history-list">
-                    <div class="showcase-history-item" data-history-type="local">
-                      <div class="showcase-history-item-body">
-                        <div class="showcase-history-meta">
-                          <span class="showcase-history-time">17:14:02</span>
-                          <span class="showcase-history-tag tag-local" data-i18n="showcase_hist_tag_local">Local</span>
-                          <span class="showcase-history-duration">2.4 с</span>
+                    <div class="history-item" data-type="local">
+                      <div class="history-item-body">
+                        <div class="history-item-meta">
+                          <span class="history-item-time">17:14:02</span>
+                          <span class="history-item-badge badge-local" data-i18n="history_badge_local">Local</span>
                         </div>
-                        <div class="showcase-history-text" data-i18n="showcase_hist_item1_text">Create an async request handler with graceful error handling.</div>
+                        <div class="history-item-text">Create an asynchronous request handler with robust error handling.</div>
                       </div>
-                      <button type="button" class="showcase-icon-btn" title="Copy">
-                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                      <button type="button" class="btn-copy-history" title="Copy" aria-label="Copy text">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
                       </button>
                     </div>
-
-                    <div class="showcase-history-item" data-history-type="local">
-                      <div class="showcase-history-item-body">
-                        <div class="showcase-history-meta">
-                          <span class="showcase-history-time">16:48:19</span>
-                          <span class="showcase-history-tag tag-local" data-i18n="showcase_hist_tag_local">Local</span>
-                          <span class="showcase-history-duration">1.8 с</span>
+                    <div class="history-item" data-type="local">
+                      <div class="history-item-body">
+                        <div class="history-item-meta">
+                          <span class="history-item-time">16:48:19</span>
+                          <span class="history-item-badge badge-local" data-i18n="history_badge_local">Local</span>
                         </div>
-                        <div class="showcase-history-text" data-i18n="showcase_hist_item2_text">Voice dictation directly into any active window with zero context switching.</div>
+                        <div class="history-item-text">Voice typing directly into the active window without switching context.</div>
                       </div>
-                      <button type="button" class="showcase-icon-btn" title="Copy">
-                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                      <button type="button" class="btn-copy-history" title="Copy" aria-label="Copy text">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
                       </button>
                     </div>
-
-                    <div class="showcase-history-item" data-history-type="cloud">
-                      <div class="showcase-history-item-body">
-                        <div class="showcase-history-meta">
-                          <span class="showcase-history-time">15:20:45</span>
-                          <span class="showcase-history-tag tag-cloud" data-i18n="showcase_hist_tag_cloud">Cloud</span>
-                          <span class="showcase-history-duration">3.1 с</span>
+                    <div class="history-day-header">
+                      <span class="history-day-title" data-i18n="history_group_yesterday">Yesterday</span>
+                      <span class="history-day-line"></span>
+                    </div>
+                    <div class="history-item" data-type="cloud">
+                      <div class="history-item-body">
+                        <div class="history-item-meta">
+                          <span class="history-item-time">15:20:45</span>
+                          <span class="history-item-badge badge-cloud" data-i18n="history_badge_cloud">Cloud</span>
                         </div>
-                        <div class="showcase-history-text" data-i18n="showcase_hist_item3_text">Prepare a concise architectural summary and review core invariants.</div>
+                        <div class="history-item-text">Prepare a concise executive summary on the system architecture and key invariants.</div>
                       </div>
-                      <button type="button" class="showcase-icon-btn" title="Copy">
-                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                      <button type="button" class="btn-copy-history" title="Copy" aria-label="Copy text">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
                       </button>
                     </div>
                   </div>
                 </div>
               </section>
 
-              <!-- Panel 5: About -->
-              <section class="showcase-panel" id="showcase-panel-about" role="tabpanel" style="display: none;">
-                <div class="showcase-card showcase-about-card">
-                  <div class="showcase-about-icon">
-                    <svg class="showcase-about-logo" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <!-- 6. ABOUT PANEL -->
+              <section class="tab-panel" id="panel-about" role="tabpanel" tabindex="0" aria-labelledby="tab-btn-about" style="display: none;">
+                <div class="card about-card">
+                  <div class="about-icon logo-container">
+                    <svg class="about-logo-svg" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
                       <path class="logo-outer" d="M398.114 421C445.533 380.876 474.714 322.514 474.714 256.857C474.714 136.486 376.229 38 255.857 38C135.486 38 37 136.486 37 256.857C37 322.514 66.1809 380.876 113.6 421" stroke="currentColor" stroke-width="73.1573"/>
                       <path class="logo-outer-ripple" d="M398.114 421C445.533 380.876 474.714 322.514 474.714 256.857C474.714 136.486 376.229 38 255.857 38C135.486 38 37 136.486 37 256.857C37 322.514 66.1809 380.876 113.6 421" stroke="currentColor" stroke-width="73.1573"/>
                       <path class="logo-inner" d="M181.963 176.024L42.0293 511.651H142.825L200.192 352.952L247.909 233.927C250.769 226.064 253.45 222.132 255.952 222.132C258.096 222.132 260.598 226.064 263.458 233.927L311.175 352.952L368.542 511.651H469.874L329.404 176.024C322.255 158.867 312.783 147.25 300.988 141.174C289.55 135.098 274.538 132.06 255.952 132.06C234.148 132.06 217.885 135.455 207.162 142.246C196.797 149.038 188.397 160.297 181.963 176.024Z" fill="currentColor"/>
                     </svg>
                   </div>
-                  <h3 class="showcase-about-title">AURA</h3>
-                  <span class="showcase-about-version">v1.0.10</span>
-                  <p class="showcase-about-desc" data-i18n="showcase_about_desc">Fast desktop voice typing for Windows powered by local neural networks (Whisper, NVIDIA Parakeet) and advanced cloud models (Gemini, OpenAI, Groq).</p>
+                  <h2 class="about-app-title">AURA</h2>
+                  <p class="about-version" data-i18n="about_version">v1.1.0</p>
+                  <p class="about-description" data-i18n="about_description">
+                    Global voice input tool for Windows. The program transcribes speech to text and inserts it into any active window with automatic formatting and punctuation.
+                  </p>
+
+                  <div class="about-gratitude-wrap">
+                    <div class="gratitude-divider"></div>
+                    <p class="gratitude-text" data-i18n="about_gratitude_text">
+                      Thank you for using Aura! If it makes your work faster and easier, please consider supporting the project with a star on GitHub.
+                    </p>
+                    <a href="https://github.com/malashkadev/aura" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-github-star" id="btn-github-star">
+                      <svg class="github-icon" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/>
+                      </svg>
+                      <span data-i18n="btn_star_github">Star on GitHub</span>
+                      <svg class="star-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                      </svg>
+                    </a>
+                  </div>
                 </div>
 
-                <div class="showcase-card">
-                  <h3 class="showcase-card-title" data-i18n="showcase_card_diag_title">Diagnostics</h3>
-                  <p class="showcase-card-desc" data-i18n="showcase_card_diag_desc">Log exact speech transcriptions to diagnostics file. Disabled by default for privacy.</p>
-                  <label class="showcase-toggle">
-                    <input type="checkbox" />
-                    <span class="showcase-toggle-track"><span class="showcase-toggle-thumb"></span></span>
-                    <span class="showcase-toggle-label" data-i18n="showcase_toggle_diag">Log speech text (Developer mode)</span>
+                <div class="card">
+                  <h2 class="card-title" data-i18n="diag_title">Diagnostics</h2>
+                  <p class="card-desc" data-i18n="diag_speech_text_desc">Include exact transcribed speech text in diagnostic logs. Disabled by default for privacy.</p>
+                  <label class="toggle-switch">
+                    <input type="checkbox" id="setting-log-speech-text" />
+                    <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                    <span class="toggle-label" data-i18n="diag_speech_text_title">Log Speech Text (Developer Mode)</span>
                   </label>
-                  <div class="showcase-btn-row">
-                    <button type="button" class="btn btn-secondary btn-sm showcase-action-btn" data-i18n="showcase_btn_diag">Copy Diagnostic Report</button>
+                  <div>
+                    <button type="button" class="btn btn-secondary" id="btn-copy-diagnostics" data-i18n="btn_copy_diagnostics">Copy Diagnostic Report</button>
                   </div>
                 </div>
               </section>
             </main>
           </div>
+
+          <footer class="app-footer">
+            <div class="footer-status" role="status" aria-live="polite">
+              <span id="footer-status-icon" class="status-icon-wrapper">
+                <svg class="icon-success" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              </span>
+              <span id="footer-status-text" data-i18n="status_ready">Ready</span>
+            </div>
+            <button type="button" class="btn-save" id="btn-save-settings" data-i18n="btn_save">Save Settings</button>
+          </footer>
         </div>
       </div>
     </div>
@@ -929,7 +1181,7 @@
         <h2 class="finale-title" data-i18n="download_title">Try Aura in Action</h2>
 
         <div class="finale-actions">
-          <a href="Aura_1.0.10_x64-setup.exe" class="btn btn-primary btn-lg" data-download-trigger download>
+          <a href="Aura_1.1.0_x64-setup.exe" class="btn btn-primary btn-lg" data-download-trigger download>
             <svg class="icon-download" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path class="dl-tray" d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><g class="dl-arrow"><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></g></svg>
             <span data-i18n="download_btn_primary">Download for Windows</span>
           </a>
@@ -989,7 +1241,7 @@
       <div class="download-modal-spec-grid">
         <div class="download-modal-spec-row">
           <span class="download-modal-spec-label" data-i18n="modal_dl_ver_label">Software Version</span>
-          <span class="download-modal-spec-val" data-i18n="modal_dl_ver_val">1.0.10 (Latest Stable)</span>
+          <span class="download-modal-spec-val" data-i18n="modal_dl_ver_val">1.1.0 (Latest Stable)</span>
         </div>
         <div class="download-modal-spec-row">
           <span class="download-modal-spec-label" data-i18n="modal_dl_req_label">Compatibility</span>
@@ -1002,7 +1254,7 @@
         <div class="download-modal-checksum-header">
           <span class="download-modal-checksum-title">SHA-256 Checksum</span>
         </div>
-        <code class="download-modal-checksum-code" title="SHA-256">C194B2804F196F69B0D489195A04F1DF4A111A56AA55AF583CD33EA7A24A2EDC</code>
+        <code class="download-modal-checksum-code" title="SHA-256">40400126D30931E552C8E30CE050C6DEF52BFE7EF3123A82AFDDFDA66F8F3534</code>
       </div>
 
       <!-- Structured, Scannable Privacy & Transparency Note -->
@@ -1029,7 +1281,7 @@
 
       <div class="download-modal-actions">
         <button type="button" class="btn btn-secondary" id="modal-download-cancel" data-i18n="modal_dl_btn_cancel">Cancel</button>
-        <a href="Aura_1.0.10_x64-setup.exe" class="btn btn-primary" id="modal-download-confirm" download>
+        <a href="Aura_1.1.0_x64-setup.exe" class="btn btn-primary" id="modal-download-confirm" download>
           <svg class="icon-download" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path class="dl-tray" d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><g class="dl-arrow"><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></g></svg>
           <span data-i18n="modal_dl_btn_confirm">Download</span>
         </a>
@@ -1053,6 +1305,6 @@
   </button>
 
   <!-- Scripts -->
-  <script src="main.js?v=6.8.2"></script>
+  <script src="main.js?v=6.9.0"></script>
 </body>
 </html>

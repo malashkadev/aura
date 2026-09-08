@@ -1,0 +1,30 @@
+# yaml-language-server: $schema=https://aka.ms/winget-manifest.locale.1.6.0.schema.json
+
+PackageIdentifier: Malashka.Aura
+PackageVersion: 1.0.11
+PackageLocale: ru-RU
+Publisher: Malashka
+PublisherUrl: https://github.com/Malashka
+PublisherSupportUrl: https://github.com/Malashka/Aura/issues
+Author: Malashka
+PackageName: Aura
+PackageUrl: https://aura-voice.com
+License: AGPL-3.0
+LicenseUrl: https://github.com/Malashka/Aura/blob/main/LICENSE
+Copyright: (c) 2026 Malashka
+ShortDescription: Быстрый приватный голосовой ввод для Windows на базе Whisper и NVIDIA Parakeet (CPU и CUDA).
+Description: |-
+  Aura — программа глобального голосового ввода для Windows. Переводит речь в текст и вставляет в любое активное окно.
+  Поддерживает локальные резидентные движки Whisper.cpp и NVIDIA Parakeet (CPU и CUDA), потоковый ввод в реальном времени,
+  автоопределение полноэкранных 3D-игр (Игровой режим), выгрузку моделей из VRAM при бездействии и автозамену текста.
+Tags:
+  - голосовой-ввод
+  - распознавание-речи
+  - диктовка
+  - whisper
+  - parakeet
+  - ai
+  - cuda
+ReleaseNotesUrl: https://github.com/Malashka/Aura/releases/tag/v1.0.11
+ManifestType: locale
+ManifestVersion: 1.6.0

@@ -11,6 +11,16 @@ static USER_INPUT_CALLBACK: Mutex<Option<CancelCallback>> = Mutex::new(None);
 static RECORDING_ACTIVE: AtomicBool = AtomicBool::new(false);
 static SHORTCUT_ACTIVE: AtomicBool = AtomicBool::new(false);
 static KEY_SUPPRESSED: AtomicBool = AtomicBool::new(false);
+static HOOK_PAUSED: AtomicBool = AtomicBool::new(false);
+
+/// Marks whether the keyboard hook is paused (e.g. during Gaming Mode).
+pub fn set_hook_paused(paused: bool) {
+    HOOK_PAUSED.store(paused, Ordering::SeqCst);
+}
+
+pub fn is_hook_paused() -> bool {
+    HOOK_PAUSED.load(Ordering::SeqCst)
+}
 
 /// Marks whether a recording session is active (enables Esc interception).
 pub fn set_recording_active(active: bool) {
@@ -450,6 +460,10 @@ mod windows_impl {
         lparam: LPARAM,
     ) -> LRESULT {
         if code >= 0 && lparam != 0 {
+            if HOOK_PAUSED.load(Ordering::Relaxed) {
+                return CallNextHookEx(0, code, wparam, lparam);
+            }
+
             let kbd_struct = *(lparam as *const KBDLLHOOKSTRUCT);
             let is_injected = (kbd_struct.flags & 0x10) != 0;
             if is_injected {
@@ -1002,6 +1016,9 @@ mod macos_impl {
             return event;
         }
         if event.is_null() {
+            return event;
+        }
+        if HOOK_PAUSED.load(Ordering::Relaxed) {
             return event;
         }
 

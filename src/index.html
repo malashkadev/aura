@@ -46,6 +46,10 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="nav-icon"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
           <span data-i18n="tab_speech">Голос</span>
         </button>
+        <button type="button" class="nav-tab" id="tab-btn-text" data-tab="text" role="tab" aria-selected="false" aria-controls="panel-text">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="nav-icon"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+          <span data-i18n="tab_text">Текст</span>
+        </button>
         <button type="button" class="nav-tab" id="tab-btn-hotkeys" data-tab="hotkeys" role="tab" aria-selected="false" aria-controls="panel-hotkeys">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="nav-icon"><rect x="2" y="4" width="20" height="16" rx="2" ry="2"></rect><line x1="6" y1="8" x2="6" y2="8"></line><line x1="10" y1="8" x2="10" y2="8"></line><line x1="14" y1="8" x2="14" y2="8"></line><line x1="18" y1="8" x2="18" y2="8"></line><line x1="6" y1="12" x2="6" y2="12"></line><line x1="18" y1="12" x2="18" y2="12"></line><line x1="7" y1="16" x2="17" y2="16"></line></svg>
           <span data-i18n="tab_hotkeys">Управление</span>
@@ -99,14 +103,48 @@
             </div>
           </div>
 
-          <div class="card">
-            <h2 class="card-title" data-i18n="overlay_timer_title">Таймер и статус в оверлее</h2>
-            <p class="card-desc" data-i18n="overlay_timer_desc">Отображать счетчик времени и статус обработки под индикатором речи. Ошибки будут видны всегда.</p>
+
+          <div class="card" id="card-gaming-mode">
+            <h2 class="card-title" data-i18n="gaming_title">Игровой режим</h2>
+            <p class="card-desc" data-i18n="gaming_desc">Автоматическая пауза перехвата клавиш и выгрузка моделей для максимального FPS в играх.</p>
+            
             <label class="toggle-switch">
-              <input type="checkbox" id="checkbox-overlay-show-timer" checked />
-              <span class="toggle-track"><span class="toggle-thumb"></span></span>
-              <span class="toggle-label" data-i18n="overlay_timer_checkbox">Показывать таймер и статус в оверлее</span>
+              <input type="checkbox" id="checkbox-gaming-mode-auto-detect" />
+              <span class="toggle-track">
+                <span class="toggle-thumb"></span>
+              </span>
+              <span class="toggle-label" data-i18n="gaming_auto_label">Автоматический игровой режим (D3D/Vulkan)</span>
             </label>
+
+            <div class="gaming-status-card">
+              <div class="gaming-status-info">
+                <span class="field-label" data-i18n="gaming_status_label">Текущее состояние</span>
+                <div class="gaming-status-value-wrap">
+                  <span class="gaming-status-dot" id="gaming-status-dot"></span>
+                  <span class="gaming-status-badge" id="gaming-status-text" data-i18n="gaming_status_inactive">Не активен</span>
+                </div>
+              </div>
+              <button type="button" class="btn btn-secondary btn-toggle-gaming" id="btn-toggle-gaming-mode" data-i18n="gaming_btn_toggle_on">Включить вручную</button>
+              <input type="checkbox" id="checkbox-gaming-mode" style="display: none;" />
+            </div>
+            <p class="field-hint" data-i18n="gaming_tray_hint">Ручное переключение также доступно через меню Aura в трее Windows.</p>
+          </div>
+
+          <div class="card" id="card-vram-standby">
+            <h2 class="card-title" data-i18n="standby_title">Выгрузка моделей при бездействии (Сон)</h2>
+            <p class="card-desc" data-i18n="standby_desc">Освобождает видеопамять (VRAM), если голосовой ввод не используется указанное время.</p>
+            <div class="form-group">
+              <label for="select-vram-standby" class="field-label" data-i18n="standby_timeout_label">Время бездействия до перехода в сон</label>
+              <div class="select-wrap">
+                <select id="select-vram-standby" class="custom-select" aria-haspopup="listbox" aria-expanded="false">
+                  <option value="15" data-i18n="standby_15m">Через 15 минут</option>
+                  <option value="30" data-i18n="standby_30m" selected>Через 30 минут (рекомендуется)</option>
+                  <option value="60" data-i18n="standby_60m">Через 1 час</option>
+                  <option value="0" data-i18n="standby_never">Никогда (держать в VRAM)</option>
+                </select>
+                <div class="select-panel" id="panel-select-vram-standby" role="listbox"></div>
+              </div>
+            </div>
           </div>
 
           <div class="card">
@@ -214,17 +252,6 @@
             </div>
           </div>
 
-          <div class="card" id="card-cloud-functions" style="display: none;">
-            <h2 class="card-title" data-i18n="copy_context_title">Редактирование выделенного текста</h2>
-            <p class="card-desc" data-i18n="copy_context_desc">Если включено, Aura отправляет Ctrl+C и передаёт выделенный текст выбранному облачному провайдеру как контекст для команды редактирования. Отключите эту функцию при работе в терминале.</p>
-            <label class="toggle-switch">
-              <input type="checkbox" id="checkbox-selection-edit-enabled" />
-              <span class="toggle-track">
-                <span class="toggle-thumb"></span>
-              </span>
-              <span class="toggle-label" data-i18n="copy_context_checkbox">Разрешить захват и облачное редактирование выделения</span>
-            </label>
-          </div>
 
           <div class="card" id="card-cloud-fallback" style="display: none;">
             <h2 class="card-title" data-i18n="fallback_title">Автопереключение при недоступности облака</h2>
@@ -416,6 +443,10 @@
           </div>
         </div>
 
+        </section>
+
+        <!-- 3. TEXT PANEL -->
+        <section class="tab-panel" id="panel-text" role="tabpanel" tabindex="0" aria-labelledby="tab-btn-text" style="display: none;">
           <div class="card" id="card-language">
             <h2 class="card-title" data-i18n="lang_bias_title">Язык распознавания</h2>
             <p class="card-desc" data-i18n="lang_bias_desc">Выберите принудительный язык ввода или включите автоопределение.</p>
@@ -462,9 +493,32 @@
               <textarea id="textarea-dictionary" class="custom-textarea" placeholder="Например: Аура, коммит, репозиторий..." autocomplete="off"></textarea>
             </div>
           </div>
+
+          <div class="card" id="card-replacements">
+            <h2 class="card-title" data-i18n="replacements_title">Автозамена</h2>
+            <p class="card-desc" data-i18n="replacements_desc">Автоматически заменяет надиктованные слова и фразы на точные термины, адреса почты или готовый текст.</p>
+            <div class="replacements-list" id="replacements-list"></div>
+            <div class="replacement-add-row">
+              <input type="text" id="input-rep-trigger" class="custom-input" placeholder="Слово или фраза (напр. почта)" data-i18n-placeholder="replacements_trigger_ph" autocomplete="off" />
+              <input type="text" id="input-rep-value" class="custom-input" placeholder="Заменить на (напр. name@mail.ru)" data-i18n-placeholder="replacements_value_ph" autocomplete="off" />
+              <button type="button" id="btn-add-replacement" class="btn btn-secondary btn-add-replacement" data-i18n="btn_add">Добавить</button>
+            </div>
+          </div>
+
+          <div class="card" id="card-cloud-functions" style="display: none;">
+            <h2 class="card-title" data-i18n="copy_context_title">Редактирование выделенного текста</h2>
+            <p class="card-desc" data-i18n="copy_context_desc">Если включено, Aura отправляет Ctrl+C и передаёт выделенный текст выбранному облачному провайдеру как контекст для команды редактирования. Отключите эту функцию при работе в терминале.</p>
+            <label class="toggle-switch">
+              <input type="checkbox" id="checkbox-selection-edit-enabled" />
+              <span class="toggle-track">
+                <span class="toggle-thumb"></span>
+              </span>
+              <span class="toggle-label" data-i18n="copy_context_checkbox">Разрешить захват и облачное редактирование выделения</span>
+            </label>
+          </div>
         </section>
 
-        <!-- 3. HOTKEYS PANEL -->
+        <!-- 4. HOTKEYS PANEL -->
         <section class="tab-panel" id="panel-hotkeys" role="tabpanel" tabindex="0" aria-labelledby="tab-btn-hotkeys" style="display: none;">
           <div class="card">
             <h2 class="card-title" data-i18n="hotkey_title">Глобальная горячая клавиша</h2>
@@ -488,6 +542,16 @@
             <p class="switch-desc" data-i18n="hotkey_toggle_mode_desc">
               Короткое нажатие начинает запись без удержания клавиши. Повторный клик останавливает запись.
             </p>
+          </div>
+
+          <div class="card" id="card-overlay-timer">
+            <h2 class="card-title" data-i18n="overlay_timer_title">Таймер и статус в оверлее</h2>
+            <p class="card-desc" data-i18n="overlay_timer_desc">Отображать счетчик времени и статус обработки под индикатором речи. Ошибки будут видны всегда.</p>
+            <label class="toggle-switch">
+              <input type="checkbox" id="checkbox-overlay-show-timer" checked />
+              <span class="toggle-track"><span class="toggle-thumb"></span></span>
+              <span class="toggle-label" data-i18n="overlay_timer_checkbox">Показывать таймер и статус в оверлее</span>
+            </label>
           </div>
 
           <div class="card">
@@ -515,11 +579,14 @@
                   <option value="rhodes" data-i18n="sound_theme_rhodes">Rhodes</option>
                   <option value="scifi" data-i18n="sound_theme_scifi">Sci-Fi</option>
                   <option value="classic" data-i18n="sound_theme_classic">Колокольчик</option>
+                  <option value="bubble" data-i18n="sound_theme_bubble">Капля воды</option>
+                  <option value="haptic" data-i18n="sound_theme_haptic">Тактильный свитч</option>
                 </select>
                 <div class="select-panel" id="select-panel-sound-theme" role="listbox"></div>
               </div>
             </div>
           </div>
+
         </section>
 
         <!-- 5. HISTORY PANEL (New!) -->
@@ -567,14 +634,30 @@
               </svg>
             </div>
             <h2 class="about-app-title">AURA</h2>
-            <p class="about-version" data-i18n="about_version">v1.0.10</p>
+            <p class="about-version" data-i18n="about_version">v1.1.0</p>
             <button type="button" id="update-badge" class="update-badge" style="display: none;">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
               <span id="update-badge-text" data-i18n="update_available">Доступно обновление</span>
             </button>
             <p class="about-description" data-i18n="about_description">
-              Быстрый инструмент голосового ввода для Windows с поддержкой локальных нейросетей (Whisper, NVIDIA Parakeet) и передовых облачных моделей (Gemini, OpenAI, Groq).
+              Инструмент глобального голосового ввода для Windows. Программа переводит речь в текст и вставляет его в любое активное окно с автоматическим форматированием и расстановкой пунктуации.
             </p>
+
+            <div class="about-gratitude-wrap">
+              <div class="gratitude-divider"></div>
+              <p class="gratitude-text" data-i18n="about_gratitude_text">
+                Спасибо, что пользуетесь Aura! Если программа делает вашу работу быстрее и удобнее — поддержите проект звездой на GitHub.
+              </p>
+              <a href="https://github.com/malashkadev/aura" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-github-star" id="btn-github-star">
+                <svg class="github-icon" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/>
+                </svg>
+                <span data-i18n="btn_star_github">Поставить звезду на GitHub</span>
+                <svg class="star-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                </svg>
+              </a>
+            </div>
           </div>
 
           <div class="card">

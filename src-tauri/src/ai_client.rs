@@ -2,7 +2,15 @@ use base64::{engine::general_purpose, Engine as _};
 use reqwest::multipart;
 use serde::{Deserialize, Serialize};
 
-const GEMINI_MODEL: &str = "gemini-3.6-flash";
+const GEMINI_CANDIDATE_MODELS: &[&str] = &[
+    "gemini-3.8-flash",
+    "gemini-3.6-flash",
+    "gemini-3.5-flash",
+    "gemini-3.7-flash",
+    "gemini-3.1-flash",
+    "gemini-2.5-flash",
+    "gemini-2.0-flash",
+];
 const OPENAI_WHISPER_MODEL: &str = "whisper-1";
 const OPENAI_CHAT_MODEL: &str = "gpt-4o-mini";
 const GROQ_WHISPER_MODEL: &str = "whisper-large-v3";
@@ -22,6 +30,19 @@ pub enum ApiProvider {
 /// Reads the Windows system proxy (Internet Settings), which proxy-based VPN
 /// clients configure. reqwest only honors env-var proxies by default, so without
 /// this the app would bypass such VPNs entirely.
+fn normalize_proxy_url(addr: &str, default_scheme: &str) -> String {
+    let trimmed = addr.trim();
+    if trimmed.starts_with("http://")
+        || trimmed.starts_with("https://")
+        || trimmed.starts_with("socks5://")
+        || trimmed.starts_with("socks://")
+    {
+        trimmed.to_string()
+    } else {
+        format!("{default_scheme}://{trimmed}")
+    }
+}
+
 #[cfg(target_os = "windows")]
 fn windows_system_proxy() -> Option<String> {
     use winreg::enums::HKEY_CURRENT_USER;
@@ -40,20 +61,18 @@ fn windows_system_proxy() -> Option<String> {
     }
     // Either "host:port" or "http=host:port;https=host:port;socks=host:port;..."
     if server.contains('=') {
-        for scheme in ["https=", "http=", "socks="] {
+        for (scheme, default_proto) in [("https=", "http"), ("http=", "http"), ("socks=", "socks5")]
+        {
             if let Some(part) = server
                 .split(';')
                 .find_map(|p| p.trim().strip_prefix(scheme))
             {
-                if scheme == "socks=" {
-                    return Some(format!("socks5://{}", part));
-                }
-                return Some(format!("http://{}", part));
+                return Some(normalize_proxy_url(part, default_proto));
             }
         }
         None
     } else {
-        Some(format!("http://{}", server))
+        Some(normalize_proxy_url(server, "http"))
     }
 }
 
@@ -310,6 +329,15 @@ async fn whisper_transcribe(
     dictionary: &str,
     provider_name: &str,
 ) -> Result<String, String> {
+    // OpenAI and Groq enforce a strict 25 MB file upload limit.
+    const MAX_WHISPER_UPLOAD_BYTES: usize = 25 * 1024 * 1024;
+    if wav_bytes.len() > MAX_WHISPER_UPLOAD_BYTES {
+        return Err(format!(
+            "Audio recording is too large ({:.1} MB) for {provider_name} API (limit 25 MB). Please split into shorter segments or use local Whisper.",
+            wav_bytes.len() as f64 / (1024.0 * 1024.0)
+        ));
+    }
+
     let file_part = multipart::Part::bytes(wav_bytes)
         .file_name("audio.wav")
         .mime_str("audio/wav")
@@ -504,6 +532,16 @@ pub async fn transcribe_and_clean(
 
     match provider {
         ApiProvider::Gemini => {
+            // Google Gemini inlineData payload limit is 20 MB (Base64), which corresponds
+            // to ~15 MB raw binary data (~7.5 minutes of 16kHz mono 16-bit PCM WAV).
+            const MAX_GEMINI_INLINE_BYTES: usize = 15 * 1024 * 1024;
+            if wav_bytes.len() > MAX_GEMINI_INLINE_BYTES {
+                return Err(format!(
+                    "Audio recording is too large ({:.1} MB) for Gemini inline transcription (limit 15 MB). Please split into shorter segments or use local Whisper.",
+                    wav_bytes.len() as f64 / (1024.0 * 1024.0)
+                ));
+            }
+
             // Encode audio bytes in Base64
             let base64_audio = general_purpose::STANDARD.encode(&wav_bytes);
 
@@ -543,17 +581,8 @@ pub async fn transcribe_and_clean(
                 }],
             };
 
-            let candidate_models = [
-                "gemini-3.6-flash",
-                "gemini-3.5-flash",
-                "gemini-3.7-flash",
-                "gemini-3.1-flash",
-                "gemini-2.5-flash",
-                "gemini-2.0-flash",
-            ];
-
             let mut last_error = String::new();
-            for model in candidate_models {
+            for model in GEMINI_CANDIDATE_MODELS {
                 let endpoint = format!(
                     "https://generativelanguage.googleapis.com/v1beta/models/{}:generateContent",
                     model
@@ -870,46 +899,73 @@ pub async fn clean_text_with_llm(
                     ],
                 }],
             };
-            let endpoint = format!(
-                "https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_MODEL}:generateContent"
-            );
-            let response = client
-                .post(&endpoint)
-                .header("Content-Type", "application/json")
-                .header("x-goog-api-key", api_key)
-                .json(&gemini_body)
-                .send()
-                .await
-                .map_err(|e| format!("Gemini API request failed: {e}"))?;
+            let mut last_error = String::new();
+            for model in GEMINI_CANDIDATE_MODELS {
+                let endpoint = format!(
+                    "https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
+                );
+                let response_result = client
+                    .post(&endpoint)
+                    .header("Content-Type", "application/json")
+                    .header("x-goog-api-key", api_key)
+                    .json(&gemini_body)
+                    .send()
+                    .await;
 
-            let status = response.status();
-            if !status.is_success() {
-                let error_body = response
-                    .text()
-                    .await
-                    .unwrap_or_else(|_| "<failed to read response body>".to_string());
-                return Err(format!(
-                    "Gemini API returned status code {status}. Response body: {error_body}"
-                ));
+                let response = match response_result {
+                    Ok(resp) => resp,
+                    Err(e) => {
+                        let err_msg = format!("Gemini API request failed for '{model}': {e}");
+                        crate::logger::log("WARN", "LLM", None, &err_msg);
+                        last_error = err_msg;
+                        continue;
+                    }
+                };
+
+                let status = response.status();
+                if !status.is_success() {
+                    let error_body = response
+                        .text()
+                        .await
+                        .unwrap_or_else(|_| "<failed to read response body>".to_string());
+                    let err_msg =
+                        format!("Gemini API model '{model}' returned {status}: {error_body}");
+                    crate::logger::log("WARN", "LLM", None, &err_msg);
+                    if matches!(status.as_u16(), 400 | 401 | 403) {
+                        return Err(format!(
+                            "Gemini request rejected with {status}; skipping remaining models: {error_body}"
+                        ));
+                    }
+                    last_error = err_msg;
+                    continue;
+                }
+
+                let gemini_resp: GeminiResponse = match response.json().await {
+                    Ok(resp) => resp,
+                    Err(e) => {
+                        let err_msg =
+                            format!("Failed to parse Gemini JSON response for '{model}': {e}");
+                        crate::logger::log("WARN", "LLM", None, &err_msg);
+                        last_error = err_msg;
+                        continue;
+                    }
+                };
+
+                if let Some(clean_text) = gemini_resp
+                    .candidates
+                    .and_then(|c| c.into_iter().next())
+                    .and_then(|c| c.content)
+                    .and_then(|c| c.parts)
+                    .and_then(|p| p.into_iter().next())
+                    .and_then(|p| p.text)
+                {
+                    return Ok(clean_text);
+                }
             }
 
-            let gemini_resp: GeminiResponse = response
-                .json()
-                .await
-                .map_err(|e| format!("Failed to parse Gemini JSON response: {e}"))?;
-
-            let clean_text = gemini_resp
-                .candidates
-                .and_then(|c| c.into_iter().next())
-                .and_then(|c| c.content)
-                .and_then(|c| c.parts)
-                .and_then(|p| p.into_iter().next())
-                .and_then(|p| p.text)
-                .ok_or_else(|| {
-                    "Gemini response did not contain expected text content structure.".to_string()
-                })?;
-
-            Ok(clean_text)
+            Err(format!(
+                "All Gemini models failed for text cleanup: {last_error}"
+            ))
         }
         ApiProvider::OpenAi => {
             chat_cleanup(
@@ -1069,5 +1125,41 @@ mod tests {
         let json = r#"{"text":"Привет, мир!"}"#;
         let resp: HuggingFaceResponse = serde_json::from_str(json).unwrap();
         assert_eq!(resp.text, "Привет, мир!");
+    }
+
+    #[test]
+    fn test_normalize_proxy_url() {
+        assert_eq!(
+            normalize_proxy_url("127.0.0.1:7890", "http"),
+            "http://127.0.0.1:7890"
+        );
+        assert_eq!(
+            normalize_proxy_url("http://127.0.0.1:7890", "http"),
+            "http://127.0.0.1:7890"
+        );
+        assert_eq!(
+            normalize_proxy_url("https://proxy.corp.internal:8080", "http"),
+            "https://proxy.corp.internal:8080"
+        );
+        assert_eq!(
+            normalize_proxy_url("127.0.0.1:1080", "socks5"),
+            "socks5://127.0.0.1:1080"
+        );
+        assert_eq!(
+            normalize_proxy_url("socks5://127.0.0.1:1080", "socks5"),
+            "socks5://127.0.0.1:1080"
+        );
+        assert_eq!(
+            normalize_proxy_url("  http://10.0.0.1:8080  ", "http"),
+            "http://10.0.0.1:8080"
+        );
+    }
+
+    #[test]
+    fn test_gemini_candidate_models_validity() {
+        assert!(!GEMINI_CANDIDATE_MODELS.is_empty());
+        assert!(GEMINI_CANDIDATE_MODELS.contains(&"gemini-3.8-flash"));
+        assert!(GEMINI_CANDIDATE_MODELS.contains(&"gemini-3.6-flash"));
+        assert!(GEMINI_CANDIDATE_MODELS.contains(&"gemini-2.5-flash"));
     }
 }

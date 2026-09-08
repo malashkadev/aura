@@ -641,6 +641,17 @@ pub struct MicMeterPayload {
 
 static ACTIVE_MIC_METER_STOP: OnceLock<Mutex<Option<Arc<AtomicBool>>>> = OnceLock::new();
 
+fn clear_active_meter_if_matches(thread_stop: &Arc<AtomicBool>) {
+    let mutex = ACTIVE_MIC_METER_STOP.get_or_init(|| Mutex::new(None));
+    if let Ok(mut guard) = mutex.lock() {
+        if let Some(current) = guard.as_ref() {
+            if Arc::ptr_eq(current, thread_stop) {
+                *guard = None;
+            }
+        }
+    }
+}
+
 pub fn is_mic_meter_running() -> bool {
     let mutex = ACTIVE_MIC_METER_STOP.get_or_init(|| Mutex::new(None));
     if let Ok(guard) = mutex.lock() {
@@ -682,20 +693,14 @@ pub fn start_mic_meter<R: tauri::Runtime>(
             let device = match find_input_device(dev_name.as_deref()) {
                 Ok(d) => d,
                 Err(_) => {
-                    let mutex = ACTIVE_MIC_METER_STOP.get_or_init(|| Mutex::new(None));
-                    if let Ok(mut guard) = mutex.lock() {
-                        *guard = None;
-                    }
+                    clear_active_meter_if_matches(&thread_stop);
                     return;
                 }
             };
             let config = match device.default_input_config() {
                 Ok(c) => c,
                 Err(_) => {
-                    let mutex = ACTIVE_MIC_METER_STOP.get_or_init(|| Mutex::new(None));
-                    if let Ok(mut guard) = mutex.lock() {
-                        *guard = None;
-                    }
+                    clear_active_meter_if_matches(&thread_stop);
                     return;
                 }
             };
@@ -727,6 +732,15 @@ pub fn start_mic_meter<R: tauri::Runtime>(
                     |_| {},
                     None,
                 ),
+                cpal::SampleFormat::I32 => device.build_input_stream(
+                    &stream_config,
+                    move |data: &[i32], _| {
+                        let samples = data.iter().map(|&s| s as f32 / 2147483648.0).collect();
+                        let _ = sample_tx.try_send(samples);
+                    },
+                    |_| {},
+                    None,
+                ),
                 cpal::SampleFormat::F32 => device.build_input_stream(
                     &stream_config,
                     move |data: &[f32], _| {
@@ -737,10 +751,7 @@ pub fn start_mic_meter<R: tauri::Runtime>(
                     None,
                 ),
                 _ => {
-                    let mutex = ACTIVE_MIC_METER_STOP.get_or_init(|| Mutex::new(None));
-                    if let Ok(mut guard) = mutex.lock() {
-                        *guard = None;
-                    }
+                    clear_active_meter_if_matches(&thread_stop);
                     return;
                 }
             };
@@ -748,29 +759,20 @@ pub fn start_mic_meter<R: tauri::Runtime>(
             let stream = match stream {
                 Ok(s) => s,
                 Err(_) => {
-                    let mutex = ACTIVE_MIC_METER_STOP.get_or_init(|| Mutex::new(None));
-                    if let Ok(mut guard) = mutex.lock() {
-                        *guard = None;
-                    }
+                    clear_active_meter_if_matches(&thread_stop);
                     return;
                 }
             };
 
             if stream.play().is_err() {
-                let mutex = ACTIVE_MIC_METER_STOP.get_or_init(|| Mutex::new(None));
-                if let Ok(mut guard) = mutex.lock() {
-                    *guard = None;
-                }
+                clear_active_meter_if_matches(&thread_stop);
                 return;
             }
 
             let mut resampler = match StreamingResampler::new(channels, sample_rate) {
                 Ok(r) => r,
                 Err(_) => {
-                    let mutex = ACTIVE_MIC_METER_STOP.get_or_init(|| Mutex::new(None));
-                    if let Ok(mut guard) = mutex.lock() {
-                        *guard = None;
-                    }
+                    clear_active_meter_if_matches(&thread_stop);
                     return;
                 }
             };
@@ -811,10 +813,7 @@ pub fn start_mic_meter<R: tauri::Runtime>(
                 }
             }
 
-            let mutex = ACTIVE_MIC_METER_STOP.get_or_init(|| Mutex::new(None));
-            if let Ok(mut guard) = mutex.lock() {
-                *guard = None;
-            }
+            clear_active_meter_if_matches(&thread_stop);
         })
         .map_err(|e| format!("Failed to spawn mic meter thread: {e}"))?;
 
@@ -889,8 +888,9 @@ fn recorder_worker(
 
     if matches!(outcome, Ok(RecorderCommand::Stop)) {
         // Post-Release Audio Grace Buffer (Tail Hold):
-        // Allow hardware/WASAPI buffers to capture trailing speech phonemes for 160ms.
-        let grace_deadline = std::time::Instant::now() + Duration::from_millis(160);
+        // Allow hardware/WASAPI buffers and human speech decay to capture trailing
+        // phonemes and final words for 450ms before severing the input stream.
+        let grace_deadline = std::time::Instant::now() + Duration::from_millis(450);
         while std::time::Instant::now() < grace_deadline {
             let _ = drain_audio_queue(
                 &sample_rx,
@@ -1064,6 +1064,17 @@ fn setup_input_stream(device_name: Option<&str>) -> Result<StreamSetup, String> 
                     .iter()
                     .map(|&s| (s as f32 - 32768.0) / 32768.0)
                     .collect();
+                publish_audio_chunk(samples, &sample_tx, &callback_dropped);
+            },
+            move |error| {
+                let _ = error_tx.send(format!("Audio input stream failed: {error}"));
+            },
+            None,
+        ),
+        cpal::SampleFormat::I32 => device.build_input_stream(
+            &stream_config,
+            move |data: &[i32], _| {
+                let samples = data.iter().map(|&s| s as f32 / 2147483648.0).collect();
                 publish_audio_chunk(samples, &sample_tx, &callback_dropped);
             },
             move |error| {
@@ -1525,5 +1536,46 @@ mod tests {
         assert_eq!(reader.spec().sample_rate, OUTPUT_SAMPLE_RATE);
         assert_eq!(reader.duration(), OUTPUT_SAMPLE_RATE);
         remove_test_wav(&path);
+    }
+
+    #[test]
+    fn test_i32_sample_conversion() {
+        let i32_samples: [i32; 5] = [0, i32::MAX, i32::MIN, 1073741824, -1073741824];
+        let f32_samples: Vec<f32> = i32_samples
+            .iter()
+            .map(|&s| s as f32 / 2147483648.0)
+            .collect();
+        assert_eq!(f32_samples[0], 0.0);
+        assert!((f32_samples[1] - 1.0).abs() < 1e-6);
+        assert_eq!(f32_samples[2], -1.0);
+        assert!((f32_samples[3] - 0.5).abs() < 1e-6);
+        assert!((f32_samples[4] - -0.5).abs() < 1e-6);
+    }
+
+    #[test]
+    fn test_clear_active_meter_matches_only_own_handle() {
+        let stop_1 = Arc::new(AtomicBool::new(false));
+        let stop_2 = Arc::new(AtomicBool::new(false));
+
+        let mutex = ACTIVE_MIC_METER_STOP.get_or_init(|| Mutex::new(None));
+        {
+            let mut guard = mutex.lock().unwrap();
+            *guard = Some(Arc::clone(&stop_2));
+        }
+
+        // Thread 1 exits and tries to clear with stop_1 - should NOT clear stop_2!
+        clear_active_meter_if_matches(&stop_1);
+        {
+            let guard = mutex.lock().unwrap();
+            assert!(guard.is_some());
+            assert!(Arc::ptr_eq(guard.as_ref().unwrap(), &stop_2));
+        }
+
+        // Thread 2 exits and clears with stop_2 - should clear!
+        clear_active_meter_if_matches(&stop_2);
+        {
+            let guard = mutex.lock().unwrap();
+            assert!(guard.is_none());
+        }
     }
 }

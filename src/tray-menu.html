@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Aura Menu</title>
+  <link rel="stylesheet" href="tray-menu.css" />
+  <script type="module" src="tray-menu.js" defer></script>
+</head>
+<body>
+  <div class="aura-tray-menu" id="tray-menu">
+
+    <!-- View 1: Main Menu -->
+    <div class="menu-view active" id="view-main">
+      <!-- 1. Open Settings -->
+      <div class="aura-menu-item" id="item-open-settings" role="button" tabindex="0">
+        <svg class="menu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
+          <circle cx="12" cy="12" r="3"/>
+        </svg>
+        <span class="menu-text" id="label-settings">Открыть настройки</span>
+      </div>
+
+      <div class="menu-separator"></div>
+
+      <!-- 2. Recognition Mode Trigger -->
+      <div class="aura-menu-item" id="item-recog-trigger" role="button" tabindex="0">
+        <svg class="menu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 10v4"/><path d="M8 7v10"/><path d="M12 4v16"/><path d="M16 7v10"/><path d="M20 10v4"/>
+        </svg>
+        <span class="menu-text" id="label-recog">Способ распознавания</span>
+        <svg class="menu-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="9 18 15 12 9 6"/>
+        </svg>
+      </div>
+
+      <!-- 2b. Language Trigger (Clean, no icon, active lang badge) -->
+      <div class="aura-menu-item aura-menu-item-lang" id="item-lang-trigger" role="button" tabindex="0">
+        <span class="menu-text" id="label-lang">Язык распознавания</span>
+        <span class="lang-status-badge" id="lang-status-badge">RU</span>
+        <svg class="menu-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="9 18 15 12 9 6"/>
+        </svg>
+      </div>
+
+      <!-- 3. Gaming Mode -->
+      <div class="aura-menu-item" id="item-gaming" role="button" tabindex="0">
+        <svg class="menu-icon gaming-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="6" x2="10" y1="12" y2="12"/><line x1="8" x2="8" y1="10" y2="14"/>
+          <line x1="15" x2="15.01" y1="13" y2="13"/><line x1="18" x2="18.01" y1="11" y2="11"/>
+          <rect width="20" height="12" x="2" y="6" rx="6"/>
+        </svg>
+        <span class="menu-text" id="label-gaming">Игровой режим</span>
+        <span class="gaming-status-badge" id="gaming-status-badge">Выкл</span>
+        <div class="menu-toggle" id="toggle-gaming" aria-label="Игровой режим">
+          <div class="menu-toggle-thumb"></div>
+        </div>
+      </div>
+
+      <div class="menu-separator"></div>
+
+      <!-- 4. Exit -->
+      <div class="aura-menu-item" id="item-exit" role="button" tabindex="0">
+        <svg class="menu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M18.36 6.64a9 9 0 1 1-12.73 0"/>
+          <line x1="12" x2="12" y1="2" y2="12"/>
+        </svg>
+        <span class="menu-text" id="label-exit">Выход</span>
+      </div>
+    </div>
+
+    <!-- View 2: Recognition Submenu -->
+    <div class="menu-view" id="view-recog">
+      <div class="drilldown-header" id="btn-back-header" role="button" tabindex="0">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="15 18 9 12 15 6"/>
+        </svg>
+        <span id="label-recog-sub">Способ распознавания</span>
+      </div>
+
+      <div class="menu-separator"></div>
+
+      <div class="submenu-item" id="sub-cloud" role="button" tabindex="0">
+        <svg class="menu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/>
+        </svg>
+        <span class="menu-text" id="label-cloud">Облачный ИИ</span>
+        <svg class="check-mark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+      </div>
+
+      <div class="submenu-item" id="sub-local" role="button" tabindex="0">
+        <svg class="menu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect width="20" height="14" x="2" y="3" rx="2"/>
+          <line x1="8" x2="16" y1="21" y2="21"/>
+          <line x1="12" x2="12" y1="17" y2="21"/>
+        </svg>
+        <span class="menu-text" id="label-local">Локальный ИИ</span>
+        <svg class="check-mark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+      </div>
+    </div>
+
+    <!-- View 3: Language Submenu -->
+    <div class="menu-view" id="view-lang">
+      <div class="drilldown-header" id="btn-back-lang-header" role="button" tabindex="0">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="15 18 9 12 15 6"/>
+        </svg>
+        <span id="label-lang-sub">Язык распознавания</span>
+      </div>
+
+      <div class="menu-separator"></div>
+
+      <div class="lang-list-container" id="lang-list-container">
+        <!-- Populated dynamically by tray-menu.js for 11 languages -->
+      </div>
+    </div>
+
+  </div>
+</body>
+</html>

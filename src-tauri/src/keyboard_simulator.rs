@@ -168,20 +168,24 @@ mod windows_impl {
                 ));
             }
             let units = (count - dispatched).min(REPLACEMENT_BATCH_UNITS);
-            let mut inputs = Vec::with_capacity(units * 2);
-            for _ in 0..units {
+            for i in 0..units {
+                let mut inputs = Vec::with_capacity(2);
                 append_key_pair(&mut inputs, 0x08, 0, 0);
-            }
-            // Each Backspace is a keydown/keyup pair (2 events); only
-            // whole pairs that were accepted count as committed.
-            if let Err((inserted, message)) = send_input_batch(&mut inputs, "Backspace batch") {
-                return Err((dispatched + inserted / 2, message));
+                if let Err((inserted, message)) = send_input_batch(&mut inputs, "Backspace batch") {
+                    return Err((dispatched + i + inserted / 2, message));
+                }
+                let current_total = dispatched + i + 1;
+                if current_total < count {
+                    let delay = if current_total.is_multiple_of(10) {
+                        15
+                    } else {
+                        3
+                    };
+                    std::thread::sleep(std::time::Duration::from_millis(delay));
+                }
             }
             dispatched += units;
             batches += 1;
-            if dispatched < count {
-                std::thread::sleep(std::time::Duration::from_millis(REPLACEMENT_BATCH_PAUSE_MS));
-            }
         }
         Ok(batches)
     }
@@ -200,20 +204,24 @@ mod windows_impl {
                 ));
             }
             let end = (dispatched + REPLACEMENT_BATCH_UNITS).min(units.len());
-            let mut inputs = Vec::with_capacity((end - dispatched) * 2);
-            for &unit in &units[dispatched..end] {
+            for (i, &unit) in units[dispatched..end].iter().enumerate() {
+                let mut inputs = Vec::with_capacity(2);
                 append_key_pair(&mut inputs, 0, unit, KEYEVENTF_UNICODE);
-            }
-            // Each character is a keydown/keyup pair (2 events); only
-            // whole pairs accepted count as committed UTF-16 units.
-            if let Err((inserted, message)) = send_input_batch(&mut inputs, "Unicode batch") {
-                return Err((dispatched + inserted / 2, message));
+                if let Err((inserted, message)) = send_input_batch(&mut inputs, "Unicode batch") {
+                    return Err((dispatched + i + inserted / 2, message));
+                }
+                let current_total = dispatched + i + 1;
+                if current_total < units.len() {
+                    let delay = if current_total.is_multiple_of(15) {
+                        10
+                    } else {
+                        1
+                    };
+                    std::thread::sleep(std::time::Duration::from_millis(delay));
+                }
             }
             dispatched = end;
             batches += 1;
-            if dispatched < units.len() {
-                std::thread::sleep(std::time::Duration::from_millis(REPLACEMENT_BATCH_PAUSE_MS));
-            }
         }
         Ok(batches)
     }

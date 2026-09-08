@@ -31,6 +31,11 @@ const APP_COMMANDS: &[&str] = &[
     "start_mic_meter",
     "stop_mic_meter",
     "reprocess_history_text",
+    "get_audio_input_devices",
+    "toggle_gaming_mode",
+    "get_gaming_mode_state",
+    "show_settings_window",
+    "exit_app",
 ];
 
 fn is_cuda_dll(name: &str) -> bool {

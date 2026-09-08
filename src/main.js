@@ -15,6 +15,7 @@ const i18nDict = {
     "title_settings": "Настройки",
     "tab_general": "Основные",
     "tab_speech": "Голос",
+    "tab_text": "Текст",
     "tab_hotkeys": "Управление",
     "section_engine": "Движок",
     "section_recognition": "Распознавание",
@@ -45,8 +46,10 @@ const i18nDict = {
     "vocab_placeholder": "Например: Аура, коммит, репозиторий...",
     "engine_health_parakeet_running": "Parakeet: сервер запущен ({provider}, порт {port})",
     "engine_health_parakeet_stopped": "Parakeet: сервер не запущен",
+    "engine_health_parakeet_gaming": "Parakeet: сервер выгружен (игровой режим)",
     "engine_health_whisper_running": "Whisper: сервер запущен ({provider}, порт {port})",
     "engine_health_whisper_stopped": "Whisper: сервер не запущен",
+    "engine_health_whisper_gaming": "Whisper: сервер выгружен (игровой режим)",
     "engine_starting": "Запуск движка…",
     "local_model_title": "Локальное распознавание",
     "local_model_desc": "Настройте локальный движок распознавания речи для полной приватности.",
@@ -74,6 +77,8 @@ const i18nDict = {
     "sound_theme_rhodes": "Rhodes",
     "sound_theme_scifi": "Sci-Fi",
     "sound_theme_classic": "Колокольчик",
+    "sound_theme_bubble": "Капля воды",
+    "sound_theme_haptic": "Тактильный свитч",
     "api_title": "Авторизация API-ключей",
     "api_desc": "Укажите ваши API-ключи для авторизации в облачных сервисах Gemini, OpenAI или Groq.",
     "api_provider": "Провайдер API",
@@ -94,9 +99,13 @@ const i18nDict = {
     "history_engine_parakeet": "NVIDIA Parakeet",
     "history_unit_ms": "мс",
     "history_unit_sec": "с",
+    "history_group_today": "Сегодня",
+    "history_group_yesterday": "Вчера",
     "about_app_title": "Голосовой ввод Aura",
-    "about_version": "v1.0.10",
+    "about_version": "v1.1.0",
     "about_description": "Инструмент глобального голосового ввода для Windows. Программа переводит речь в текст и вставляет его в любое активное окно с автоматическим форматированием и расстановкой пунктуации.",
+    "about_gratitude_text": "Спасибо, что пользуетесь Aura! Если программа делает вашу работу быстрее и удобнее — поддержите проект звездой на GitHub.",
+    "btn_star_github": "Поставить звезду на GitHub",
     "status_ready": "Готово",
     "btn_save": "Сохранить настройки",
     "confirm_title": "Подтверждение",
@@ -190,12 +199,50 @@ const i18nDict = {
     "history_filter_all": "Все",
     "history_filter_cloud": "Облако",
     "history_filter_local": "Локально",
-    "gpu_status_installing": "Установка..."
+    "gpu_status_installing": "Установка...",
+    "replacements_title": "Автозамена",
+    "replacements_desc": "Автоматически заменяет надиктованные слова и фразы на точные термины, адреса почты или готовый текст.",
+    "replacements_trigger_ph": "Слово или фраза (напр. почта)",
+    "replacements_value_ph": "Заменить на (напр. name@mail.ru)",
+    "replacements_macro_hint": "Доступные макросы: {date} (ГГГГ-ММ-ДД), {date_ru} (ДД.ММ.ГГГГ), {time} (ЧЧ:ММ), {datetime}.",
+    "replacements_macros_label": "Вставить шаблон:",
+    "macro_chip_date_ru": "+ Дата РФ",
+    "macro_chip_date_iso": "+ Дата ISO",
+    "macro_chip_time": "+ Время",
+    "macro_chip_datetime": "+ Дата и время",
+    "btn_add": "Добавить",
+    "replacements_empty": "Правила автозамены пока не настроены",
+    "gaming_title": "Игровой режим",
+    "gaming_desc": "Автоматическая пауза перехвата клавиш и выгрузка моделей для максимального FPS в играх.",
+    "gaming_mode_label": "Игровой режим",
+    "gaming_mode_subdesc": "Отключает перехват клавиатуры и выгружает модели из видеопамяти (VRAM).",
+    "gaming_auto_label": "Автоматический игровой режим (D3D/Vulkan)",
+    "gaming_auto_desc": "Приостанавливает горячие клавиши и освобождает видеопамять при запуске полноэкранных 3D-игр.",
+    "gaming_status_label": "Текущее состояние",
+    "gaming_status_inactive": "Не активен",
+    "gaming_status_active": "Активен (пауза)",
+    "gaming_btn_toggle_on": "Включить вручную",
+    "gaming_btn_toggle_off": "Выключить",
+    "gaming_tray_hint": "Ручное переключение также доступно через меню Aura в трее Windows.",
+    "standby_title": "Выгрузка моделей при бездействии (Сон)",
+    "standby_timeout_label": "Время бездействия до перехода в сон",
+    "standby_desc": "Освобождает видеопамять (VRAM), если голосовой ввод не используется указанное время.",
+    "standby_15m": "Через 15 минут",
+    "standby_30m": "Через 30 минут (рекомендуется)",
+    "standby_60m": "Через 1 час",
+    "standby_never": "Никогда (держать в VRAM)",
+    "window_minimize": "Свернуть",
+    "window_close": "Закрыть",
+    "history_copy_title": "Скопировать в буфер обмена",
+    "history_search_clear": "Очистить поиск",
+    "api_key_toggle_visibility": "Показать/скрыть ключ",
+    "history_filters_label": "Фильтры истории"
   },
   "en": {
     "title_settings": "Settings",
     "tab_general": "General",
     "tab_speech": "Speech",
+    "tab_text": "Text",
     "tab_hotkeys": "Hotkeys",
     "section_engine": "Recognition engine",
     "section_recognition": "Recognition",
@@ -226,8 +273,10 @@ const i18nDict = {
     "vocab_placeholder": "e.g. Aura, commit, repository...",
     "engine_health_parakeet_running": "Parakeet: server running ({provider}, port {port})",
     "engine_health_parakeet_stopped": "Parakeet: server not running",
+    "engine_health_parakeet_gaming": "Parakeet: server unloaded (Gaming Mode active)",
     "engine_health_whisper_running": "Whisper: server running ({provider}, port {port})",
     "engine_health_whisper_stopped": "Whisper: server not running",
+    "engine_health_whisper_gaming": "Whisper: server unloaded (Gaming Mode active)",
     "engine_starting": "Starting engine…",
     "local_model_title": "Local Recognition",
     "local_model_desc": "Configure a local speech-to-text engine for complete privacy.",
@@ -255,6 +304,8 @@ const i18nDict = {
     "sound_theme_rhodes": "Rhodes",
     "sound_theme_scifi": "Sci-Fi",
     "sound_theme_classic": "Bell",
+    "sound_theme_bubble": "Water Drop",
+    "sound_theme_haptic": "Haptic Switch",
     "api_title": "API Keys Authorization",
     "api_desc": "Provide API keys for Gemini, OpenAI, or Groq cloud services.",
     "api_provider": "API Provider",
@@ -275,9 +326,13 @@ const i18nDict = {
     "history_engine_parakeet": "NVIDIA Parakeet",
     "history_unit_ms": "ms",
     "history_unit_sec": "s",
+    "history_group_today": "Today",
+    "history_group_yesterday": "Yesterday",
     "about_app_title": "Aura Voice Input",
-    "about_version": "v1.0.10",
+    "about_version": "v1.1.0",
     "about_description": "Global voice input tool for Windows. The program transcribes speech to text and inserts it into any active window with automatic formatting and punctuation.",
+    "about_gratitude_text": "Thank you for using Aura! If it makes your work faster and easier, please consider supporting the project with a star on GitHub.",
+    "btn_star_github": "Star on GitHub",
     "status_ready": "Ready",
     "btn_save": "Save Settings",
     "confirm_title": "Confirmation",
@@ -371,7 +426,44 @@ const i18nDict = {
     "history_filter_all": "All",
     "history_filter_cloud": "Cloud",
     "history_filter_local": "Local",
-    "gpu_status_installing": "Installing..."
+    "gpu_status_installing": "Installing...",
+    "replacements_title": "Auto-replacements",
+    "replacements_desc": "Automatically replaces dictated words and phrases with exact terms, email addresses, or custom text.",
+    "replacements_trigger_ph": "Word or phrase (e.g. email)",
+    "replacements_value_ph": "Replace with (e.g. name@mail.com)",
+    "replacements_macro_hint": "Available macros: {date} (YYYY-MM-DD), {date_ru} (DD.MM.YYYY), {time} (HH:MM), {datetime}.",
+    "replacements_macros_label": "Insert template:",
+    "macro_chip_date_ru": "+ Date (RU)",
+    "macro_chip_date_iso": "+ Date (ISO)",
+    "macro_chip_time": "+ Time",
+    "macro_chip_datetime": "+ Date & Time",
+    "btn_add": "Add",
+    "replacements_empty": "No replacement rules configured yet",
+    "gaming_title": "Gaming Mode",
+    "gaming_desc": "Automatically pauses hotkey hooks and unloads models from video memory for maximum FPS in games.",
+    "gaming_mode_label": "Gaming Mode",
+    "gaming_mode_subdesc": "Disables keyboard hooks and unloads models from video memory (VRAM).",
+    "gaming_auto_label": "Automatic Gaming Mode (D3D/Vulkan)",
+    "gaming_auto_desc": "Suspends hotkeys and frees video memory (VRAM) when launching fullscreen 3D games.",
+    "gaming_status_label": "Current status",
+    "gaming_status_inactive": "Inactive",
+    "gaming_status_active": "Active (paused)",
+    "gaming_btn_toggle_on": "Enable manually",
+    "gaming_btn_toggle_off": "Disable",
+    "gaming_tray_hint": "Manual toggle is also available via the Aura system tray menu.",
+    "standby_title": "Standby Model Unloader (Sleep)",
+    "standby_timeout_label": "Idle timeout before sleep",
+    "standby_desc": "Releases video memory (VRAM) when voice typing is unused for the selected duration.",
+    "standby_15m": "After 15 minutes",
+    "standby_30m": "After 30 minutes (recommended)",
+    "standby_60m": "After 1 hour",
+    "standby_never": "Never (keep in VRAM)",
+    "window_minimize": "Minimize",
+    "window_close": "Close",
+    "history_copy_title": "Copy to clipboard",
+    "history_search_clear": "Clear search",
+    "api_key_toggle_visibility": "Show/hide key",
+    "history_filters_label": "History filters"
   },
   "de": {
     "gpu_accel_label": "Lokale Hardware-Beschleunigung",
@@ -390,6 +482,7 @@ const i18nDict = {
     "title_settings": "Einstellungen",
     "tab_general": "Allgemein",
     "tab_speech": "Diktat",
+    "tab_text": "Text",
     "tab_hotkeys": "Tastenkombinationen",
     "section_engine": "Erkennungsmodul",
     "section_recognition": "Spracherkennung",
@@ -420,8 +513,10 @@ const i18nDict = {
     "vocab_placeholder": "z.B. Aura, Commit, Repository...",
     "engine_health_parakeet_running": "Parakeet: Server läuft ({provider}, Port {port})",
     "engine_health_parakeet_stopped": "Parakeet: Server läuft nicht",
+    "engine_health_parakeet_gaming": "Parakeet: Server entladen (Spielmodus aktiv)",
     "engine_health_whisper_running": "Whisper: Server läuft ({provider}, Port {port})",
     "engine_health_whisper_stopped": "Whisper: Server läuft nicht",
+    "engine_health_whisper_gaming": "Whisper: Server entladen (Spielmodus aktiv)",
     "engine_starting": "Engine wird gestartet…",
     "local_model_title": "Lokales Whisper-Modell",
     "local_model_desc": "Konfigurieren Sie eine lokale Spracherkennungs-Engine für vollständige Privatsphäre.",
@@ -446,6 +541,8 @@ const i18nDict = {
     "sound_theme_rhodes": "Rhodes",
     "sound_theme_scifi": "Sci-Fi",
     "sound_theme_classic": "Glocke",
+    "sound_theme_bubble": "Wassertropfen",
+    "sound_theme_haptic": "Haptischer Schalter",
     "api_title": "API-Schlüssel Autorisierung",
     "api_desc": "Geben Sie Ihre API-Schlüssel für Gemini, OpenAI oder Groq Cloud-Dienste ein.",
     "api_provider": "API-Provider",
@@ -466,9 +563,13 @@ const i18nDict = {
     "history_engine_parakeet": "NVIDIA Parakeet",
     "history_unit_ms": "ms",
     "history_unit_sec": "s",
+    "history_group_today": "Heute",
+    "history_group_yesterday": "Gestern",
     "about_app_title": "Aura Spracheingabe",
-    "about_version": "v1.0.10",
+    "about_version": "v1.1.0",
     "about_description": "Globales Spracheingabe-Tool für Windows. Die Anwendung überträgt Sprache in Text und fügt ihn mit automatischer Formatierung und Zeichensetzung in jedes aktive Fenster ein.",
+    "about_gratitude_text": "Danke, dass Sie Aura nutzen! Wenn das Tool Ihre Arbeit erleichtert, unterstützen Sie das Projekt gerne mit einem Stern auf GitHub.",
+    "btn_star_github": "Stern auf GitHub geben",
     "status_ready": "Bereit",
     "btn_save": "Einstellungen speichern",
     "confirm_title": "Bestätigung",
@@ -552,12 +653,50 @@ const i18nDict = {
     "history_filter_all": "Alle",
     "history_filter_cloud": "Cloud",
     "history_filter_local": "Lokal",
-    "gpu_status_installing": "Installieren..."
+    "gpu_status_installing": "Installieren...",
+    "replacements_title": "Auto-Ersetzung",
+    "replacements_desc": "Ersetzt diktierte Wörter und Ausdrücke automatisch durch genaue Begriffe, E-Mail-Adressen oder Text.",
+    "replacements_trigger_ph": "Wort oder Satz (z.B. E-Mail)",
+    "replacements_value_ph": "Ersetzen durch (z.B. name@mail.com)",
+    "replacements_macro_hint": "Verfügbare Makros: {date} (JJJJ-MM-TT), {date_ru} (TT.MM.JJJJ), {time} (HH:MM), {datetime}.",
+    "replacements_macros_label": "Vorlage einfügen:",
+    "macro_chip_date_ru": "+ Datum (RU)",
+    "macro_chip_date_iso": "+ Datum (ISO)",
+    "macro_chip_time": "+ Uhrzeit",
+    "macro_chip_datetime": "+ Datum & Zeit",
+    "btn_add": "Hinzufügen",
+    "replacements_empty": "Noch keine Ersetzungsregeln eingerichtet",
+    "gaming_title": "Spielemodus",
+    "gaming_desc": "Pausiert Tastatur-Hooks automatisch und gibt Videospeicher frei für maximale FPS in Spielen.",
+    "gaming_mode_label": "Spielemodus",
+    "gaming_mode_subdesc": "Deaktiviert Tastatur-Hooks und entlädt Modelle aus dem Grafikspeicher (VRAM).",
+    "gaming_auto_label": "Automatischer Spielemodus (D3D/Vulkan)",
+    "gaming_auto_desc": "Pausiert Hotkeys und gibt Videospeicher (VRAM) frei, wenn Vollbild-3D-Spiele gestartet werden.",
+    "gaming_status_label": "Aktueller Status",
+    "gaming_status_inactive": "Inaktiv",
+    "gaming_status_active": "Aktiv (pausiert)",
+    "gaming_btn_toggle_on": "Manuell aktivieren",
+    "gaming_btn_toggle_off": "Deaktivieren",
+    "gaming_tray_hint": "Manuelles Umschalten ist auch über das Aura-Taskleistenmenü möglich.",
+    "standby_title": "Modell-Entladung im Leerlauf (Schlafmodus)",
+    "standby_timeout_label": "Inaktivitätszeit vor dem Schlafmodus",
+    "standby_desc": "Gibt Videospeicher (VRAM) frei, wenn die Spracheingabe für die gewählte Zeit nicht genutzt wird.",
+    "standby_15m": "Nach 15 Minuten",
+    "standby_30m": "Nach 30 Minuten (empfohlen)",
+    "standby_60m": "Nach 1 Stunde",
+    "standby_never": "Nie (im VRAM behalten)",
+    "window_minimize": "Minimieren",
+    "window_close": "Schließen",
+    "history_copy_title": "In die Zwischenablage kopieren",
+    "history_search_clear": "Suche löschen",
+    "api_key_toggle_visibility": "Schlüssel anzeigen/ausblenden",
+    "history_filters_label": "Verlaufsfilter"
   },
   "es": {
     "title_settings": "Ajustes",
     "tab_general": "General",
     "tab_speech": "Voz",
+    "tab_text": "Texto",
     "tab_hotkeys": "Accesos rápidos",
     "section_engine": "Motor de reconocimiento",
     "section_recognition": "Reconocimiento",
@@ -588,8 +727,10 @@ const i18nDict = {
     "vocab_placeholder": "ej. Aura, commit, repositorio...",
     "engine_health_parakeet_running": "Parakeet: servidor en ejecución ({provider}, puerto {port})",
     "engine_health_parakeet_stopped": "Parakeet: servidor no en ejecución",
+    "engine_health_parakeet_gaming": "Parakeet: servidor descargado (Modo de juego activo)",
     "engine_health_whisper_running": "Whisper: servidor en ejecución ({provider}, puerto {port})",
     "engine_health_whisper_stopped": "Whisper: servidor no en ejecución",
+    "engine_health_whisper_gaming": "Whisper: servidor descargado (Modo de juego activo)",
     "engine_starting": "Iniciando motor…",
     "local_model_title": "Modelo Whisper local",
     "local_model_desc": "Configure un motor local de reconocimiento de voz para mantener la privacidad.",
@@ -614,6 +755,8 @@ const i18nDict = {
     "sound_theme_rhodes": "Rhodes",
     "sound_theme_scifi": "Sci-Fi",
     "sound_theme_classic": "Campana",
+    "sound_theme_bubble": "Gota de agua",
+    "sound_theme_haptic": "Interruptor háptico",
     "api_title": "Autorización de claves API",
     "api_desc": "Introduzca sus claves API para los servicios en la nube de Gemini, OpenAI o Groq.",
     "api_provider": "Proveedor de API",
@@ -634,9 +777,13 @@ const i18nDict = {
     "history_engine_parakeet": "Parakeet de NVIDIA",
     "history_unit_ms": "ms",
     "history_unit_sec": "s",
+    "history_group_today": "Hoy",
+    "history_group_yesterday": "Ayer",
     "about_app_title": "Dictado por voz Aura",
-    "about_version": "v1.0.10",
+    "about_version": "v1.1.0",
     "about_description": "Herramienta de entrada de voz global para Windows. El programa transcribe el habla en texto y lo inserta en cualquier ventana activa con formato y puntuación automáticos.",
+    "about_gratitude_text": "¡Gracias por usar Aura! Si hace tu trabajo más rápido y cómodo, apoya el proyecto con una estrella en GitHub.",
+    "btn_star_github": "Dar una estrella en GitHub",
     "status_ready": "Listo",
     "btn_save": "Guardar ajustes",
     "confirm_title": "Confirmación",
@@ -733,12 +880,50 @@ const i18nDict = {
     "history_filter_all": "Todos",
     "history_filter_cloud": "Nube",
     "history_filter_local": "Local",
-    "gpu_status_installing": "Instalando..."
+    "gpu_status_installing": "Instalando...",
+    "replacements_title": "Autoreemplazo",
+    "replacements_desc": "Reemplaza automáticamente palabras y frases dictadas por términos exactos, correos o texto personalizado.",
+    "replacements_trigger_ph": "Palabra o frase (ej. correo)",
+    "replacements_value_ph": "Reemplazar con (ej. name@mail.com)",
+    "replacements_macro_hint": "Macros disponibles: {date} (AAAA-MM-DD), {date_ru} (DD.MM.AAAA), {time} (HH:MM), {datetime}.",
+    "replacements_macros_label": "Insertar plantilla:",
+    "macro_chip_date_ru": "+ Fecha (RU)",
+    "macro_chip_date_iso": "+ Fecha (ISO)",
+    "macro_chip_time": "+ Hora",
+    "macro_chip_datetime": "+ Fecha y hora",
+    "btn_add": "Añadir",
+    "replacements_empty": "Aún no hay reglas de sustitución configuradas",
+    "gaming_title": "Modo de juego",
+    "gaming_desc": "Pausa automáticamente los ganchos de teclado y descarga modelos de la VRAM para el máximo FPS en juegos.",
+    "gaming_mode_label": "Modo de juego",
+    "gaming_mode_subdesc": "Desactiva los ganchos de teclado y descarga modelos de la memoria de video (VRAM).",
+    "gaming_auto_label": "Modo de juego automático (D3D/Vulkan)",
+    "gaming_auto_desc": "Suspende las teclas de acceso rápido y libera memoria de video (VRAM) al iniciar juegos 3D a pantalla completa.",
+    "gaming_status_label": "Estado actual",
+    "gaming_status_inactive": "Inactivo",
+    "gaming_status_active": "Activo (en pausa)",
+    "gaming_btn_toggle_on": "Activar manualmente",
+    "gaming_btn_toggle_off": "Desactivar",
+    "gaming_tray_hint": "El cambio manual también está disponible en el menú de Aura en la bandeja del sistema.",
+    "standby_title": "Descarga de modelos por inactividad (Reposo)",
+    "standby_timeout_label": "Tiempo de inactividad antes del reposo",
+    "standby_desc": "Libera memoria de video (VRAM) cuando el dictado por voz no se utiliza durante el tiempo seleccionado.",
+    "standby_15m": "Tras 15 minutos",
+    "standby_30m": "Tras 30 minutos (recomendado)",
+    "standby_60m": "Tras 1 hora",
+    "standby_never": "Nunca (mantener en VRAM)",
+    "window_minimize": "Minimizar",
+    "window_close": "Cerrar",
+    "history_copy_title": "Copiar al portapapeles",
+    "history_search_clear": "Borrar búsqueda",
+    "api_key_toggle_visibility": "Mostrar/ocultar clave",
+    "history_filters_label": "Filtros del historial"
   },
   "fr": {
     "title_settings": "Paramètres",
     "tab_general": "Général",
     "tab_speech": "Dictée",
+    "tab_text": "Texte",
     "tab_hotkeys": "Raccourcis",
     "section_engine": "Moteur de reconnaissance",
     "section_recognition": "Reconnaissance",
@@ -769,8 +954,10 @@ const i18nDict = {
     "vocab_placeholder": "ex. Aura, commit, dépôt...",
     "engine_health_parakeet_running": "Parakeet : serveur en cours d'exécution ({provider}, port {port})",
     "engine_health_parakeet_stopped": "Parakeet : serveur non démarré",
+    "engine_health_parakeet_gaming": "Parakeet : serveur déchargé (Mode jeu actif)",
     "engine_health_whisper_running": "Whisper : serveur en cours d'exécution ({provider}, port {port})",
     "engine_health_whisper_stopped": "Whisper : serveur non démarré",
+    "engine_health_whisper_gaming": "Whisper : serveur déchargé (Mode jeu actif)",
     "engine_starting": "Démarrage du moteur…",
     "local_model_title": "Modèle Whisper local",
     "local_model_desc": "Configurez un moteur local de reconnaissance vocale pour préserver entièrement votre confidentialité.",
@@ -795,6 +982,8 @@ const i18nDict = {
     "sound_theme_rhodes": "Rhodes",
     "sound_theme_scifi": "Sci-Fi",
     "sound_theme_classic": "Cloche",
+    "sound_theme_bubble": "Goutte d'eau",
+    "sound_theme_haptic": "Interrupteur haptique",
     "api_title": "Clés d'API",
     "api_desc": "Saisissez vos clés d'API pour les services Gemini, OpenAI ou Groq.",
     "api_provider": "Fournisseur d'API",
@@ -815,9 +1004,13 @@ const i18nDict = {
     "history_engine_parakeet": "Parakeet NVIDIA",
     "history_unit_ms": "ms",
     "history_unit_sec": "s",
+    "history_group_today": "Aujourd'hui",
+    "history_group_yesterday": "Hier",
     "about_app_title": "Dictée vocale Aura",
-    "about_version": "v1.0.10",
+    "about_version": "v1.1.0",
     "about_description": "Outil de saisie vocale globale pour Windows. Le programme transcrit la parole en texte et l'insère dans n'importe quelle fenêtre active avec un formatage et une ponctuation automatiques.",
+    "about_gratitude_text": "Merci d'utiliser Aura ! Si le programme vous fait gagner du temps, soutenez le projet avec une étoile sur GitHub.",
+    "btn_star_github": "Mettre une étoile sur GitHub",
     "status_ready": "Prêt",
     "btn_save": "Enregistrer",
     "confirm_title": "Confirmation",
@@ -914,12 +1107,50 @@ const i18nDict = {
     "history_filter_all": "Tous",
     "history_filter_cloud": "Nuage",
     "history_filter_local": "Local",
-    "gpu_status_installing": "Installation..."
+    "gpu_status_installing": "Installation...",
+    "replacements_title": "Remplacement automatique",
+    "replacements_desc": "Remplace automatiquement les mots et expressions dictés par des termes exacts, adresses e-mail ou texte personnalisé.",
+    "replacements_trigger_ph": "Mot ou phrase (ex. e-mail)",
+    "replacements_value_ph": "Remplacer par (ex. name@mail.com)",
+    "replacements_macro_hint": "Macros disponibles : {date} (AAAA-MM-JJ), {date_ru} (JJ.MM.AAAA), {time} (HH:MM), {datetime}.",
+    "replacements_macros_label": "Insérer un modèle :",
+    "macro_chip_date_ru": "+ Date (RU)",
+    "macro_chip_date_iso": "+ Date (ISO)",
+    "macro_chip_time": "+ Heure",
+    "macro_chip_datetime": "+ Date et heure",
+    "btn_add": "Ajouter",
+    "replacements_empty": "Aucune règle de remplacement configurée pour l'instant",
+    "gaming_title": "Mode Jeu",
+    "gaming_desc": "Met en pause automatiquement les hooks clavier et décharge les modèles de la VRAM pour un FPS maximal en jeu.",
+    "gaming_mode_label": "Mode Jeu",
+    "gaming_mode_subdesc": "Désactive les hooks clavier et décharge les modèles de la mémoire vidéo (VRAM).",
+    "gaming_auto_label": "Mode Jeu automatique (D3D/Vulkan)",
+    "gaming_auto_desc": "Suspend les raccourcis clavier et libère la mémoire vidéo (VRAM) lors du lancement de jeux 3D en plein écran.",
+    "gaming_status_label": "État actuel",
+    "gaming_status_inactive": "Inactif",
+    "gaming_status_active": "Actif (en pause)",
+    "gaming_btn_toggle_on": "Activer manuellement",
+    "gaming_btn_toggle_off": "Désactiver",
+    "gaming_tray_hint": "Le basculement manuel est également disponible via le menu Aura dans la barre des tâches.",
+    "standby_title": "Mise en veille des modèles en cas d'inactivité",
+    "standby_timeout_label": "Délai d'inactivité avant la mise en veille",
+    "standby_desc": "Libère la mémoire vidéo (VRAM) lorsque la saisie vocale n'est pas utilisée pendant la durée choisie.",
+    "standby_15m": "Après 15 minutes",
+    "standby_30m": "Après 30 minutes (recommandé)",
+    "standby_60m": "Après 1 heure",
+    "standby_never": "Jamais (garder en VRAM)",
+    "window_minimize": "Réduire",
+    "window_close": "Fermer",
+    "history_copy_title": "Copier dans le presse-papiers",
+    "history_search_clear": "Effacer la recherche",
+    "api_key_toggle_visibility": "Afficher/masquer la clé",
+    "history_filters_label": "Filtres de l'historique"
   },
   "it": {
     "title_settings": "Impostazioni",
     "tab_general": "Generale",
     "tab_speech": "Dettatura",
+    "tab_text": "Testo",
     "tab_hotkeys": "Scorciatoie",
     "section_engine": "Motore di riconoscimento",
     "section_recognition": "Riconoscimento",
@@ -950,8 +1181,10 @@ const i18nDict = {
     "vocab_placeholder": "es. Aura, commit, repository...",
     "engine_health_parakeet_running": "Parakeet: server in esecuzione ({provider}, porta {port})",
     "engine_health_parakeet_stopped": "Parakeet: server non in esecuzione",
+    "engine_health_parakeet_gaming": "Parakeet: server scaricato (Modalità gioco attiva)",
     "engine_health_whisper_running": "Whisper: server in esecuzione ({provider}, porta {port})",
     "engine_health_whisper_stopped": "Whisper: server non in esecuzione",
+    "engine_health_whisper_gaming": "Whisper: server scaricato (Modalità gioco attiva)",
     "engine_starting": "Avvio del motore…",
     "local_model_title": "Modello Whisper locale",
     "local_model_desc": "Configura un motore locale di riconoscimento vocale per la massima privacy.",
@@ -976,6 +1209,8 @@ const i18nDict = {
     "sound_theme_rhodes": "Rhodes",
     "sound_theme_scifi": "Sci-Fi",
     "sound_theme_classic": "Campanella",
+    "sound_theme_bubble": "Goccia d'acqua",
+    "sound_theme_haptic": "Interruttore tattile",
     "api_title": "Autorizzazione chiavi API",
     "api_desc": "Inserisci le tue chiavi API per Gemini, OpenAI o Groq.",
     "api_provider": "Provider API",
@@ -996,9 +1231,13 @@ const i18nDict = {
     "history_engine_parakeet": "Parakeet NVIDIA",
     "history_unit_ms": "ms",
     "history_unit_sec": "s",
+    "history_group_today": "Oggi",
+    "history_group_yesterday": "Ieri",
     "about_app_title": "Dettatura vocale Aura",
-    "about_version": "v1.0.10",
+    "about_version": "v1.1.0",
     "about_description": "Strumento di inserimento vocale globale per Windows. Il programma trascrive la voce in testo e la inserisce in qualsiasi finestra attiva con formattazione e punteggiatura automatiche.",
+    "about_gratitude_text": "Grazie per aver scelto Aura! Se rende il tuo lavoro più veloce e comodo, sostieni il progetto con una stella su GitHub.",
+    "btn_star_github": "Lascia una stella su GitHub",
     "status_ready": "Pronto",
     "btn_save": "Salva impostazioni",
     "confirm_title": "Conferma",
@@ -1095,12 +1334,50 @@ const i18nDict = {
     "history_filter_all": "Tutti",
     "history_filter_cloud": "Cloud",
     "history_filter_local": "Locale",
-    "gpu_status_installing": "Installazione..."
+    "gpu_status_installing": "Installazione...",
+    "replacements_title": "Sostituzione automatica",
+    "replacements_desc": "Sostituisce automaticamente parole e frasi dettate con termini esatti, indirizzi email o testo personalizzato.",
+    "replacements_trigger_ph": "Parola o frase (es. email)",
+    "replacements_value_ph": "Sostituisci con (es. name@mail.com)",
+    "replacements_macro_hint": "Macro disponibili: {date} (AAAA-MM-GG), {date_ru} (GG.MM.AAAA), {time} (OO:MM), {datetime}.",
+    "replacements_macros_label": "Inserisci modello:",
+    "macro_chip_date_ru": "+ Data (RU)",
+    "macro_chip_date_iso": "+ Data (ISO)",
+    "macro_chip_time": "+ Ora",
+    "macro_chip_datetime": "+ Data e ora",
+    "btn_add": "Aggiungi",
+    "replacements_empty": "Nessuna regola di sostituzione configurata",
+    "gaming_title": "Modalità Gioco",
+    "gaming_desc": "Mette in pausa automaticamente gli hook della tastiera e scarica i modelli dalla VRAM per il massimo FPS nei giochi.",
+    "gaming_mode_label": "Modalità Gioco",
+    "gaming_mode_subdesc": "Disattiva gli hook della tastiera e scarica i modelli dalla memoria video (VRAM).",
+    "gaming_auto_label": "Modalità Gioco automatica (D3D/Vulkan)",
+    "gaming_auto_desc": "Sospende i tasti di scelta rapida e libera la memoria video (VRAM) all'avvio di giochi 3D a schermo intero.",
+    "gaming_status_label": "Stato attuale",
+    "gaming_status_inactive": "Inattivo",
+    "gaming_status_active": "Attivo (in pausa)",
+    "gaming_btn_toggle_on": "Attiva manualmente",
+    "gaming_btn_toggle_off": "Disattiva",
+    "gaming_tray_hint": "La commutazione manuale è disponibile anche dal menu della barra delle applicazioni di Aura.",
+    "standby_title": "Sospensione modelli per inattività",
+    "standby_timeout_label": "Tempo di inattività prima della sospensione",
+    "standby_desc": "Libera la memoria video (VRAM) se la digitazione vocale non viene utilizzata per il tempo indicato.",
+    "standby_15m": "Dopo 15 minuti",
+    "standby_30m": "Dopo 30 minuti (consigliato)",
+    "standby_60m": "Dopo 1 ora",
+    "standby_never": "Mai (mantieni in VRAM)",
+    "window_minimize": "Riduci a icona",
+    "window_close": "Chiudi",
+    "history_copy_title": "Copia negli appunti",
+    "history_search_clear": "Cancella ricerca",
+    "api_key_toggle_visibility": "Mostra/nascondi chiave",
+    "history_filters_label": "Filtri della cronologia"
   },
   "zh": {
     "title_settings": "设置",
     "tab_general": "常规",
     "tab_speech": "语音",
+    "tab_text": "文本",
     "tab_hotkeys": "快捷键",
     "section_engine": "识别引擎",
     "section_recognition": "识别",
@@ -1131,8 +1408,10 @@ const i18nDict = {
     "vocab_placeholder": "例如：Aura, commit, 仓库...",
     "engine_health_parakeet_running": "Parakeet：服务器运行中（{provider}，端口 {port}）",
     "engine_health_parakeet_stopped": "Parakeet：服务器未运行",
+    "engine_health_parakeet_gaming": "Parakeet：服务器已卸载（游戏模式已启用）",
     "engine_health_whisper_running": "Whisper：服务器运行中（{provider}，端口 {port}）",
     "engine_health_whisper_stopped": "Whisper：服务器未运行",
+    "engine_health_whisper_gaming": "Whisper：服务器已卸载（游戏模式已启用）",
     "engine_starting": "引擎启动中…",
     "local_model_title": "本地 Whisper 模型",
     "local_model_desc": "配置本地语音识别引擎，确保数据完全私密。",
@@ -1157,6 +1436,8 @@ const i18nDict = {
     "sound_theme_rhodes": "Rhodes",
     "sound_theme_scifi": "科幻",
     "sound_theme_classic": "铃声",
+    "sound_theme_bubble": "水滴音",
+    "sound_theme_haptic": "触感微动",
     "api_title": "API 密钥授权",
     "api_desc": "输入您在 Gemini、OpenAI 或 Groq 云端服务的 API 密钥。",
     "api_provider": "API 供应商",
@@ -1177,9 +1458,13 @@ const i18nDict = {
     "history_engine_parakeet": "NVIDIA Parakeet",
     "history_unit_ms": "毫秒",
     "history_unit_sec": "秒",
+    "history_group_today": "今天",
+    "history_group_yesterday": "昨天",
     "about_app_title": "Aura 智能语音输入",
-    "about_version": "v1.0.10",
+    "about_version": "v1.1.0",
     "about_description": "适用于 Windows 的全局语音输入工具。本程序可以将语音转录为文本，并以自动格式和标点符号插入到任何活动窗口中。",
+    "about_gratitude_text": "感谢您使用 Aura！如果它让您的输入更高效便捷，欢迎在 GitHub 上为本项目点亮一颗星。",
+    "btn_star_github": "在 GitHub 上点亮 Star",
     "status_ready": "就绪",
     "btn_save": "保存设置",
     "confirm_title": "确认",
@@ -1276,12 +1561,50 @@ const i18nDict = {
     "history_filter_all": "全部",
     "history_filter_cloud": "云端",
     "history_filter_local": "本地",
-    "gpu_status_installing": "正在安装..."
+    "gpu_status_installing": "正在安装...",
+    "replacements_title": "自动替换",
+    "replacements_desc": "自动将口述词语和短语替换为精准术语、电子邮件地址或自定义文本。",
+    "replacements_trigger_ph": "口述词或短语 (例如: 邮箱)",
+    "replacements_value_ph": "替换为 (例如: name@mail.com)",
+    "replacements_macro_hint": "可用宏: {date} (YYYY-MM-DD), {date_ru} (DD.MM.YYYY), {time} (HH:MM), {datetime}。",
+    "replacements_macros_label": "插入模板:",
+    "macro_chip_date_ru": "+ 日期 (RU)",
+    "macro_chip_date_iso": "+ 日期 (ISO)",
+    "macro_chip_time": "+ 时间",
+    "macro_chip_datetime": "+ 日期与时间",
+    "btn_add": "添加",
+    "replacements_empty": "暂未配置自动替换规则",
+    "gaming_title": "游戏模式",
+    "gaming_desc": "自动暂停按键拦截并从显存中卸载模型，以保证游戏中的最高帧率。",
+    "gaming_mode_label": "游戏模式",
+    "gaming_mode_subdesc": "禁用键盘钩子并从显存中卸载模型。",
+    "gaming_auto_label": "全屏 3D 游戏自动检测 (D3D/Vulkan)",
+    "gaming_auto_desc": "启动全屏 3D 游戏时暂停快捷键并释放显存 (VRAM)。",
+    "gaming_status_label": "当前状态",
+    "gaming_status_inactive": "未激活",
+    "gaming_status_active": "已激活 (已暂停)",
+    "gaming_btn_toggle_on": "手动开启",
+    "gaming_btn_toggle_off": "关闭",
+    "gaming_tray_hint": "也可以通过 Windows 系统托盘菜单手动切换。",
+    "standby_title": "闲置时释放模型（睡眠模式）",
+    "standby_timeout_label": "进入睡眠前的闲置时间",
+    "standby_desc": "在选定时间内未使用语音输入时释放显存 (VRAM)。",
+    "standby_15m": "15 分钟后",
+    "standby_30m": "30 分钟后 (推荐)",
+    "standby_60m": "1 小时后",
+    "standby_never": "从不 (常驻显存)",
+    "window_minimize": "最小化",
+    "window_close": "关闭",
+    "history_copy_title": "复制到剪贴板",
+    "history_search_clear": "清除搜索",
+    "api_key_toggle_visibility": "显示/隐藏密钥",
+    "history_filters_label": "历史记录筛选"
   },
   "pt": {
     "title_settings": "Configurações",
     "tab_general": "Geral",
     "tab_speech": "Voz",
+    "tab_text": "Texto",
     "tab_hotkeys": "Teclas de atalho",
     "section_engine": "Motor de reconhecimento",
     "section_recognition": "Reconhecimento",
@@ -1312,8 +1635,10 @@ const i18nDict = {
     "vocab_placeholder": "ex. Aura, commit, repositório...",
     "engine_health_parakeet_running": "Parakeet: servidor em execução ({provider}, porta {port})",
     "engine_health_parakeet_stopped": "Parakeet: servidor não em execução",
+    "engine_health_parakeet_gaming": "Parakeet: servidor descarregado (Modo de Jogo ativo)",
     "engine_health_whisper_running": "Whisper: servidor em execução ({provider}, porta {port})",
     "engine_health_whisper_stopped": "Whisper: servidor não em execução",
+    "engine_health_whisper_gaming": "Whisper: servidor descarregado (Modo de Jogo ativo)",
     "engine_starting": "Iniciando o motor…",
     "local_model_title": "Modelo Whisper local",
     "local_model_desc": "Configure um mecanismo local de reconhecimento de voz para manter total privacidade.",
@@ -1338,6 +1663,8 @@ const i18nDict = {
     "sound_theme_rhodes": "Rhodes",
     "sound_theme_scifi": "Sci-Fi",
     "sound_theme_classic": "Sino",
+    "sound_theme_bubble": "Gota de água",
+    "sound_theme_haptic": "Interruptor tátil",
     "api_title": "Autorização de chaves API",
     "api_desc": "Insira suas chaves API para os serviços Gemini, OpenAI ou Groq.",
     "api_provider": "Provedor de API",
@@ -1358,9 +1685,13 @@ const i18nDict = {
     "history_engine_parakeet": "Parakeet NVIDIA",
     "history_unit_ms": "ms",
     "history_unit_sec": "s",
+    "history_group_today": "Hoje",
+    "history_group_yesterday": "Ontem",
     "about_app_title": "Ditado de voz Aura",
-    "about_version": "v1.0.10",
+    "about_version": "v1.1.0",
     "about_description": "Ferramenta de entrada de voz global para Windows. O programa transcreve a fala em texto e a insere em qualquer janela ativa com formatação e pontuação automáticas.",
+    "about_gratitude_text": "Obrigado por usar o Aura! Se ele torna seu dia a dia mais ágil, apoie o projeto com uma estrela no GitHub.",
+    "btn_star_github": "Dar uma estrela no GitHub",
     "status_ready": "Pronto",
     "btn_save": "Salvar configurações",
     "confirm_title": "Confirmação",
@@ -1457,12 +1788,50 @@ const i18nDict = {
     "history_filter_all": "Todos",
     "history_filter_cloud": "Nuvem",
     "history_filter_local": "Local",
-    "gpu_status_installing": "Instalando..."
+    "gpu_status_installing": "Instalando...",
+    "replacements_title": "Substituição automática",
+    "replacements_desc": "Substitui automaticamente palavras e frases ditadas por termos exatos, endereços de email ou texto personalizado.",
+    "replacements_trigger_ph": "Palavra ou frase (ex: email)",
+    "replacements_value_ph": "Substituir por (ex: name@mail.com)",
+    "replacements_macro_hint": "Macros disponíveis: {date} (AAAA-MM-DD), {date_ru} (DD.MM.AAAA), {time} (HH:MM), {datetime}.",
+    "replacements_macros_label": "Inserir modelo:",
+    "macro_chip_date_ru": "+ Data (RU)",
+    "macro_chip_date_iso": "+ Data (ISO)",
+    "macro_chip_time": "+ Hora",
+    "macro_chip_datetime": "+ Data e hora",
+    "btn_add": "Adicionar",
+    "replacements_empty": "Nenhuma regra de substituição configurada ainda",
+    "gaming_title": "Modo de Jogo",
+    "gaming_desc": "Pausa automaticamente os ganchos de teclado e descarrega modelos da VRAM para FPS máximo em jogos.",
+    "gaming_mode_label": "Modo de Jogo",
+    "gaming_mode_subdesc": "Desativa ganchos de teclado e descarrega modelos da memória de vídeo (VRAM).",
+    "gaming_auto_label": "Modo de Jogo Automático (D3D/Vulkan)",
+    "gaming_auto_desc": "Suspende as teclas de atalho e libera memória de vídeo (VRAM) ao iniciar jogos 3D em tela cheia.",
+    "gaming_status_label": "Status atual",
+    "gaming_status_inactive": "Inativo",
+    "gaming_status_active": "Ativo (pausado)",
+    "gaming_btn_toggle_on": "Ativar manualmente",
+    "gaming_btn_toggle_off": "Desativar",
+    "gaming_tray_hint": "A alternância manual também está disponível no menu do Aura na bandeja do sistema.",
+    "standby_title": "Liberação de modelos por inatividade (Repouso)",
+    "standby_timeout_label": "Tempo de inatividade antes do repouso",
+    "standby_desc": "Libera memória de vídeo (VRAM) se a digitação por voz não for usada durante o tempo selecionado.",
+    "standby_15m": "Após 15 minutos",
+    "standby_30m": "Após 30 minutos (recomendado)",
+    "standby_60m": "Após 1 hora",
+    "standby_never": "Nunca (manter na VRAM)",
+    "window_minimize": "Minimizar",
+    "window_close": "Fechar",
+    "history_copy_title": "Copiar para a área de transferência",
+    "history_search_clear": "Limpar pesquisa",
+    "api_key_toggle_visibility": "Mostrar/ocultar chave",
+    "history_filters_label": "Filtros do histórico"
   },
   "tr": {
     "title_settings": "Ayarlar",
     "tab_general": "Genel",
     "tab_speech": "Ses",
+    "tab_text": "Metin",
     "tab_hotkeys": "Kısayollar",
     "section_engine": "Tanıma motoru",
     "section_recognition": "Tanıma",
@@ -1493,8 +1862,10 @@ const i18nDict = {
     "vocab_placeholder": "örn. Aura, commit, depo...",
     "engine_health_parakeet_running": "Parakeet: sunucu çalışıyor ({provider}, port {port})",
     "engine_health_parakeet_stopped": "Parakeet: sunucu çalışmıyor",
+    "engine_health_parakeet_gaming": "Parakeet: sunucu bellekten kaldırıldı (Oyun Modu aktif)",
     "engine_health_whisper_running": "Whisper: sunucu çalışıyor ({provider}, port {port})",
     "engine_health_whisper_stopped": "Whisper: sunucu çalışmıyor",
+    "engine_health_whisper_gaming": "Whisper: sunucu bellekten kaldırıldı (Oyun Modu aktif)",
     "engine_starting": "Motor başlatılıyor…",
     "local_model_title": "Yerel Whisper Modülü",
     "local_model_desc": "Tam gizlilik için yerel bir konuşma tanıma motoru yapılandırın.",
@@ -1519,6 +1890,8 @@ const i18nDict = {
     "sound_theme_rhodes": "Rhodes",
     "sound_theme_scifi": "Sci-Fi",
     "sound_theme_classic": "Zil",
+    "sound_theme_bubble": "Su Damlası",
+    "sound_theme_haptic": "Haptik Anahtar",
     "api_title": "API Anahtarları Yetkilendirme",
     "api_desc": "Gemini, OpenAI veya Groq bulut hizmetleri için API anahtarlarınızı girin.",
     "api_provider": "API Sağlayıcısı",
@@ -1539,9 +1912,13 @@ const i18nDict = {
     "history_engine_parakeet": "NVIDIA Parakeet",
     "history_unit_ms": "ms",
     "history_unit_sec": "sn",
+    "history_group_today": "Bugün",
+    "history_group_yesterday": "Dün",
     "about_app_title": "Aura Sesli Giriş",
-    "about_version": "v1.0.10",
+    "about_version": "v1.1.0",
     "about_description": "Windows için genel sesli giriş aracı. Program, konuşmayı metne dönüştürür ve otomatik biçimlendirme ve noktalama işaretleriyle herhangi bir aktif pencereye ekler.",
+    "about_gratitude_text": "Aura'yı kullandığınız için teşekkürler! Çalışmanızı hızlandırıyorsa, projeyi GitHub'da yıldızlayarak destekleyebilirsiniz.",
+    "btn_star_github": "GitHub'da Yıldız Ver",
     "status_ready": "Hazır",
     "btn_save": "Ayarları Kaydet",
     "confirm_title": "Onay",
@@ -1638,7 +2015,44 @@ const i18nDict = {
     "history_filter_all": "Tümü",
     "history_filter_cloud": "Bulut",
     "history_filter_local": "Yerel",
-    "gpu_status_installing": "Yükleniyor..."
+    "gpu_status_installing": "Yükleniyor...",
+    "replacements_title": "Otomatik Değiştirme",
+    "replacements_desc": "Dikte edilen kelimeleri ve ifadeleri otomatik olarak kesin terimlerle, e-posta adresleriyle veya özel metinle değiştirir.",
+    "replacements_trigger_ph": "Kelime veya ifade (örn. e-posta)",
+    "replacements_value_ph": "Şununla değiştir (örn. name@mail.com)",
+    "replacements_macro_hint": "Kullanılabilir makrolar: {date} (YYYY-AA-GG), {date_ru} (GG.AA.YYYY), {time} (SS:DD), {datetime}.",
+    "replacements_macros_label": "Şablon ekle:",
+    "macro_chip_date_ru": "+ Tarih (RU)",
+    "macro_chip_date_iso": "+ Tarih (ISO)",
+    "macro_chip_time": "+ Saat",
+    "macro_chip_datetime": "+ Tarih ve saat",
+    "btn_add": "Ekle",
+    "replacements_empty": "Henüz yapılandırılmış değiştirme kuralı yok",
+    "gaming_title": "Oyun Modu",
+    "gaming_desc": "Oyunlarda maksimum FPS için klavye kancalarını otomatik duraklatır ve modelleri video belleğinden kaldırır.",
+    "gaming_mode_label": "Oyun Modu",
+    "gaming_mode_subdesc": "Klavye kancalarını devre dışı bırakır ve modelleri video belleğinden (VRAM) kaldırır.",
+    "gaming_auto_label": "Otomatik Oyun Modu (D3D/Vulkan)",
+    "gaming_auto_desc": "Tam ekran 3D oyunlar başlatıldığında kısayol tuşlarını askıya alır ve video belleğini (VRAM) serbest bırakır.",
+    "gaming_status_label": "Mevcut durum",
+    "gaming_status_inactive": "Etkin değil",
+    "gaming_status_active": "Aktif (duraklatıldı)",
+    "gaming_btn_toggle_on": "Manuel olarak etkinleştir",
+    "gaming_btn_toggle_off": "Devre dışı bırak",
+    "gaming_tray_hint": "Manuel geçişe Windows sistem tepsisindeki Aura menüsünden de erişilebilir.",
+    "standby_title": "Boşta Model Boşaltma (Uyku Modu)",
+    "standby_timeout_label": "Uyku öncesi boşta kalma süresi",
+    "standby_desc": "Sesli yazma seçilen süre boyunca kullanılmadığında video belleğini (VRAM) serbest bırakır.",
+    "standby_15m": "15 dakika sonra",
+    "standby_30m": "30 dakika sonra (önerilen)",
+    "standby_60m": "1 saat sonra",
+    "standby_never": "Asla (VRAM'de tut)",
+    "window_minimize": "Küçült",
+    "window_close": "Kapat",
+    "history_copy_title": "Panoya kopyala",
+    "history_search_clear": "Aramayı temizle",
+    "api_key_toggle_visibility": "Anahtarı göster/gizle",
+    "history_filters_label": "Geçmiş filtreleri"
   }
 };
 
@@ -1861,6 +2275,12 @@ document.addEventListener("DOMContentLoaded", () => {
   });
   bindTabKeyboardNavigation(tabs, activateTab);
 
+  const initialTabMatch = (location.hash || "").replace("#", "") || new URLSearchParams(location.search).get("tab");
+  if (initialTabMatch) {
+    const targetTab = Array.from(tabs).find((t) => t.dataset.tab === initialTabMatch);
+    if (targetTab) activateTab(targetTab);
+  }
+
   // Toggle API Key visibility
   const apiKeyInput = document.getElementById("input-api-key");
   const toggleKeyBtn = document.getElementById("btn-toggle-key");
@@ -1961,6 +2381,14 @@ async function refreshEngineHealth() {
       }
       if (Date.now() < engineStartNoticeUntil) {
         chip.innerHTML = `<span class="spinner-inline" aria-hidden="true"></span> ${getTranslation("engine_starting")}`;
+        chip.classList.add("health-warn");
+        return;
+      }
+      if (!health.running && health.gaming_mode) {
+        const gamingKey = health.engine === "whisper"
+          ? "engine_health_whisper_gaming"
+          : "engine_health_parakeet_gaming";
+        chip.textContent = getTranslation(gamingKey);
         chip.classList.add("health-warn");
         return;
       }
@@ -2082,6 +2510,9 @@ const btnSaveSettings = document.getElementById("btn-save-settings");
         });
       }
       selectAudioDevice.value = currentVal;
+      if (selectAudioDevice.value !== currentVal) {
+        selectAudioDevice.value = "default";
+      }
       buildSelectPanel(selectAudioDevice);
       syncPanelSelection(selectAudioDevice);
     } catch (e) {
@@ -2310,6 +2741,7 @@ const providerDict = i18nDict[currentLanguage] || i18nDict.ru;
   let engineFastPollTimer = null;
   let engineStartNoticeUntil = 0;
   let lastHealthState = null;
+  let updateGamingModeUi = () => {};
 
   function markSettingsModified(immediate = false) {
     if (!isSettingsLoaded) return;
@@ -2331,18 +2763,125 @@ const providerDict = i18nDict[currentLanguage] || i18nDict.ru;
     }, delay);
   }
 
+  let currentReplacements = [];
+
+  function renderReplacementsList(replacements) {
+    const container = document.getElementById("replacements-list");
+    if (!container) return;
+    container.innerHTML = "";
+
+    if (!replacements || replacements.length === 0) {
+      const empty = document.createElement("div");
+      empty.className = "replacements-empty";
+      empty.setAttribute("data-i18n", "replacements_empty");
+      empty.textContent = getTranslation("replacements_empty") || "Правила автозамены не настроены";
+      container.appendChild(empty);
+      return;
+    }
+
+    replacements.forEach((rep, index) => {
+      const item = document.createElement("div");
+      item.className = "replacement-item";
+
+      const info = document.createElement("div");
+      info.className = "replacement-info";
+
+      const trigger = document.createElement("span");
+      trigger.className = "replacement-trigger";
+      trigger.textContent = rep.trigger;
+
+      const arrow = document.createElement("span");
+      arrow.className = "replacement-arrow";
+      arrow.setAttribute("aria-hidden", "true");
+      arrow.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>';
+
+      const val = document.createElement("span");
+      val.className = "replacement-value";
+      val.textContent = rep.replacement;
+
+      info.appendChild(trigger);
+      info.appendChild(arrow);
+      info.appendChild(val);
+
+      const btnDel = document.createElement("button");
+      btnDel.type = "button";
+      btnDel.className = "replacement-delete";
+      btnDel.setAttribute("aria-label", "Delete replacement");
+      btnDel.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>';
+      btnDel.addEventListener("click", () => {
+        currentReplacements.splice(index, 1);
+        renderReplacementsList(currentReplacements);
+        markSettingsModified(true);
+      });
+
+      item.appendChild(info);
+      item.appendChild(btnDel);
+      container.appendChild(item);
+    });
+  }
+
+  function setupReplacementsUI() {
+    const btnAdd = document.getElementById("btn-add-replacement");
+    const inputTrigger = document.getElementById("input-rep-trigger");
+    const inputValue = document.getElementById("input-rep-value");
+
+    function addCurrentReplacement() {
+      const trig = inputTrigger ? inputTrigger.value.trim() : "";
+      const val = inputValue ? inputValue.value.trim() : "";
+      if (!trig || !val) return;
+
+      const existingIdx = currentReplacements.findIndex(r => r.trigger.toLowerCase() === trig.toLowerCase());
+      if (existingIdx >= 0) {
+        currentReplacements[existingIdx].replacement = val;
+      } else {
+        currentReplacements.push({ trigger: trig, replacement: val });
+      }
+
+      if (inputTrigger) inputTrigger.value = "";
+      if (inputValue) inputValue.value = "";
+      renderReplacementsList(currentReplacements);
+      markSettingsModified(true);
+    }
+
+    if (btnAdd) {
+      btnAdd.addEventListener("click", addCurrentReplacement);
+    }
+    if (inputValue) {
+      inputValue.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          addCurrentReplacement();
+        }
+      });
+    }
+    if (inputTrigger) {
+      inputTrigger.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          inputValue?.focus();
+        }
+      });
+    }
+  }
+
+  let isSettingsListenersBound = false;
   function bindSettingsChangeListeners() {
+    if (isSettingsListenersBound) return;
+    isSettingsListenersBound = true;
+
     const checkboxStreaming = document.getElementById("checkbox-streaming");
     const checkboxLogSpeechText = document.getElementById("setting-log-speech-text");
     const checkboxOverlayTimer = document.getElementById("checkbox-overlay-show-timer");
     const inputCustomUrl = document.getElementById("input-custom-url");
     const inputCustomModel = document.getElementById("input-custom-model");
+    const checkboxGamingAuto = document.getElementById("checkbox-gaming-mode-auto-detect");
+    const selectVramStandby = document.getElementById("select-vram-standby");
     const inputs = [
       radioCloud, radioLocal, selectProvider, apiKeyInput, inputCustomUrl, inputCustomModel, selectHotkey,
       selectLanguage, textareaDictionary, checkboxToggle, checkboxCloudFallback,
       checkboxAutostart, checkboxAutomaticUpdateChecks, checkboxStreaming, checkboxSounds,
       selectSoundTheme, rangeVolume, selectLocalEngine, checkboxCopyContext, checkboxLogSpeechText,
-      checkboxOverlayTimer
+      checkboxOverlayTimer, checkboxGamingAuto, selectVramStandby
     ];
     inputs.forEach(input => {
       if (input) {
@@ -2351,6 +2890,57 @@ const providerDict = i18nDict[currentLanguage] || i18nDict.ru;
         if (input.tagName === "INPUT" || input.tagName === "TEXTAREA") {
           input.addEventListener("input", () => markSettingsModified(false));
         }
+      }
+    });
+
+    const btnToggleGaming = document.getElementById("btn-toggle-gaming-mode");
+    const checkboxGamingMode = document.getElementById("checkbox-gaming-mode");
+    const gamingStatusText = document.getElementById("gaming-status-text");
+    const gamingStatusDot = document.getElementById("gaming-status-dot");
+
+    updateGamingModeUi = function(isActive) {
+      if (checkboxGamingMode) {
+        checkboxGamingMode.checked = isActive;
+      }
+      if (gamingStatusText) {
+        gamingStatusText.textContent = isActive
+          ? (getTranslation("gaming_status_active") || "Активен (пауза)")
+          : (getTranslation("gaming_status_inactive") || "Не активен");
+        gamingStatusText.classList.toggle("active", isActive);
+      }
+      if (gamingStatusDot) {
+        gamingStatusDot.classList.toggle("active", isActive);
+      }
+      if (btnToggleGaming) {
+        btnToggleGaming.textContent = isActive
+          ? (getTranslation("gaming_btn_toggle_off") || "Выключить")
+          : (getTranslation("gaming_btn_toggle_on") || "Включить вручную");
+      }
+    };
+
+    let isTogglingGaming = false;
+    if (btnToggleGaming) {
+      btnToggleGaming.addEventListener("click", async () => {
+        if (isTogglingGaming) return;
+        isTogglingGaming = true;
+        btnToggleGaming.disabled = true;
+        try {
+          const newState = await invoke("toggle_gaming_mode");
+          updateGamingModeUi(!!newState);
+          refreshEngineHealth();
+        } catch (err) {
+          console.error("Failed to toggle gaming mode:", err);
+        } finally {
+          isTogglingGaming = false;
+          btnToggleGaming.disabled = false;
+        }
+      });
+    }
+
+    listen("gaming-mode-changed", (event) => {
+      if (typeof event.payload === "boolean") {
+        updateGamingModeUi(event.payload);
+        refreshEngineHealth();
       }
     });
   }
@@ -2521,9 +3111,31 @@ const providerDict = i18nDict[currentLanguage] || i18nDict.ru;
         if (checkboxOverlayTimer) {
           checkboxOverlayTimer.checked = settings.overlay_show_timer !== false;
         }
+        const checkboxGamingMode = document.getElementById("checkbox-gaming-mode");
+        if (checkboxGamingMode) {
+          checkboxGamingMode.checked = !!settings.gaming_mode_enabled;
+        }
+        try {
+          const isGamingActive = await invoke("get_gaming_mode_state");
+          updateGamingModeUi(isGamingActive);
+        } catch (_) {
+          updateGamingModeUi(!!settings.gaming_mode_enabled);
+        }
+        const checkboxGamingAuto = document.getElementById("checkbox-gaming-mode-auto-detect");
+        if (checkboxGamingAuto) {
+          checkboxGamingAuto.checked = !!settings.gaming_mode_auto_detect;
+        }
+        const selectVramStandby = document.getElementById("select-vram-standby");
+        if (selectVramStandby) {
+          selectVramStandby.value = String(settings.vram_standby_timeout_mins !== undefined ? settings.vram_standby_timeout_mins : 30);
+          syncPanelSelection(selectVramStandby);
+        }
+        currentReplacements = Array.isArray(settings.text_replacements) ? [...settings.text_replacements] : [];
+        renderReplacementsList(currentReplacements);
         activeLocalAcceleration = settings.local_acceleration || "cpu";
         if (selectSoundTheme) {
           selectSoundTheme.value = settings.overlay_sound_theme || "zen";
+          syncPanelSelection(selectSoundTheme);
         }
         if (rangeVolume) {
           const volumeVal = typeof settings.overlay_sound_volume === "number" ? Math.round(settings.overlay_sound_volume * 100) : 80;
@@ -2686,7 +3298,20 @@ modelCards.forEach(card => {
     overlay_show_timer: (() => {
       const el = document.getElementById("checkbox-overlay-show-timer");
       return el ? el.checked : true;
-    })()
+    })(),
+    gaming_mode_enabled: (() => {
+      const el = document.getElementById("checkbox-gaming-mode");
+      return el ? el.checked : false;
+    })(),
+    gaming_mode_auto_detect: (() => {
+      const el = document.getElementById("checkbox-gaming-mode-auto-detect");
+      return el ? el.checked : false;
+    })(),
+    vram_standby_timeout_mins: (() => {
+      const el = document.getElementById("select-vram-standby");
+      return el ? (parseInt(el.value, 10) || 0) : 30;
+    })(),
+    text_replacements: currentReplacements
   };
 
 await invoke("set_settings", { settings });
@@ -2862,6 +3487,11 @@ showStatus(getTranslation("model_deleted_success"));
 
   listen("history-updated", () => {
     loadHistoryList();
+  });
+
+  listen("audio-devices-changed", (event) => {
+    console.log("Audio devices changed:", event.payload);
+    loadAudioDevices(selectAudioDevice ? selectAudioDevice.value : "default");
   });
 
   listen("streaming-degraded", (event) => {
@@ -3349,7 +3979,57 @@ if (e.button === 0 && !e.target.closest(".window-control-btn") && !e.target.clos
 
     const btnReset = document.getElementById("btn-reset-hotkey");
     if (btnReset) {
-      btnReset.setAttribute("title", dict.hotkey_reset_title || "Сбросить на Alt+V");
+      const resetTitle = dict.hotkey_reset_title || "Сбросить на Alt+V";
+      btnReset.setAttribute("title", resetTitle);
+      btnReset.setAttribute("aria-label", resetTitle);
+    }
+
+    const btnMin = document.getElementById("btn-window-minimize");
+    if (btnMin) {
+      const minText = dict.window_minimize || (lang === "ru" ? "Свернуть" : "Minimize");
+      btnMin.setAttribute("title", minText);
+      btnMin.setAttribute("aria-label", minText);
+    }
+
+    const btnClose = document.getElementById("btn-window-close");
+    if (btnClose) {
+      const closeText = dict.window_close || (lang === "ru" ? "Закрыть" : "Close");
+      btnClose.setAttribute("title", closeText);
+      btnClose.setAttribute("aria-label", closeText);
+    }
+
+    const btnClearSearch = document.getElementById("btn-clear-history-search");
+    if (btnClearSearch) {
+      const clearSearchText = dict.history_search_clear || "Clear search";
+      btnClearSearch.setAttribute("title", clearSearchText);
+      btnClearSearch.setAttribute("aria-label", clearSearchText);
+    }
+
+    const btnToggleKey = document.getElementById("btn-toggle-key");
+    if (btnToggleKey) {
+      const toggleKeyText = dict.api_key_toggle_visibility || "Show/hide key";
+      btnToggleKey.setAttribute("aria-label", toggleKeyText);
+      btnToggleKey.setAttribute("title", toggleKeyText);
+    }
+
+    const historyFiltersGroup = document.querySelector(".history-filter-pills");
+    if (historyFiltersGroup) {
+      historyFiltersGroup.setAttribute("aria-label", dict.history_filters_label || "History filters");
+    }
+
+    const gpuModesGroup = document.querySelector(".gpu-modes-grid");
+    if (gpuModesGroup) {
+      gpuModesGroup.setAttribute("aria-label", dict.gpu_accel_label || "Hardware acceleration");
+    }
+
+    const modelsGridGroup = document.querySelector(".models-grid");
+    if (modelsGridGroup) {
+      modelsGridGroup.setAttribute("aria-label", dict.model_title || "Whisper Models");
+    }
+
+    const settingsNav = document.querySelector(".settings-nav");
+    if (settingsNav) {
+      settingsNav.setAttribute("aria-label", dict.title_settings || "Settings");
     }
 
     
@@ -3369,6 +4049,19 @@ if (e.button === 0 && !e.target.closest(".window-control-btn") && !e.target.clos
     const historySearchInput = document.getElementById("input-history-search");
     if (historySearchInput) {
       historySearchInput.placeholder = dict.history_search_placeholder || "";
+    }
+    const inputRepTrigger = document.getElementById("input-rep-trigger");
+    if (inputRepTrigger) {
+      inputRepTrigger.placeholder = dict.replacements_trigger_ph || "";
+    }
+    const inputRepValue = document.getElementById("input-rep-value");
+    if (inputRepValue) {
+      inputRepValue.placeholder = dict.replacements_value_ph || "";
+    }
+    renderReplacementsList(currentReplacements);
+    const checkboxGamingMode = document.getElementById("checkbox-gaming-mode");
+    if (typeof updateGamingModeUi === "function" && checkboxGamingMode) {
+      updateGamingModeUi(checkboxGamingMode.checked);
     }
     
     // Update dynamic link text
@@ -3588,6 +4281,30 @@ if (e.button === 0 && !e.target.closest(".window-control-btn") && !e.target.clos
     historyContainer.innerHTML = "";
     const fragment = document.createDocumentFragment();
 
+    const now = new Date();
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+    const startOfYesterday = startOfToday - 86400000;
+    const endOfToday = startOfToday + 86400000;
+
+    function getDayGroup(timestampMs) {
+      if (!timestampMs) return { key: "today", title: dict.history_group_today || "Сегодня" };
+      if (timestampMs >= startOfToday && timestampMs < endOfToday) {
+        return { key: "today", title: dict.history_group_today || "Сегодня" };
+      }
+      if (timestampMs >= startOfYesterday && timestampMs < startOfToday) {
+        return { key: "yesterday", title: dict.history_group_yesterday || "Вчера" };
+      }
+      const d = new Date(timestampMs);
+      const isCurrentYear = d.getFullYear() === now.getFullYear();
+      const dateTitle = d.toLocaleDateString(currentLanguage || "ru", {
+        day: "numeric",
+        month: "long",
+        year: isCurrentYear ? undefined : "numeric"
+      });
+      const dateKey = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+      return { key: dateKey, title: dateTitle };
+    }
+
     function formatHistoryDuration(ms) {
       if (!ms) return "";
       if (ms < 1000) return `${ms} ${dict.history_unit_ms || "ms"}`;
@@ -3595,27 +4312,38 @@ if (e.button === 0 && !e.target.closest(".window-control-btn") && !e.target.clos
       return `${secs} ${dict.history_unit_sec || "s"}`;
     }
 
+    let lastDayKey = null;
+
     filtered.forEach(entry => {
-      const date = new Date(entry.timestamp_ms);
-      const timeStr = date.toLocaleTimeString(currentLanguage, { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-      const dateStr = date.toLocaleDateString(currentLanguage, { month: 'short', day: 'numeric' });
-      const displayTime = `${dateStr}, ${timeStr}`;
+      const dayGroup = getDayGroup(entry.timestamp_ms);
+      if (dayGroup.title && dayGroup.key !== lastDayKey) {
+        lastDayKey = dayGroup.key;
+        const headerEl = document.createElement("div");
+        headerEl.className = "history-day-header";
+        headerEl.innerHTML = `
+          <span class="history-day-title">${escapeHtml(dayGroup.title)}</span>
+          <span class="history-day-line"></span>
+        `;
+        fragment.appendChild(headerEl);
+      }
+
+      const date = new Date(entry.timestamp_ms || Date.now());
+      const displayTime = date.toLocaleTimeString(currentLanguage, { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 
       const itemEl = document.createElement("div");
       itemEl.className = "history-item";
 
       let badgeHtml;
       const engineLabel = dict[`history_engine_${entry.engine}`];
+      const durationHtml = entry.processing_ms
+        ? `<span class="history-item-duration">${formatHistoryDuration(entry.processing_ms)}</span>`
+        : "";
       if (engineLabel) {
-        const durationHtml = entry.processing_ms
-          ? `<span class="history-item-duration">${formatHistoryDuration(entry.processing_ms)}</span>`
-          : "";
-        badgeHtml =
-          `<span class="history-item-badge badge-local">${escapeHtml(engineLabel)}</span>${durationHtml}`;
+        badgeHtml = `<span class="history-item-badge badge-local">${escapeHtml(engineLabel)}</span>${durationHtml}`;
       } else if (entry.mode === "cloud") {
-        badgeHtml = `<span class="history-item-badge badge-cloud">${escapeHtml(dict.history_badge_cloud || "Cloud")}</span>`;
+        badgeHtml = `<span class="history-item-badge badge-cloud">${escapeHtml(dict.history_badge_cloud || "Cloud")}</span>${durationHtml}`;
       } else {
-        badgeHtml = `<span class="history-item-badge badge-local">${escapeHtml(dict.history_badge_local || "Local")}</span>`;
+        badgeHtml = `<span class="history-item-badge badge-local">${escapeHtml(dict.history_badge_local || "Local")}</span>${durationHtml}`;
       }
 
       itemEl.innerHTML = `
@@ -3626,7 +4354,7 @@ if (e.button === 0 && !e.target.closest(".window-control-btn") && !e.target.clos
           </div>
           <div class="history-item-text">${escapeHtml(entry.text)}</div>
         </div>
-        <button type="button" class="btn-copy-history" title="Copy to clipboard">
+        <button type="button" class="btn-copy-history" title="${escapeHtml(dict.history_copy_title || "Copy to clipboard")}" aria-label="${escapeHtml(dict.history_copy_title || "Copy to clipboard")}">
           <svg class="copy-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
             <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
@@ -3870,6 +4598,7 @@ if (e.button === 0 && !e.target.closest(".window-control-btn") && !e.target.clos
     // Apply initial language choice outside the if block so translations initialize even if #select-ui-lang is missing
     applyLanguage(savedUiLang);
 
+    setupReplacementsUI();
     initSelectPanels();
 
     // Initialize Settings

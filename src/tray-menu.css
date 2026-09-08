@@ -1,0 +1,389 @@
+/* Aura Desktop Tray Menu Styles */
+:root {
+  --font-display: "Segoe UI Variable Display", "Segoe UI", -apple-system, sans-serif;
+  --font-sans: "Segoe UI Variable Text", "Segoe UI", -apple-system, sans-serif;
+
+  /* Desktop App Native Dark Graphite Palette */
+  --bg-menu: #0a0a0c;
+  --surface-card: #121214;
+  --surface-hover: rgba(255, 255, 255, 0.06);
+  --border-color: rgba(255, 255, 255, 0.09);
+  --border-subtle: rgba(255, 255, 255, 0.05);
+
+  --text-primary: #f1f5f9;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+
+  --accent-color: #ff4200;
+  --accent-color-rgb: 255, 66, 0;
+
+  --radius-menu: 10px;
+  --radius-item: 6px;
+  --radius-full: 9999px;
+
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --transition: all 0.15s var(--ease-out);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  user-select: none;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  background: transparent !important;
+  overflow: hidden;
+  font-family: var(--font-sans);
+  color: var(--text-primary);
+  display: flex;
+  align-items: stretch;
+  justify-content: stretch;
+}
+
+.aura-tray-menu {
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  background-color: var(--bg-menu);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-menu);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  padding: 5px;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+  animation: menuIn 0.12s var(--ease-out);
+}
+
+@keyframes menuIn {
+  from {
+    opacity: 0;
+    transform: translateY(-3px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Dual View System (No height change, no taskbar clipping) */
+.menu-view {
+  display: none;
+  flex-direction: column;
+  gap: 2px;
+  width: 100%;
+  height: 100%;
+}
+
+.menu-view.active {
+  display: flex;
+  animation: viewFadeIn 0.14s var(--ease-out);
+}
+
+@keyframes viewFadeIn {
+  from {
+    opacity: 0;
+    transform: translateX(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Menu Item */
+.aura-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 10px;
+  border-radius: var(--radius-item);
+  font-size: 13px;
+  font-family: var(--font-sans);
+  font-weight: 500;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: background-color 0.12s ease, color 0.12s ease;
+  position: relative;
+  outline: none;
+}
+
+.aura-menu-item:hover,
+.aura-menu-item:focus-visible {
+  background-color: var(--surface-hover);
+}
+
+.menu-icon {
+  width: 15px;
+  height: 15px;
+  color: #838896;
+  flex-shrink: 0;
+  transition: color 0.12s ease;
+}
+
+.aura-menu-item:hover .menu-icon,
+.aura-menu-item:focus-visible .menu-icon {
+  color: #ffffff;
+}
+
+.menu-text {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.menu-arrow {
+  width: 13px;
+  height: 13px;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+/* Drill-down Header (Submenu) */
+.drilldown-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  border-radius: var(--radius-item);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background-color 0.12s ease, color 0.12s ease;
+  outline: none;
+}
+
+.drilldown-header:hover,
+.drilldown-header:focus-visible {
+  background-color: var(--surface-hover);
+  color: var(--text-primary);
+}
+
+.drilldown-header svg {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+}
+
+/* Submenu Items (Recognition Mode options) */
+.submenu-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 10px;
+  border-radius: var(--radius-item);
+  font-size: 12.5px;
+  font-family: var(--font-sans);
+  font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.12s ease;
+  outline: none;
+}
+
+.submenu-item:hover,
+.submenu-item:focus-visible {
+  background-color: var(--surface-hover);
+  color: var(--text-primary);
+}
+
+.submenu-item .menu-icon {
+  width: 15px;
+  height: 15px;
+  color: #838896;
+  flex-shrink: 0;
+  transition: color 0.12s ease;
+}
+
+.submenu-item:hover .menu-icon,
+.submenu-item:focus-visible .menu-icon {
+  color: #ffffff;
+}
+
+.submenu-item.is-selected {
+  color: var(--text-primary);
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.submenu-item.is-selected .menu-icon {
+  color: var(--accent-color);
+}
+
+.submenu-item .check-mark {
+  width: 13px;
+  height: 13px;
+  color: var(--accent-color);
+  margin-left: auto;
+  flex-shrink: 0;
+  opacity: 0;
+  transition: opacity 0.12s ease;
+}
+
+.submenu-item.is-selected .check-mark {
+  opacity: 1;
+}
+
+/* Gaming Mode Status Badge */
+.gaming-status-badge {
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  padding: 2px 7px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.04);
+  color: #717684;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  transition: all 0.15s ease;
+  line-height: 1.2;
+  margin-left: auto;
+  margin-right: 6px;
+  flex-shrink: 0;
+}
+
+.aura-menu-item.gaming-active .gaming-status-badge {
+  background: rgba(var(--accent-color-rgb), 0.12);
+  color: #ff5722;
+  border-color: rgba(var(--accent-color-rgb), 0.35);
+}
+
+/* Toggle Switch (Desktop Minimalist) */
+.menu-toggle {
+  width: 28px;
+  height: 16px;
+  background: #1f2024;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--radius-full);
+  position: relative;
+  flex-shrink: 0;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.menu-toggle-thumb {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #717684;
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  transition: transform 0.15s cubic-bezier(0.25, 0.8, 0.25, 1), background-color 0.15s ease;
+}
+
+/* Gaming Mode Active Switch */
+.aura-menu-item.gaming-active .menu-toggle {
+  background-color: var(--accent-color);
+  border-color: var(--accent-color);
+}
+
+.aura-menu-item.gaming-active .menu-toggle-thumb {
+  transform: translateX(12px);
+  background-color: #ffffff;
+}
+
+.aura-menu-item.gaming-active .menu-icon.gaming-icon {
+  color: var(--accent-color);
+}
+
+/* Separator */
+.menu-separator {
+  height: 1px;
+  background-color: var(--border-subtle);
+  margin: 3px 4px;
+}
+
+/* Language Status Badge */
+.lang-status-badge {
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.04);
+  color: #94a3b8;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  transition: all 0.15s ease;
+  line-height: 1.2;
+  margin-left: auto;
+  margin-right: 6px;
+  flex-shrink: 0;
+  text-transform: uppercase;
+}
+
+/* Language List Container */
+.lang-list-container {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-height: 0;
+  max-height: 142px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 2px;
+}
+
+.lang-list-container::-webkit-scrollbar {
+  width: 4px;
+}
+
+.lang-list-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.lang-list-container::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.14);
+  border-radius: 4px;
+}
+
+.lang-list-container::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.28);
+}
+
+.lang-item {
+  display: flex;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: var(--radius-item);
+  font-size: 12.5px;
+  font-family: var(--font-sans);
+  font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.12s ease;
+  outline: none;
+}
+
+.lang-item:hover,
+.lang-item:focus-visible {
+  background-color: var(--surface-hover);
+  color: var(--text-primary);
+}
+
+.lang-item.is-selected {
+  color: var(--text-primary);
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.lang-item .check-mark {
+  width: 13px;
+  height: 13px;
+  color: var(--accent-color);
+  margin-left: auto;
+  flex-shrink: 0;
+  opacity: 0;
+  transition: opacity 0.12s ease;
+}
+
+.lang-item.is-selected .check-mark {
+  opacity: 1;
+}
+

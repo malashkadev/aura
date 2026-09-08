@@ -50,7 +50,9 @@ listen("selection-context-active", (event) => {
     const textEl = document.getElementById("overlay-context-text");
     if (textEl) {
       const uiLang = localStorage.getItem("aura_ui_lang") || "ru";
-      textEl.textContent = contextIndicatorTranslations[uiLang] || contextIndicatorTranslations.en;
+      const txt = contextIndicatorTranslations[uiLang] || contextIndicatorTranslations.en;
+      textEl.textContent = txt;
+      if (contextBadgeEl) contextBadgeEl.title = txt;
     }
   }
   updateStatusVisibility();
@@ -253,6 +255,74 @@ function playBell(freq, duration, gainStart = 0.07) {
   osc3.stop(now + duration + 0.1);
 }
 
+function playWaterDrop(fStart, fEnd, duration, gainStart = 0.08) {
+  initAudioCtx();
+  if (audioCtx.state === "suspended") {
+    audioCtx.resume();
+  }
+  const now = audioCtx.currentTime;
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+
+  osc.type = "sine";
+  osc.frequency.setValueAtTime(fStart, now);
+  osc.frequency.exponentialRampToValueAtTime(fEnd, now + (duration * 0.65));
+  osc.frequency.exponentialRampToValueAtTime(fEnd * 0.9, now + duration);
+
+  gain.gain.setValueAtTime(0.0001, now);
+  gain.gain.linearRampToValueAtTime(gainStart, now + 0.008);
+  gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+  osc.connect(gain);
+  gain.connect(globalGain);
+
+  osc.start(now);
+  osc.stop(now + duration + 0.02);
+}
+
+function playHapticClick(clickFreq, duration, gainStart = 0.10) {
+  initAudioCtx();
+  if (audioCtx.state === "suspended") {
+    audioCtx.resume();
+  }
+  const now = audioCtx.currentTime;
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+
+  osc.type = "sine";
+  osc.frequency.setValueAtTime(clickFreq * 2.5, now);
+  osc.frequency.exponentialRampToValueAtTime(clickFreq * 0.6, now + duration);
+
+  gain.gain.setValueAtTime(0.0001, now);
+  gain.gain.linearRampToValueAtTime(gainStart, now + 0.002);
+  gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+  const bufferSize = Math.floor(audioCtx.sampleRate * 0.008);
+  const noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+  const output = noiseBuffer.getChannelData(0);
+  for (let i = 0; i < bufferSize; i++) {
+    output[i] = Math.random() * 2 - 1;
+  }
+  const noise = audioCtx.createBufferSource();
+  noise.buffer = noiseBuffer;
+  const filter = audioCtx.createBiquadFilter();
+  filter.type = "bandpass";
+  filter.frequency.value = 2800;
+  const noiseGain = audioCtx.createGain();
+  noiseGain.gain.setValueAtTime(gainStart * 0.35, now);
+  noiseGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.008);
+
+  noise.connect(filter);
+  filter.connect(noiseGain);
+  noiseGain.connect(globalGain);
+  noise.start(now);
+
+  osc.connect(gain);
+  gain.connect(globalGain);
+  osc.start(now);
+  osc.stop(now + duration);
+}
+
 let soundsEnabled = true;
 let soundTheme = "zen";
 let overlayShowTimer = true;
@@ -260,6 +330,17 @@ let overlayShowTimer = true;
 function applyActiveThemeSettings(settings) {
   if (!settings || typeof settings !== "object") {
     return;
+  }
+  if (settings.ui_language) {
+    try {
+      localStorage.setItem("aura_ui_lang", settings.ui_language);
+    } catch (_) {}
+    const textEl = document.getElementById("overlay-context-text");
+    if (textEl) {
+      const txt = contextIndicatorTranslations[settings.ui_language] || contextIndicatorTranslations.en;
+      textEl.textContent = txt;
+      if (contextBadgeEl) contextBadgeEl.title = txt;
+    }
   }
   soundsEnabled = settings.overlay_sounds !== false;
   soundTheme = settings.overlay_sound_theme || "zen";
@@ -277,14 +358,6 @@ listen("overlay-preferences", (event) => {
   applyActiveThemeSettings(event.payload);
 });
 
-if (window.__TAURI__?.core?.invoke) {
-  window.__TAURI__.core.invoke("get_settings").then((settings) => {
-    if (settings) {
-      applyActiveThemeSettings(settings);
-    }
-  }).catch((err) => console.error("Overlay failed to load settings:", err));
-}
-
 function playThemeStart() {
   if (!soundsEnabled) return;
   if (soundTheme === "rhodes") {
@@ -295,6 +368,10 @@ function playThemeStart() {
   } else if (soundTheme === "classic") {
     playBell(440.00, 0.45, 0.06);
     setTimeout(() => { playBell(659.25, 0.60, 0.06); }, 90);
+  } else if (soundTheme === "bubble") {
+    playWaterDrop(400, 950, 0.12, 0.08);
+  } else if (soundTheme === "haptic") {
+    playHapticClick(180, 0.03, 0.12);
   } else {
     // Default: zen
     playBowl(174.61, 1.2, 0.08);
@@ -331,6 +408,12 @@ function playThemeSuccess() {
         }, 70);
       }, 70);
     }, 70);
+  } else if (soundTheme === "bubble") {
+    playWaterDrop(380, 850, 0.10, 0.07);
+    setTimeout(() => { playWaterDrop(500, 1200, 0.15, 0.08); }, 90);
+  } else if (soundTheme === "haptic") {
+    playHapticClick(240, 0.025, 0.10);
+    setTimeout(() => { playHapticClick(360, 0.04, 0.12); }, 70);
   } else {
     // Default: zen
     playBowl(174.61, 1.8, 0.07);
@@ -348,6 +431,11 @@ function playThemeError() {
   } else if (soundTheme === "classic") {
     playBell(659.25, 0.35, 0.06);
     setTimeout(() => { playBell(440.00, 0.50, 0.06); }, 120);
+  } else if (soundTheme === "bubble") {
+    playWaterDrop(650, 280, 0.18, 0.08);
+  } else if (soundTheme === "haptic") {
+    playHapticClick(120, 0.05, 0.12);
+    setTimeout(() => { playHapticClick(90, 0.08, 0.12); }, 100);
   } else {
     // Default: zen
     playBowl(174.61, 0.45, 0.07);

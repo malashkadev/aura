@@ -24,7 +24,7 @@ const ALLOWED_LANGUAGES: &[&str] = &[
     "auto", "layout", "ru", "en", "de", "es", "fr", "it", "zh", "pt", "tr",
 ];
 const ALLOWED_UI_LANGUAGES: &[&str] = &["ru", "en", "de", "es", "fr", "it", "zh", "pt", "tr"];
-const ALLOWED_SOUND_THEMES: &[&str] = &["zen", "rhodes", "scifi", "classic"];
+const ALLOWED_SOUND_THEMES: &[&str] = &["zen", "rhodes", "scifi", "classic", "bubble", "haptic"];
 const MAX_DICTIONARY_CHARS: usize = 4096;
 const MAX_HOTKEY_CHARS: usize = 64;
 
@@ -88,6 +88,24 @@ pub struct Settings {
     pub whisper_keep_in_memory: bool,
     #[serde(default = "default_audio_device")]
     pub audio_input_device: String,
+    #[serde(default = "default_vram_standby_timeout_mins")]
+    pub vram_standby_timeout_mins: u32,
+    #[serde(default)]
+    pub gaming_mode_enabled: bool,
+    #[serde(default)]
+    pub gaming_mode_auto_detect: bool,
+    #[serde(default)]
+    pub text_replacements: Vec<TextReplacement>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
+pub struct TextReplacement {
+    pub trigger: String,
+    pub replacement: String,
+}
+
+fn default_vram_standby_timeout_mins() -> u32 {
+    30
 }
 
 fn default_audio_device() -> String {
@@ -128,6 +146,10 @@ impl Default for Settings {
             overlay_show_timer: true,
             whisper_keep_in_memory: true,
             audio_input_device: "default".to_string(),
+            vram_standby_timeout_mins: 30,
+            gaming_mode_enabled: false,
+            gaming_mode_auto_detect: false,
+            text_replacements: Vec::new(),
         }
     }
 }
@@ -201,6 +223,31 @@ impl Settings {
             || self.audio_input_device.chars().any(|ch| ch.is_control())
         {
             return Err("Audio input device is invalid or too long".to_string());
+        }
+        if self.vram_standby_timeout_mins > 1440 {
+            return Err("VRAM standby timeout cannot exceed 1440 minutes (24 hours)".to_string());
+        }
+        if self.text_replacements.len() > 500 {
+            return Err("Text replacements count cannot exceed 500 entries".to_string());
+        }
+        for (idx, r) in self.text_replacements.iter().enumerate() {
+            if r.trigger.trim().is_empty() {
+                return Err(format!(
+                    "Replacement trigger at index {idx} cannot be empty"
+                ));
+            }
+            if r.trigger.chars().count() > 128 {
+                return Err(format!(
+                    "Replacement trigger '{}' exceeds 128 characters",
+                    r.trigger
+                ));
+            }
+            if r.replacement.chars().count() > 2048 {
+                return Err(format!(
+                    "Replacement value for '{}' exceeds 2048 characters",
+                    r.trigger
+                ));
+            }
         }
         Ok(())
     }

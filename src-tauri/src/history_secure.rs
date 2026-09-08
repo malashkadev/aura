@@ -7,7 +7,7 @@ use zeroize::Zeroize;
 
 use crate::secure_storage;
 
-const MAX_ENTRIES: usize = 50;
+const MAX_ENTRIES: usize = 300;
 const MAX_ENTRY_CHARS: usize = 100_000;
 static HISTORY_LOCK: OnceLock<Mutex<()>> = OnceLock::new();
 
