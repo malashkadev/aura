@@ -68,29 +68,53 @@ function startTypingSimulator() {
   const isRu = (document.documentElement.lang || 'ru') === 'ru';
   const phrases = isRu ? [
     {
-      raw: "Создай асинхронный обработчик запросов с обработкой ошибок",
-      clean: "Создай асинхронный обработчик запросов с обработкой ошибок."
+      raw: "Привет, во сколько созвонимся, чтобы обсудить новый релиз",
+      clean: "Привет, во сколько созвонимся, чтобы обсудить новый релиз?"
     },
     {
-      raw: "Голосовой ввод прямо в активное окно без переключения контекста",
-      clean: "Голосовой ввод прямо в активное окно без переключения контекста."
+      raw: "Напиши функцию валидации: проверь email, пароль и токен доступа",
+      clean: "Напиши функцию валидации: проверь email, пароль и токен доступа."
     },
     {
-      raw: "Локальное распознавание речи на базе Whisper без отправки данных в сеть",
-      clean: "Локальное распознавание речи на базе Whisper без отправки данных в сеть."
+      raw: "Почему падает тест авторизации, если передать пустой заголовок",
+      clean: "Почему падает тест авторизации, если передать пустой заголовок?"
+    },
+    {
+      raw: "Идея для фичи — добавить умную паузу, пока пользователь думает",
+      clean: "Идея для фичи — добавить умную паузу, пока пользователь думает."
+    },
+    {
+      raw: "Спасибо за отчёт, все правки внесены — отправляю клиенту на подпись",
+      clean: "Спасибо за отчёт, все правки внесены — отправляю клиенту на подпись."
+    },
+    {
+      raw: "Проверь логи сервера: время ответа базы данных резко выросло",
+      clean: "Проверь логи сервера: время ответа базы данных резко выросло!"
     }
   ] : [
     {
-      raw: "Create an async request handler with graceful error handling",
-      clean: "Create an async request handler with graceful error handling."
+      raw: "Hey, what time can we sync to discuss the new release",
+      clean: "Hey, what time can we sync to discuss the new release?"
     },
     {
-      raw: "Voice dictation directly into any active window with zero context switching",
-      clean: "Voice dictation directly into any active window with zero context switching."
+      raw: "Write a validation function: check email, password, and auth token",
+      clean: "Write a validation function: check email, password, and auth token."
     },
     {
-      raw: "Local Whisper speech recognition without sending any audio over the internet",
-      clean: "Local Whisper speech recognition without sending any audio over the internet."
+      raw: "Why does the auth test fail when an empty header is passed",
+      clean: "Why does the auth test fail when an empty header is passed?"
+    },
+    {
+      raw: "Feature idea — add a smart pause while the user is thinking",
+      clean: "Feature idea — add a smart pause while the user is thinking."
+    },
+    {
+      raw: "Thanks for the report, edits are done — sending to the client",
+      clean: "Thanks for the report, edits are done — sending to the client."
+    },
+    {
+      raw: "Check the server logs: database response time spiked suddenly",
+      clean: "Check the server logs: database response time spiked suddenly!"
     }
   ];
 
