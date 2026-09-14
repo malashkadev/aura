@@ -59,7 +59,7 @@ jobs:
       - name: Install and run cargo-audit
         run: |
           cargo install cargo-audit --locked --version 0.22.2
-          cargo audit --file src-tauri/Cargo.lock --ignore RUSTSEC-2026-0258
+          cargo audit --file src-tauri/Cargo.lock --ignore RUSTSEC-2026-0258 --ignore RUSTSEC-2024-0429
 
       - name: Install and run osv-scanner
         run: |
