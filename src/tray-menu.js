@@ -142,7 +142,8 @@ const SUPPORTED_LANGS = [
   { code: "it", name: "Italiano", badge: "IT" },
   { code: "zh", name: "中文", badge: "ZH" },
   { code: "pt", name: "Português", badge: "PT" },
-  { code: "tr", name: "Türkçe", badge: "TR" }
+  { code: "tr", name: "Türkçe", badge: "TR" },
+  { code: "nl", name: "Nederlands", badge: "NL" }
 ];
 
 let currentSettings = null;

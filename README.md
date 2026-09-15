@@ -43,7 +43,7 @@ Press and hold the hotkey, speak, and release — Aura instantly transcribes you
 - **Audio device selection, WASAPI Hotplug & Tail Hold** — choose physical microphone input devices with dynamic device hotplugging, 450ms tail grace buffer, and non-destructive Silero VAD silence trimming.
 - **Transcription history with day grouping** — up to 300 encrypted dictations (DPAPI) with day grouping (Today / Yesterday / calendar dates), live search, and source filters.
 - **Custom dictionary** — bias recognition towards your names, brands, and technical terms.
-- **11 language options** — auto-detect, keyboard-layout detection, or fixed selection (ru, en, de, es, fr, it, zh, pt, tr).
+- **12 language options** — auto-detect, keyboard-layout detection, or fixed selection (ru, en, de, es, fr, it, zh, pt, tr, nl).
 - **Polished overlay with 6 sound themes** — microphone VU meter, recording timer, 6 audio themes (Zen, Rhodes, Sci-Fi, Classic Bell, Bubble, Haptic), and display customization.
 - **Native High-DPI Tray Menu** — modern tray menu with per-monitor DPI scaling, instant gaming mode toggle, and settings access.
 - **System integration & security** — autostart with Windows, Windows DPAPI credential encryption, and one-click diagnostic reports.

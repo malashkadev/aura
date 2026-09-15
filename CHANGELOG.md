@@ -3,6 +3,14 @@
 All notable changes to Aura are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/), versions follow [SemVer](https://semver.org/).
 
+## [1.1.1] — 2026-09-15
+
+### Added
+- **Dutch (nl) Transcription Support**: Added Dutch (`nl` / Nederlands) as a fixed recognition language across Whisper local engine, cloud providers, and the system tray menu. Includes Windows Dutch keyboard layout detection (`0x0413` nl-NL, `0x0813` nl-BE) and native punctuation guidance.
+
+### Fixed
+- **Whisper Auto-Detect Prompt Poisoning (#5)**: Eliminated Cyrillic prompt leakage when `Auto-detect` is selected. In previous versions, the wildcard fallback in `build_whisper_prompt` defaulted to Russian text, which biased Whisper's decoder priors and frequently misclassified short non-Russian speech (such as Dutch) as Russian. Auto-detect now passes an empty base prompt (or user dictionary terms only).
+
 ## [1.1.0] — 2026-09-08
 
 ### Added

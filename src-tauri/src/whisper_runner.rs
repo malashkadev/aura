@@ -625,7 +625,7 @@ pub fn run_local_whisper<R: Runtime>(
     let short_wav_path = get_short_path(Path::new(wav_path))?;
 
     let lang = match language {
-        "ru" | "en" | "de" | "es" | "fr" | "it" | "zh" | "pt" | "tr" => language,
+        "ru" | "en" | "de" | "es" | "fr" | "it" | "zh" | "pt" | "tr" | "nl" => language,
         _ => "auto",
     };
 
@@ -2768,12 +2768,15 @@ pub fn build_whisper_prompt(language: &str, user_dictionary: &str) -> String {
         "zh" => "你好，这是一个标点和大小写规范的听写示例。",
         "pt" => "Olá, este é um exemplo de ditado claro: com pontos, vírgulas e maiúsculas corretas.",
         "tr" => "Merhaba, noktaları, virgülleri ve doğru büyük harfleri olan düzgün bir dikte örneği.",
-        _ => "Привет, вот пример грамотной диктовки: с точками, запятыми и верным регистром.",
+        "nl" => "Hallo, hier is een voorbeeld van een duidelijke dictatie: met punten, komma's en het juiste hoofdlettergebruik.",
+        _ => "",
     };
 
     let dict = user_dictionary.trim();
     if dict.is_empty() {
         base_prompt.to_string()
+    } else if base_prompt.is_empty() {
+        format!("{dict}.")
     } else {
         format!("{base_prompt} {dict}.")
     }
@@ -2800,7 +2803,7 @@ pub async fn transcribe_via_whisper_server(
         .map_err(|e| format!("Failed to set MIME type: {e}"))?;
 
     let lang = match language {
-        "ru" | "en" | "de" | "es" | "fr" | "it" | "zh" | "pt" | "tr" => language,
+        "ru" | "en" | "de" | "es" | "fr" | "it" | "zh" | "pt" | "tr" | "nl" => language,
         _ => "auto",
     };
 
@@ -3684,5 +3687,30 @@ mod tests {
         {
             let _ = pid;
         }
+    }
+
+    #[test]
+    fn test_build_whisper_prompt_auto_never_leaks_russian() {
+        // "auto" language with no dictionary must produce an empty prompt so
+        // Whisper language ID is not biased toward any language.
+        let prompt_auto = super::build_whisper_prompt("auto", "");
+        assert_eq!(prompt_auto, "");
+
+        // "auto" with dictionary words must contain ONLY the dictionary, no Russian boilerplate.
+        let prompt_auto_dict = super::build_whisper_prompt("auto", "Aura Kubernetes");
+        assert_eq!(prompt_auto_dict, "Aura Kubernetes.");
+        assert!(!prompt_auto_dict.contains("Привет"));
+
+        // Unknown language code fallback must also be empty.
+        let prompt_unknown = super::build_whisper_prompt("xyz", "");
+        assert_eq!(prompt_unknown, "");
+
+        // Dutch ("nl") must contain the clean Dutch prompt.
+        let prompt_nl = super::build_whisper_prompt("nl", "");
+        assert!(prompt_nl.contains("Hallo, hier is een voorbeeld"));
+
+        // Russian ("ru") must retain its Russian sample.
+        let prompt_ru = super::build_whisper_prompt("ru", "");
+        assert!(prompt_ru.contains("Привет, вот пример"));
     }
 }

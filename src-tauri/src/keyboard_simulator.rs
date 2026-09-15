@@ -503,6 +503,7 @@ mod windows_impl {
                 0x0404 | 0x0804 | 0x0c04 | 0x1004 | 0x1404 => "zh".to_string(),
                 0x0416 | 0x0816 => "pt".to_string(),
                 0x041f => "tr".to_string(),
+                0x0413 | 0x0813 => "nl".to_string(),
                 // Unknown layout: let the recognizer auto-detect instead of
                 // forcing Russian on every other language of the world.
                 _ => "auto".to_string(),
@@ -854,6 +855,8 @@ mod macos_impl {
                     return "pt".to_string();
                 } else if s.starts_with("tr") {
                     return "tr".to_string();
+                } else if s.starts_with("nl") {
+                    return "nl".to_string();
                 }
             }
             // Unknown input source: let the recognizer auto-detect instead of

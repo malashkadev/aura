@@ -240,6 +240,7 @@ fn normalize_language(language: &str) -> Option<&'static str> {
         "zh" => Some("zh"),
         "pt" => Some("pt"),
         "tr" => Some("tr"),
+        "nl" => Some("nl"),
         _ => None,
     }
 }
@@ -257,6 +258,7 @@ fn language_hint(language: &str) -> String {
             "\nLanguage hint: the speaker is most likely speaking Portuguese.".to_string()
         }
         Some("tr") => "\nLanguage hint: the speaker is most likely speaking Turkish.".to_string(),
+        Some("nl") => "\nLanguage hint: the speaker is most likely speaking Dutch.".to_string(),
         _ => String::new(),
     }
 }
@@ -1095,6 +1097,7 @@ mod tests {
     fn test_language_normalization() {
         assert_eq!(normalize_language("ru"), Some("ru"));
         assert_eq!(normalize_language("en"), Some("en"));
+        assert_eq!(normalize_language("nl"), Some("nl"));
         assert_eq!(normalize_language("auto"), None);
         assert_eq!(normalize_language("layout"), None);
         assert_eq!(normalize_language(""), None);
