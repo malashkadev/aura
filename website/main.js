@@ -515,7 +515,7 @@ function initInterfaceShowcase() {
       btnUpdates.disabled = true;
 
       setTimeout(() => {
-        btnUpdates.textContent = currentLangRu ? '✓ Актуальная версия v1.1.0' : '✓ Aura is up to date (v1.1.0)';
+        btnUpdates.textContent = currentLangRu ? '✓ Актуальная версия v1.1.1' : '✓ Aura is up to date (v1.1.1)';
         setTimeout(() => {
           btnUpdates.textContent = originalText;
           btnUpdates.disabled = false;
@@ -530,7 +530,7 @@ function initInterfaceShowcase() {
     btnDiag.addEventListener('click', async () => {
       const currentLangRu = (document.documentElement.lang || 'ru') === 'ru';
       const originalText = btnDiag.textContent;
-      const report = `Aura System Diagnostic Report\nVersion: 1.1.0 (x64)\nOS: Windows 10/11 x64\nEngine: Whisper.cpp / NVIDIA Parakeet (CUDA Active)\nVRAM: NVIDIA GeForce RTX (Detected)\nDPAPI Storage: Encrypted\nStatus: Nominal (Ready)`;
+      const report = `Aura System Diagnostic Report\nVersion: 1.1.1 (x64)\nOS: Windows 10/11 x64\nEngine: Whisper.cpp / NVIDIA Parakeet (CUDA Active)\nVRAM: NVIDIA GeForce RTX (Detected)\nDPAPI Storage: Encrypted\nStatus: Nominal (Ready)`;
       try {
         await navigator.clipboard.writeText(report);
       } catch (err) {}
