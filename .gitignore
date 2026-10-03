@@ -1,8 +1,12 @@
-# Ignore binary executables (whisper sidecar in src-tauri/binaries is intentionally tracked)
+# Ignore binary executables (whisper sidecar and llama-server in src-tauri/binaries are intentionally tracked)
 Aura.exe
 *.exe
 !src-tauri/binaries/*.exe
+!src-tauri/binaries/**/*.exe
 !website/*.exe
+
+# Local benchmark/test artifacts (GGUF models are fetched at runtime, never committed)
+src-tauri/models-test/
 
 # Ignore node_modules
 node_modules/
@@ -49,13 +53,17 @@ log.txt
 # Downloaded GPU runtimes (fetched at install time, not committed)
 src-tauri/binaries/cuda/
 src-tauri/binaries/ggml-cuda.dll
+src-tauri/binaries/llm-cpu/
+src-tauri/binaries/llm-vulkan/
 
 # Website temporary preview profiles, test scripts, and test screenshots
 website/.temp_edge_profile*/
 website/.temp_edge_verify*/
+website/.temp_edge_preview/
 website/screenshot_*.png
 website/check_console.cjs
 website/take_screenshots.cjs
+website/capture_*.cjs
 website/verify_*.cjs
 website/server.cjs
 website/*showcase*.html

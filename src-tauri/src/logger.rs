@@ -230,6 +230,22 @@ pub fn generate_diagnostic_report<R: tauri::Runtime>(
     let raw_logs = get_recent_logs(50);
     let logs = sanitize_logs_for_report(&raw_logs, settings.log_speech_text);
 
+    // The unified tail is dominated by sidecar noise, which pushes edit
+    // activity out of the window. Read deeper and keep only the lines that
+    // describe a command on selected text: what was captured, what route it
+    // took, how long each step took and why it failed.
+    let raw_edit_trace = get_recent_logs(800);
+    let mut edit_trace: Vec<String> = raw_edit_trace
+        .into_iter()
+        .filter(|line| {
+            line.contains("[LLM]") || line.contains("[Context]") || line.contains("Final result: ")
+        })
+        .collect();
+    if edit_trace.len() > 60 {
+        edit_trace = edit_trace.split_off(edit_trace.len() - 60);
+    }
+    let edit_trace = sanitize_logs_for_report(&edit_trace, settings.log_speech_text);
+
     Ok(format_diagnostic_report(
         &version,
         os,
@@ -252,6 +268,7 @@ pub fn generate_diagnostic_report<R: tauri::Runtime>(
         cuda_exe,
         &whisper_models,
         &logs,
+        &edit_trace,
         &engine_status(app_handle, settings.local_engine.as_str()),
     ))
 }
@@ -325,6 +342,7 @@ pub fn format_diagnostic_report(
     cuda_exe: bool,
     whisper_models: &[String],
     logs: &[String],
+    edit_trace: &[String],
     engine_status: &str,
 ) -> String {
     let whisper_models_str = if whisper_models.is_empty() {
@@ -337,6 +355,13 @@ pub fn format_diagnostic_report(
         "(No logs recorded)".to_string()
     } else {
         logs.join("\n")
+    };
+
+    let trace_content = if edit_trace.is_empty() {
+        "(No edit commands recorded yet. Run a command over selected text and copy the report again.)"
+            .to_string()
+    } else {
+        edit_trace.join("\n")
     };
 
     format!(
@@ -365,6 +390,10 @@ pub fn format_diagnostic_report(
           - onnxruntime_providers_cuda.dll: {}\n  \
           - sherpa-onnx-offline-websocket-server.exe: {}\n\
         - **Whisper GGML Models**: {}\n\n\
+        ## Edit Command Trace (last 60 relevant lines)\n\
+        ```\n\
+        {}\n\
+        ```\n\n\
         ## Unified Log (Last 50 Lines)\n\
         ```\n\
         {}\n\
@@ -419,6 +448,7 @@ pub fn format_diagnostic_report(
         if cuda_dll { "Present" } else { "Missing" },
         if cuda_exe { "Present" } else { "Missing" },
         whisper_models_str,
+        trace_content,
         log_content
     )
 }
@@ -496,6 +526,10 @@ mod tests {
             "2026-07-20 00:00:01.000Z [WARN] [Audio] Test log line 2".to_string(),
         ];
         let whisper_models = vec!["small".to_string(), "base".to_string()];
+        let edit_trace = vec![
+            "2026-07-20 00:00:02.000Z [INFO] [LLM] Edit request: model=qwen3-1.7b, language=ru, spoken=8 chars, selection=120 chars".to_string(),
+            "2026-07-20 00:00:03.000Z [INFO] [LLM] Local model replied in 900 ms (128 -> 74 chars, model=qwen3-1.7b)".to_string(),
+        ];
 
         let report = format_diagnostic_report(
             "1.0.8",
@@ -519,13 +553,16 @@ mod tests {
             true,
             &whisper_models,
             &logs,
+            &edit_trace,
             "Running (provider: cuda, port: 3033)",
         );
 
         assert!(report.contains("# Aura Diagnostic Report"));
         assert!(report.contains("## System & Config Specs"));
         assert!(report.contains("## Component Verification"));
+        assert!(report.contains("## Edit Command Trace (last 60 relevant lines)"));
         assert!(report.contains("## Unified Log (Last 50 Lines)"));
+        assert!(report.contains("Edit request: model=qwen3-1.7b"));
         assert!(report.contains("- **App Version**: 1.0.8"));
         assert!(report.contains("- **Engine Status**: Running (provider: cuda, port: 3033)"));
         assert!(report.contains("- **Selected Model**: parakeet-v3"));

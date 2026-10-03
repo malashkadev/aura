@@ -1,0 +1,1022 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aura — Интерактивный стенд редизайна программы</title>
+
+  <!-- Google Fonts: Onest -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="app_redesign.css">
+</head>
+<body class="preview-viewport mode-redesign" id="preview-viewport">
+
+  <!-- Minimalist Functional Control Dock (Zero Fluff Switcher) -->
+  <nav class="preview-top-dock" aria-label="Параметры предпросмотра">
+    <button type="button" class="mode-toggle-btn active" id="btn-mode-redesign" data-mode="mode-redesign">
+      <span class="btn-accent-pip"></span>
+      <span>Новый дизайн (Сайт Obsidian Glass)</span>
+    </button>
+    <button type="button" class="mode-toggle-btn" id="btn-mode-classic" data-mode="mode-classic">
+      <span class="btn-accent-pip"></span>
+      <span>Текущий дизайн программы (Classic)</span>
+    </button>
+    <span class="dock-divider"></span>
+    <span class="dock-status-label" id="dock-active-tab-label">Вкладка: Основные</span>
+  </nav>
+
+  <!-- Aura Application Window (Exact Real Markup Replica + Redesign Architectural Tokens) -->
+  <div class="preview-stage-container">
+    <div class="glass-container" id="app-glass-container" role="region" aria-label="Окно настроек Aura">
+      
+      <!-- Window Header -->
+      <header class="app-header">
+        <div class="logo-container">
+          <svg class="app-logo" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path class="logo-outer" d="M398.114 421C445.533 380.876 474.714 322.514 474.714 256.857C474.714 136.486 376.229 38 255.857 38C135.486 38 37 136.486 37 256.857C37 322.514 66.1809 380.876 113.6 421" stroke="currentColor" stroke-width="73.1573"/>
+            <path class="logo-outer-ripple" d="M398.114 421C445.533 380.876 474.714 322.514 474.714 256.857C474.714 136.486 376.229 38 255.857 38C135.486 38 37 136.486 37 256.857C37 322.514 66.1809 380.876 113.6 421" stroke="currentColor" stroke-width="73.1573"/>
+            <path class="logo-inner" d="M181.963 176.024L42.0293 511.651H142.825L200.192 352.952L247.909 233.927C250.769 226.064 253.45 222.132 255.952 222.132C258.096 222.132 260.598 226.064 263.458 233.927L311.175 352.952L368.542 511.651H469.874L329.404 176.024C322.255 158.867 312.783 147.25 300.988 141.174C289.55 135.098 274.538 132.06 255.952 132.06C234.148 132.06 217.885 135.455 207.162 142.246C196.797 149.038 188.397 160.297 181.963 176.024Z" fill="currentColor"/>
+          </svg>
+          <span class="logo-text">AURA</span>
+          <span class="redesign-only brand-pill-badge">v1.1.0 · Obsidian Deck</span>
+        </div>
+
+        <div class="header-right">
+          <div class="window-controls">
+            <button type="button" class="window-control-btn" id="btn-window-minimize" title="Свернуть">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="control-icon"><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            </button>
+            <button type="button" class="window-control-btn btn-close" id="btn-window-close" title="Закрыть">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="control-icon"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <!-- Main Layout -->
+      <div class="main-layout">
+        
+        <!-- Sidebar Navigation -->
+        <nav class="settings-nav" role="tablist" aria-label="Категории настроек">
+          <div class="nav-title">Настройки</div>
+          
+          <button type="button" class="nav-tab active" id="tab-btn-general" data-tab="general" role="tab" aria-selected="true" aria-controls="panel-general">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="nav-icon"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+            <span>Основные</span>
+          </button>
+          
+          <button type="button" class="nav-tab" id="tab-btn-speech" data-tab="speech" role="tab" aria-selected="false" aria-controls="panel-speech">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="nav-icon"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
+            <span>Голос</span>
+          </button>
+          
+          <button type="button" class="nav-tab" id="tab-btn-text" data-tab="text" role="tab" aria-selected="false" aria-controls="panel-text">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="nav-icon"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+            <span>Текст</span>
+          </button>
+          
+          <button type="button" class="nav-tab" id="tab-btn-hotkeys" data-tab="hotkeys" role="tab" aria-selected="false" aria-controls="panel-hotkeys">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="nav-icon"><rect x="2" y="4" width="20" height="16" rx="2" ry="2"></rect><line x1="6" y1="8" x2="6" y2="8"></line><line x1="10" y1="8" x2="10" y2="8"></line><line x1="14" y1="8" x2="14" y2="8"></line><line x1="18" y1="8" x2="18" y2="8"></line><line x1="6" y1="12" x2="6" y2="12"></line><line x1="18" y1="12" x2="18" y2="12"></line><line x1="7" y1="16" x2="17" y2="16"></line></svg>
+            <span>Управление</span>
+          </button>
+          
+          <button type="button" class="nav-tab" id="tab-btn-history" data-tab="history" role="tab" aria-selected="false" aria-controls="panel-history">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="nav-icon"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            <span>История</span>
+          </button>
+          
+          <button type="button" class="nav-tab" id="tab-btn-about" data-tab="about" role="tab" aria-selected="false" aria-controls="panel-about">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="nav-icon"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+            <span>О программе</span>
+          </button>
+        </nav>
+
+        <!-- Main Content Area -->
+        <main class="settings-content" id="settings-main-content">
+          
+          <!-- 1. GENERAL PANEL -->
+          <section class="tab-panel active" id="panel-general" role="tabpanel" tabindex="0" aria-labelledby="tab-btn-general">
+            <div class="card">
+              <h2 class="card-title">Автозапуск Aura</h2>
+              <p class="card-desc">Запускать приложение автоматически при входе в операционную систему Windows.</p>
+              <label class="toggle-switch">
+                <input type="checkbox" id="checkbox-autostart" checked />
+                <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                <span class="toggle-label">Запускать Aura при старте системы</span>
+              </label>
+            </div>
+
+            <div class="card">
+              <h2 class="card-title">Язык интерфейса</h2>
+              <p class="card-desc">Выберите язык для отображения настроек и уведомлений приложения.</p>
+              <div class="form-group">
+                <label for="select-ui-lang" class="field-label">Язык интерфейса</label>
+                <div class="select-wrap">
+                  <select id="select-ui-lang" class="custom-select">
+                    <option value="ru" selected>Русский (Russian)</option>
+                    <option value="en">English</option>
+                    <option value="de">Deutsch</option>
+                    <option value="es">Español</option>
+                    <option value="fr">Français</option>
+                    <option value="zh">中文 (Chinese)</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div class="card" id="card-gaming-mode">
+              <h2 class="card-title">Игровой режим</h2>
+              <p class="card-desc">Автоматическая пауза перехвата клавиш и выгрузка моделей для максимального FPS в играх.</p>
+              
+              <label class="toggle-switch">
+                <input type="checkbox" id="checkbox-gaming-mode-auto-detect" checked />
+                <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                <span class="toggle-label">Автоматический игровой режим (D3D/Vulkan)</span>
+              </label>
+
+              <div class="gaming-status-card">
+                <div class="gaming-status-info">
+                  <span class="field-label">Текущее состояние</span>
+                  <div class="gaming-status-value-wrap">
+                    <span class="gaming-status-dot" id="gaming-status-dot"></span>
+                    <span class="gaming-status-badge" id="gaming-status-text">Не активен</span>
+                  </div>
+                </div>
+                <button type="button" class="btn btn-secondary btn-toggle-gaming" id="btn-toggle-gaming-mode">Включить вручную</button>
+              </div>
+              <p class="field-hint">Ручное переключение также доступно через меню Aura в трее Windows.</p>
+            </div>
+
+            <div class="card" id="card-vram-standby">
+              <h2 class="card-title">Выгрузка моделей при бездействии (Сон)</h2>
+              <p class="card-desc">Освобождает видеопамять (VRAM), если голосовой ввод не используется указанное время.</p>
+              <div class="form-group">
+                <label for="select-vram-standby" class="field-label">Время бездействия до перехода в сон</label>
+                <div class="select-wrap">
+                  <select id="select-vram-standby" class="custom-select">
+                    <option value="15">Через 15 минут</option>
+                    <option value="30" selected>Через 30 минут (рекомендуется)</option>
+                    <option value="60">Через 1 час</option>
+                    <option value="0">Никогда (держать в VRAM)</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div class="card">
+              <h2 class="card-title">Проверка обновлений</h2>
+              <p class="card-desc">Aura обращается к GitHub только при ручной проверке или если вы включили автоматическую проверку.</p>
+              <label class="toggle-switch">
+                <input type="checkbox" id="checkbox-automatic-update-checks" checked />
+                <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                <span class="toggle-label">Автоматически проверять обновления при запуске</span>
+              </label>
+              <div>
+                <button type="button" class="btn btn-secondary" id="btn-check-updates">Проверить обновления</button>
+              </div>
+            </div>
+          </section>
+
+          <!-- 2. SPEECH PANEL -->
+          <section class="tab-panel" id="panel-speech" role="tabpanel" tabindex="0" aria-labelledby="tab-btn-speech" style="display: none;">
+            <div class="card" id="card-mic-meter">
+              <div class="mic-meter-header">
+                <div class="mic-meter-title-wrap">
+                  <h2 class="card-title">Проверка микрофона</h2>
+                  <p class="card-desc">Проверьте уровень входного сигнала и детекцию речи в реальном времени.</p>
+                </div>
+                <button type="button" class="btn btn-secondary btn-mic-test" id="btn-toggle-mic-meter">Запустить тест</button>
+              </div>
+              <div class="form-group" style="margin-top: 12px; margin-bottom: 12px;">
+                <label for="select-audio-device" class="field-label">Микрофон (устройство ввода)</label>
+                <div class="select-wrap">
+                  <select id="select-audio-device" class="custom-select">
+                    <option value="default" selected>По умолчанию (системное)</option>
+                    <option value="mic-usb">USB Microphone Realtek High Definition Audio</option>
+                  </select>
+                </div>
+              </div>
+              <div class="mic-meter-display">
+                <!-- Redesign dB Scale (Zero Fluff, Studio Calibrated) -->
+                <div class="redesign-only mic-meter-db-scale">
+                  <span>-40 dB</span>
+                  <span>-24 dB</span>
+                  <span>-12 dB</span>
+                  <span>-6 dB</span>
+                  <span>0 dB</span>
+                </div>
+                <div class="mic-meter-bar-track">
+                  <div class="mic-meter-bar-fill" id="mic-meter-fill"></div>
+                  <div class="mic-meter-peak" id="mic-meter-peak"></div>
+                </div>
+                <div class="mic-meter-status">
+                  <span class="mic-vad-indicator" id="mic-vad-indicator">
+                    <span class="mic-vad-dot"></span>
+                    <span class="mic-vad-text" id="mic-vad-text">Тишина</span>
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div class="card">
+              <h2 class="card-title">Способ распознавания</h2>
+              <p class="card-desc">Выберите между облачной обработкой высокого качества или полностью автономным локальным распознаванием речи.</p>
+              
+              <div class="engine-toggle-group">
+                <label class="engine-option" id="label-cloud">
+                  <input type="radio" name="transcription_mode" value="cloud" id="radio-cloud" />
+                  <span class="engine-card">
+                    <div class="engine-card-header">
+                      <span class="engine-name">Облачный ИИ</span>
+                      <span class="redesign-only engine-badge">API Online</span>
+                    </div>
+                    <span class="engine-meta">Gemini / OpenAI / Groq / Hugging Face (требуется API-ключ)</span>
+                    <div class="redesign-only redesign-tech-specs">
+                      <span class="tech-chip">Gemini 2.5 Flash</span>
+                      <span class="tech-chip">OpenAI Whisper</span>
+                      <span class="tech-chip">Groq LPU</span>
+                    </div>
+                  </span>
+                </label>
+                <label class="engine-option" id="label-local">
+                  <input type="radio" name="transcription_mode" value="local" checked id="radio-local" />
+                  <span class="engine-card">
+                    <div class="engine-card-header">
+                      <span class="engine-name">Локальный ИИ</span>
+                      <span class="redesign-only engine-badge accent">100% Offline</span>
+                    </div>
+                    <span class="engine-meta">Whisper / Parakeet (100% офлайн, приватность)</span>
+                    <div class="redesign-only redesign-tech-specs">
+                      <span class="tech-chip accent">0 КБ трафика</span>
+                      <span class="tech-chip">Whisper.cpp</span>
+                      <span class="tech-chip">NVIDIA Parakeet</span>
+                    </div>
+                  </span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Cloud API Keys Card -->
+            <div class="card" id="card-api-keys" style="display: none;">
+              <h2 class="card-title">Авторизация API-ключей</h2>
+              <p class="card-desc">Укажите ваши API-ключи для авторизации в облачных сервисах Gemini, OpenAI, Groq, Hugging Face или на пользовательском сервере.</p>
+              <div class="form-group">
+                <label for="select-provider" class="field-label">Провайдер API</label>
+                <div class="select-wrap">
+                  <select id="select-provider" class="custom-select">
+                    <option value="gemini" selected>Google Gemini AI</option>
+                    <option value="openai">OpenAI</option>
+                    <option value="groq">Groq</option>
+                    <option value="huggingface">Hugging Face</option>
+                    <option value="custom">Пользовательский сервер</option>
+                  </select>
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="input-api-key" class="field-label">API-ключ</label>
+                <div class="api-key-input-wrapper">
+                  <input type="password" id="input-api-key" class="custom-input" placeholder="Введите ваш API-ключ..." autocomplete="off" />
+                  <button type="button" class="btn-toggle-visibility" id="btn-toggle-key" aria-label="Показать/скрыть ключ">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="eye-icon"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Cloud Fallback Card -->
+            <div class="card" id="card-cloud-fallback" style="display: none;">
+              <h2 class="card-title">Автопереключение при недоступности облака</h2>
+              <p class="card-desc">Если облачный ИИ недоступен (VPN, блокировка региона, нет сети), автоматически использовать уже скачанную локальную модель для этой записи.</p>
+              <label class="toggle-switch">
+                <input type="checkbox" id="checkbox-cloud-fallback" checked />
+                <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                <span class="toggle-label">Включить автопереключение на локальную модель</span>
+              </label>
+            </div>
+
+            <!-- Local Engine Section -->
+            <div id="local-engine-section">
+              <div class="card" id="card-local-model">
+                <h2 class="card-title">Локальное распознавание</h2>
+                <p class="card-desc">Настройте локальный движок распознавания речи для полной приватности.</p>
+              
+                <div class="form-group">
+                  <label for="select-local-engine" class="field-label">Движок распознавания</label>
+                  <div class="select-wrap">
+                    <select id="select-local-engine" class="custom-select">
+                      <option value="whisper" selected>Whisper.cpp (Мультиязычный, стабильный)</option>
+                      <option value="parakeet">NVIDIA Parakeet (Сверхбыстрый, оптимизирован для RU/EN)</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="form-group" id="gpu-acceleration-settings">
+                  <label class="field-label">Локальное аппаратное ускорение</label>
+                  <div class="model-cards-group" role="radiogroup" aria-label="Выберите режим GPU">
+                    <!-- CPU Card -->
+                    <div class="model-card" data-gpu="cpu" role="radio" aria-checked="false" tabindex="0">
+                      <div class="model-card-main">
+                        <div class="model-card-info">
+                          <div class="model-title-row">
+                            <span class="model-name">CPU (Без ускорения)</span>
+                            <span class="redesign-only hardware-chip-tag">x86_64 CPU</span>
+                          </div>
+                          <span class="model-meta">Стандартный режим. Безопасен, но нагружает процессор (CPU).</span>
+                          <div class="redesign-only redesign-tech-specs">
+                            <span class="tech-chip">Универсальный</span>
+                            <span class="tech-chip">0 МБ VRAM</span>
+                            <span class="tech-chip">Любой ПК</span>
+                          </div>
+                        </div>
+                        <div class="model-card-action">
+                          <span class="status-ready-badge">
+                            <svg class="status-ready-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                            <span>Установлено</span>
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    <!-- CUDA Card -->
+                    <div class="model-card active" data-gpu="cuda" role="radio" aria-checked="true" tabindex="0">
+                      <div class="model-card-main">
+                        <div class="model-card-info">
+                          <div class="model-title-row">
+                            <span class="model-name">NVIDIA CUDA (Макс. скорость)</span>
+                            <span class="redesign-only hardware-chip-tag accent">NVIDIA GPU</span>
+                          </div>
+                          <span class="model-meta">Для видеокарт GeForce. Задействует видеопамять (VRAM) для мгновенного отклика без нагрузки на процессор.</span>
+                          <div class="redesign-only redesign-tech-specs">
+                            <span class="tech-chip accent">0 ms задержка</span>
+                            <span class="tech-chip">VRAM Resident</span>
+                            <span class="tech-chip">CUDA Cores</span>
+                          </div>
+                        </div>
+                        <div class="model-card-action">
+                          <span class="status-ready-badge">
+                            <svg class="status-ready-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                            <span>Установлено</span>
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Whisper Models Group -->
+                <div class="form-group" id="group-whisper-models">
+                  <label class="field-label">Размер модели</label>
+                  <div class="model-cards-group" id="model-cards-container" role="radiogroup" aria-label="Выберите модель">
+                    <!-- Tiny -->
+                    <div class="model-card" data-model="tiny" role="radio" aria-checked="false" tabindex="0">
+                      <div class="model-card-main">
+                        <div class="model-card-info">
+                          <div class="model-title-row">
+                            <span class="model-name">Tiny</span>
+                            <span class="redesign-only model-size-tag">~75 МБ</span>
+                          </div>
+                          <span class="model-meta">~75 МБ — сверхбыстрая</span>
+                          <div class="redesign-only redesign-tech-specs">
+                            <span class="tech-chip">Ultra-Fast</span>
+                            <span class="tech-chip">~75 МБ RAM</span>
+                            <span class="tech-chip">EN / Базовый RU</span>
+                          </div>
+                        </div>
+                        <div class="model-card-action">
+                          <span class="status-ready-badge">
+                            <svg class="status-ready-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                            <span>Готово</span>
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    <!-- Base -->
+                    <div class="model-card" data-model="base" role="radio" aria-checked="false" tabindex="0">
+                      <div class="model-card-main">
+                        <div class="model-card-info">
+                          <div class="model-title-row">
+                            <span class="model-name">Base</span>
+                            <span class="redesign-only model-size-tag">~145 МБ</span>
+                          </div>
+                          <span class="model-meta">~145 МБ — базовая легковесная (для слабых CPU)</span>
+                          <div class="redesign-only redesign-tech-specs">
+                            <span class="tech-chip">Lightweight</span>
+                            <span class="tech-chip">~145 МБ RAM</span>
+                            <span class="tech-chip">Базовая</span>
+                          </div>
+                        </div>
+                        <div class="model-card-action">
+                          <span class="status-ready-badge">
+                            <svg class="status-ready-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                            <span>Готово</span>
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    <!-- Small -->
+                    <div class="model-card" data-model="small" role="radio" aria-checked="false" tabindex="0">
+                      <div class="model-card-main">
+                        <div class="model-card-info">
+                          <div class="model-title-row">
+                            <span class="model-name">Small</span>
+                            <span class="redesign-only model-size-tag">~465 МБ</span>
+                          </div>
+                          <span class="model-meta">~465 МБ — точная для русского</span>
+                          <div class="redesign-only redesign-tech-specs">
+                            <span class="tech-chip">Точность RU</span>
+                            <span class="tech-chip">~465 МБ VRAM</span>
+                            <span class="tech-chip">Высокая точность</span>
+                          </div>
+                        </div>
+                        <div class="model-card-action">
+                          <button type="button" class="btn-download-model redesign-only">Скачать</button>
+                        </div>
+                      </div>
+                    </div>
+                    <!-- Large v3 Turbo (Quantized) -->
+                    <div class="model-card active" data-model="large-v3-turbo-q5_0" role="radio" aria-checked="true" tabindex="0">
+                      <div class="model-card-main">
+                        <div class="model-card-info">
+                          <div class="model-title-row">
+                            <span class="model-name">Large v3 Turbo (Q5)</span>
+                            <span class="redesign-only redesign-pill-badge recommended">Рекомендуется</span>
+                            <span class="redesign-only model-size-tag accent">~550 МБ</span>
+                          </div>
+                          <span class="model-meta">~550 МБ — рекомендуемая (макс. точность, оптимизирована для GPU)</span>
+                          <div class="redesign-only redesign-tech-specs">
+                            <span class="tech-chip accent">Топовое качество</span>
+                            <span class="tech-chip">INT8 Q5</span>
+                            <span class="tech-chip">550 МБ VRAM</span>
+                            <span class="tech-chip">Whisper.cpp</span>
+                          </div>
+                        </div>
+                        <div class="model-card-action">
+                          <span class="status-ready-badge">
+                            <svg class="status-ready-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                            <span>Установлено</span>
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    <!-- Large v3 Turbo -->
+                    <div class="model-card" data-model="large-v3-turbo" role="radio" aria-checked="false" tabindex="0">
+                      <div class="model-card-main">
+                        <div class="model-card-info">
+                          <div class="model-title-row">
+                            <span class="model-name">Large v3 Turbo</span>
+                            <span class="redesign-only model-size-tag">~1.6 ГБ</span>
+                          </div>
+                          <span class="model-meta">~1.6 ГБ — максимальная точность для RU/EN (без квантования)</span>
+                          <div class="redesign-only redesign-tech-specs">
+                            <span class="tech-chip">FP16 Lossless</span>
+                            <span class="tech-chip">1.6 ГБ VRAM</span>
+                            <span class="tech-chip">Студийный звук</span>
+                          </div>
+                        </div>
+                        <div class="model-card-action">
+                          <button type="button" class="btn-download-model redesign-only">Скачать</button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Parakeet Models Group -->
+                <div class="form-group" id="group-parakeet-models" style="display: none;">
+                  <label class="field-label">Модель Parakeet</label>
+                  <div class="model-cards-group" role="radiogroup" aria-label="Выберите модель Parakeet">
+                    <div class="model-card active" data-model="parakeet-v3" role="radio" aria-checked="true" tabindex="0">
+                      <div class="model-card-main">
+                        <div class="model-card-info">
+                          <div class="model-title-row">
+                            <span class="model-name">Parakeet TDT 0.6b v3 (int8)</span>
+                            <span class="redesign-only hardware-chip-tag accent">NVIDIA TDT</span>
+                          </div>
+                          <span class="model-meta">~670 МБ — оптимизировано NVIDIA для молниеносного распознавания</span>
+                          <div class="redesign-only redesign-tech-specs">
+                            <span class="tech-chip accent">0.6B Fast</span>
+                            <span class="tech-chip">Sherpa-ONNX</span>
+                            <span class="tech-chip">Рекордная скорость</span>
+                          </div>
+                        </div>
+                        <div class="model-card-action">
+                          <span class="status-ready-badge">
+                            <svg class="status-ready-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                            <span>Установлено</span>
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- 3. TEXT PANEL -->
+          <section class="tab-panel" id="panel-text" role="tabpanel" tabindex="0" aria-labelledby="tab-btn-text" style="display: none;">
+            <div class="card" id="card-language">
+              <h2 class="card-title">Язык распознавания</h2>
+              <p class="card-desc">Выберите принудительный язык ввода или включите автоопределение.</p>
+              <div class="form-group">
+                <label for="select-language" class="field-label">Выберите язык</label>
+                <div class="select-wrap">
+                  <select id="select-language" class="custom-select">
+                    <option value="auto">Автоопределение (Auto detect)</option>
+                    <option value="layout">По раскладке клавиатуры</option>
+                    <option value="ru" selected>Русский (Russian)</option>
+                    <option value="en">English</option>
+                    <option value="de">Deutsch</option>
+                    <option value="es">Español</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div class="card" id="card-vocabulary">
+              <h2 class="card-title">Пользовательский словарь</h2>
+              <p class="card-desc">Внесите термины, имена или брендовые названия через запятую, чтобы улучшить их распознавание.</p>
+              <div class="form-group">
+                <!-- Classic Only Textarea -->
+                <textarea id="textarea-dictionary" class="custom-textarea classic-only" placeholder="Например: Аура, коммит, репозиторий, CUDA, Whisper..." autocomplete="off">Аура, репозиторий, коммит, Obsidian, CUDA</textarea>
+                
+                <!-- Redesign Only Token Chips Cloud -->
+                <div class="redesign-only vocab-chips-cloud">
+                  <span class="vocab-chip">Аура <button type="button" class="chip-remove" aria-label="Удалить">×</button></span>
+                  <span class="vocab-chip">репозиторий <button type="button" class="chip-remove" aria-label="Удалить">×</button></span>
+                  <span class="vocab-chip">коммит <button type="button" class="chip-remove" aria-label="Удалить">×</button></span>
+                  <span class="vocab-chip">Obsidian <button type="button" class="chip-remove" aria-label="Удалить">×</button></span>
+                  <span class="vocab-chip accent">CUDA <button type="button" class="chip-remove" aria-label="Удалить">×</button></span>
+                  <div class="vocab-add-chip-wrap">
+                    <input type="text" class="vocab-quick-input" placeholder="+ Добавить термин..." />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="card" id="card-replacements">
+              <h2 class="card-title">Автозамена</h2>
+              <p class="card-desc">Автоматически заменяет надиктованные слова и фразы на точные термины, адреса почты или готовый текст.</p>
+              <div class="replacements-list" id="replacements-list">
+                <div class="replacement-item">
+                  <div class="replacement-info">
+                    <span class="replacement-trigger">почта</span>
+                    <span class="replacement-arrow">&rarr;</span>
+                    <span class="replacement-value">name@mail.ru</span>
+                  </div>
+                  <button type="button" class="replacement-delete" title="Удалить" aria-label="Удалить замену">
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                  </button>
+                </div>
+                <div class="replacement-item">
+                  <div class="replacement-info">
+                    <span class="replacement-trigger">созвон</span>
+                    <span class="replacement-arrow">&rarr;</span>
+                    <span class="replacement-value">https://meet.google.com/abc-defg-hij</span>
+                  </div>
+                  <button type="button" class="replacement-delete" title="Удалить" aria-label="Удалить замену">
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                  </button>
+                </div>
+              </div>
+              <div class="replacement-add-row">
+                <input type="text" id="input-rep-trigger" class="custom-input" placeholder="Слово или фраза (напр. почта)" autocomplete="off" />
+                <input type="text" id="input-rep-value" class="custom-input" placeholder="Заменить на (напр. name@mail.ru)" autocomplete="off" />
+                <button type="button" id="btn-add-replacement" class="btn btn-secondary btn-add-replacement">Добавить</button>
+              </div>
+            </div>
+          </section>
+
+          <!-- 4. HOTKEYS PANEL -->
+          <section class="tab-panel" id="panel-hotkeys" role="tabpanel" tabindex="0" aria-labelledby="tab-btn-hotkeys" style="display: none;">
+            <div class="card">
+              <h2 class="card-title">Глобальная горячая клавиша</h2>
+              <p class="card-desc">Зажмите выбранную комбинацию для начала записи, отпустите для распознавания.</p>
+              <div class="form-group">
+                <label for="input-hotkey" class="field-label">Комбинация</label>
+                <div class="hotkey-field-wrapper">
+                  <!-- Classic Only Input -->
+                  <input type="text" id="input-hotkey" class="custom-input hotkey-input classic-only" readonly value="Alt + V" />
+                  
+                  <!-- Redesign Only 3D Physical Keycaps Display -->
+                  <div class="redesign-only redesign-keycap-container">
+                    <div class="keycap-keys">
+                      <kbd class="site-keycap">Alt</kbd>
+                      <span class="keycap-sep">+</span>
+                      <kbd class="site-keycap">V</kbd>
+                    </div>
+                    <span class="keycap-hint">Нажмите для переназначения</span>
+                  </div>
+
+                  <button type="button" id="btn-reset-hotkey" class="btn-reset-icon" title="Сбросить на Alt+V">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><polyline points="3 3 3 8 8 8"></polyline></svg>
+                  </button>
+                </div>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" id="checkbox-toggle" />
+                <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                <span class="toggle-label">Режим переключателя (короткое нажатие)</span>
+              </label>
+              <p class="switch-desc">Короткое нажатие начинает запись без удержания клавиши. Повторный клик останавливает запись.</p>
+            </div>
+
+            <div class="card" id="card-overlay-timer">
+              <h2 class="card-title">Таймер и статус в оверлее</h2>
+              <p class="card-desc">Отображать счетчик времени и статус обработки под индикатором речи. Ошибки будут видны всегда.</p>
+              <label class="toggle-switch">
+                <input type="checkbox" id="checkbox-overlay-show-timer" checked />
+                <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                <span class="toggle-label">Показывать таймер и статус в оверлее</span>
+              </label>
+            </div>
+
+            <div class="card">
+              <h2 class="card-title">Звуковое сопровождение</h2>
+              <p class="card-desc">Звуковые эффекты оверлея при записи.</p>
+              <label class="toggle-switch">
+                <input type="checkbox" id="checkbox-sounds" checked />
+                <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                <span class="toggle-label">Включить звуки оверлея</span>
+              </label>
+              <div class="form-group" id="sound-volume-group" style="margin-top: 10px;">
+                <label for="range-sound-volume" class="field-label">Громкость звука</label>
+                <div class="volume-slider-container">
+                  <input type="range" id="range-sound-volume" min="0" max="100" value="80" class="custom-slider" />
+                  <span id="volume-value-label" class="volume-value-text">80%</span>
+                </div>
+              </div>
+              <div class="form-group" id="sound-theme-group" style="margin-top: 10px;">
+                <label for="select-sound-theme" class="field-label">Звуковая тема</label>
+                <div class="select-wrap">
+                  <select id="select-sound-theme" class="custom-select">
+                    <option value="zen" selected>Дзен (Мягкий перезвон)</option>
+                    <option value="rhodes">Rhodes (Клавишный аккорд)</option>
+                    <option value="scifi">Sci-Fi (Футуристический импульс)</option>
+                    <option value="classic">Колокольчик</option>
+                    <option value="bubble">Капля воды</option>
+                    <option value="haptic">Тактильный свитч</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- 5. HISTORY PANEL -->
+          <section class="tab-panel" id="panel-history" role="tabpanel" tabindex="0" aria-labelledby="tab-btn-history" style="display: none;">
+            <div class="card card-history">
+              <div class="history-header">
+                <h2 class="card-title">История транскрипций</h2>
+                <button type="button" class="btn-clear-history" id="btn-clear-history">Очистить историю</button>
+              </div>
+              <p class="card-desc">Последние надиктованные фразы хранятся локально.</p>
+
+              <!-- History Search and Filter Controls -->
+              <div class="history-controls">
+                <div class="history-search-wrap">
+                  <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                  </svg>
+                  <input type="text" id="input-history-search" class="history-search-input" placeholder="Поиск по истории..." autocomplete="off" />
+                </div>
+                <div class="history-filters" role="group" aria-label="Фильтры истории">
+                  <button type="button" class="history-filter-btn active" data-filter="all" id="btn-history-filter-all">Все</button>
+                  <button type="button" class="history-filter-btn" data-filter="cloud" id="btn-history-filter-cloud">Облако</button>
+                  <button type="button" class="history-filter-btn" data-filter="local" id="btn-history-filter-local">Локально</button>
+                </div>
+              </div>
+
+              <div class="history-list" id="history-items-container">
+                <div class="history-day-header">
+                  <span class="history-day-title">Сегодня</span>
+                  <span class="history-day-line"></span>
+                </div>
+                <div class="history-item" data-type="local">
+                  <div class="history-item-body">
+                    <div class="history-item-meta">
+                      <span class="history-item-time">17:14:02</span>
+                      <span class="history-item-badge badge-local">Локально · CUDA</span>
+                    </div>
+                    <div class="history-item-text">Создай асинхронный обработчик запросов с обработкой ошибок.</div>
+                  </div>
+                  <button type="button" class="btn-copy-history" title="Копировать" aria-label="Копировать текст">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                  </button>
+                </div>
+                <div class="history-item" data-type="local">
+                  <div class="history-item-body">
+                    <div class="history-item-meta">
+                      <span class="history-item-time">16:48:19</span>
+                      <span class="history-item-badge badge-local">Локально · CUDA</span>
+                    </div>
+                    <div class="history-item-text">Голосовой ввод прямо в активное окно без переключения контекста.</div>
+                  </div>
+                  <button type="button" class="btn-copy-history" title="Копировать" aria-label="Копировать текст">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                  </button>
+                </div>
+                <div class="history-day-header">
+                  <span class="history-day-title">Вчера</span>
+                  <span class="history-day-line"></span>
+                </div>
+                <div class="history-item" data-type="cloud">
+                  <div class="history-item-body">
+                    <div class="history-item-meta">
+                      <span class="history-item-time">15:20:45</span>
+                      <span class="history-item-badge badge-cloud">Облако · Gemini</span>
+                    </div>
+                    <div class="history-item-text">Подготовь краткую сводку по архитектуре проекта и ключевым инвариантам.</div>
+                  </div>
+                  <button type="button" class="btn-copy-history" title="Копировать" aria-label="Копировать текст">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- 6. ABOUT PANEL -->
+          <section class="tab-panel" id="panel-about" role="tabpanel" tabindex="0" aria-labelledby="tab-btn-about" style="display: none;">
+            <div class="card about-card">
+              <div class="about-icon logo-container">
+                <svg class="about-logo-svg" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path class="logo-outer" d="M398.114 421C445.533 380.876 474.714 322.514 474.714 256.857C474.714 136.486 376.229 38 255.857 38C135.486 38 37 136.486 37 256.857C37 322.514 66.1809 380.876 113.6 421" stroke="currentColor" stroke-width="73.1573"/>
+                  <path class="logo-outer-ripple" d="M398.114 421C445.533 380.876 474.714 322.514 474.714 256.857C474.714 136.486 376.229 38 255.857 38C135.486 38 37 136.486 37 256.857C37 322.514 66.1809 380.876 113.6 421" stroke="currentColor" stroke-width="73.1573"/>
+                  <path class="logo-inner" d="M181.963 176.024L42.0293 511.651H142.825L200.192 352.952L247.909 233.927C250.769 226.064 253.45 222.132 255.952 222.132C258.096 222.132 260.598 226.064 263.458 233.927L311.175 352.952L368.542 511.651H469.874L329.404 176.024C322.255 158.867 312.783 147.25 300.988 141.174C289.55 135.098 274.538 132.06 255.952 132.06C234.148 132.06 217.885 135.455 207.162 142.246C196.797 149.038 188.397 160.297 181.963 176.024Z" fill="currentColor"/>
+                </svg>
+              </div>
+              <h2 class="about-app-title">AURA</h2>
+              <p class="about-version">v1.1.0</p>
+              <p class="about-description">
+                Инструмент глобального голосового ввода для Windows. Программа переводит речь в текст и вставляет его в любое активное окно с автоматическим форматированием и расстановкой пунктуации.
+              </p>
+
+              <div class="about-gratitude-wrap">
+                <div class="gratitude-divider"></div>
+                <p class="gratitude-text">
+                  Спасибо, что пользуетесь Aura! Если программа делает вашу работу быстрее и удобнее — поддержите проект звездой на GitHub.
+                </p>
+                <a href="https://github.com/malashkadev/aura" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-github-star" id="btn-github-star">
+                  <svg class="github-icon" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/>
+                  </svg>
+                  <span>Поставить звезду на GitHub</span>
+                  <svg class="star-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                  </svg>
+                </a>
+              </div>
+            </div>
+
+            <div class="card">
+              <h2 class="card-title">Диагностика</h2>
+              <p class="card-desc">Сохранять точный текст распознанной речи в диагностические логи.</p>
+              <label class="toggle-switch">
+                <input type="checkbox" id="setting-log-speech-text" />
+                <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                <span class="toggle-label">Логирование текста речи</span>
+              </label>
+              <div>
+                <button type="button" class="btn btn-secondary" id="btn-copy-diagnostics">Скопировать отчет диагностики</button>
+              </div>
+            </div>
+          </section>
+        </main>
+      </div>
+
+      <!-- Window Footer -->
+      <footer class="app-footer">
+        <div class="footer-status" role="status" aria-live="polite">
+          <span id="footer-status-icon" class="status-icon-wrapper">
+            <svg class="icon-success" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          </span>
+          <span id="footer-status-text">Готово</span>
+          <span class="redesign-only footer-vram-tag">CUDA Active · 0ms</span>
+        </div>
+        <button type="button" class="btn-save" id="btn-save-settings">Сохранить настройки</button>
+      </footer>
+    </div>
+  </div>
+
+  <!-- Interactive Demo Script -->
+  <script>
+    (function() {
+      // 1. Mode Switcher (Redesign vs Classic)
+      const viewport = document.getElementById('preview-viewport');
+      const btnRedesign = document.getElementById('btn-mode-redesign');
+      const btnClassic = document.getElementById('btn-mode-classic');
+
+      btnRedesign.addEventListener('click', () => {
+        viewport.classList.remove('mode-classic');
+        viewport.classList.add('mode-redesign');
+        btnRedesign.classList.add('active');
+        btnClassic.classList.remove('active');
+      });
+
+      btnClassic.addEventListener('click', () => {
+        viewport.classList.remove('mode-redesign');
+        viewport.classList.add('mode-classic');
+        btnClassic.classList.add('active');
+        btnRedesign.classList.remove('active');
+      });
+
+      // 2. Tab Navigation
+      const navTabs = document.querySelectorAll('.nav-tab');
+      const panels = document.querySelectorAll('.tab-panel');
+      const dockTabLabel = document.getElementById('dock-active-tab-label');
+
+      navTabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+          const targetTab = tab.getAttribute('data-tab');
+          
+          navTabs.forEach(t => {
+            t.classList.remove('active');
+            t.setAttribute('aria-selected', 'false');
+          });
+          tab.classList.add('active');
+          tab.setAttribute('aria-selected', 'true');
+
+          panels.forEach(p => {
+            if (p.id === `panel-${targetTab}`) {
+              p.style.display = 'flex';
+              p.classList.add('active');
+            } else {
+              p.style.display = 'none';
+              p.classList.remove('active');
+            }
+          });
+
+          const tabName = tab.querySelector('span')?.textContent || targetTab;
+          if (dockTabLabel) {
+            dockTabLabel.textContent = `Вкладка: ${tabName}`;
+          }
+        });
+      });
+
+      // 3. Engine Toggle (Cloud vs Local)
+      const radioCloud = document.getElementById('radio-cloud');
+      const radioLocal = document.getElementById('radio-local');
+      const cardApiKeys = document.getElementById('card-api-keys');
+      const cardCloudFallback = document.getElementById('card-cloud-fallback');
+      const localSection = document.getElementById('local-engine-section');
+
+      function updateEngineView() {
+        const isLocal = radioLocal.checked;
+        if (isLocal) {
+          if (cardApiKeys) cardApiKeys.style.display = 'none';
+          if (cardCloudFallback) cardCloudFallback.style.display = 'none';
+          if (localSection) localSection.style.display = 'block';
+        } else {
+          if (cardApiKeys) cardApiKeys.style.display = 'flex';
+          if (cardCloudFallback) cardCloudFallback.style.display = 'flex';
+          if (localSection) localSection.style.display = 'none';
+        }
+      }
+
+      if (radioCloud && radioLocal) {
+        radioCloud.addEventListener('change', updateEngineView);
+        radioLocal.addEventListener('change', updateEngineView);
+        updateEngineView();
+      }
+
+      // 4. Local Engine Selector (Whisper vs Parakeet)
+      const selectEngine = document.getElementById('select-local-engine');
+      const groupWhisper = document.getElementById('group-whisper-models');
+      const groupParakeet = document.getElementById('group-parakeet-models');
+
+      if (selectEngine) {
+        selectEngine.addEventListener('change', () => {
+          if (selectEngine.value.startsWith('parakeet')) {
+            if (groupWhisper) groupWhisper.style.display = 'none';
+            if (groupParakeet) groupParakeet.style.display = 'block';
+          } else {
+            if (groupWhisper) groupWhisper.style.display = 'block';
+            if (groupParakeet) groupParakeet.style.display = 'none';
+          }
+        });
+      }
+
+      // 5. GPU & Model Cards Selection
+      document.querySelectorAll('.model-card').forEach(card => {
+        card.addEventListener('click', () => {
+          const group = card.closest('.model-cards-group');
+          if (group) {
+            group.querySelectorAll('.model-card').forEach(c => {
+              c.classList.remove('active');
+              c.setAttribute('aria-checked', 'false');
+            });
+            card.classList.add('active');
+            card.setAttribute('aria-checked', 'true');
+          }
+        });
+      });
+
+      // 6. Mic Meter Interactive Simulation (NO GREEN! NO RAINBOW!)
+      const btnMicTest = document.getElementById('btn-toggle-mic-meter');
+      const micFill = document.getElementById('mic-meter-fill');
+      const vadIndicator = document.getElementById('mic-vad-indicator');
+      const vadText = document.getElementById('mic-vad-text');
+      let micTestInterval = null;
+
+      if (btnMicTest) {
+        btnMicTest.addEventListener('click', () => {
+          if (micTestInterval) {
+            clearInterval(micTestInterval);
+            micTestInterval = null;
+            btnMicTest.textContent = 'Запустить тест';
+            btnMicTest.classList.remove('active');
+            if (micFill) micFill.style.width = '0%';
+            if (vadIndicator) vadIndicator.classList.remove('speaking');
+            if (vadText) vadText.textContent = 'Тишина';
+          } else {
+            btnMicTest.textContent = 'Остановить тест';
+            btnMicTest.classList.add('active');
+            let tick = 0;
+            micTestInterval = setInterval(() => {
+              tick++;
+              const level = Math.max(8, Math.min(85, Math.sin(tick * 0.45) * 35 + Math.cos(tick * 0.9) * 20 + 40));
+              if (micFill) micFill.style.width = `${level}%`;
+              
+              if (level > 28) {
+                if (vadIndicator) vadIndicator.classList.add('speaking');
+                if (vadText) vadText.textContent = 'Говорите...';
+              } else {
+                if (vadIndicator) vadIndicator.classList.remove('speaking');
+                if (vadText) vadText.textContent = 'Тишина';
+              }
+            }, 100);
+          }
+        });
+      }
+
+      // 7. Gaming Mode Button
+      const btnGaming = document.getElementById('btn-toggle-gaming-mode');
+      const gamingDot = document.getElementById('gaming-status-dot');
+      const gamingText = document.getElementById('gaming-status-text');
+
+      if (btnGaming) {
+        btnGaming.addEventListener('click', () => {
+          const isActive = gamingDot && gamingDot.classList.contains('active');
+          if (isActive) {
+            gamingDot.classList.remove('active');
+            if (gamingText) {
+              gamingText.textContent = 'Не активен';
+              gamingText.classList.remove('active');
+            }
+            btnGaming.textContent = 'Включить вручную';
+          } else {
+            if (gamingDot) gamingDot.classList.add('active');
+            if (gamingText) {
+              gamingText.textContent = 'Активен';
+              gamingText.classList.add('active');
+            }
+            btnGaming.textContent = 'Отключить';
+          }
+        });
+      }
+
+      // 8. History Filter
+      const filterBtns = document.querySelectorAll('.history-filter-btn');
+      const historyItems = document.querySelectorAll('.history-item');
+
+      filterBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          filterBtns.forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          const filter = btn.getAttribute('data-filter');
+
+          historyItems.forEach(item => {
+            const itemType = item.getAttribute('data-type');
+            if (filter === 'all' || itemType === filter) {
+              item.style.display = 'flex';
+            } else {
+              item.style.display = 'none';
+            }
+          });
+        });
+      });
+
+      // 9. Volume Slider Label
+      const rangeVol = document.getElementById('range-sound-volume');
+      const volLabel = document.getElementById('volume-value-label');
+      if (rangeVol && volLabel) {
+        rangeVol.addEventListener('input', () => {
+          volLabel.textContent = `${rangeVol.value}%`;
+        });
+      }
+
+      // 10. Vocabulary Chip Remove Interaction
+      document.querySelectorAll('.chip-remove').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const chip = btn.closest('.vocab-chip');
+          if (chip) chip.remove();
+        });
+      });
+
+    })();
+  </script>
+</body>
+</html>

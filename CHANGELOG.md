@@ -3,6 +3,21 @@
 All notable changes to Aura are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/), versions follow [SemVer](https://semver.org/).
 
+## [1.1.2] — 2026-10-03
+
+### Added
+- **Deterministic Intent Parsing for Voice Editing (`edit_intent.rs`)**: Replaced single-prompt classification with deterministic command parsing for voice editing over selected text ("переведи", "сократи", "исправь грамматику", "формальнее", "сделай списком"). Separates command instructions from document data so models receive only the selected text and never mistake the command itself for content to translate or edit.
+- **Output Quality & Echo Gate (`edit_validate.rs`)**: Validates editing results by target language alphabet match, length invariants (shortening must be shorter, grammar fixes must preserve semantic similarity), and rejects echo leaks before touching user document.
+- **Unified «Редактирование выделенного текста» Settings Card**: Consolidated duplicate cards on the Text tab into a single unified card with master toggle, route selector (`Auto` / `Local` / `Cloud`), default translation language selector, and local model downloader cards.
+- **Default Target Translation Language (`translate_default_target`)**: Added configurable target language for bare «переведи» / «translate» commands with intelligent fallback to application UI language when the selected text is already in the target language.
+- **Local LLM Commands on Selected Text (Qwen3 + llama.cpp)**: Voice commands spoken over a selected text run fully offline via resident CPU/Vulkan `llama-server` (Qwen3 0.6B / 1.7B / 4B).
+
+### Fixed
+- **Command Self-Translation Bug**: Fixed issue where saying "переведи на английский" translated the command phrase itself into "Translate to English." and pasted it over user selection instead of translating the selected text.
+- **Echo Detection False Failures**: Fixed false `edit-failed` aborts on "сократи" and "исправь грамматику" caused by over-aggressive echo heuristics and classifier ambiguity.
+- **Keyboard Layout Language Leak in Voice Editing**: Fixed issue where holding the hotkey with an English keyboard layout forced Whisper into English transcription mode for Russian edit commands.
+- **Settings Duplication & Conflicts**: Eliminated confusing division between selection capture toggle and selection command options, removing conflicting "Off" dropdown state in favor of a single master toggle.
+
 ## [1.1.1] — 2026-09-15
 
 ### Added

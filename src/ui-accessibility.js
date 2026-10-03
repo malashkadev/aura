@@ -7,9 +7,16 @@ export function bindTabKeyboardNavigation(tabs, activate) {
   const items = Array.from(tabs);
   const isVisible = (tab) => tab.offsetParent !== null;
 
-  const wrap = (index, step) => (index + step + items.length) % items.length;
-  const nextVisible = (fromIndex, step) => {
+  const wrap = (index, step) => (((index + step) % items.length) + items.length) % items.length;
+  const firstVisible = (fromIndex, step) => {
     for (let count = 0; count < items.length; count += 1) {
+      const index = wrap(fromIndex, count * step);
+      if (isVisible(items[index])) return items[index];
+    }
+    return null;
+  };
+  const nextVisible = (fromIndex, step) => {
+    for (let count = 1; count <= items.length; count += 1) {
       const index = wrap(fromIndex, count * step);
       if (isVisible(items[index])) return items[index];
     }
@@ -26,9 +33,9 @@ export function bindTabKeyboardNavigation(tabs, activate) {
       } else if (event.key === "ArrowUp" || event.key === "ArrowLeft") {
         target = nextVisible(index, -1);
       } else if (event.key === "Home") {
-        target = nextVisible(0, 1);
+        target = firstVisible(0, 1);
       } else if (event.key === "End") {
-        target = nextVisible(items.length - 1, -1);
+        target = firstVisible(items.length - 1, -1);
       } else {
         return;
       }

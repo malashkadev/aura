@@ -165,7 +165,7 @@ pub struct DownloadProgress {
 }
 
 /// Helper to search recursively for the sidecar file if not in direct paths
-fn find_file_recursive(dir: &Path, target_name: &str) -> Option<PathBuf> {
+pub(crate) fn find_file_recursive(dir: &Path, target_name: &str) -> Option<PathBuf> {
     if dir.is_dir() {
         if let Ok(entries) = fs::read_dir(dir) {
             for entry in entries.flatten() {
@@ -305,7 +305,7 @@ pub fn find_sidecar<R: Runtime>(app_handle: &tauri::AppHandle<R>) -> Result<Path
 
 static ACTIVE_MODEL_DOWNLOADS: OnceLock<Mutex<HashSet<String>>> = OnceLock::new();
 
-struct DownloadLease {
+pub(crate) struct DownloadLease {
     model: String,
 }
 
@@ -321,7 +321,7 @@ pub fn is_model_download_active(model: &str) -> bool {
     recover_lock(downloads, "active model downloads").contains(model)
 }
 
-fn begin_model_download(model: &str) -> Result<DownloadLease, String> {
+pub(crate) fn begin_model_download(model: &str) -> Result<DownloadLease, String> {
     let downloads = ACTIVE_MODEL_DOWNLOADS.get_or_init(|| Mutex::new(HashSet::new()));
     let mut active = match downloads.lock() {
         Ok(active) => active,
@@ -419,7 +419,7 @@ pub(crate) fn whisper_model_is_installed(model_name: &str, path: &Path) -> bool 
 /// the result is memoized.
 static RUNTIME_VERIFIED_MODELS: OnceLock<Mutex<HashSet<PathBuf>>> = OnceLock::new();
 
-fn runtime_verify_model_file(
+pub(crate) fn runtime_verify_model_file(
     label: &str,
     path: &Path,
     expected_sha256: &str,
@@ -1062,7 +1062,7 @@ impl Drop for RunningParakeetServer {
 }
 
 #[cfg(target_os = "windows")]
-struct KillOnCloseJob {
+pub(crate) struct KillOnCloseJob {
     handle: windows_sys::Win32::Foundation::HANDLE,
 }
 
@@ -1078,7 +1078,7 @@ impl Drop for KillOnCloseJob {
 }
 
 #[cfg(target_os = "windows")]
-fn create_kill_on_close_job() -> Result<KillOnCloseJob, String> {
+pub(crate) fn create_kill_on_close_job() -> Result<KillOnCloseJob, String> {
     use windows_sys::Win32::System::JobObjects::{
         CreateJobObjectW, JobObjectExtendedLimitInformation, SetInformationJobObject,
         JOBOBJECT_EXTENDED_LIMIT_INFORMATION, JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE,
@@ -1112,7 +1112,10 @@ fn create_kill_on_close_job() -> Result<KillOnCloseJob, String> {
 }
 
 #[cfg(target_os = "windows")]
-fn assign_process_to_job(job: &KillOnCloseJob, child: &std::process::Child) -> Result<(), String> {
+pub(crate) fn assign_process_to_job(
+    job: &KillOnCloseJob,
+    child: &std::process::Child,
+) -> Result<(), String> {
     use std::os::windows::io::AsRawHandle;
     use windows_sys::Win32::System::JobObjects::AssignProcessToJobObject;
 
@@ -1126,7 +1129,10 @@ fn assign_process_to_job(job: &KillOnCloseJob, child: &std::process::Child) -> R
     Ok(())
 }
 
-fn recover_lock<'a, T>(mutex: &'a std::sync::Mutex<T>, name: &str) -> std::sync::MutexGuard<'a, T> {
+pub(crate) fn recover_lock<'a, T>(
+    mutex: &'a std::sync::Mutex<T>,
+    name: &str,
+) -> std::sync::MutexGuard<'a, T> {
     match mutex.lock() {
         Ok(guard) => guard,
         Err(poisoned) => {
@@ -1141,7 +1147,7 @@ fn recover_lock<'a, T>(mutex: &'a std::sync::Mutex<T>, name: &str) -> std::sync:
     }
 }
 
-fn get_free_port() -> Result<u16, String> {
+pub(crate) fn get_free_port() -> Result<u16, String> {
     let listener = std::net::TcpListener::bind("127.0.0.1:0")
         .map_err(|e| format!("Failed to reserve a local Parakeet port: {e}"))?;
     listener
@@ -1184,7 +1190,7 @@ fn is_routine_parakeet_status_line(line: &str) -> bool {
 /// Owns the two pipe-reader threads of a sidecar plus the diagnostics buffer.
 /// Dropping it joins both readers, so restarts never accumulate threads that
 /// keep blocking on a half-closed pipe.
-struct SidecarPipeReaders {
+pub(crate) struct SidecarPipeReaders {
     diagnostics: SidecarDiagnostics,
     stdout: Option<std::thread::JoinHandle<()>>,
     stderr: Option<std::thread::JoinHandle<()>>,
@@ -1205,7 +1211,7 @@ impl Default for SidecarPipeReaders {
 impl SidecarPipeReaders {
     /// Must be called after the child has been killed/waited: the pipes hit EOF
     /// only once the sidecar is gone, and `join` reaps the reader threads.
-    fn join(&mut self) {
+    pub(crate) fn join(&mut self) {
         for handle in [self.stdout.take(), self.stderr.take()]
             .into_iter()
             .flatten()
@@ -1232,7 +1238,7 @@ fn prevent_pipe_inheritance(pipe: &impl std::os::windows::io::AsRawHandle, name:
     }
 }
 
-fn pipe_child_output(child: &mut std::process::Child) -> SidecarPipeReaders {
+pub(crate) fn pipe_child_output(child: &mut std::process::Child) -> SidecarPipeReaders {
     let diagnostics = std::sync::Arc::new(std::sync::Mutex::new(std::collections::VecDeque::new()));
     let stdout_reader = if let Some(stdout) = child.stdout.take() {
         #[cfg(target_os = "windows")]
@@ -3354,7 +3360,7 @@ pub fn run_punctuation<R: Runtime>(
     Err("Failed to parse punctuation output".to_string())
 }
 
-fn get_short_path(path: &Path) -> Result<PathBuf, String> {
+pub(crate) fn get_short_path(path: &Path) -> Result<PathBuf, String> {
     #[cfg(target_os = "windows")]
     {
         use std::os::windows::ffi::OsStrExt;

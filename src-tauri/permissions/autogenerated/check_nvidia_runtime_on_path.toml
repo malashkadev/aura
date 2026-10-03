@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-check-nvidia-runtime-on-path"
+description = "Enables the check_nvidia_runtime_on_path command without any pre-configured scope."
+commands.allow = ["check_nvidia_runtime_on_path"]
+
+[[permission]]
+identifier = "deny-check-nvidia-runtime-on-path"
+description = "Denies the check_nvidia_runtime_on_path command without any pre-configured scope."
+commands.deny = ["check_nvidia_runtime_on_path"]

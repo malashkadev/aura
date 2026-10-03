@@ -10,6 +10,21 @@
       "repository": "csukuangfj/sherpa-onnx-nemo-parakeet-tdt-0.6b-v3-int8",
       "revision": "2bda32ec70b097a55adaa07d9a7173915b43cc78",
       "metadata_url": "https://huggingface.co/api/models/csukuangfj/sherpa-onnx-nemo-parakeet-tdt-0.6b-v3-int8?blobs=true"
+    },
+    {
+      "repository": "mradermacher/Qwen3-0.6B-GGUF",
+      "revision": "c78cc72f00bd0d5f2d5d61085874f6c99e683f26",
+      "metadata_url": "https://huggingface.co/api/models/mradermacher/Qwen3-0.6B-GGUF?blobs=true"
+    },
+    {
+      "repository": "mradermacher/Qwen3-1.7B-GGUF",
+      "revision": "ca6ba1095f054bcecb6580972236774694b6cdb6",
+      "metadata_url": "https://huggingface.co/api/models/mradermacher/Qwen3-1.7B-GGUF?blobs=true"
+    },
+    {
+      "repository": "Qwen/Qwen3-4B-GGUF",
+      "revision": "bc640142c66e1fdd12af0bd68f40445458f3869b",
+      "metadata_url": "https://huggingface.co/api/models/Qwen/Qwen3-4B-GGUF?blobs=true"
     }
   ],
   "models": [
@@ -112,6 +127,36 @@
       "expected_size": 93939,
       "sha256": "d58544679ea4bc6ac563d1f545eb7d474bd6cfa467f0a6e2c1dc1c7d37e3c35d",
       "enabled": false
+    },
+    {
+      "id": "qwen3-0.6b",
+      "engine": "qwen3",
+      "filename": "Qwen3-0.6B.Q4_K_M.gguf",
+      "revision": "c78cc72f00bd0d5f2d5d61085874f6c99e683f26",
+      "url": "https://huggingface.co/mradermacher/Qwen3-0.6B-GGUF/resolve/c78cc72f00bd0d5f2d5d61085874f6c99e683f26/Qwen3-0.6B.Q4_K_M.gguf",
+      "expected_size": 484220448,
+      "sha256": "870bc8d16bfd608ebe38ef656766c32ee243d9401f360bb492625992bcf1c9e9",
+      "enabled": true
+    },
+    {
+      "id": "qwen3-1.7b",
+      "engine": "qwen3",
+      "filename": "Qwen3-1.7B.Q4_K_M.gguf",
+      "revision": "ca6ba1095f054bcecb6580972236774694b6cdb6",
+      "url": "https://huggingface.co/mradermacher/Qwen3-1.7B-GGUF/resolve/ca6ba1095f054bcecb6580972236774694b6cdb6/Qwen3-1.7B.Q4_K_M.gguf",
+      "expected_size": 1282439712,
+      "sha256": "aa4c262a7411b87aaf58917408d7b613c96d9a4d2a8bbecf726ba516cdec2493",
+      "enabled": true
+    },
+    {
+      "id": "qwen3-4b",
+      "engine": "qwen3",
+      "filename": "Qwen3-4B-Q4_K_M.gguf",
+      "revision": "bc640142c66e1fdd12af0bd68f40445458f3869b",
+      "url": "https://huggingface.co/Qwen/Qwen3-4B-GGUF/resolve/bc640142c66e1fdd12af0bd68f40445458f3869b/Qwen3-4B-Q4_K_M.gguf",
+      "expected_size": 2497280256,
+      "sha256": "7485fe6f11af29433bc51cab58009521f205840f5b4ae3a32fa7f92e8534fdf5",
+      "enabled": true
     }
   ]
 }

@@ -15,7 +15,9 @@ const I18N = {
     inactive: "Выкл",
     back: "Назад в меню",
     opt_auto: "Автоопределение",
-    opt_layout: "По раскладке клавиатуры"
+    opt_layout: "По раскладке клавиатуры",
+    badge_auto: "АВТО",
+    badge_layout: "КЛАВ"
   },
   en: {
     settings: "Open settings",
@@ -29,7 +31,9 @@ const I18N = {
     inactive: "Off",
     back: "Back to menu",
     opt_auto: "Auto-detect",
-    opt_layout: "Follow keyboard layout"
+    opt_layout: "Follow keyboard layout",
+    badge_auto: "AUTO",
+    badge_layout: "KEYB"
   },
   de: {
     settings: "Einstellungen öffnen",
@@ -43,7 +47,9 @@ const I18N = {
     inactive: "Aus",
     back: "Zurück zum Menü",
     opt_auto: "Automatisch",
-    opt_layout: "Nach Tastaturlayout"
+    opt_layout: "Nach Tastaturlayout",
+    badge_auto: "AUTO",
+    badge_layout: "TAST"
   },
   es: {
     settings: "Abrir ajustes",
@@ -57,7 +63,9 @@ const I18N = {
     inactive: "Desactivado",
     back: "Volver al menú",
     opt_auto: "Detección automática",
-    opt_layout: "Por distribución de teclado"
+    opt_layout: "Por distribución de teclado",
+    badge_auto: "AUTO",
+    badge_layout: "TECL"
   },
   fr: {
     settings: "Ouvrir les paramètres",
@@ -71,7 +79,9 @@ const I18N = {
     inactive: "Désactivé",
     back: "Retour au menu",
     opt_auto: "Détection automatique",
-    opt_layout: "Selon la disposition"
+    opt_layout: "Selon la disposition",
+    badge_auto: "AUTO",
+    badge_layout: "CLAV"
   },
   it: {
     settings: "Apri impostazioni",
@@ -85,7 +95,9 @@ const I18N = {
     inactive: "Disattivo",
     back: "Torna al menu",
     opt_auto: "Rilevamento automatico",
-    opt_layout: "Da layout tastiera"
+    opt_layout: "Da layout tastiera",
+    badge_auto: "AUTO",
+    badge_layout: "TAST"
   },
   zh: {
     settings: "打开设置",
@@ -99,7 +111,9 @@ const I18N = {
     inactive: "已关闭",
     back: "返回菜单",
     opt_auto: "自动检测",
-    opt_layout: "按键盘布局"
+    opt_layout: "按键盘布局",
+    badge_auto: "自动",
+    badge_layout: "键盘"
   },
   pt: {
     settings: "Abrir configurações",
@@ -113,7 +127,9 @@ const I18N = {
     inactive: "Desactivado",
     back: "Voltar ao menu",
     opt_auto: "Detecção automática",
-    opt_layout: "Por layout do teclado"
+    opt_layout: "Por layout do teclado",
+    badge_auto: "AUTO",
+    badge_layout: "TECL"
   },
   tr: {
     settings: "Ayarları aç",
@@ -127,7 +143,25 @@ const I18N = {
     inactive: "Kapalı",
     back: "Menüye dön",
     opt_auto: "Otomatik algılama",
-    opt_layout: "Klavye düzenine göre"
+    opt_layout: "Klavye düzenine göre",
+    badge_auto: "OTO",
+    badge_layout: "KLAV"
+  },
+  nl: {
+    settings: "Instellingen openen",
+    recog: "Herkenningsmodus",
+    lang: "Herkenningstaal",
+    cloud: "Cloud AI",
+    local: "Lokale AI",
+    gaming: "Gamingmodus",
+    exit: "Afsluiten",
+    active: "Actief",
+    inactive: "Uit",
+    back: "Terug naar menu",
+    opt_auto: "Automatisch",
+    opt_layout: "Volgens toetsenbordindeling",
+    badge_auto: "AUTO",
+    badge_layout: "TOETS"
   }
 };
 
@@ -145,6 +179,9 @@ const SUPPORTED_LANGS = [
   { code: "tr", name: "Türkçe", badge: "TR" },
   { code: "nl", name: "Nederlands", badge: "NL" }
 ];
+
+const CLOUD_ICON_SVG = '<path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/>';
+const LOCAL_ICON_SVG = '<rect width="20" height="14" x="2" y="3" rx="2"/><line x1="8" x2="16" y1="21" y2="21"/><line x1="12" x2="12" y1="17" y2="21"/>';
 
 let currentSettings = null;
 
@@ -166,6 +203,7 @@ function applyTranslations(lang) {
   const toggleGaming = document.getElementById("toggle-gaming");
   if (toggleGaming) toggleGaming.setAttribute("aria-label", t.gaming);
 
+  updateLanguageBadge((currentSettings && currentSettings.language) || "ru");
   renderLanguageList();
 }
 
@@ -175,13 +213,28 @@ function updateEngineSelection(mode) {
   const subLocal = document.getElementById("sub-local");
   if (subCloud) subCloud.classList.toggle("is-selected", isCloud);
   if (subLocal) subLocal.classList.toggle("is-selected", !isCloud);
+
+  const statusIcon = document.getElementById("recog-status-icon");
+  if (statusIcon) {
+    statusIcon.innerHTML = isCloud ? CLOUD_ICON_SVG : LOCAL_ICON_SVG;
+    statusIcon.setAttribute("title", isCloud ? "Cloud AI" : "Local AI");
+  }
 }
 
 function updateLanguageBadge(code) {
   const badge = document.getElementById("lang-status-badge");
   if (!badge) return;
-  const found = SUPPORTED_LANGS.find(l => l.code === code);
-  badge.textContent = found ? found.badge : (code ? code.toUpperCase() : "RU");
+  const lang = (currentSettings && currentSettings.ui_language) || "ru";
+  const t = I18N[lang] || I18N.ru;
+
+  if (code === "auto") {
+    badge.textContent = t.badge_auto || "AUTO";
+  } else if (code === "layout") {
+    badge.textContent = t.badge_layout || "КЛАВ";
+  } else {
+    const found = SUPPORTED_LANGS.find(l => l.code === code);
+    badge.textContent = found ? found.badge : (code ? code.toUpperCase() : "RU");
+  }
 }
 
 function renderLanguageList() {
@@ -238,13 +291,6 @@ function updateGamingState(isActive) {
   const isGaming = !!isActive;
   const item = document.getElementById("item-gaming");
   if (item) item.classList.toggle("gaming-active", isGaming);
-
-  const badge = document.getElementById("gaming-status-badge");
-  if (badge) {
-    const lang = (currentSettings && currentSettings.ui_language) || "ru";
-    const t = I18N[lang] || I18N.ru;
-    badge.textContent = isGaming ? t.active : t.inactive;
-  }
 }
 
 function switchView(viewName) {

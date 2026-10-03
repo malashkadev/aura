@@ -113,7 +113,7 @@
               <span class="toggle-track">
                 <span class="toggle-thumb"></span>
               </span>
-              <span class="toggle-label" data-i18n="gaming_auto_label">Автоматический игровой режим (D3D/Vulkan)</span>
+              <span class="toggle-label" data-i18n="gaming_auto_label">Автоматический игровой режим</span>
             </label>
 
             <div class="gaming-status-card">
@@ -506,16 +506,134 @@
             </div>
           </div>
 
-          <div class="card" id="card-cloud-functions" style="display: none;">
+          <div class="card" id="card-selection-edit">
             <h2 class="card-title" data-i18n="copy_context_title">Редактирование выделенного текста</h2>
-            <p class="card-desc" data-i18n="copy_context_desc">Если включено, Aura отправляет Ctrl+C и передаёт выделенный текст выбранному облачному провайдеру как контекст для команды редактирования. Отключите эту функцию при работе в терминале.</p>
+            <p class="card-desc" data-i18n="copy_context_desc">Голосовые команды над выделенным текстом: «переведи», «сократи», «исправь грамматику». Обычная диктовка вставляется без изменений. Примечание: программа отправляет Ctrl+C для захвата контекста, отключите при работе в терминале.</p>
             <label class="toggle-switch">
               <input type="checkbox" id="checkbox-selection-edit-enabled" />
               <span class="toggle-track">
                 <span class="toggle-thumb"></span>
               </span>
-              <span class="toggle-label" data-i18n="copy_context_checkbox">Разрешить захват и облачное редактирование выделения</span>
+              <span class="toggle-label" data-i18n="copy_context_checkbox">Разрешить редактирование выделенного текста</span>
             </label>
+
+            <!-- Inner settings container: visible only when the toggle is enabled -->
+            <div id="selection-edit-inner" style="display: none; flex-direction: column; gap: 12px; margin-top: 4px;">
+              <div class="form-group">
+                <label for="select-ai-edit-mode" class="field-label" data-i18n="ai_edit_mode_label">Режим редактирования</label>
+                <div class="select-wrap">
+                  <select id="select-ai-edit-mode" class="custom-select" aria-haspopup="listbox" aria-expanded="false">
+                    <option value="auto" data-i18n="ai_edit_mode_auto">Авто</option>
+                    <option value="local" data-i18n="ai_edit_mode_local">Локальный</option>
+                    <option value="cloud" data-i18n="ai_edit_mode_cloud">Облачный</option>
+                  </select>
+                  <div class="select-panel" id="select-panel-ai-edit-mode" role="listbox"></div>
+                </div>
+                <p class="switch-desc" data-i18n="ai_edit_mode_sub">Авто использует локальную модель при наличии, иначе облачный сервис.</p>
+              </div>
+
+              <div class="form-group" id="group-translate-target">
+                <label for="select-translate-target" class="field-label" data-i18n="translate_target_label">Язык перевода по умолчанию</label>
+                <div class="select-wrap">
+                  <select id="select-translate-target" class="custom-select" aria-haspopup="listbox" aria-expanded="false">
+                    <option value="en">English</option>
+                    <option value="ru">Русский</option>
+                    <option value="de">Deutsch</option>
+                    <option value="es">Español</option>
+                    <option value="fr">Français</option>
+                    <option value="it">Italiano</option>
+                    <option value="zh">中文</option>
+                    <option value="pt">Português</option>
+                    <option value="tr">Türkçe</option>
+                    <option value="nl">Nederlands</option>
+                  </select>
+                  <div class="select-panel" id="select-panel-translate-target" role="listbox"></div>
+                </div>
+                <p class="switch-desc" data-i18n="translate_target_sub">Используется при голосовой команде «переведи» без указания языка.</p>
+              </div>
+
+              <div class="form-group" id="group-llm-models">
+                <label class="field-label" data-i18n="llm_model_label">Локальная модель</label>
+                <div class="model-cards-group" id="llm-model-cards-container" role="radiogroup" aria-label="Выберите локальную модель">
+                  <div class="model-card" data-model="qwen3-0.6b" role="radio" aria-checked="false" tabindex="0">
+                    <div class="model-card-main">
+                      <div class="model-card-info">
+                        <span class="model-name">Qwen3 0.6B</span>
+                        <span class="model-meta" data-i18n="model_meta_llm_0_6b">~460 МБ — минимальная, простые команды</span>
+                      </div>
+                      <div class="model-card-action" id="action-qwen3-0.6b"></div>
+                    </div>
+                    <div class="model-card-progress" id="progress-qwen3-0.6b" style="display: none;">
+                      <div class="progress-bar-bg"><div class="progress-bar-fill" id="fill-qwen3-0.6b"></div></div>
+                      <span class="progress-pct" id="pct-qwen3-0.6b">0%</span>
+                    </div>
+                  </div>
+                  <div class="model-card" data-model="qwen3-1.7b" role="radio" aria-checked="false" tabindex="0">
+                    <div class="model-card-main">
+                      <div class="model-card-info">
+                        <span class="model-name">Qwen3 1.7B</span>
+                        <span class="model-meta" data-i18n="model_meta_llm_1_7b">~1,2 ГБ — сбалансированная</span>
+                      </div>
+                      <div class="model-card-action" id="action-qwen3-1.7b"></div>
+                    </div>
+                    <div class="model-card-progress" id="progress-qwen3-1.7b" style="display: none;">
+                      <div class="progress-bar-bg"><div class="progress-bar-fill" id="fill-qwen3-1.7b"></div></div>
+                      <span class="progress-pct" id="pct-qwen3-1.7b">0%</span>
+                    </div>
+                  </div>
+                  <div class="model-card" data-model="qwen3-4b" role="radio" aria-checked="false" tabindex="0">
+                    <div class="model-card-main">
+                      <div class="model-card-info">
+                        <span class="model-name">Qwen3 4B</span>
+                        <span class="model-meta" data-i18n="model_meta_llm_4b">~2,3 ГБ — максимальное качество</span>
+                      </div>
+                      <div class="model-card-action" id="action-qwen3-4b"></div>
+                    </div>
+                    <div class="model-card-progress" id="progress-qwen3-4b" style="display: none;">
+                      <div class="progress-bar-bg"><div class="progress-bar-fill" id="fill-qwen3-4b"></div></div>
+                      <span class="progress-pct" id="pct-qwen3-4b">0%</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-group" id="group-edit-cloud-provider" style="display: none;">
+                <label for="select-edit-cloud-provider" class="field-label" data-i18n="edit_cloud_provider_label">Облачный сервис</label>
+                <div class="select-wrap">
+                  <select id="select-edit-cloud-provider" class="custom-select" aria-haspopup="listbox" aria-expanded="false">
+                    <option value="gemini">Google Gemini AI</option>
+                    <option value="openai">OpenAI</option>
+                    <option value="groq">Groq</option>
+                    <option value="huggingface">Hugging Face</option>
+                    <option value="custom" data-i18n="provider_opt_custom">Пользовательский сервер</option>
+                  </select>
+                  <div class="select-panel" id="select-panel-edit-cloud-provider" role="listbox"></div>
+                </div>
+                <p class="switch-desc" id="desc-edit-cloud-provider" data-i18n="edit_cloud_provider_sub">Модель, выполняющая команды перевода, сокращения и форматирования текста.</p>
+
+                <div class="form-group" id="edit-custom-provider-url-group" style="display: none; margin-top: 8px;">
+                  <label for="input-edit-custom-url" class="field-label" data-i18n="api_custom_url">Адрес API сервера</label>
+                  <input type="text" id="input-edit-custom-url" class="custom-input" placeholder="https://api.deepinfra.com/v1/openai" autocomplete="off" />
+                </div>
+                <div class="form-group" id="edit-custom-provider-model-group" style="display: none; margin-top: 8px;">
+                  <label for="input-edit-custom-model" class="field-label" data-i18n="api_custom_model">Имя модели</label>
+                  <input type="text" id="input-edit-custom-model" class="custom-input" placeholder="openai/whisper-large-v3-turbo" autocomplete="off" />
+                </div>
+
+                <div class="form-group" style="margin-top: 8px;">
+                  <label for="input-edit-api-key" class="field-label" data-i18n="api_key">API-ключ</label>
+                  <div class="api-key-input-wrapper">
+                    <input type="password" id="input-edit-api-key" class="custom-input" placeholder="Введите ваш API-ключ..." autocomplete="off" />
+                    <button type="button" class="btn-toggle-visibility" id="btn-toggle-key-edit" aria-label="Показать/скрыть ключ">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="eye-icon"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                    </button>
+                  </div>
+                </div>
+                <div class="api-link-wrapper">
+                  <a href="https://aistudio.google.com/" target="_blank" class="help-link" id="link-get-key-edit" data-i18n="api_get_key">Получить ключ API</a>
+                </div>
+              </div>
+            </div>
           </div>
         </section>
 
@@ -635,7 +753,7 @@
               </svg>
             </div>
             <h2 class="about-app-title">AURA</h2>
-            <p class="about-version" data-i18n="about_version">v1.1.1</p>
+            <p class="about-version" data-i18n="about_version">v1.1.2</p>
             <button type="button" id="update-badge" class="update-badge" style="display: none;">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
               <span id="update-badge-text" data-i18n="update_available">Доступно обновление</span>

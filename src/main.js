@@ -102,7 +102,7 @@ const i18nDict = {
     "history_group_today": "Сегодня",
     "history_group_yesterday": "Вчера",
     "about_app_title": "Голосовой ввод Aura",
-    "about_version": "v1.1.1",
+    "about_version": "v1.1.2",
     "about_description": "Инструмент глобального голосового ввода для Windows. Программа переводит речь в текст и вставляет его в любое активное окно с автоматическим форматированием и расстановкой пунктуации.",
     "about_gratitude_text": "Спасибо, что пользуетесь Aura! Если программа делает вашу работу быстрее и удобнее — поддержите проект звездой на GitHub.",
     "btn_star_github": "Поставить звезду на GitHub",
@@ -158,8 +158,25 @@ const i18nDict = {
     "fallback_desc": "Если облачный ИИ недоступен (VPN, блокировка региона, нет сети), автоматически использовать уже скачанную локальную модель для этой записи.",
     "fallback_checkbox": "Включить автопереключение на локальную модель",
     "copy_context_title": "Редактирование выделенного текста",
-    "copy_context_desc": "Если включено, Aura отправляет Ctrl+C и передаёт выделенный текст выбранному облачному провайдеру как контекст для команды редактирования. Отключите эту функцию при работе в терминале.",
-    "copy_context_checkbox": "Разрешить захват и облачное редактирование выделения",
+    "copy_context_desc": "Если включено, Aura отправляет Ctrl+C и передаёт выделенный текст провайдеру или локальной модели как контекст для команды редактирования. Отключите эту функцию при работе в терминале.",
+    "copy_context_checkbox": "Разрешить редактирование выделенного текста",
+    "ai_edit_title": "Команды над выделением",
+    "ai_edit_desc": "Голосовые команды для выделенного текста: «переведи», «сократи», «исправь грамматику». Команда применяется к выделению, обычная диктовка вставляется без изменений.",
+    "ai_edit_mode_label": "Режим редактирования",
+    "ai_edit_mode_auto": "Авто",
+    "ai_edit_mode_cloud": "Облачный",
+    "ai_edit_mode_local": "Локальный",
+    "ai_edit_mode_off": "Выключен",
+    "ai_edit_mode_sub": "Авто использует локальную модель, если она установлена, иначе облачный провайдер. Для команд над выделением включите «Разрешить захват выделения и команды редактирования».",
+    "translate_target_label": "Язык перевода по умолчанию",
+    "translate_target_sub": "Используется при голосовой команде «переведи» без указания языка.",
+    "edit_cloud_provider_label": "Облачный сервис",
+    "edit_cloud_provider_sub": "Модель, выполняющая команды перевода, сокращения и форматирования текста.",
+    "edit_cloud_provider_fallback_sub": "Используется как резервный сервис, если локальная модель не установлена или недоступна.",
+    "llm_model_label": "Локальная модель",
+    "model_meta_llm_0_6b": "~460 МБ — минимальная, простые команды",
+    "model_meta_llm_1_7b": "~1,2 ГБ — сбалансированная",
+    "model_meta_llm_4b": "~2,3 ГБ — максимальное качество",
     "gpu_accel_label": "Локальное аппаратное ускорение",
     "gpu_accel_cpu_title": "CPU (без ускорения)",
     "gpu_accel_cpu_desc": "Стандартный режим. Надёжен, но нагружает процессор.",
@@ -216,7 +233,7 @@ const i18nDict = {
     "gaming_desc": "Автоматическая пауза перехвата клавиш и выгрузка моделей для максимального FPS в играх.",
     "gaming_mode_label": "Игровой режим",
     "gaming_mode_subdesc": "Отключает перехват клавиатуры и выгружает модели из видеопамяти (VRAM).",
-    "gaming_auto_label": "Автоматический игровой режим (D3D/Vulkan)",
+    "gaming_auto_label": "Автоматический игровой режим",
     "gaming_auto_desc": "Приостанавливает горячие клавиши и освобождает видеопамять при запуске полноэкранных 3D-игр.",
     "gaming_status_label": "Текущее состояние",
     "gaming_status_inactive": "Не активен",
@@ -329,7 +346,7 @@ const i18nDict = {
     "history_group_today": "Today",
     "history_group_yesterday": "Yesterday",
     "about_app_title": "Aura Voice Input",
-    "about_version": "v1.1.1",
+    "about_version": "v1.1.2",
     "about_description": "Global voice input tool for Windows. The program transcribes speech to text and inserts it into any active window with automatic formatting and punctuation.",
     "about_gratitude_text": "Thank you for using Aura! If it makes your work faster and easier, please consider supporting the project with a star on GitHub.",
     "btn_star_github": "Star on GitHub",
@@ -385,8 +402,25 @@ const i18nDict = {
     "fallback_desc": "If cloud AI is unavailable (VPN, region block, no network), automatically use the already downloaded local model for this recording.",
     "fallback_checkbox": "Enable automatic fallback to local model",
     "copy_context_title": "Edit selected text",
-    "copy_context_desc": "When enabled, Aura sends Ctrl+C and passes the selected text to the chosen cloud provider as context for an editing command. Disable this feature when working in a terminal.",
-    "copy_context_checkbox": "Allow selection capture and cloud editing",
+    "copy_context_desc": "When enabled, Aura sends Ctrl+C and passes the selected text to the provider or local model as context for an editing command. Disable this feature when working in a terminal.",
+    "copy_context_checkbox": "Enable selected text editing",
+    "ai_edit_title": "Commands on selection",
+    "ai_edit_desc": "Voice commands for the selected text: \"translate\", \"shorten\", \"fix grammar\". A command is applied to the selection; plain dictation is inserted unchanged.",
+    "ai_edit_mode_label": "Editing mode",
+    "ai_edit_mode_auto": "Auto",
+    "ai_edit_mode_cloud": "Cloud",
+    "ai_edit_mode_local": "Local",
+    "ai_edit_mode_off": "Off",
+    "ai_edit_mode_sub": "Auto uses the local model when it is installed, otherwise the cloud provider. For commands on selection, enable \"Allow selection capture and edit commands\".",
+    "translate_target_label": "Default translation language",
+    "translate_target_sub": "Used when saying \"translate\" without specifying a target language.",
+    "edit_cloud_provider_label": "Cloud AI Service",
+    "edit_cloud_provider_sub": "Model executing translation, summarization, and formatting commands.",
+    "edit_cloud_provider_fallback_sub": "Used as a fallback service if the local model is not installed or unavailable.",
+    "llm_model_label": "Local model",
+    "model_meta_llm_0_6b": "~460 MB — smallest, basic commands",
+    "model_meta_llm_1_7b": "~1.2 GB — balanced",
+    "model_meta_llm_4b": "~2.3 GB — best quality",
     "gpu_accel_label": "Local hardware acceleration",
     "gpu_accel_cpu_title": "CPU (no acceleration)",
     "gpu_accel_cpu_desc": "Standard mode. Reliable, but uses more CPU.",
@@ -443,7 +477,7 @@ const i18nDict = {
     "gaming_desc": "Automatically pauses hotkey hooks and unloads models from video memory for maximum FPS in games.",
     "gaming_mode_label": "Gaming Mode",
     "gaming_mode_subdesc": "Disables keyboard hooks and unloads models from video memory (VRAM).",
-    "gaming_auto_label": "Automatic Gaming Mode (D3D/Vulkan)",
+    "gaming_auto_label": "Automatic Gaming Mode",
     "gaming_auto_desc": "Suspends hotkeys and frees video memory (VRAM) when launching fullscreen 3D games.",
     "gaming_status_label": "Current status",
     "gaming_status_inactive": "Inactive",
@@ -566,7 +600,7 @@ const i18nDict = {
     "history_group_today": "Heute",
     "history_group_yesterday": "Gestern",
     "about_app_title": "Aura Spracheingabe",
-    "about_version": "v1.1.1",
+    "about_version": "v1.1.2",
     "about_description": "Globales Spracheingabe-Tool für Windows. Die Anwendung überträgt Sprache in Text und fügt ihn mit automatischer Formatierung und Zeichensetzung in jedes aktive Fenster ein.",
     "about_gratitude_text": "Danke, dass Sie Aura nutzen! Wenn das Tool Ihre Arbeit erleichtert, unterstützen Sie das Projekt gerne mit einem Stern auf GitHub.",
     "btn_star_github": "Stern auf GitHub geben",
@@ -625,8 +659,25 @@ const i18nDict = {
     "fallback_desc": "Wenn die Cloud-KI nicht erreichbar ist (VPN, Regionssperre, kein Netzwerk), automatisch das bereits heruntergeladene lokale Modell für diese Aufnahme verwenden.",
     "fallback_checkbox": "Automatischen Fallback auf lokales Modell aktivieren",
     "copy_context_title": "Ausgewählten Text bearbeiten",
-    "copy_context_desc": "Wenn aktiviert, sendet Aura Strg+C und übermittelt den ausgewählten Text als Kontext für einen Bearbeitungsbefehl an den gewählten Cloud-Anbieter. Deaktivieren Sie diese Funktion bei der Arbeit im Terminal.",
-    "copy_context_checkbox": "Erfassen der Auswahl und Cloud-Bearbeitung zulassen",
+    "copy_context_desc": "Wenn aktiviert, sendet Aura Strg+C und übermittelt den ausgewählten Text als Kontext für einen Bearbeitungsbefehl an den Anbieter oder das lokale Modell. Deaktivieren Sie diese Funktion bei der Arbeit im Terminal.",
+    "copy_context_checkbox": "Bearbeitung des ausgewählten Texts aktivieren",
+    "ai_edit_title": "Befehle für die Auswahl",
+    "ai_edit_desc": "Sprachbefehle für den ausgewählten Text: „übersetzen“, „kürzen“, „Grammatik korrigieren“. Ein Befehl wird auf die Auswahl angewendet; normales Diktat wird unverändert eingefügt.",
+    "ai_edit_mode_label": "Bearbeitungsmodus",
+    "ai_edit_mode_auto": "Auto",
+    "ai_edit_mode_cloud": "Cloud",
+    "ai_edit_mode_local": "Lokal",
+    "ai_edit_mode_off": "Aus",
+    "ai_edit_mode_sub": "Auto verwendet das lokale Modell, wenn es installiert ist, sonst den Cloud-Anbieter. Für Befehle auf die Auswahl aktivieren Sie „Erfassen der Auswahl und Bearbeitungsbefehle zulassen“.",
+    "translate_target_label": "Standard-Zielsprache für Übersetzungen",
+    "translate_target_sub": "Wird verwendet, wenn „übersetze“ ohne Zielangabe gesprochen wird.",
+    "edit_cloud_provider_label": "Cloud-KI-Dienst",
+    "edit_cloud_provider_sub": "Modell zur Ausführung von Befehlen wie Übersetzung, Zusammenfassung und Formatierung.",
+    "edit_cloud_provider_fallback_sub": "Wird als Fallback verwendet, wenn das lokale Modell nicht installiert oder nicht verfügbar ist.",
+    "llm_model_label": "Lokales Modell",
+    "model_meta_llm_0_6b": "~460 MB — kleinste, einfache Befehle",
+    "model_meta_llm_1_7b": "~1,2 GB — ausgewogen",
+    "model_meta_llm_4b": "~2,3 GB — beste Qualität",
     "btn_copy_diagnostics": "Diagnosebericht kopieren",
     "toast_diagnostics_copied": "Diagnosebericht in Zwischenablage kopiert!",
     "diag_speech_text_title": "Sprachtext protokollieren (Entwicklermodus)",
@@ -670,7 +721,7 @@ const i18nDict = {
     "gaming_desc": "Pausiert Tastatur-Hooks automatisch und gibt Videospeicher frei für maximale FPS in Spielen.",
     "gaming_mode_label": "Spielemodus",
     "gaming_mode_subdesc": "Deaktiviert Tastatur-Hooks und entlädt Modelle aus dem Grafikspeicher (VRAM).",
-    "gaming_auto_label": "Automatischer Spielemodus (D3D/Vulkan)",
+    "gaming_auto_label": "Automatischer Spielemodus",
     "gaming_auto_desc": "Pausiert Hotkeys und gibt Videospeicher (VRAM) frei, wenn Vollbild-3D-Spiele gestartet werden.",
     "gaming_status_label": "Aktueller Status",
     "gaming_status_inactive": "Inaktiv",
@@ -780,7 +831,7 @@ const i18nDict = {
     "history_group_today": "Hoy",
     "history_group_yesterday": "Ayer",
     "about_app_title": "Dictado por voz Aura",
-    "about_version": "v1.1.1",
+    "about_version": "v1.1.2",
     "about_description": "Herramienta de entrada de voz global para Windows. El programa transcribe el habla en texto y lo inserta en cualquier ventana activa con formato y puntuación automáticos.",
     "about_gratitude_text": "¡Gracias por usar Aura! Si hace tu trabajo más rápido y cómodo, apoya el proyecto con una estrella en GitHub.",
     "btn_star_github": "Dar una estrella en GitHub",
@@ -852,8 +903,25 @@ const i18nDict = {
     "fallback_desc": "Si la IA en la nube no está disponible (VPN, bloqueo regional, sin red), usar automáticamente el modelo local ya descargado para esta grabación.",
     "fallback_checkbox": "Activar cambio automático al modelo local",
     "copy_context_title": "Editar texto seleccionado",
-    "copy_context_desc": "Cuando está activado, Aura envía Ctrl+C y pasa el texto seleccionado al proveedor en la nube elegido como contexto para una orden de edición. Desactive esta función al trabajar en una terminal.",
-    "copy_context_checkbox": "Permitir captura de selección y edición en la nube",
+    "copy_context_desc": "Cuando está activado, Aura envía Ctrl+C y pasa el texto seleccionado al proveedor o al modelo local como contexto para una orden de edición. Desactive esta función al trabajar en una terminal.",
+    "copy_context_checkbox": "Permitir edición del texto seleccionado",
+    "ai_edit_title": "Órdenes sobre la selección",
+    "ai_edit_desc": "Órdenes por voz para el texto seleccionado: «traducir», «acortar», «corregir gramática». La orden se aplica a la selección; el dictado normal se inserta sin cambios.",
+    "ai_edit_mode_label": "Modo de edición",
+    "ai_edit_mode_auto": "Auto",
+    "ai_edit_mode_cloud": "Nube",
+    "ai_edit_mode_local": "Local",
+    "ai_edit_mode_off": "Desactivado",
+    "ai_edit_mode_sub": "Auto usa el modelo local si está instalado; si no, el proveedor en la nube. Para órdenes sobre la selección, active «Permitir captura de selección y órdenes de edición».",
+    "translate_target_label": "Idioma de traducción predeterminado",
+    "translate_target_sub": "Se utiliza al decir «traduce» sin especificar un idioma de destino.",
+    "edit_cloud_provider_label": "Servicio de IA en la nube",
+    "edit_cloud_provider_sub": "Modelo que ejecuta comandos de traducción, resumen y formato de texto.",
+    "edit_cloud_provider_fallback_sub": "Se utiliza como reserva si el modelo local no está instalado o disponible.",
+    "llm_model_label": "Modelo local",
+    "model_meta_llm_0_6b": "~460 MB — la más pequeña, órdenes básicas",
+    "model_meta_llm_1_7b": "~1,2 GB — equilibrada",
+    "model_meta_llm_4b": "~2,3 GB — máxima calidad",
     "btn_copy_diagnostics": "Copiar informe de diagnóstico",
     "toast_diagnostics_copied": "¡Informe de diagnóstico copiado al portapapeles!",
     "diag_speech_text_title": "Registrar texto de voz (Modo desarrollador)",
@@ -897,7 +965,7 @@ const i18nDict = {
     "gaming_desc": "Pausa automáticamente los ganchos de teclado y descarga modelos de la VRAM para el máximo FPS en juegos.",
     "gaming_mode_label": "Modo de juego",
     "gaming_mode_subdesc": "Desactiva los ganchos de teclado y descarga modelos de la memoria de video (VRAM).",
-    "gaming_auto_label": "Modo de juego automático (D3D/Vulkan)",
+    "gaming_auto_label": "Modo de juego automático",
     "gaming_auto_desc": "Suspende las teclas de acceso rápido y libera memoria de video (VRAM) al iniciar juegos 3D a pantalla completa.",
     "gaming_status_label": "Estado actual",
     "gaming_status_inactive": "Inactivo",
@@ -1007,7 +1075,7 @@ const i18nDict = {
     "history_group_today": "Aujourd'hui",
     "history_group_yesterday": "Hier",
     "about_app_title": "Dictée vocale Aura",
-    "about_version": "v1.1.1",
+    "about_version": "v1.1.2",
     "about_description": "Outil de saisie vocale globale pour Windows. Le programme transcrit la parole en texte et l'insère dans n'importe quelle fenêtre active avec un formatage et une ponctuation automatiques.",
     "about_gratitude_text": "Merci d'utiliser Aura ! Si le programme vous fait gagner du temps, soutenez le projet avec une étoile sur GitHub.",
     "btn_star_github": "Mettre une étoile sur GitHub",
@@ -1079,8 +1147,25 @@ const i18nDict = {
     "fallback_desc": "Si l'IA cloud est indisponible (VPN, blocage régional, pas de réseau), utiliser automatiquement le modèle local déjà téléchargé pour cet enregistrement.",
     "fallback_checkbox": "Activer le basculement automatique vers le modèle local",
     "copy_context_title": "Modifier le texte sélectionné",
-    "copy_context_desc": "Lorsque cette option est activée, Aura envoie Ctrl+C et transmet le texte sélectionné au fournisseur cloud choisi comme contexte d’une commande de modification. Désactivez-la lorsque vous travaillez dans un terminal.",
-    "copy_context_checkbox": "Autoriser la capture de la sélection et la modification dans le cloud",
+    "copy_context_desc": "Lorsque cette option est activée, Aura envoie Ctrl+C et transmet le texte sélectionné au fournisseur ou au modèle local comme contexte d’une commande de modification. Désactivez-la lorsque vous travaillez dans un terminal.",
+    "copy_context_checkbox": "Activer la modification du texte sélectionné",
+    "ai_edit_title": "Commandes sur la sélection",
+    "ai_edit_desc": "Commandes vocales pour le texte sélectionné : « traduire », « raccourcir », « corriger la grammaire ». La commande s’applique à la sélection ; la dictée simple est insérée inchangée.",
+    "ai_edit_mode_label": "Mode de modification",
+    "ai_edit_mode_auto": "Auto",
+    "ai_edit_mode_cloud": "Cloud",
+    "ai_edit_mode_local": "Local",
+    "ai_edit_mode_off": "Désactivé",
+    "ai_edit_mode_sub": "Auto utilise le modèle local s’il est installé, sinon le fournisseur cloud. Pour les commandes sur la sélection, activez « Autoriser la capture de la sélection et les commandes de modification ».",
+    "translate_target_label": "Langue de traduction par défaut",
+    "translate_target_sub": "Utilisée lorsque vous dites « traduis » sans préciser de langue.",
+    "edit_cloud_provider_label": "Service d'IA cloud",
+    "edit_cloud_provider_sub": "Modèle exécutant les commandes de traduction, résumé et mise en forme.",
+    "edit_cloud_provider_fallback_sub": "Utilisé en secours si le modèle local n'est pas installé ou indisponible.",
+    "llm_model_label": "Modèle local",
+    "model_meta_llm_0_6b": "~460 Mo — la plus légère, commandes simples",
+    "model_meta_llm_1_7b": "~1,2 Go — équilibrée",
+    "model_meta_llm_4b": "~2,3 Go — qualité maximale",
     "btn_copy_diagnostics": "Copier le rapport de diagnostic",
     "toast_diagnostics_copied": "Rapport de diagnostic copié dans le presse-papiers !",
     "diag_speech_text_title": "Consigner le texte vocal (Mode développeur)",
@@ -1124,7 +1209,7 @@ const i18nDict = {
     "gaming_desc": "Met en pause automatiquement les hooks clavier et décharge les modèles de la VRAM pour un FPS maximal en jeu.",
     "gaming_mode_label": "Mode Jeu",
     "gaming_mode_subdesc": "Désactive les hooks clavier et décharge les modèles de la mémoire vidéo (VRAM).",
-    "gaming_auto_label": "Mode Jeu automatique (D3D/Vulkan)",
+    "gaming_auto_label": "Mode Jeu automatique",
     "gaming_auto_desc": "Suspend les raccourcis clavier et libère la mémoire vidéo (VRAM) lors du lancement de jeux 3D en plein écran.",
     "gaming_status_label": "État actuel",
     "gaming_status_inactive": "Inactif",
@@ -1234,7 +1319,7 @@ const i18nDict = {
     "history_group_today": "Oggi",
     "history_group_yesterday": "Ieri",
     "about_app_title": "Dettatura vocale Aura",
-    "about_version": "v1.1.1",
+    "about_version": "v1.1.2",
     "about_description": "Strumento di inserimento vocale globale per Windows. Il programma trascrive la voce in testo e la inserisce in qualsiasi finestra attiva con formattazione e punteggiatura automatiche.",
     "about_gratitude_text": "Grazie per aver scelto Aura! Se rende il tuo lavoro più veloce e comodo, sostieni il progetto con una stella su GitHub.",
     "btn_star_github": "Lascia una stella su GitHub",
@@ -1306,8 +1391,25 @@ const i18nDict = {
     "fallback_desc": "Se l'IA cloud non è disponibile (VPN, blocco regionale, nessuna rete), utilizza automaticamente il modello locale già scaricato per questa registrazione.",
     "fallback_checkbox": "Attiva il fallback automatico al modello locale",
     "copy_context_title": "Modifica testo selezionato",
-    "copy_context_desc": "Quando è abilitata, Aura invia Ctrl+C e passa il testo selezionato al provider cloud scelto come contesto per un comando di modifica. Disattiva questa funzione quando lavori in un terminale.",
-    "copy_context_checkbox": "Consenti acquisizione della selezione e modifica nel cloud",
+    "copy_context_desc": "Quando è abilitata, Aura invia Ctrl+C e passa il testo selezionato al provider o al modello locale come contesto per un comando di modifica. Disattiva questa funzione quando lavori in un terminale.",
+    "copy_context_checkbox": "Abilita modifica del testo selezionato",
+    "ai_edit_title": "Comandi sulla selezione",
+    "ai_edit_desc": "Comandi vocali per il testo selezionato: «traduci», «riduci», «correggi la grammatica». Il comando si applica alla selezione; la dettatura semplice viene inserita invariata.",
+    "ai_edit_mode_label": "Modalità di modifica",
+    "ai_edit_mode_auto": "Auto",
+    "ai_edit_mode_cloud": "Cloud",
+    "ai_edit_mode_local": "Locale",
+    "ai_edit_mode_off": "Disattivo",
+    "ai_edit_mode_sub": "Auto usa il modello locale se installato, altrimenti il provider cloud. Per i comandi sulla selezione, attiva «Consenti acquisizione della selezione e comandi di modifica».",
+    "translate_target_label": "Lingua di traduzione predefinita",
+    "translate_target_sub": "Utilizzata quando pronunci «traduci» senza specificare una lingua.",
+    "edit_cloud_provider_label": "Servizio IA cloud",
+    "edit_cloud_provider_sub": "Modello che esegue comandi di traduzione, riassunto e formattazione.",
+    "edit_cloud_provider_fallback_sub": "Utilizzato come fallback se il modello locale non è installato o disponibile.",
+    "llm_model_label": "Modello locale",
+    "model_meta_llm_0_6b": "~460 MB — più leggera, comandi semplici",
+    "model_meta_llm_1_7b": "~1,2 GB — bilanciata",
+    "model_meta_llm_4b": "~2,3 GB — qualità massima",
     "btn_copy_diagnostics": "Copia rapporto diagnostico",
     "toast_diagnostics_copied": "Rapporto diagnostico copiato negli appunti!",
     "diag_speech_text_title": "Registra testo vocale (Modalità sviluppatore)",
@@ -1351,7 +1453,7 @@ const i18nDict = {
     "gaming_desc": "Mette in pausa automaticamente gli hook della tastiera e scarica i modelli dalla VRAM per il massimo FPS nei giochi.",
     "gaming_mode_label": "Modalità Gioco",
     "gaming_mode_subdesc": "Disattiva gli hook della tastiera e scarica i modelli dalla memoria video (VRAM).",
-    "gaming_auto_label": "Modalità Gioco automatica (D3D/Vulkan)",
+    "gaming_auto_label": "Modalità Gioco automatica",
     "gaming_auto_desc": "Sospende i tasti di scelta rapida e libera la memoria video (VRAM) all'avvio di giochi 3D a schermo intero.",
     "gaming_status_label": "Stato attuale",
     "gaming_status_inactive": "Inattivo",
@@ -1461,7 +1563,7 @@ const i18nDict = {
     "history_group_today": "今天",
     "history_group_yesterday": "昨天",
     "about_app_title": "Aura 智能语音输入",
-    "about_version": "v1.1.1",
+    "about_version": "v1.1.2",
     "about_description": "适用于 Windows 的全局语音输入工具。本程序可以将语音转录为文本，并以自动格式和标点符号插入到任何活动窗口中。",
     "about_gratitude_text": "感谢您使用 Aura！如果它让您的输入更高效便捷，欢迎在 GitHub 上为本项目点亮一颗星。",
     "btn_star_github": "在 GitHub 上点亮 Star",
@@ -1533,8 +1635,25 @@ const i18nDict = {
     "fallback_desc": "当云端 AI 不可用时（VPN、地区限制、无网络），自动使用已下载的本地模型进行本次录音识别。",
     "fallback_checkbox": "启用自动回退至本地模型",
     "copy_context_title": "编辑选中文本",
-    "copy_context_desc": "启用后，Aura 会发送 Ctrl+C，并将选中文本作为编辑指令的上下文传给所选云服务提供商。在终端中工作时请关闭此功能。",
-    "copy_context_checkbox": "允许捕获选区并在云端编辑",
+    "copy_context_desc": "启用后，Aura 会发送 Ctrl+C，并将选中文本作为编辑指令的上下文传给服务提供商或本地模型。在终端中工作时请关闭此功能。",
+    "copy_context_checkbox": "启用选中文本编辑",
+    "ai_edit_title": "选区指令",
+    "ai_edit_desc": "针对选中文本的语音指令：“翻译”、“缩短”、“修正语法”。指令作用于选区；普通听写原样插入。",
+    "ai_edit_mode_label": "编辑模式",
+    "ai_edit_mode_auto": "自动",
+    "ai_edit_mode_cloud": "云端",
+    "ai_edit_mode_local": "本地",
+    "ai_edit_mode_off": "关闭",
+    "ai_edit_mode_sub": "自动模式在已安装本地模型时使用本地模型，否则使用云端服务。要使用选区指令，请开启“允许捕获选区和编辑指令”。",
+    "translate_target_label": "默认翻译目标语言",
+    "translate_target_sub": "当语音指令仅为“翻译”且未指定语言时使用。",
+    "edit_cloud_provider_label": "云端 AI 服务",
+    "edit_cloud_provider_sub": "执行翻译、精简和格式化指令的云端模型。",
+    "edit_cloud_provider_fallback_sub": "当本地模型未安装或不可用时作为备用服务。",
+    "llm_model_label": "本地模型",
+    "model_meta_llm_0_6b": "~460 MB — 最小，基础指令",
+    "model_meta_llm_1_7b": "~1.2 GB — 均衡",
+    "model_meta_llm_4b": "~2.3 GB — 最佳质量",
     "btn_copy_diagnostics": "复制诊断报告",
     "toast_diagnostics_copied": "诊断报告已复制到剪贴板！",
     "diag_speech_text_title": "记录语音文本（开发者模式）",
@@ -1578,7 +1697,7 @@ const i18nDict = {
     "gaming_desc": "自动暂停按键拦截并从显存中卸载模型，以保证游戏中的最高帧率。",
     "gaming_mode_label": "游戏模式",
     "gaming_mode_subdesc": "禁用键盘钩子并从显存中卸载模型。",
-    "gaming_auto_label": "全屏 3D 游戏自动检测 (D3D/Vulkan)",
+    "gaming_auto_label": "全屏 3D 游戏自动检测",
     "gaming_auto_desc": "启动全屏 3D 游戏时暂停快捷键并释放显存 (VRAM)。",
     "gaming_status_label": "当前状态",
     "gaming_status_inactive": "未激活",
@@ -1688,7 +1807,7 @@ const i18nDict = {
     "history_group_today": "Hoje",
     "history_group_yesterday": "Ontem",
     "about_app_title": "Ditado de voz Aura",
-    "about_version": "v1.1.1",
+    "about_version": "v1.1.2",
     "about_description": "Ferramenta de entrada de voz global para Windows. O programa transcreve a fala em texto e a insere em qualquer janela ativa com formatação e pontuação automáticas.",
     "about_gratitude_text": "Obrigado por usar o Aura! Se ele torna seu dia a dia mais ágil, apoie o projeto com uma estrela no GitHub.",
     "btn_star_github": "Dar uma estrela no GitHub",
@@ -1760,8 +1879,25 @@ const i18nDict = {
     "fallback_desc": "Se a IA na nuvem estiver indisponível (VPN, bloqueio regional, sem rede), usar automaticamente o modelo local já baixado para esta gravação.",
     "fallback_checkbox": "Ativar fallback automático para modelo local",
     "copy_context_title": "Editar texto selecionado",
-    "copy_context_desc": "Quando ativado, o Aura envia Ctrl+C e encaminha o texto selecionado ao provedor de nuvem escolhido como contexto para um comando de edição. Desative este recurso ao trabalhar em um terminal.",
-    "copy_context_checkbox": "Permitir captura da seleção e edição na nuvem",
+    "copy_context_desc": "Quando ativado, o Aura envia Ctrl+C e encaminha o texto selecionado ao provedor ou ao modelo local como contexto para um comando de edição. Desative este recurso ao trabalhar em um terminal.",
+    "copy_context_checkbox": "Ativar edição de texto selecionado",
+    "ai_edit_title": "Comandos sobre a seleção",
+    "ai_edit_desc": "Comandos de voz para o texto selecionado: «traduzir», «encurtar», \"corrigir gramática». O comando é aplicado à seleção; a ditado comum é inserida sem alterações.",
+    "ai_edit_mode_label": "Modo de edição",
+    "ai_edit_mode_auto": "Auto",
+    "ai_edit_mode_cloud": "Nuvem",
+    "ai_edit_mode_local": "Local",
+    "ai_edit_mode_off": "Desativado",
+    "ai_edit_mode_sub": "Auto usa o modelo local se estiver instalado; caso contrário, o provedor de nuvem. Para comandos sobre a seleção, ative «Permitir captura da seleção e comandos de edição».",
+    "translate_target_label": "Idioma padrão para tradução",
+    "translate_target_sub": "Usado ao dizer «traduza» sem especificar um idioma de destino.",
+    "edit_cloud_provider_label": "Serviço de IA na nuvem",
+    "edit_cloud_provider_sub": "Modelo que executa comandos de tradução, resumo e formatação.",
+    "edit_cloud_provider_fallback_sub": "Usado como contingência se o modelo local não estiver instalado ou disponível.",
+    "llm_model_label": "Modelo local",
+    "model_meta_llm_0_6b": "~460 MB — o menor, comandos básicos",
+    "model_meta_llm_1_7b": "~1,2 GB — equilibrada",
+    "model_meta_llm_4b": "~2,3 GB — qualidade máxima",
     "btn_copy_diagnostics": "Copiar relatório de diagnóstico",
     "toast_diagnostics_copied": "Relatório de diagnóstico copiado para a área de transferência!",
     "diag_speech_text_title": "Registrar texto de voz (Modo desenvolvedor)",
@@ -1805,7 +1941,7 @@ const i18nDict = {
     "gaming_desc": "Pausa automaticamente os ganchos de teclado e descarrega modelos da VRAM para FPS máximo em jogos.",
     "gaming_mode_label": "Modo de Jogo",
     "gaming_mode_subdesc": "Desativa ganchos de teclado e descarrega modelos da memória de vídeo (VRAM).",
-    "gaming_auto_label": "Modo de Jogo Automático (D3D/Vulkan)",
+    "gaming_auto_label": "Modo de Jogo Automático",
     "gaming_auto_desc": "Suspende as teclas de atalho e libera memória de vídeo (VRAM) ao iniciar jogos 3D em tela cheia.",
     "gaming_status_label": "Status atual",
     "gaming_status_inactive": "Inativo",
@@ -1915,7 +2051,7 @@ const i18nDict = {
     "history_group_today": "Bugün",
     "history_group_yesterday": "Dün",
     "about_app_title": "Aura Sesli Giriş",
-    "about_version": "v1.1.1",
+    "about_version": "v1.1.2",
     "about_description": "Windows için genel sesli giriş aracı. Program, konuşmayı metne dönüştürür ve otomatik biçimlendirme ve noktalama işaretleriyle herhangi bir aktif pencereye ekler.",
     "about_gratitude_text": "Aura'yı kullandığınız için teşekkürler! Çalışmanızı hızlandırıyorsa, projeyi GitHub'da yıldızlayarak destekleyebilirsiniz.",
     "btn_star_github": "GitHub'da Yıldız Ver",
@@ -1987,8 +2123,25 @@ const i18nDict = {
     "fallback_desc": "Bulut yapay zekası kullanılamıyorsa (VPN, bölge engeli, ağ yok), bu kayıt için önceden indirilmiş yerel modeli otomatik olarak kullan.",
     "fallback_checkbox": "Yerel modele otomatik geçişi etkinleştir",
     "copy_context_title": "Seçili metni düzenle",
-    "copy_context_desc": "Etkinleştirildiğinde Aura, Ctrl+C gönderir ve seçili metni bir düzenleme komutu için bağlam olarak seçilen bulut sağlayıcısına iletir. Terminalde çalışırken bu özelliği devre dışı bırakın.",
-    "copy_context_checkbox": "Seçimi yakalamaya ve bulutta düzenlemeye izin ver",
+    "copy_context_desc": "Etkinleştirildiğinde Aura, Ctrl+C gönderir ve seçili metni bir düzenleme komutu için bağlam olarak seçilen bulut sağlayıcısına veya yerel modele iletir. Terminalde çalışırken bu özelliği devre dışı bırakın.",
+    "copy_context_checkbox": "Seçili metni düzenlemeyi etkinleştir",
+    "ai_edit_title": "Seçim üzerinde komutlar",
+    "ai_edit_desc": "Seçili metin için sesli komutlar: «çevir», «kısalt», «dilbilgisini düzelt». Komut seçime uygulanır; normal dikte olduğu gibi eklenir.",
+    "ai_edit_mode_label": "Düzenleme modu",
+    "ai_edit_mode_auto": "Otomatik",
+    "ai_edit_mode_cloud": "Bulut",
+    "ai_edit_mode_local": "Yerel",
+    "ai_edit_mode_off": "Kapalı",
+    "ai_edit_mode_sub": "Otomatik, yerel model kuruluysa onu kullanır; değilse bulut sağlayıcısını kullanır. Seçim komutları için «Seçim yakalamaya ve düzenleme komutlarına izin ver» seçeneğini etkinleştirin.",
+    "translate_target_label": "Varsayılan çeviri dili",
+    "translate_target_sub": "Hedef dil belirtilmeden «çevir» komutu verildiğinde kullanılır.",
+    "edit_cloud_provider_label": "Bulut Yapay Zeka Servisi",
+    "edit_cloud_provider_sub": "Metin çeviri, özetleme ve biçimlendirme komutlarını yürüten model.",
+    "edit_cloud_provider_fallback_sub": "Yerel model kurulu değilse veya kullanılamıyorsa yedek olarak kullanılır.",
+    "llm_model_label": "Yerel model",
+    "model_meta_llm_0_6b": "~460 MB — en küçük, temel komutlar",
+    "model_meta_llm_1_7b": "~1,2 GB — dengeli",
+    "model_meta_llm_4b": "~2,3 GB — en iyi kalite",
     "btn_copy_diagnostics": "Teşhis Raporunu Kopyala",
     "toast_diagnostics_copied": "Teşhis raporu panoya kopyalandı!",
     "diag_speech_text_title": "Konuşma Metnini Günlüğe Kaydet (Geliştirici Modu)",
@@ -2032,7 +2185,7 @@ const i18nDict = {
     "gaming_desc": "Oyunlarda maksimum FPS için klavye kancalarını otomatik duraklatır ve modelleri video belleğinden kaldırır.",
     "gaming_mode_label": "Oyun Modu",
     "gaming_mode_subdesc": "Klavye kancalarını devre dışı bırakır ve modelleri video belleğinden (VRAM) kaldırır.",
-    "gaming_auto_label": "Otomatik Oyun Modu (D3D/Vulkan)",
+    "gaming_auto_label": "Otomatik Oyun Modu",
     "gaming_auto_desc": "Tam ekran 3D oyunlar başlatıldığında kısayol tuşlarını askıya alır ve video belleğini (VRAM) serbest bırakır.",
     "gaming_status_label": "Mevcut durum",
     "gaming_status_inactive": "Etkin değil",
@@ -2250,6 +2403,7 @@ function getTranslation(key, params = {}) {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
+  let isMicTesting = false;
   // Navigation tabs follow the WAI-ARIA tab pattern and remain native buttons.
   const tabs = document.querySelectorAll(".nav-tab");
   const panels = document.querySelectorAll(".tab-panel");
@@ -2308,14 +2462,12 @@ const radioCloud = document.getElementById("radio-cloud");
     const langCard = document.getElementById("card-language");
     const localEngineSection = document.getElementById("local-engine-section");
     const apiKeysCard = document.getElementById("card-api-keys");
-    const cloudFunctionsCard = document.getElementById("card-cloud-functions");
 
     if (radioLocal.checked) {
       if (localEngineSection) localEngineSection.style.display = "flex";
       updateLocalEngineUI();
       if (fallbackCard) fallbackCard.style.display = "none";
       if (apiKeysCard) apiKeysCard.style.display = "none";
-      if (cloudFunctionsCard) cloudFunctionsCard.style.display = "none";
     } else {
       if (localEngineSection) localEngineSection.style.display = "none";
       if (apiKeysCard) apiKeysCard.style.display = "flex";
@@ -2323,9 +2475,6 @@ const radioCloud = document.getElementById("radio-cloud");
       if (langCard) langCard.style.display = "none";
       if (vocabCard) vocabCard.style.display = "none";
       if (streamingCard) streamingCard.style.display = "none";
-
-      const isHuggingFace = selectProvider && selectProvider.value === "huggingface";
-      if (cloudFunctionsCard) cloudFunctionsCard.style.display = isHuggingFace ? "none" : "flex";
     }
   }
 
@@ -2434,6 +2583,7 @@ async function refreshEngineHealth() {
 
   // Dynamic API Key Links
   const linkGetKey = document.getElementById("link-get-key");
+  const linkGetKeyEdit = document.getElementById("link-get-key-edit");
   const providerLinks = {
     gemini: { url: "https://aistudio.google.com/", name: "Google AI Studio" },
     openai: { url: "https://platform.openai.com/api-keys", name: "OpenAI Platform" },
@@ -2444,9 +2594,14 @@ async function refreshEngineHealth() {
   function updateApiKeyLink() {
     const prov = selectProvider ? selectProvider.value : "gemini";
     const info = providerLinks[prov] || providerLinks.gemini;
+    const text = getTranslation("api_get_key_pattern", { name: info.name });
     if (linkGetKey) {
       linkGetKey.href = info.url;
-      linkGetKey.textContent = getTranslation("api_get_key_pattern", { name: info.name });
+      linkGetKey.textContent = text;
+    }
+    if (linkGetKeyEdit) {
+      linkGetKeyEdit.href = info.url;
+      linkGetKeyEdit.textContent = text;
     }
   }
 
@@ -2454,8 +2609,12 @@ async function refreshEngineHealth() {
     const isCustom = selectProvider && selectProvider.value === "custom";
     const urlGroup = document.getElementById("custom-provider-url-group");
     const modelGroup = document.getElementById("custom-provider-model-group");
+    const editUrlGroup = document.getElementById("edit-custom-provider-url-group");
+    const editModelGroup = document.getElementById("edit-custom-provider-model-group");
     if (urlGroup) urlGroup.style.display = isCustom ? "flex" : "none";
     if (modelGroup) modelGroup.style.display = isCustom ? "flex" : "none";
+    if (editUrlGroup) editUrlGroup.style.display = isCustom ? "flex" : "none";
+    if (editModelGroup) editModelGroup.style.display = isCustom ? "flex" : "none";
   }
 
   document.addEventListener("click", (e) => {
@@ -2468,6 +2627,13 @@ async function refreshEngineHealth() {
 
   // Settings elements
   const selectProvider = document.getElementById("select-provider");
+  const selectEditCloudProvider = document.getElementById("select-edit-cloud-provider");
+  const apiKeyInputEdit = document.getElementById("input-edit-api-key");
+  const toggleKeyEditBtn = document.getElementById("btn-toggle-key-edit");
+  const inputCustomUrl = document.getElementById("input-custom-url");
+  const inputCustomModel = document.getElementById("input-custom-model");
+  const inputEditCustomUrl = document.getElementById("input-edit-custom-url");
+  const inputEditCustomModel = document.getElementById("input-edit-custom-model");
   const selectHotkey = document.getElementById("input-hotkey");
   const selectLanguage = document.getElementById("select-language");
   const textareaDictionary = document.getElementById("textarea-dictionary");
@@ -2481,6 +2647,14 @@ const btnSaveSettings = document.getElementById("btn-save-settings");
   
   const checkboxSounds = document.getElementById("checkbox-sounds");
   const checkboxCopyContext = document.getElementById("checkbox-selection-edit-enabled");
+  const selectAiEditMode = document.getElementById("select-ai-edit-mode");
+  const selectTranslateTarget = document.getElementById("select-translate-target");
+  const selectionEditInner = document.getElementById("selection-edit-inner");
+  const syncSelectionEditInner = () => {
+    if (selectionEditInner && checkboxCopyContext) {
+      selectionEditInner.style.display = checkboxCopyContext.checked ? "flex" : "none";
+    }
+  };
   const selectSoundTheme = document.getElementById("select-sound-theme");
   const rangeVolume = document.getElementById("range-sound-volume");
   const volumeLabel = document.getElementById("volume-value-label");
@@ -2701,29 +2875,103 @@ const btnSaveSettings = document.getElementById("btn-save-settings");
     huggingface: false,
     custom: false
   };
-  let previousSelProvider = selectProvider.value;
+  let previousSelProvider = selectProvider ? selectProvider.value : "gemini";
 
   function renderProviderKeyInput() {
-    const provider = selectProvider.value;
-    apiKeyInput.value = apiKeys[provider] || "";
-const providerDict = i18nDict[currentLanguage] || i18nDict.ru;
-    apiKeyInput.placeholder = apiKeyPresent[provider]
+    const provider = selectProvider ? selectProvider.value : "gemini";
+    const val = apiKeys[provider] || "";
+    const providerDict = i18nDict[currentLanguage] || i18nDict.ru;
+    const placeholder = apiKeyPresent[provider]
       ? providerDict.key_saved_placeholder || "•••••••• (saved securely)"
       : providerDict.key_placeholder || "Enter API key";
+
+    if (apiKeyInput) {
+      apiKeyInput.value = val;
+      apiKeyInput.placeholder = placeholder;
+    }
+    if (apiKeyInputEdit) {
+      apiKeyInputEdit.value = val;
+      apiKeyInputEdit.placeholder = placeholder;
+    }
   }
 
-  apiKeyInput.addEventListener("input", () => {
-    const provider = selectProvider.value;
-    apiKeys[provider] = apiKeyInput.value;
-    apiKeyDirty[provider] = true;
-  });
+  function handleProviderChange(newProvider) {
+    if (apiKeyInput) apiKeys[previousSelProvider] = apiKeyInput.value;
+    previousSelProvider = newProvider;
+    if (selectProvider && selectProvider.value !== newProvider) {
+      selectProvider.value = newProvider;
+      syncPanelSelection(selectProvider);
+    }
+    if (selectEditCloudProvider && selectEditCloudProvider.value !== newProvider) {
+      selectEditCloudProvider.value = newProvider;
+      syncPanelSelection(selectEditCloudProvider);
+    }
+    renderProviderKeyInput();
+    updateApiKeyLink();
+    updateCustomProviderUI();
+    updateEngineUI();
+    markSettingsModified(true);
+  }
+
+  if (apiKeyInput) {
+    apiKeyInput.addEventListener("input", () => {
+      const provider = selectProvider ? selectProvider.value : "gemini";
+      apiKeys[provider] = apiKeyInput.value;
+      apiKeyDirty[provider] = true;
+      if (apiKeyInputEdit) apiKeyInputEdit.value = apiKeyInput.value;
+    });
+  }
+
+  if (apiKeyInputEdit) {
+    apiKeyInputEdit.addEventListener("input", () => {
+      const provider = selectProvider ? selectProvider.value : (selectEditCloudProvider ? selectEditCloudProvider.value : "gemini");
+      apiKeys[provider] = apiKeyInputEdit.value;
+      apiKeyDirty[provider] = true;
+      if (apiKeyInput) apiKeyInput.value = apiKeyInputEdit.value;
+    });
+  }
+
+  if (toggleKeyEditBtn && apiKeyInputEdit) {
+    toggleKeyEditBtn.addEventListener("click", () => {
+      if (apiKeyInputEdit.type === "password") {
+        apiKeyInputEdit.type = "text";
+        toggleKeyEditBtn.classList.add("visible");
+      } else {
+        apiKeyInputEdit.type = "password";
+        toggleKeyEditBtn.classList.remove("visible");
+      }
+    });
+  }
+
+  if (inputEditCustomUrl && inputCustomUrl) {
+    inputEditCustomUrl.addEventListener("input", () => {
+      inputCustomUrl.value = inputEditCustomUrl.value;
+      markSettingsModified(false);
+    });
+    inputCustomUrl.addEventListener("input", () => {
+      inputEditCustomUrl.value = inputCustomUrl.value;
+    });
+  }
+
+  if (inputEditCustomModel && inputCustomModel) {
+    inputEditCustomModel.addEventListener("input", () => {
+      inputCustomModel.value = inputEditCustomModel.value;
+      markSettingsModified(false);
+    });
+    inputCustomModel.addEventListener("input", () => {
+      inputEditCustomModel.value = inputCustomModel.value;
+    });
+  }
 
   if (selectProvider) {
     selectProvider.addEventListener("change", () => {
-      updateApiKeyLink();
-      updateCustomProviderUI();
-      renderProviderKeyInput();
-      updateEngineUI();
+      handleProviderChange(selectProvider.value);
+    });
+  }
+
+  if (selectEditCloudProvider) {
+    selectEditCloudProvider.addEventListener("change", () => {
+      handleProviderChange(selectEditCloudProvider.value);
     });
   }
   
@@ -2731,6 +2979,7 @@ const providerDict = i18nDict[currentLanguage] || i18nDict.ru;
 
   let selectedModelName = "base";
   let lastSelectedWhisperModel = "large-v3-turbo-q5_0";
+  let selectedLlmModel = "qwen3-1.7b";
   let activeLocalAcceleration = "cpu";
 
   let settingsModified = false;
@@ -2876,12 +3125,15 @@ const providerDict = i18nDict[currentLanguage] || i18nDict.ru;
     const inputCustomModel = document.getElementById("input-custom-model");
     const checkboxGamingAuto = document.getElementById("checkbox-gaming-mode-auto-detect");
     const selectVramStandby = document.getElementById("select-vram-standby");
+
+    const groupLlmModels = document.getElementById("group-llm-models");
     const inputs = [
-      radioCloud, radioLocal, selectProvider, apiKeyInput, inputCustomUrl, inputCustomModel, selectHotkey,
+      radioCloud, radioLocal, selectProvider, selectEditCloudProvider, apiKeyInput, apiKeyInputEdit,
+      inputCustomUrl, inputEditCustomUrl, inputCustomModel, inputEditCustomModel, selectHotkey,
       selectLanguage, textareaDictionary, checkboxToggle, checkboxCloudFallback,
       checkboxAutostart, checkboxAutomaticUpdateChecks, checkboxStreaming, checkboxSounds,
       selectSoundTheme, rangeVolume, selectLocalEngine, checkboxCopyContext, checkboxLogSpeechText,
-      checkboxOverlayTimer, checkboxGamingAuto, selectVramStandby
+      checkboxOverlayTimer, checkboxGamingAuto, selectVramStandby, selectAiEditMode, selectTranslateTarget
     ];
     inputs.forEach(input => {
       if (input) {
@@ -2892,6 +3144,35 @@ const providerDict = i18nDict[currentLanguage] || i18nDict.ru;
         }
       }
     });
+
+    const syncLlmGroupVisibility = () => {
+      const groupCloud = document.getElementById("group-edit-cloud-provider");
+      const descCloud = document.getElementById("desc-edit-cloud-provider");
+      if (selectAiEditMode) {
+        const mode = selectAiEditMode.value;
+        const needsLocal = mode === "auto" || mode === "local";
+        const needsCloud = mode === "auto" || mode === "cloud";
+        if (groupLlmModels) {
+          groupLlmModels.style.display = needsLocal ? "" : "none";
+        }
+        if (groupCloud) {
+          groupCloud.style.display = needsCloud ? "" : "none";
+        }
+        if (descCloud) {
+          descCloud.textContent = mode === "auto"
+            ? getTranslation("edit_cloud_provider_fallback_sub")
+            : getTranslation("edit_cloud_provider_sub");
+        }
+      }
+    };
+    if (selectAiEditMode) {
+      selectAiEditMode.addEventListener("change", syncLlmGroupVisibility);
+      syncLlmGroupVisibility();
+    }
+    if (checkboxCopyContext) {
+      checkboxCopyContext.addEventListener("change", syncSelectionEditInner);
+      syncSelectionEditInner();
+    }
 
     const btnToggleGaming = document.getElementById("btn-toggle-gaming-mode");
     const checkboxGamingMode = document.getElementById("checkbox-gaming-mode");
@@ -3010,6 +3291,23 @@ const providerDict = i18nDict[currentLanguage] || i18nDict.ru;
     if (model === "punctuation") {
       return;
     }
+    if (model.startsWith("qwen3-")) {
+      // Local edit models are a separate setting (settings.llm_model); they
+      // must never overwrite the ASR model_name selection.
+      if (selectedLlmModel !== model) {
+        selectedLlmModel = model;
+        markSettingsModified(true);
+      }
+      modelCards.forEach(c => {
+        if (!c.dataset.model.startsWith("qwen3-")) {
+          return;
+        }
+        const isCurrent = c.dataset.model === model;
+        c.classList.toggle("active", isCurrent);
+        c.setAttribute("aria-checked", isCurrent ? "true" : "false");
+      });
+      return;
+    }
     if (model !== "parakeet-v3") {
       lastSelectedWhisperModel = model;
     }
@@ -3018,6 +3316,9 @@ const providerDict = i18nDict[currentLanguage] || i18nDict.ru;
       markSettingsModified(true);
     }
     modelCards.forEach(c => {
+      if (c.dataset.model.startsWith("qwen3-")) {
+        return;
+      }
       const isCurrent = c.dataset.model === model;
       c.classList.toggle("active", isCurrent);
       c.setAttribute("aria-checked", isCurrent ? "true" : "false");
@@ -3042,6 +3343,38 @@ const providerDict = i18nDict[currentLanguage] || i18nDict.ru;
           lastSelectedWhisperModel = settings.model_name;
         }
         selectModelCard(settings.model_name || "base");
+        if (typeof settings.ai_edit_mode === "string") {
+          const aiEditSelect = document.getElementById("select-ai-edit-mode");
+          if (aiEditSelect) {
+            aiEditSelect.value = settings.ai_edit_mode === "off" ? "auto" : settings.ai_edit_mode;
+            syncPanelSelection(aiEditSelect);
+            const groupLlm = document.getElementById("group-llm-models");
+            const groupCloud = document.getElementById("group-edit-cloud-provider");
+            const descCloud = document.getElementById("desc-edit-cloud-provider");
+            const mode = aiEditSelect.value;
+            const needsLocal = mode === "auto" || mode === "local";
+            const needsCloud = mode === "auto" || mode === "cloud";
+            if (groupLlm) {
+              groupLlm.style.display = needsLocal ? "" : "none";
+            }
+            if (groupCloud) {
+              groupCloud.style.display = needsCloud ? "" : "none";
+            }
+            if (descCloud) {
+              descCloud.textContent = mode === "auto"
+                ? getTranslation("edit_cloud_provider_fallback_sub")
+                : getTranslation("edit_cloud_provider_sub");
+            }
+          }
+        }
+        if (selectTranslateTarget) {
+          selectTranslateTarget.value = settings.translate_default_target || "en";
+          syncPanelSelection(selectTranslateTarget);
+        }
+        if (typeof settings.llm_model === "string" && settings.llm_model.startsWith("qwen3-")) {
+          selectedLlmModel = settings.llm_model;
+        }
+        selectModelCard(selectedLlmModel);
         apiKeys = { gemini: "", openai: "", groq: "", huggingface: "", custom: "" };
         apiKeyDirty = { gemini: false, openai: false, groq: false, huggingface: false, custom: false };
         apiKeyPresent = {
@@ -3054,15 +3387,27 @@ const providerDict = i18nDict[currentLanguage] || i18nDict.ru;
 
         selectProvider.value = settings.api_provider || "gemini";
         previousSelProvider = selectProvider.value;
+        if (selectEditCloudProvider) {
+          selectEditCloudProvider.value = selectProvider.value;
+          syncPanelSelection(selectEditCloudProvider);
+        }
         renderProviderKeyInput();
         updateApiKeyLink();
         const inputCustomUrl = document.getElementById("input-custom-url");
         if (inputCustomUrl) {
           inputCustomUrl.value = settings.custom_api_url || "https://api.deepinfra.com/v1/openai";
         }
+        const inputEditCustomUrl = document.getElementById("input-edit-custom-url");
+        if (inputEditCustomUrl) {
+          inputEditCustomUrl.value = settings.custom_api_url || "https://api.deepinfra.com/v1/openai";
+        }
         const inputCustomModel = document.getElementById("input-custom-model");
         if (inputCustomModel) {
           inputCustomModel.value = settings.custom_model_name || "openai/whisper-large-v3-turbo";
+        }
+        const inputEditCustomModel = document.getElementById("input-edit-custom-model");
+        if (inputEditCustomModel) {
+          inputEditCustomModel.value = settings.custom_model_name || "openai/whisper-large-v3-turbo";
         }
         updateCustomProviderUI();
         if (selectHotkey) {
@@ -3101,7 +3446,8 @@ const providerDict = i18nDict[currentLanguage] || i18nDict.ru;
   }
   if (checkboxCopyContext) {
 
-    checkboxCopyContext.checked = !!settings.copy_context_on_start;
+    checkboxCopyContext.checked = settings.ai_edit_mode !== "off" && !!settings.copy_context_on_start;
+    syncSelectionEditInner();
   }
         const checkboxLogSpeechText = document.getElementById("setting-log-speech-text");
         if (checkboxLogSpeechText) {
@@ -3211,21 +3557,27 @@ modelCards.forEach(card => {
               </svg>
               <span data-i18n="model_status_ready">${dict.model_status_ready || "Установлено"}</span>
             </span>
-            <button type="button" class="btn-delete-card-model" title="${dict.model_action_delete || "Удалить"}" data-model="${model}">
-              <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+            <button type="button" class="btn-delete-card-model" title="${dict.model_action_delete || "Удалить"}" aria-label="${dict.model_action_delete || "Удалить"}" data-model="${model}">
+              <svg class="btn-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
             </button>
           `;
           // Bind click to the delete button
-          actionEl.querySelector(".btn-delete-card-model").addEventListener("click", () => deleteModelCard(model));
+          actionEl.querySelector(".btn-delete-card-model").addEventListener("click", (e) => {
+            e.stopPropagation();
+            deleteModelCard(model);
+          });
         } else {
           actionEl.innerHTML = `
             <button type="button" class="btn-download-card-model" data-model="${model}">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="btn-icon"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+              <svg class="btn-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
               ${dict.model_action_download || "Скачать"}
             </button>
           `;
 // Bind click to the download button
-          actionEl.querySelector(".btn-download-card-model").addEventListener("click", () => downloadModelCard(model));
+          actionEl.querySelector(".btn-download-card-model").addEventListener("click", (e) => {
+            e.stopPropagation();
+            downloadModelCard(model);
+          });
         }
       });
       refreshEngineHealth();
@@ -3311,7 +3663,14 @@ modelCards.forEach(card => {
       const el = document.getElementById("select-vram-standby");
       return el ? (parseInt(el.value, 10) || 0) : 30;
     })(),
-    text_replacements: currentReplacements
+    text_replacements: currentReplacements,
+    ai_edit_mode: (() => {
+      const el = document.getElementById("select-ai-edit-mode");
+      if (!checkboxCopyContext || !checkboxCopyContext.checked) return "off";
+      return el ? el.value : "auto";
+    })(),
+    translate_default_target: selectTranslateTarget ? selectTranslateTarget.value : "en",
+    llm_model: selectedLlmModel
   };
 
 await invoke("set_settings", { settings });
@@ -3382,6 +3741,7 @@ async function downloadModelCard(model) {
     const fillEl = document.getElementById(`fill-${model}`);
     const pctEl = document.getElementById(`pct-${model}`);
     const modelAtStart = selectedModelName;
+    const llmAtStart = selectedLlmModel;
 
     try {
       showStatus(getTranslation("model_downloading_pattern", { model }));
@@ -3419,8 +3779,14 @@ async function downloadModelCard(model) {
 
       await invoke("download_model_command", { modelName: model });
       // Only auto-select when the user has not picked a different model
-      // during the (potentially long) download.
-      if (model !== "punctuation" && selectedModelName === modelAtStart) {
+      // during the (potentially long) download. LLM cards write to a
+      // different setting (llm_model), so they compare against their own
+      // snapshot instead of the speech model.
+      const isLlmCard = model.startsWith("qwen3-");
+      const selectionUntouched = isLlmCard
+        ? selectedLlmModel === llmAtStart
+        : selectedModelName === modelAtStart;
+      if (model !== "punctuation" && selectionUntouched) {
         selectModelCard(model);
       }
     } catch (err) {
@@ -3465,11 +3831,26 @@ async function downloadModelCard(model) {
       showStatus(getTranslation("model_deleting_pattern", { model }));
       await invoke("delete_model_command", { modelName: model });
       
-showStatus(getTranslation("model_deleted_success"));
+      showStatus(getTranslation("model_deleted_success"));
       if (model === "parakeet-v3" && selectLocalEngine?.value === "parakeet") {
         selectLocalEngine.value = "whisper";
         updateLocalEngineUI();
         markSettingsModified();
+      }
+      // A deleted local edit model can still be the selected one. Move the
+      // selection to a model that is still installed so the saved setting
+      // never points at a file that no longer exists.
+      if (model.startsWith("qwen3-") && selectedLlmModel === model) {
+        try {
+          const downloaded = await invoke("get_downloaded_models");
+          const replacement = (Array.isArray(downloaded) ? downloaded : []).find(
+            id => id.startsWith("qwen3-") && id !== model
+          );
+          selectModelCard(replacement || "qwen3-1.7b");
+          markSettingsModified(true);
+        } catch (err) {
+          console.error("Failed to reselect local edit model", err);
+        }
       }
       await refreshDownloadedModels();
     } catch (err) {
@@ -3590,8 +3971,8 @@ showStatus(getTranslation("model_deleted_success"));
             <svg class="status-ready-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
             <span data-i18n="model_status_ready">${dict.model_status_ready || "Установлено"}</span>
           </span>
-          <button type="button" class="btn-delete-card-model" title="${dict.model_action_delete || "Удалить"}" data-gpu="${provider}">
-            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+          <button type="button" class="btn-delete-card-model" title="${dict.model_action_delete || "Удалить"}" aria-label="${dict.model_action_delete || "Удалить"}" data-gpu="${provider}">
+            <svg class="btn-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
           </button>
         `;
         actionEl.querySelector(".btn-delete-card-model").addEventListener("click", (e) => {
@@ -3601,7 +3982,7 @@ showStatus(getTranslation("model_deleted_success"));
       } else {
         actionEl.innerHTML = `
           <button type="button" class="btn-download-card-model" data-gpu="${provider}">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="btn-icon"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+            <svg class="btn-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
             ${dict.model_action_download || "Скачать"}
           </button>
         `;
@@ -3921,14 +4302,7 @@ card.addEventListener("keydown", async (e) => {
   if (btnSaveSettings) {
     btnSaveSettings.addEventListener("click", saveSettings);
   }
-  selectProvider.addEventListener("change", () => {
-    // Keep only unsaved drafts in memory; stored keys are never returned by IPC.
-    apiKeys[previousSelProvider] = apiKeyInput.value;
-    previousSelProvider = selectProvider.value;
-    renderProviderKeyInput();
-    updateApiKeyLink();
-    updateCustomProviderUI();
-  });
+
 
   // Window controls via Tauri IPC commands
   const btnWindowMinimize = document.getElementById("btn-window-minimize");
@@ -4012,6 +4386,13 @@ if (e.button === 0 && !e.target.closest(".window-control-btn") && !e.target.clos
       btnToggleKey.setAttribute("title", toggleKeyText);
     }
 
+    const btnToggleKeyEdit = document.getElementById("btn-toggle-key-edit");
+    if (btnToggleKeyEdit) {
+      const toggleKeyText = dict.api_key_toggle_visibility || "Show/hide key";
+      btnToggleKeyEdit.setAttribute("aria-label", toggleKeyText);
+      btnToggleKeyEdit.setAttribute("title", toggleKeyText);
+    }
+
     const historyFiltersGroup = document.querySelector(".history-filter-pills");
     if (historyFiltersGroup) {
       historyFiltersGroup.setAttribute("aria-label", dict.history_filters_label || "History filters");
@@ -4020,6 +4401,11 @@ if (e.button === 0 && !e.target.closest(".window-control-btn") && !e.target.clos
     const gpuModesGroup = document.querySelector(".gpu-modes-grid");
     if (gpuModesGroup) {
       gpuModesGroup.setAttribute("aria-label", dict.gpu_accel_label || "Hardware acceleration");
+    }
+
+    const llmModelsGroup = document.getElementById("llm-model-cards-container");
+    if (llmModelsGroup) {
+      llmModelsGroup.setAttribute("aria-label", dict.llm_model_label || "Local model");
     }
 
     const modelsGridGroup = document.querySelector(".models-grid");
@@ -4037,6 +4423,17 @@ if (e.button === 0 && !e.target.closest(".window-control-btn") && !e.target.clos
     const apiInput = document.getElementById("input-api-key");
     if (apiInput) {
       apiInput.placeholder = dict.api_key_placeholder || "";
+    }
+    const apiInputEdit = document.getElementById("input-edit-api-key");
+    if (apiInputEdit) {
+      apiInputEdit.placeholder = dict.api_key_placeholder || "";
+    }
+    const descCloud = document.getElementById("desc-edit-cloud-provider");
+    const aiEditSelect = document.getElementById("select-ai-edit-mode");
+    if (descCloud && aiEditSelect) {
+      descCloud.textContent = aiEditSelect.value === "auto"
+        ? (dict.edit_cloud_provider_fallback_sub || getTranslation("edit_cloud_provider_fallback_sub"))
+        : (dict.edit_cloud_provider_sub || getTranslation("edit_cloud_provider_sub"));
     }
     const dictionaryTextarea = document.getElementById("textarea-dictionary");
     if (dictionaryTextarea) {
@@ -4064,8 +4461,9 @@ if (e.button === 0 && !e.target.closest(".window-control-btn") && !e.target.clos
       updateGamingModeUi(checkboxGamingMode.checked);
     }
     
-    // Update dynamic link text
+    // Update dynamic link text and provider key placeholders
     updateApiKeyLink();
+    renderProviderKeyInput();
     
     // Refresh model cards status/actions
     refreshDownloadedModels();
@@ -4092,7 +4490,6 @@ if (e.button === 0 && !e.target.closest(".window-control-btn") && !e.target.clos
   const micMeterPeak = document.getElementById("mic-meter-peak");
   const micVadIndicator = document.getElementById("mic-vad-indicator");
   const micVadText = document.getElementById("mic-vad-text");
-  let isMicTesting = false;
   let rawVolumeTarget = 0;
   let smoothedVolume = 0;
   let peakVolume = 0;

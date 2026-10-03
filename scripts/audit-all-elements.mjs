@@ -59,7 +59,19 @@ while ((btnMatch = buttonRegex.exec(html)) !== null) {
         // Has title or aria
         const text = title || aria;
         // Is it localized in main.js?
-        const mainSetsTitleOrAria = mainJs.includes(id) && (mainJs.includes(`${id}.setAttribute("title"`) || mainJs.includes(`${id}.setAttribute("aria-label"`) || mainJs.includes(`${id}.title`) || mainJs.includes(`${id}.ariaLabel`));
+        const varNames = [
+          ...mainJs.matchAll(new RegExp(`(?:const|let|var|\\b)\\s*([a-zA-Z0-9_$]+)\\s*=\\s*document\\.getElementById\\(["']${id}["']\\)`, "g"))
+        ].map(m => m[1]);
+        varNames.push(id);
+
+        const mainSetsTitleOrAria = varNames.some(varName =>
+          mainJs.includes(`${varName}.setAttribute("title"`) ||
+          mainJs.includes(`${varName}.setAttribute("aria-label"`) ||
+          mainJs.includes(`${varName}.title`) ||
+          mainJs.includes(`${varName}.ariaLabel`)
+        ) || mainJs.includes(`getElementById("${id}").setAttribute("title"`) ||
+             mainJs.includes(`getElementById("${id}").setAttribute("aria-label"`);
+
         if (!mainSetsTitleOrAria) {
           buttonIssues.push({ id, cls, issue: `Icon-only button has static attribute "${text}" never updated when language changes` });
         }
@@ -98,9 +110,22 @@ while ((inpMatch = inputRegex.exec(html)) !== null) {
     continue;
   }
 
+  // Technical URLs/model strings do not require i18n
+  if (placeholder && (placeholder.startsWith("http") || placeholder.startsWith("openai/"))) {
+    continue;
+  }
+
   if (placeholder && !dataI18n) {
     // Check if updated in main.js
-    const isUpdatedInMain = mainJs.includes(id) && mainJs.includes(`${id}.placeholder`);
+    const varNames = [
+      ...mainJs.matchAll(new RegExp(`(?:const|let|var|\\b)\\s*([a-zA-Z0-9_$]+)\\s*=\\s*document\\.getElementById\\(["']${id}["']\\)`, "g"))
+    ].map(m => m[1]);
+    varNames.push(id);
+
+    const isUpdatedInMain = varNames.some(varName =>
+      mainJs.includes(`${varName}.placeholder`)
+    ) || mainJs.includes(`getElementById("${id}").placeholder`);
+
     if (!isUpdatedInMain) {
       inputIssues.push({ id, type, issue: `Placeholder "${placeholder}" is static and not in data-i18n or main.js` });
     }

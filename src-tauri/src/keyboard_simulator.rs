@@ -203,16 +203,41 @@ mod windows_impl {
                     "keyboard replacement interrupted before Unicode batch".to_string(),
                 ));
             }
-            let end = (dispatched + REPLACEMENT_BATCH_UNITS).min(units.len());
-            for (i, &unit) in units[dispatched..end].iter().enumerate() {
-                let mut inputs = Vec::with_capacity(2);
-                append_key_pair(&mut inputs, 0, unit, KEYEVENTF_UNICODE);
+            let mut end = (dispatched + REPLACEMENT_BATCH_UNITS).min(units.len());
+            // If batch boundary cuts between a surrogate pair, include the low surrogate
+            // so the surrogate pair is never split across batch boundaries.
+            if end < units.len()
+                && (0xD800..=0xDBFF).contains(&units[end - 1])
+                && (0xDC00..=0xDFFF).contains(&units[end])
+            {
+                end += 1;
+            }
+
+            let mut idx = dispatched;
+            while idx < end {
+                let unit = units[idx];
+                let is_surrogate_pair = (0xD800..=0xDBFF).contains(&unit)
+                    && idx + 1 < units.len()
+                    && (0xDC00..=0xDFFF).contains(&units[idx + 1]);
+
+                let (units_to_send, mut inputs) = if is_surrogate_pair {
+                    let mut inp = Vec::with_capacity(4);
+                    append_key_pair(&mut inp, 0, unit, KEYEVENTF_UNICODE);
+                    append_key_pair(&mut inp, 0, units[idx + 1], KEYEVENTF_UNICODE);
+                    (2usize, inp)
+                } else {
+                    let mut inp = Vec::with_capacity(2);
+                    append_key_pair(&mut inp, 0, unit, KEYEVENTF_UNICODE);
+                    (1usize, inp)
+                };
+
                 if let Err((inserted, message)) = send_input_batch(&mut inputs, "Unicode batch") {
-                    return Err((dispatched + i + inserted / 2, message));
+                    return Err((idx + (inserted / 2).min(units_to_send), message));
                 }
-                let current_total = dispatched + i + 1;
-                if current_total < units.len() {
-                    let delay = if current_total.is_multiple_of(15) {
+
+                idx += units_to_send;
+                if idx < units.len() {
+                    let delay = if idx.is_multiple_of(15) {
                         10
                     } else {
                         1
@@ -517,9 +542,29 @@ mod windows_impl {
             for (index, ch) in text.chars().enumerate() {
                 let mut buf = [0; 2];
                 let utf16_chars = ch.encode_utf16(&mut buf);
-                for &mut val in utf16_chars {
+                if utf16_chars.len() == 2 {
+                    let mut inputs = [std::mem::zeroed::<INPUT>(); 4];
+                    for (i, &val) in utf16_chars.iter().enumerate() {
+                        inputs[i * 2].r#type = INPUT_KEYBOARD;
+                        inputs[i * 2].Anonymous.ki = KEYBDINPUT {
+                            wVk: 0,
+                            wScan: val,
+                            dwFlags: KEYEVENTF_UNICODE,
+                            time: 0,
+                            dwExtraInfo: 0,
+                        };
+                        inputs[i * 2 + 1].r#type = INPUT_KEYBOARD;
+                        inputs[i * 2 + 1].Anonymous.ki = KEYBDINPUT {
+                            wVk: 0,
+                            wScan: val,
+                            dwFlags: KEYEVENTF_UNICODE | KEYEVENTF_KEYUP,
+                            time: 0,
+                            dwExtraInfo: 0,
+                        };
+                    }
+                    SendInput(4, inputs.as_mut_ptr(), std::mem::size_of::<INPUT>() as i32);
+                } else if let Some(&val) = utf16_chars.first() {
                     let mut inputs = [std::mem::zeroed::<INPUT>(); 2];
-
                     inputs[0].r#type = INPUT_KEYBOARD;
                     inputs[0].Anonymous.ki = KEYBDINPUT {
                         wVk: 0,
@@ -528,7 +573,6 @@ mod windows_impl {
                         time: 0,
                         dwExtraInfo: 0,
                     };
-
                     inputs[1].r#type = INPUT_KEYBOARD;
                     inputs[1].Anonymous.ki = KEYBDINPUT {
                         wVk: 0,
@@ -537,11 +581,10 @@ mod windows_impl {
                         time: 0,
                         dwExtraInfo: 0,
                     };
-
                     SendInput(2, inputs.as_mut_ptr(), std::mem::size_of::<INPUT>() as i32);
-                    let delay = if (index + 1) % 15 == 0 { 10 } else { 1 };
-                    std::thread::sleep(std::time::Duration::from_millis(delay));
                 }
+                let delay = if (index + 1) % 15 == 0 { 10 } else { 1 };
+                std::thread::sleep(std::time::Duration::from_millis(delay));
             }
         }
         restore_modifiers(&released);
@@ -1076,5 +1119,14 @@ mod tests {
         assert!(target_a.is_compatible_with(&target_b));
         assert!(target_a.is_compatible_with(&target_c));
         assert!(!target_a.is_compatible_with(&target_other));
+    }
+
+    #[test]
+    fn surrogate_pair_at_batch_boundary_is_not_split() {
+        let text = format!("{}😀", "a".repeat(REPLACEMENT_BATCH_UNITS - 1));
+        let utf16_units: Vec<u16> = text.encode_utf16().collect();
+        assert_eq!(utf16_units.len(), REPLACEMENT_BATCH_UNITS + 1);
+        assert!((0xD800..=0xDBFF).contains(&utf16_units[REPLACEMENT_BATCH_UNITS - 1]));
+        assert!((0xDC00..=0xDFFF).contains(&utf16_units[REPLACEMENT_BATCH_UNITS]));
     }
 }

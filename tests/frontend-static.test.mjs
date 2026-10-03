@@ -366,3 +366,124 @@ test("website describes provider data flow and unsigned installer honestly", () 
     assert.equal(statSync(hostedInstaller).size, publishedArtifact.bytes, "hosted installer size must match manifest");
   }
 });
+
+test("tab keyboard navigation advances through tabs on arrow keys and wraps correctly", async () => {
+  const { bindTabKeyboardNavigation } = await import("../src/ui-accessibility.js");
+
+  class MockTab {
+    constructor(id, visible = true) {
+      this.id = id;
+      this.offsetParent = visible ? {} : null;
+      this.listeners = {};
+      this.focused = false;
+    }
+    addEventListener(event, fn) {
+      this.listeners[event] = fn;
+    }
+    focus() {
+      this.focused = true;
+    }
+    dispatchKey(key) {
+      let defaultPrevented = false;
+      const event = {
+        key,
+        preventDefault: () => {
+          defaultPrevented = true;
+        },
+      };
+      if (this.listeners.keydown) {
+        this.listeners.keydown(event);
+      }
+      return defaultPrevented;
+    }
+  }
+
+  const tab0 = new MockTab("tab0", true);
+  const tab1 = new MockTab("tab1", true);
+  const tab2 = new MockTab("tab2", false); // hidden
+  const tab3 = new MockTab("tab3", true);
+  const tabs = [tab0, tab1, tab2, tab3];
+
+  let activatedTab = null;
+  bindTabKeyboardNavigation(tabs, (tab) => {
+    activatedTab = tab;
+  });
+
+  // ArrowRight from tab0 must advance to tab1 (not stay on tab0)
+  assert.ok(tab0.dispatchKey("ArrowRight"));
+  assert.equal(activatedTab, tab1);
+  assert.equal(tab1.focused, true);
+
+  // ArrowRight from tab1 must skip hidden tab2 and activate tab3
+  activatedTab = null;
+  assert.ok(tab1.dispatchKey("ArrowRight"));
+  assert.equal(activatedTab, tab3);
+
+  // ArrowRight from tab3 wraps back to tab0
+  activatedTab = null;
+  assert.ok(tab3.dispatchKey("ArrowRight"));
+  assert.equal(activatedTab, tab0);
+
+  // ArrowLeft from tab0 wraps back to tab3 (skipping hidden tab2)
+  activatedTab = null;
+  assert.ok(tab0.dispatchKey("ArrowLeft"));
+  assert.equal(activatedTab, tab3);
+
+  // Home key activates tab0
+  activatedTab = null;
+  assert.ok(tab3.dispatchKey("Home"));
+  assert.equal(activatedTab, tab0);
+
+  // End key activates tab3
+  activatedTab = null;
+  assert.ok(tab0.dispatchKey("End"));
+  assert.equal(activatedTab, tab3);
+});
+
+test("model card actions render visible download icons and delete buttons with defined dimensions", () => {
+  const main = read("src/main.js");
+  const css = read("src/style.css");
+
+  // CSS must explicitly define .btn-icon and button SVG sizing so flex containers never collapse icons to 0x0
+  assert.match(css, /\.btn-icon\s*\{[^}]*width:\s*14px;[^}]*height:\s*14px;/);
+  assert.match(css, /\.btn-delete-card-model\s*\{[^}]*width:\s*28px;[^}]*height:\s*28px;/);
+  assert.match(css, /\.btn-download-card-model\s*\{[^}]*display:\s*inline-flex;/);
+
+  // main.js must include explicit SVG dimensions and aria-labels for download and delete buttons
+  assert.match(main, /class="btn-delete-card-model"[^>]*title="[^"]+"[^>]*aria-label="[^"]+"/);
+  assert.match(main, /<svg class="btn-icon" width="14" height="14"/);
+  assert.match(main, /actionEl\.querySelector\("\.btn-delete-card-model"\)\.addEventListener\("click",\s*\(e\)\s*=>/);
+});
+
+test("typography reset and button font consistency across application UI", () => {
+  const css = read("src/style.css");
+  const trayCss = read("src/tray-menu.css");
+  const overlayHtml = read("src/overlay.html");
+
+  // Form controls must inherit font family to avoid browser default Arial/MS Sans Serif
+  assert.match(
+    css,
+    /button,\s*input,\s*select,\s*textarea\s*\{[^}]*font-family:\s*inherit;/
+  );
+  assert.match(trayCss, /button\s*\{[^}]*font-family:\s*inherit;/);
+
+  // Model card download button must explicitly use var(--font-display) with semi-bold weight
+  assert.match(
+    css,
+    /\.btn-download-card-model\s*\{[^}]*font-family:\s*var\(--font-display\);[^}]*font-weight:\s*600;/
+  );
+
+  // Secondary buttons, star button, gaming button must use var(--font-display)
+  assert.match(
+    css,
+    /\.btn-secondary\s*\{[^}]*font-family:\s*var\(--font-display\);[^}]*font-weight:\s*600;/
+  );
+  assert.match(
+    css,
+    /\.btn-github-star\s*\{[^}]*font-family:\s*var\(--font-display\);[^}]*font-weight:\s*600;/
+  );
+
+  // Overlay status must use Segoe UI Variable font stack
+  assert.match(overlayHtml, /#overlay-status\s*\{[^}]*font-family:\s*"Segoe UI Variable Text"/);
+});
+

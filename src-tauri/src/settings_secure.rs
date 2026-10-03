@@ -19,9 +19,14 @@ const ALLOWED_MODELS: &[&str] = &[
     "parakeet-v3",
 ];
 const ALLOWED_ENGINES: &[&str] = &["whisper", "parakeet"];
+const ALLOWED_AI_EDIT_MODES: &[&str] = &["auto", "cloud", "local", "off"];
+const ALLOWED_LLM_MODELS: &[&str] = &["qwen3-0.6b", "qwen3-1.7b", "qwen3-4b"];
 const ALLOWED_ACCELERATION: &[&str] = &["cpu", "cuda"];
 const ALLOWED_LANGUAGES: &[&str] = &[
     "auto", "layout", "ru", "en", "de", "es", "fr", "it", "zh", "pt", "tr", "nl",
+];
+const ALLOWED_TRANSLATE_TARGETS: &[&str] = &[
+    "en", "ru", "de", "es", "fr", "it", "zh", "pt", "tr", "nl",
 ];
 const ALLOWED_UI_LANGUAGES: &[&str] = &["ru", "en", "de", "es", "fr", "it", "zh", "pt", "tr"];
 const ALLOWED_SOUND_THEMES: &[&str] = &["zen", "rhodes", "scifi", "classic", "bubble", "haptic"];
@@ -82,6 +87,16 @@ pub struct Settings {
     pub cloud_fallback_enabled: bool,
     pub local_engine: String,
     pub copy_context_on_start: bool,
+    /// Where commands on selected text run: "auto" (local model when
+    /// installed, otherwise cloud), "cloud", "local" or "off".
+    #[serde(default = "default_ai_edit_mode")]
+    pub ai_edit_mode: String,
+    /// Local Qwen3 model used when the edit route resolves to "local".
+    #[serde(default = "default_llm_model")]
+    pub llm_model: String,
+    /// Default target language for bare "переведи" / "translate" commands.
+    #[serde(default = "default_translate_default_target")]
+    pub translate_default_target: String,
     pub local_acceleration: String,
     pub log_speech_text: bool,
     pub overlay_show_timer: bool,
@@ -106,6 +121,18 @@ pub struct TextReplacement {
 
 fn default_vram_standby_timeout_mins() -> u32 {
     30
+}
+
+fn default_ai_edit_mode() -> String {
+    "auto".to_string()
+}
+
+fn default_llm_model() -> String {
+    "qwen3-1.7b".to_string()
+}
+
+fn default_translate_default_target() -> String {
+    "en".to_string()
 }
 
 fn default_audio_device() -> String {
@@ -141,6 +168,9 @@ impl Default for Settings {
             cloud_fallback_enabled: true,
             local_engine: "whisper".to_string(),
             copy_context_on_start: false,
+            ai_edit_mode: default_ai_edit_mode(),
+            llm_model: default_llm_model(),
+            translate_default_target: default_translate_default_target(),
             local_acceleration: "cpu".to_string(),
             log_speech_text: false,
             overlay_show_timer: true,
@@ -177,6 +207,13 @@ impl Settings {
             ALLOWED_MODES,
         )?;
         validate_choice("API provider", &self.api_provider, ALLOWED_PROVIDERS)?;
+        validate_choice("AI edit mode", &self.ai_edit_mode, ALLOWED_AI_EDIT_MODES)?;
+        validate_choice("local editing model", &self.llm_model, ALLOWED_LLM_MODELS)?;
+        validate_choice(
+            "default translation target language",
+            &self.translate_default_target,
+            ALLOWED_TRANSLATE_TARGETS,
+        )?;
         validate_choice("model", &self.model_name, ALLOWED_MODELS)?;
         validate_choice("local engine", &self.local_engine, ALLOWED_ENGINES)?;
         validate_choice(
@@ -669,6 +706,8 @@ mod tests {
         assert_eq!(settings.local_acceleration, "cpu");
         assert!(!settings.log_speech_text);
         assert_eq!(settings.active_api_key(), "");
+        assert_eq!(settings.ai_edit_mode, "auto");
+        assert_eq!(settings.llm_model, "qwen3-1.7b");
         settings.validate().unwrap();
     }
 
@@ -736,6 +775,24 @@ mod tests {
             ..Settings::default()
         };
         assert!(invalid_dictionary.validate().is_err());
+
+        let invalid_edit_mode = Settings {
+            ai_edit_mode: "sometimes".to_string(),
+            ..Settings::default()
+        };
+        assert!(invalid_edit_mode.validate().is_err());
+
+        let invalid_llm_model = Settings {
+            llm_model: "qwen3-8b".to_string(),
+            ..Settings::default()
+        };
+        assert!(invalid_llm_model.validate().is_err());
+
+        let invalid_translate_target = Settings {
+            translate_default_target: "japanese".to_string(),
+            ..Settings::default()
+        };
+        assert!(invalid_translate_target.validate().is_err());
     }
 
     #[test]

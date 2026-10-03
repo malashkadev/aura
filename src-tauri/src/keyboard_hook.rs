@@ -490,7 +490,9 @@ mod windows_impl {
             let is_target_key = key_vk != 0 && vk_code == key_vk;
 
             if key_vk == 0 && is_required_modifier {
-                let event_modifier = event_modifier.expect("required modifiers have a bit");
+                let Some(event_modifier) = event_modifier else {
+                    return CallNextHookEx(0, code, wparam, lparam);
+                };
                 if is_down {
                     let already_active = SHORTCUT_ACTIVE.load(Ordering::SeqCst);
                     if !already_active && modifiers_satisfied(modifier_mask, vk_code, true) {

@@ -1,7 +1,7 @@
 /* Aura Desktop Tray Menu Styles */
 :root {
-  --font-display: "Segoe UI Variable Display", "Segoe UI", -apple-system, sans-serif;
-  --font-sans: "Segoe UI Variable Text", "Segoe UI", -apple-system, sans-serif;
+  --font-display: "Segoe UI Variable Display", "Segoe UI", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --font-sans: "Segoe UI Variable Text", "Segoe UI", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
 
   /* Desktop App Native Dark Graphite Palette */
   --bg-menu: #0a0a0c;
@@ -30,6 +30,12 @@
   margin: 0;
   padding: 0;
   user-select: none;
+}
+
+button {
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
 }
 
 html, body {
@@ -232,7 +238,25 @@ html, body {
   opacity: 1;
 }
 
-/* Gaming Mode Status Badge */
+/* Recognition Status Icon */
+.recog-status-icon {
+  width: 14px;
+  height: 14px;
+  color: #717684;
+  flex-shrink: 0;
+  margin-left: auto;
+  margin-right: 6px;
+  opacity: 0.85;
+  transition: color 0.12s ease, opacity 0.12s ease;
+}
+
+.aura-menu-item:hover .recog-status-icon,
+.aura-menu-item:focus-visible .recog-status-icon {
+  color: #ffffff;
+  opacity: 1;
+}
+
+/* Gaming Mode Status Badge (legacy fallback if present) */
 .gaming-status-badge {
   font-size: 10.5px;
   font-weight: 600;
@@ -264,6 +288,7 @@ html, body {
   border-radius: var(--radius-full);
   position: relative;
   flex-shrink: 0;
+  margin-left: auto;
   transition: background-color 0.15s ease, border-color 0.15s ease;
 }
 

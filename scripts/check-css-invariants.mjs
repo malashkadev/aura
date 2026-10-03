@@ -1,8 +1,11 @@
-import { readFileSync } from "node:fs";
+import { readFileSync, existsSync } from "node:fs";
 
 const read = (p) => readFileSync(p, "utf8");
 
-const cssFiles = ["src/style.css", "src/tray-menu.css", "src/overlay.css"];
+const cssFiles = ["src/style.css", "src/tray-menu.css"];
+if (existsSync("src/overlay.css")) {
+  cssFiles.push("src/overlay.css");
+}
 
 console.log("=== CHECKING CSS INVARIANTS & ZERO SHADOWS/GLOWS ===");
 

@@ -346,7 +346,11 @@ function applyActiveThemeSettings(settings) {
   soundTheme = settings.overlay_sound_theme || "zen";
   soundVolume = typeof settings.overlay_sound_volume === "number" ? settings.overlay_sound_volume : 0.8;
   overlayShowTimer = settings.overlay_show_timer !== false;
-  if (!overlayShowTimer && !currentState.startsWith("error")) {
+  if (
+    !overlayShowTimer &&
+    !currentState.startsWith("error") &&
+    !currentState.startsWith("notice:")
+  ) {
     setOverlayText("");
   }
   if (globalGain && audioCtx) {
@@ -543,6 +547,18 @@ const processingTranslations = {
 };
 
 const noticeTranslations = {
+  "edit-failed": {
+    ru: "Команда не выполнена — выделенный текст не изменён",
+    en: "Command not applied — selected text left unchanged",
+    de: "Befehl nicht angewendet — ausgewählter Text unverändert",
+    fr: "Commande non appliquée — texte sélectionné inchangé",
+    it: "Comando non applicato — testo selezionato invariato",
+    es: "Orden no aplicada — texto seleccionado sin cambios",
+    pt: "Comando não aplicado — texto selecionado inalterado",
+    zh: "指令未应用——选中文本未改动",
+    ja: "コマンドを適用できません — 選択テキストは変更されていません",
+    tr: "Komut uygulanamadı — seçili metin değiştirilmedi"
+  },
   "elevated-paste-blocked": {
     ru: "Система заблокировала вставку в активное окно. Текст сохранён в буфере обмена",
     en: "The system blocked pasting into the active window. Text kept in the clipboard",
@@ -826,7 +842,10 @@ listen("recording-state", (event) => {
     const notice = currentState.substring("notice:".length);
     const uiLang = localStorage.getItem("aura_ui_lang") || "ru";
     const translations = noticeTranslations[notice];
-    setOverlayText(overlayShowTimer ? (translations?.[uiLang] || translations?.en || notice) : "");
+    // A notice is a message, not the countdown: it must stay readable even
+    // when "show timer" is off, otherwise a failed edit looks like nothing
+    // happened.
+    setOverlayText(translations?.[uiLang] || translations?.en || notice);
     statusEl.classList.remove("error");
     setBarColor("#FE4200");
     pill.classList.add("visible");

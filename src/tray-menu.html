@@ -29,13 +29,21 @@
           <path d="M4 10v4"/><path d="M8 7v10"/><path d="M12 4v16"/><path d="M16 7v10"/><path d="M20 10v4"/>
         </svg>
         <span class="menu-text" id="label-recog">Способ распознавания</span>
+        <svg class="recog-status-icon" id="recog-status-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/>
+        </svg>
         <svg class="menu-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <polyline points="9 18 15 12 9 6"/>
         </svg>
       </div>
 
-      <!-- 2b. Language Trigger (Clean, no icon, active lang badge) -->
-      <div class="aura-menu-item aura-menu-item-lang" id="item-lang-trigger" role="button" tabindex="0">
+      <!-- 2b. Language Trigger (with globe icon) -->
+      <div class="aura-menu-item" id="item-lang-trigger" role="button" tabindex="0">
+        <svg class="menu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="2" y1="12" x2="22" y2="12"/>
+          <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+        </svg>
         <span class="menu-text" id="label-lang">Язык распознавания</span>
         <span class="lang-status-badge" id="lang-status-badge">RU</span>
         <svg class="menu-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -43,7 +51,7 @@
         </svg>
       </div>
 
-      <!-- 3. Gaming Mode -->
+      <!-- 3. Gaming Mode (clean toggle without redundant text badge) -->
       <div class="aura-menu-item" id="item-gaming" role="button" tabindex="0">
         <svg class="menu-icon gaming-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <line x1="6" x2="10" y1="12" y2="12"/><line x1="8" x2="8" y1="10" y2="14"/>
@@ -51,7 +59,6 @@
           <rect width="20" height="12" x="2" y="6" rx="6"/>
         </svg>
         <span class="menu-text" id="label-gaming">Игровой режим</span>
-        <span class="gaming-status-badge" id="gaming-status-badge">Выкл</span>
         <div class="menu-toggle" id="toggle-gaming" aria-label="Игровой режим">
           <div class="menu-toggle-thumb"></div>
         </div>

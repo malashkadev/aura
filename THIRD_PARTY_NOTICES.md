@@ -26,3 +26,27 @@ support. Compatible libraries already available through the process `PATH` are
 reused; downloaded runtime files are installed in Aura's private application
 data directory. Both layouts are used only by Aura's local transcription
 processes.
+
+## llama.cpp (b11179)
+
+The local text-editing feature bundles prebuilt `llama-server` binaries for
+the CPU and Vulkan backends in `src-tauri/binaries/llm-cpu/` and
+`src-tauri/binaries/llm-vulkan/`. llama.cpp is licensed under the MIT
+License:
+
+https://github.com/ggml-org/llama.cpp/blob/master/LICENSE
+
+These builds include the LLVM OpenMP runtime (`libomp.dll`); the license text
+ships next to the binaries as `LICENSE-LLVM-OpenMP` (Apache License 2.0 with
+LLVM exceptions).
+
+## Qwen3 Model Weights (optional download)
+
+On user request, Aura downloads GGUF-quantized Qwen3 editing models from
+Hugging Face (the official `Qwen/Qwen3-4B-GGUF` repository and the
+`mradermacher/Qwen3-0.6B-GGUF` / `Qwen3-1.7B-GGUF` mirrors) into Aura's
+private application data directory. The weights are not bundled with the
+installer and are not licensed under the AGPL; Qwen3 model weights are
+licensed under the Apache License 2.0:
+
+https://www.apache.org/licenses/LICENSE-2.0

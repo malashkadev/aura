@@ -3,10 +3,13 @@
 pub mod ai_client;
 pub mod artifact_download;
 pub mod audio_recorder;
+pub mod edit_intent;
+pub mod edit_validate;
 #[path = "history_secure.rs"]
 pub mod history;
 pub mod keyboard_hook;
 pub mod keyboard_simulator;
+pub mod llm_runner;
 pub mod logger;
 pub mod parakeet_streaming;
 pub mod secure_storage;
@@ -65,6 +68,9 @@ struct AppState {
     whisper_server: Mutex<Option<whisper_runner::RunningWhisperServer>>,
     whisper_port: std::sync::atomic::AtomicU16,
     whisper_watchdog: Mutex<Option<whisper_runner::WhisperWatchdog>>,
+    llm_lifecycle: Mutex<()>,
+    llm_server: Mutex<Option<llm_runner::RunningLlmServer>>,
+    llm_port: std::sync::atomic::AtomicU16,
     last_activity_time: Mutex<std::time::Instant>,
     gaming_mode_active: AtomicBool,
     last_audio_devices: Mutex<Vec<String>>,
@@ -201,6 +207,7 @@ async fn set_settings(
     tauri::async_runtime::spawn_blocking(move || {
         whisper_runner::ensure_parakeet_server_state(&sidecar_handle, &sidecar_settings);
         whisper_runner::ensure_whisper_server_state(&sidecar_handle, &sidecar_settings);
+        llm_runner::ensure_llm_server_state(&sidecar_handle, &sidecar_settings);
     });
     let _ = app_handle.emit("settings-changed", ());
     Ok(())
@@ -347,6 +354,9 @@ fn canonical_model_name(model_name: &str) -> Result<String, String> {
     if model_name.len() > 64 {
         return Err("Invalid model name".to_string());
     }
+    if llm_runner::is_llm_model_id(model_name) {
+        return Ok(model_name.to_string());
+    }
     if model_name == "parakeet-v3" || model_name == "punctuation" {
         return Ok(model_name.to_string());
     }
@@ -366,6 +376,10 @@ async fn download_model_command(
     let model_name = canonical_model_name(&model_name)?;
     if model_name == "parakeet-v3" {
         whisper_runner::download_parakeet_model(&app_handle)
+            .await
+            .map(|_| ())
+    } else if llm_runner::is_llm_model_id(&model_name) {
+        llm_runner::download_llm_model(&app_handle, model_name.as_str())
             .await
             .map(|_| ())
     } else {
@@ -428,6 +442,21 @@ async fn delete_model_command(
         .map_err(|error| format!("Punctuation deletion worker failed: {error}"))?;
     }
 
+    if llm_runner::is_llm_model_id(&model_name) {
+        let model_path = llm_runner::llm_model_path(&app_handle, &model_name)?;
+        let worker_handle = app_handle.clone();
+        return tauri::async_runtime::spawn_blocking(move || {
+            llm_runner::stop_llm_server(&worker_handle);
+            match std::fs::remove_file(&model_path) {
+                Ok(()) => Ok(()),
+                Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(()),
+                Err(error) => Err(format!("Failed to delete local editing model: {error}")),
+            }
+        })
+        .await
+        .map_err(|error| format!("Local editing model deletion worker failed: {error}"))?;
+    }
+
     let filename = whisper_runner::whisper_model_filename(&model_name)?;
     let model_path = app_local_data.join("models").join(&filename);
 
@@ -478,6 +507,11 @@ async fn get_downloaded_models(app_handle: tauri::AppHandle) -> Result<Vec<Strin
         }
         if whisper_runner::punctuation_files_complete(&models_dir.join("punctuation")) {
             downloaded.push("punctuation".to_string());
+        }
+        for llm_id in llm_runner::LLM_MODEL_IDS {
+            if llm_runner::llm_model_is_installed(&app_handle, llm_id) {
+                downloaded.push((*llm_id).to_string());
+            }
         }
 
         let entries = match std::fs::read_dir(&models_dir) {
@@ -546,7 +580,9 @@ async fn copy_to_clipboard(text: String) -> Result<(), String> {
 
 #[tauri::command]
 async fn get_audio_input_devices() -> Result<Vec<String>, String> {
-    Ok(audio_recorder::list_audio_input_devices())
+    tokio::task::spawn_blocking(audio_recorder::list_audio_input_devices)
+        .await
+        .map_err(|e| format!("Audio device enumeration task failed: {e}"))
 }
 
 #[tauri::command]
@@ -791,12 +827,25 @@ fn provider_from(settings: &settings::Settings) -> ai_client::ApiProvider {
 }
 
 /// Resolves the language to send to the recognizer from settings + detected layout.
-fn effective_language(settings: &settings::Settings, layout_language: &str) -> String {
+/// When editing selected text, if the setting is "layout", we prefer auto-detect ("")
+/// so that a foreign active keyboard layout (e.g. English keyboard while speaking Russian
+/// commands) does not poison Whisper's decoder priors.
+fn effective_language(
+    settings: &settings::Settings,
+    layout_language: &str,
+    has_selection: bool,
+) -> String {
     match settings.language.as_str() {
         "ru" | "en" | "de" | "es" | "fr" | "it" | "zh" | "pt" | "tr" | "nl" => {
             settings.language.clone()
         }
-        "layout" => layout_language.to_string(),
+        "layout" => {
+            if has_selection {
+                String::new()
+            } else {
+                layout_language.to_string()
+            }
+        }
         _ => String::new(), // auto-detect
     }
 }
@@ -1098,7 +1147,7 @@ fn clean_hallucinated_brackets(text: &str) -> String {
     cleaned.trim().to_string()
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 enum ClipboardBackup {
     Text(String),
     Image {
@@ -1107,6 +1156,17 @@ enum ClipboardBackup {
         bytes: Vec<u8>,
     },
     Empty,
+    Preserve,
+}
+
+#[cfg(target_os = "windows")]
+fn is_clipboard_empty_os() -> bool {
+    unsafe { windows_sys::Win32::System::DataExchange::CountClipboardFormats() == 0 }
+}
+
+#[cfg(not(target_os = "windows"))]
+fn is_clipboard_empty_os() -> bool {
+    false
 }
 
 fn backup_clipboard() -> ClipboardBackup {
@@ -1122,14 +1182,31 @@ fn backup_clipboard() -> ClipboardBackup {
                     bytes: img.bytes.into_owned(),
                 };
             }
-            return ClipboardBackup::Empty;
+            if is_clipboard_empty_os() {
+                return ClipboardBackup::Empty;
+            } else {
+                return ClipboardBackup::Preserve;
+            }
         }
         std::thread::sleep(std::time::Duration::from_millis(20));
     }
-    ClipboardBackup::Empty
+    if is_clipboard_empty_os() {
+        ClipboardBackup::Empty
+    } else {
+        ClipboardBackup::Preserve
+    }
 }
 
 fn restore_clipboard(backup: ClipboardBackup) {
+    if matches!(backup, ClipboardBackup::Preserve) {
+        crate::logger::log(
+            "INFO",
+            "Clipboard",
+            None,
+            "Clipboard held non-text/non-image formats (e.g. files/tables); skipped clearing to prevent data loss",
+        );
+        return;
+    }
     for _ in 0..5 {
         if let Ok(mut cb) = arboard::Clipboard::new() {
             let res = match &backup {
@@ -1147,6 +1224,7 @@ fn restore_clipboard(backup: ClipboardBackup) {
                     cb.set_image(img)
                 }
                 ClipboardBackup::Empty => cb.clear(),
+                ClipboardBackup::Preserve => Ok(()),
             };
             if res.is_ok() {
                 return;
@@ -1157,6 +1235,9 @@ fn restore_clipboard(backup: ClipboardBackup) {
 }
 
 fn restore_clipboard_if_unchanged(backup: ClipboardBackup, expected_temporary_text: &str) {
+    if matches!(backup, ClipboardBackup::Preserve) {
+        return;
+    }
     let current_text_opt = arboard::Clipboard::new()
         .ok()
         .and_then(|mut clipboard| clipboard.get_text().ok());
@@ -2854,13 +2935,21 @@ async fn start_recording_session(app_handle: tauri::AppHandle) {
     state
         .live_target_monitoring
         .store(session_settings.streaming_enabled, Ordering::Release);
+    // Selected-text context is captured whenever an edit route will actually
+    // consume it: the cloud provider (cloud or cloud-after-local cleanup) or
+    // the local Qwen3 server. Route "off" never needs the selection.
+    let edit_route = llm_runner::resolve_ai_edit_route(&app_handle, &session_settings);
     let copy_context = session_settings.copy_context_on_start
-        && session_settings.transcription_mode == "cloud"
-        && session_settings.api_provider != "huggingface";
+        && edit_route != llm_runner::AiEditRoute::Off;
 
     if copy_context {
         let app_handle_copy = app_handle.clone();
         let session_tag_copy = session_tag.clone();
+        // Prewarm the local editing server as soon as a selection is captured:
+        // loading Qwen3 into the GPU then overlaps with the recording instead
+        // of adding 20+ seconds after the hotkey is released.
+        let warm_route = edit_route;
+        let warm_model = session_settings.llm_model.clone();
         // Blocking worker: the clipboard mutex guard cannot be held across an
         // async yield (MutexGuard is not Send), and the whole backup -> clear
         // -> copy -> read -> restore sequence must stay serialized (C7).
@@ -2899,6 +2988,7 @@ async fn start_recording_session(app_handle: tauri::AppHandle) {
                 .unwrap_or_default();
             clipboard_guard.expected_temporary_text = Some(copied.clone());
 
+            let mut captured_selection = false;
             if let Some(state) = app_handle_copy.try_state::<AppState>() {
                 let state = state.inner();
                 let session_is_current = state.session_gen.load(Ordering::SeqCst) == gen
@@ -2913,6 +3003,7 @@ async fn start_recording_session(app_handle: tauri::AppHandle) {
                             &format!("Captured selected text ({} chars)", copied.chars().count()),
                         );
                         if !copied.trim().is_empty() {
+                            captured_selection = true;
                             let _ = app_handle_copy.emit("selection-context-active", true);
                         }
                     }
@@ -2923,6 +3014,29 @@ async fn start_recording_session(app_handle: tauri::AppHandle) {
             // performs the clipboard restore while still serialized.
             drop(clipboard_guard);
             drop(clipboard_mutex_guard);
+
+            // Selection captured and the local route will use it: bring the
+            // editing server up in the background while the user is still
+            // speaking, so the edit does not have to wait for model loading.
+            if captured_selection && warm_route == llm_runner::AiEditRoute::Local {
+                crate::logger::log(
+                    "INFO",
+                    "LLM",
+                    Some(&session_tag_copy),
+                    "Selection captured — prewarming the local editing server",
+                );
+                let warm_handle = app_handle_copy.clone();
+                tauri::async_runtime::spawn_blocking(move || {
+                    if let Err(error) = llm_runner::start_llm_server(&warm_handle, &warm_model) {
+                        crate::logger::log(
+                            "WARN",
+                            "LLM",
+                            None,
+                            &format!("Local editing server prewarm failed: {error}"),
+                        );
+                    }
+                });
+            }
         });
     }
 
@@ -3212,7 +3326,7 @@ async fn start_recording_session(app_handle: tauri::AppHandle) {
 
                     if let Some((sample_len, settings, layout_lang)) = preview.work {
                         last_len = sample_len;
-                        let language = effective_language(&settings, &layout_lang);
+                        let language = effective_language(&settings, &layout_lang, false);
 
                         let transcription_result = if settings.transcription_mode == "local" {
                             run_local_whisper_async(
@@ -3417,8 +3531,12 @@ async fn finalize_recording(app_handle: tauri::AppHandle) {
 
         let layout_lang = active_layout_lang.clone();
         let selected_text = session_selected_text;
-        let language = effective_language(&settings, &layout_lang);
+        let has_selection = !selected_text.trim().is_empty();
+        let language = effective_language(&settings, &layout_lang, has_selection);
         let api_call_start = std::time::Instant::now();
+        let edit_route = llm_runner::resolve_ai_edit_route(&app_handle_clone, &settings);
+        // ASR strictly transcribes speech; the dedicated edit pass handles selected-text
+        // modifications deterministically for all engines.
 
         let streaming_eligible = settings.streaming_enabled
             && settings.transcription_mode == "local"
@@ -3542,7 +3660,7 @@ async fn finalize_recording(app_handle: tauri::AppHandle) {
                         provider_from(&settings),
                         &settings.api_key,
                         &temp_path_str,
-                        &selected_text,
+                        "",
                         &language,
                         &settings.dictionary,
                         true,
@@ -3619,8 +3737,151 @@ async fn finalize_recording(app_handle: tauri::AppHandle) {
         let mut had_error = None;
         let mut final_notice = None;
         let mut overlay_hide_requested = false;
+        // Set whenever a selected-text edit pass could not run. `text` then
+        // still holds the raw speech, and pasting it would insert the spoken
+        // command ("Сократи") instead of the document it was meant to change.
+        let mut edit_failed = false;
         match transcription_result {
-            Ok(text) => {
+            Ok(mut text) => {
+                // Selected-text edit pass: runs whenever a selection and spoken text
+                // are present, for any transcription engine and edit route.
+                let has_selection = !selected_text.trim().is_empty();
+                let needs_edit_pass = llm_runner::needs_edit_pass(
+                    has_selection,
+                    !text.trim().is_empty(),
+                    edit_route,
+                );
+                if needs_edit_pass {
+                    let session_ok = app_handle_clone
+                        .try_state::<AppState>()
+                        .map(|s| s.session_gen.load(Ordering::SeqCst) == my_gen)
+                        .unwrap_or(false);
+                    if !session_ok {
+                        crate::logger::log(
+                            "INFO",
+                            "LLM",
+                            Some(&session_tag_clone),
+                            "Session superseded before the edit pass; keeping the unedited text",
+                        );
+                    } else {
+                        match edit_route {
+                            llm_runner::AiEditRoute::Local => {
+                                let edit_started = std::time::Instant::now();
+                                match llm_runner::run_local_edit(
+                                    app_handle_clone.clone(),
+                                    &text,
+                                    &selected_text,
+                                    &language,
+                                    &settings.dictionary,
+                                )
+                                .await
+                                {
+                                    Ok(edited) => {
+                                        crate::logger::log(
+                                            "INFO",
+                                            "LLM",
+                                            Some(&session_tag_clone),
+                                            &format!(
+                                                "Local edit pass succeeded in {} ms ({} -> {} chars, model={})",
+                                                edit_started.elapsed().as_millis(),
+                                                text.chars().count(),
+                                                edited.chars().count(),
+                                                settings.llm_model
+                                            ),
+                                        );
+                                        text = edited;
+                                    }
+                                    Err(error) => {
+                                        crate::logger::log(
+                                            "WARN",
+                                            "LLM",
+                                            Some(&session_tag_clone),
+                                                &format!(
+                                                    "Local edit pass failed; keeping the unedited text: {error}"
+                                                ),
+                                            );
+                                        edit_failed = true;
+                                        final_notice = Some("edit-failed");
+                                    }
+                                }
+                            }
+                            llm_runner::AiEditRoute::Cloud => {
+                                let active_key = if !settings.api_key.trim().is_empty() {
+                                    settings.api_key.as_str()
+                                } else {
+                                    settings.active_api_key()
+                                };
+                                if active_key.trim().is_empty() {
+                                    crate::logger::log(
+                                        "WARN",
+                                        "LLM",
+                                        Some(&session_tag_clone),
+                                        "No API key for the cloud edit pass; keeping the unedited text",
+                                    );
+                                    edit_failed = true;
+                                    final_notice = Some("edit-failed");
+                                } else {
+                                    let edit_started = std::time::Instant::now();
+                                    match tokio::time::timeout(
+                                        std::time::Duration::from_secs(45),
+                                        ai_client::edit_text_with_provider(
+                                            provider_from(&settings),
+                                            active_key,
+                                            &text,
+                                            &selected_text,
+                                            &language,
+                                            &settings.dictionary,
+                                            &settings.translate_default_target,
+                                            &settings.ui_language,
+                                            Some(&settings.custom_api_url),
+                                            Some(&settings.custom_model_name),
+                                        ),
+                                    )
+                                    .await
+                                    {
+                                        Ok(Ok(edited)) => {
+                                            crate::logger::log(
+                                                "INFO",
+                                                "LLM",
+                                                Some(&session_tag_clone),
+                                                &format!(
+                                                    "Cloud edit pass succeeded in {} ms ({} -> {} chars)",
+                                                    edit_started.elapsed().as_millis(),
+                                                    text.chars().count(),
+                                                    edited.chars().count()
+                                                ),
+                                            );
+                                            text = edited;
+                                        }
+                                        Ok(Err(error)) => {
+                                            crate::logger::log(
+                                                "WARN",
+                                                "LLM",
+                                                Some(&session_tag_clone),
+                                                &format!(
+                                                    "Cloud edit pass failed; keeping the unedited text: {error}"
+                                                ),
+                                            );
+                                            edit_failed = true;
+                                            final_notice = Some("edit-failed");
+                                        }
+                                        Err(_) => {
+                                            crate::logger::log(
+                                                "WARN",
+                                                "LLM",
+                                                Some(&session_tag_clone),
+                                                "Cloud edit pass timed out after 45s; keeping the unedited text",
+                                            );
+                                            edit_failed = true;
+                                            final_notice = Some("edit-failed");
+                                        }
+                                    }
+                                }
+                            }
+                            llm_runner::AiEditRoute::Off => {}
+                        }
+                    }
+                }
                 let normalized_text =
                     text_normalizer::normalize_transcription_text(&text, &language);
                 let replaced_text = text_normalizer::apply_text_replacements(
@@ -3637,7 +3898,14 @@ async fn finalize_recording(app_handle: tauri::AppHandle) {
                         crate::logger::anonymize_speech(&trimmed, settings.log_speech_text)
                     ),
                 );
-                if !trimmed.is_empty() && !is_silence_hallucination(&trimmed) {
+                if edit_failed {
+                    crate::logger::log(
+                        "INFO",
+                        "Paste",
+                        Some(&session_tag_clone),
+                        "Text editing failed; nothing was inserted and the selection was left unchanged",
+                    );
+                } else if !trimmed.is_empty() && !is_silence_hallucination(&trimmed) {
                     let final_text = trimmed;
 
                     let history_mode = if used_local_fallback {
@@ -4154,6 +4422,9 @@ pub fn run() {
                 whisper_server: Mutex::new(None),
                 whisper_port: std::sync::atomic::AtomicU16::new(0),
                 whisper_watchdog: Mutex::new(None),
+                llm_lifecycle: Mutex::new(()),
+                llm_server: Mutex::new(None),
+                llm_port: std::sync::atomic::AtomicU16::new(0),
                 last_activity_time: Mutex::new(std::time::Instant::now()),
                 gaming_mode_active: AtomicBool::new(startup_settings.gaming_mode_enabled),
                 last_audio_devices: Mutex::new(audio_recorder::list_audio_input_devices()),
@@ -4182,6 +4453,40 @@ pub fn run() {
                         );
                     });
                 }
+
+                // Text editing on a selection has to load a Qwen3 model from
+                // disk; waiting for that on the first command cost 20+ seconds.
+                // Warm the server up in the background right after launch, and
+                // only when a model is actually on disk.
+                if llm_runner::resolve_ai_edit_route(&app_handle, &startup_settings)
+                    == llm_runner::AiEditRoute::Local
+                    && llm_runner::llm_model_is_installed(&app_handle, &startup_settings.llm_model)
+                {
+                    let llm_handle = app_handle.clone();
+                    let llm_model = startup_settings.llm_model.clone();
+                    tauri::async_runtime::spawn_blocking(move || {
+                        let warm_started = std::time::Instant::now();
+                        match llm_runner::start_llm_server(&llm_handle, &llm_model) {
+                            Ok(()) => crate::logger::log(
+                                "INFO",
+                                "LLM",
+                                None,
+                                &format!(
+                                    "Local editing server warmed up at startup in {} ms",
+                                    warm_started.elapsed().as_millis()
+                                ),
+                            ),
+                            Err(error) => crate::logger::log(
+                                "WARN",
+                                "LLM",
+                                None,
+                                &format!(
+                                    "Startup warm-up of the local editing server failed: {error}"
+                                ),
+                            ),
+                        }
+                    });
+                }
             }
 
             // Standby Unloader, Gaming Mode & Audio Hotplug background monitor
@@ -4191,7 +4496,7 @@ pub fn run() {
                 loop {
                     interval.tick().await;
                     check_vram_standby_and_gaming(&standby_handle).await;
-                    check_audio_devices_hotplug(&standby_handle);
+                    check_audio_devices_hotplug(&standby_handle).await;
                 }
             });
             // Esc cancels an active recording
@@ -4355,6 +4660,7 @@ pub fn run() {
         if let tauri::RunEvent::Exit = event {
             whisper_runner::stop_whisper_server(app_handle);
             whisper_runner::stop_parakeet_server(app_handle);
+            llm_runner::stop_llm_server(app_handle);
         }
     });
 }
@@ -4857,6 +5163,7 @@ async fn apply_gaming_mode_state(app: &tauri::AppHandle, enabled: bool, auto_tri
         if enabled {
             whisper_runner::stop_whisper_server(app);
             whisper_runner::stop_parakeet_server(app);
+            llm_runner::stop_llm_server(app);
             crate::logger::log(
                 "INFO",
                 "GamingMode",
@@ -4912,7 +5219,17 @@ fn is_foreground_window_fullscreen() -> bool {
         let len = GetClassNameW(hwnd, class_name.as_mut_ptr(), 256);
         if len > 0 {
             let name = String::from_utf16_lossy(&class_name[..len as usize]);
-            if name == "Progman" || name == "WorkerW" || name == "Shell_TrayWnd" || name == "Aura" {
+            if name == "Progman"
+                || name == "WorkerW"
+                || name == "Shell_TrayWnd"
+                || name == "Aura"
+                || name.starts_with("Chrome_WidgetWin_")
+                || name == "MozillaWindowClass"
+                || name == "screenClass"
+                || name == "vlc"
+                || name == "MediaPlayerClassicW"
+                || name == "ApplicationFrameWindow"
+            {
                 return false;
             }
         }
@@ -4948,6 +5265,9 @@ fn is_foreground_window_fullscreen() -> bool {
     }
 }
 
+static AUTO_GAMING_DISENGAGE_TICKS: std::sync::atomic::AtomicU32 =
+    std::sync::atomic::AtomicU32::new(0);
+
 async fn check_vram_standby_and_gaming(app: &tauri::AppHandle) {
     let Some(state) = app.try_state::<AppState>() else {
         return;
@@ -4973,9 +5293,18 @@ async fn check_vram_standby_and_gaming(app: &tauri::AppHandle) {
 
         let currently_active = state.gaming_mode_active.load(Ordering::Acquire);
         if is_d3d_fullscreen && !currently_active && !state.is_recording.load(Ordering::SeqCst) {
+            AUTO_GAMING_DISENGAGE_TICKS.store(0, Ordering::Relaxed);
             apply_gaming_mode_state(app, true, true).await;
+        } else if is_d3d_fullscreen {
+            AUTO_GAMING_DISENGAGE_TICKS.store(0, Ordering::Relaxed);
         } else if !is_d3d_fullscreen && currently_active {
-            apply_gaming_mode_state(app, false, true).await;
+            // Require 4 consecutive ticks (12 seconds) of sustained non-game focus
+            // before reloading resident models, preventing VRAM thrashing on quick Alt+Tabs.
+            let streak = AUTO_GAMING_DISENGAGE_TICKS.fetch_add(1, Ordering::Relaxed) + 1;
+            if streak >= 4 {
+                AUTO_GAMING_DISENGAGE_TICKS.store(0, Ordering::Relaxed);
+                apply_gaming_mode_state(app, false, true).await;
+            }
         }
     }
 
@@ -4999,10 +5328,12 @@ async fn check_vram_standby_and_gaming(app: &tauri::AppHandle) {
                 .lock()
                 .map(|s| s.is_some())
                 .unwrap_or(false);
+            let llm_running = state.llm_port.load(Ordering::SeqCst) > 0;
 
-            if whisper_running || parakeet_running {
+            if whisper_running || parakeet_running || llm_running {
                 whisper_runner::stop_whisper_server(app);
                 whisper_runner::stop_parakeet_server(app);
+                llm_runner::stop_llm_server(app);
                 crate::logger::log(
                     "INFO",
                     "Standby",
@@ -5017,11 +5348,14 @@ async fn check_vram_standby_and_gaming(app: &tauri::AppHandle) {
     }
 }
 
-fn check_audio_devices_hotplug(app: &tauri::AppHandle) {
+async fn check_audio_devices_hotplug(app: &tauri::AppHandle) {
     let Some(state) = app.try_state::<AppState>() else {
         return;
     };
-    let current_devices = audio_recorder::list_audio_input_devices();
+    let current_devices = match tokio::task::spawn_blocking(audio_recorder::list_audio_input_devices).await {
+        Ok(devices) => devices,
+        Err(_) => return,
+    };
     let changed = {
         let mut guard = state
             .last_audio_devices
@@ -6285,6 +6619,9 @@ mod tests {
             whisper_server: Mutex::new(None),
             whisper_port: std::sync::atomic::AtomicU16::new(0),
             whisper_watchdog: Mutex::new(None),
+            llm_lifecycle: Mutex::new(()),
+            llm_server: Mutex::new(None),
+            llm_port: std::sync::atomic::AtomicU16::new(0),
             last_activity_time: Mutex::new(std::time::Instant::now()),
             gaming_mode_active: AtomicBool::new(false),
             last_audio_devices: Mutex::new(Vec::new()),
