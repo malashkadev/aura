@@ -200,21 +200,21 @@ test("settings translations cover every supported locale without fallback gaps",
 
 test("interface language persists in native settings and defaults to a supported system locale", () => {
   const main = read("src/main.js");
-  const rust = read("src-tauri/src/lib.rs");
+  const tray = read("src/tray-menu.js");
   const settings = read("src-tauri/src/settings_secure.rs");
 
   assert.match(main, /navigator\.language\.toLowerCase\(\)\.split\(\/\[-_\]\/\)\[0\]/);
   assert.match(main, /supportedLangs\.includes\(browserUiLang\) \? browserUiLang : "en"/);
   assert.match(main, /invoke\("set_ui_language", \{ uiLanguage: selectedLang \}\)/);
-  assert.match(rust, /fn tray_translations\(language: &str\)/);
-  assert.match(rust, /show_sync\.set_text\(text\.show\)/);
+  assert.match(tray, /const I18N =/);
+  assert.match(tray, /settings: "Открыть настройки"/);
   assert.match(settings, /GetUserDefaultUILanguage/);
 });
 
 test("safe clipboard handoff notice is translated in every overlay locale", () => {
   const notices = parseOverlayNotices();
   const translated = notices["final-copied-after-edit"];
-  const expectedLocales = ["ru", "en", "de", "fr", "it", "es", "pt", "zh", "ja", "tr"];
+  const expectedLocales = ["ru", "en", "de", "fr", "it", "es", "pt", "zh", "ja", "tr", "nl"];
 
   assert.deepEqual(Object.keys(translated), expectedLocales);
   for (const locale of expectedLocales) {

@@ -33,7 +33,14 @@ pub enum EditIntent {
 
 impl EditIntent {
     /// Returns the focused system instruction for the AI model tailored to this intent.
-    pub fn system_prompt(&self) -> Option<String> {
+    pub fn system_prompt(&self, selected_text: &str) -> Option<String> {
+        let is_cyrillic = is_primarily_cyrillic(selected_text);
+        let lang_rule = if is_cyrillic {
+            "CRITICAL LANGUAGE RULE: The input text is in Russian. Your output MUST be in Russian. Do NOT translate to English or any other language."
+        } else {
+            "CRITICAL LANGUAGE RULE: Your output MUST be in the exact same language as the input text. Do NOT translate to any other language."
+        };
+
         match self {
             EditIntent::Translate { target_lang } => {
                 let lang_name = lang_code_to_name(target_lang);
@@ -41,37 +48,37 @@ impl EditIntent {
                     "You are an expert translator. Translate the user's text into {lang_name}. Output ONLY the direct translation. Never add explanations, greetings, quotes, or markdown commentary."
                 ))
             }
-            EditIntent::Shorten => Some(
-                "You are an expert editor. Condense and shorten the user's text while preserving its core meaning and key facts. Output MUST be significantly shorter than input. Output ONLY the shortened text without commentary."
-                    .to_string(),
-            ),
-            EditIntent::Expand => Some(
-                "You are an expert writer. Expand and elaborate on the user's text with helpful details and clarity while preserving the original intent. Output ONLY the expanded text without commentary."
-                    .to_string(),
-            ),
-            EditIntent::FixGrammar => Some(
-                "You are an expert proofreader. Correct all grammar, spelling, punctuation, and typographical errors in the user's text. Preserve the original voice, meaning, and language. Output ONLY the corrected text without commentary."
-                    .to_string(),
-            ),
-            EditIntent::RewriteFormal => Some(
-                "You are a professional editor. Rewrite the user's text in a polished, formal, and professional tone suitable for business communication. Output ONLY the rewritten text without commentary."
-                    .to_string(),
-            ),
-            EditIntent::RewriteCasual => Some(
-                "You are a creative editor. Rewrite the user's text in a natural, friendly, and casual tone. Output ONLY the rewritten text without commentary."
-                    .to_string(),
-            ),
-            EditIntent::Summarize => Some(
-                "You are an expert analyst. Provide a concise summary capturing the key points and essential takeaways of the user's text. Output ONLY the summary without commentary."
-                    .to_string(),
-            ),
-            EditIntent::Bulletize => Some(
-                "You are an organizational assistant. Format the user's text into clear, readable bullet points (- item). Output ONLY the bulleted list without commentary."
-                    .to_string(),
-            ),
-            EditIntent::Custom(instruction) => Some(format!(
-                "You are an expert text editor. Apply this instruction to the user's text: {instruction}. Output ONLY the resulting text without explanations or conversational filler."
+            EditIntent::Shorten => Some(format!(
+                "You are an expert editor. Condense and shorten the user's text while preserving its core meaning and key facts. Output MUST be significantly shorter than input. {lang_rule} Output ONLY the shortened text without commentary."
             )),
+            EditIntent::Expand => Some(format!(
+                "You are an expert writer. Expand and elaborate on the user's text with helpful details and clarity while preserving the original intent. {lang_rule} Output ONLY the expanded text without commentary."
+            )),
+            EditIntent::FixGrammar => Some(format!(
+                "You are an expert proofreader. Correct all grammar, spelling, punctuation, and typographical errors in the user's text. Preserve the original voice and meaning. {lang_rule} Output ONLY the corrected text without commentary."
+            )),
+            EditIntent::RewriteFormal => Some(format!(
+                "You are a professional editor. Rewrite the user's text in a polished, formal, and professional tone suitable for business communication. {lang_rule} Output ONLY the rewritten text without commentary."
+            )),
+            EditIntent::RewriteCasual => Some(format!(
+                "You are a creative editor. Rewrite the user's text in a natural, friendly, and casual tone. {lang_rule} Output ONLY the rewritten text without commentary."
+            )),
+            EditIntent::Summarize => Some(format!(
+                "You are an expert analyst. Provide a concise summary capturing the key points and essential takeaways of the user's text. {lang_rule} Output ONLY the summary without commentary."
+            )),
+            EditIntent::Bulletize => Some(format!(
+                "You are an organizational assistant. Format the user's text into clear, readable bullet points (- item). {lang_rule} Output ONLY the bulleted list without commentary."
+            )),
+            EditIntent::Custom(instruction) => {
+                let custom_rule = if is_cyrillic {
+                    "CRITICAL: Keep output in Russian unless the instruction explicitly specifies translation."
+                } else {
+                    "CRITICAL: Maintain the exact same language as the input text unless the instruction explicitly specifies translation."
+                };
+                Some(format!(
+                    "You are an expert text editor. Apply this instruction to the user's text: {instruction}. {custom_rule} Output ONLY the resulting text without explanations or conversational filler."
+                ))
+            }
             EditIntent::NotACommand => None,
         }
     }
@@ -121,34 +128,155 @@ fn normalize_utterance(utterance: &str) -> String {
     cleaned.split_whitespace().collect::<Vec<_>>().join(" ").to_lowercase()
 }
 
-/// Extracts target language code from a translation utterance.
+/// Extracts target language code from a translation utterance across all supported languages.
 fn detect_translation_target(normalized: &str) -> Option<&'static str> {
-    if normalized.contains("английск") || normalized.contains("англ") || normalized.contains("english") {
+    if normalized.contains("английск")
+        || normalized.contains("англ")
+        || normalized.contains("english")
+        || normalized.contains("anglais")
+        || normalized.contains("englisch")
+        || normalized.contains("ingles")
+        || normalized.contains("inglese")
+        || normalized.contains("inglês")
+        || normalized.contains("engels")
+        || normalized.contains("ingilizce")
+        || normalized.contains("英语")
+        || normalized.contains("英文")
+    {
         Some("en")
-    } else if normalized.contains("русск") || normalized.contains("russian") {
+    } else if normalized.contains("русск")
+        || normalized.contains("russian")
+        || normalized.contains("russe")
+        || normalized.contains("russisch")
+        || normalized.contains("ruso")
+        || normalized.contains("russo")
+        || normalized.contains("rusça")
+        || normalized.contains("rusca")
+        || normalized.contains("俄语")
+        || normalized.contains("俄文")
+    {
         Some("ru")
-    } else if normalized.contains("немецк") || normalized.contains("нем") || normalized.contains("german") || normalized.contains("deutsch") {
+    } else if normalized.contains("немецк")
+        || normalized.contains("нем")
+        || normalized.contains("german")
+        || normalized.contains("deutsch")
+        || normalized.contains("allemand")
+        || normalized.contains("alemán")
+        || normalized.contains("aleman")
+        || normalized.contains("tedesco")
+        || normalized.contains("alemão")
+        || normalized.contains("alemao")
+        || normalized.contains("duits")
+        || normalized.contains("almanca")
+        || normalized.contains("德语")
+        || normalized.contains("德文")
+    {
         Some("de")
-    } else if normalized.contains("испанск") || normalized.contains("spanish") || normalized.contains("espanol") {
+    } else if normalized.contains("испанск")
+        || normalized.contains("spanish")
+        || normalized.contains("español")
+        || normalized.contains("espanol")
+        || normalized.contains("espagnol")
+        || normalized.contains("spanisch")
+        || normalized.contains("spagnolo")
+        || normalized.contains("espanhol")
+        || normalized.contains("spaans")
+        || normalized.contains("ispanyolca")
+        || normalized.contains("西班牙语")
+        || normalized.contains("西语")
+    {
         Some("es")
-    } else if normalized.contains("французск") || normalized.contains("франц") || normalized.contains("french") {
+    } else if normalized.contains("французск")
+        || normalized.contains("франц")
+        || normalized.contains("french")
+        || normalized.contains("français")
+        || normalized.contains("francais")
+        || normalized.contains("französisch")
+        || normalized.contains("franzosisch")
+        || normalized.contains("francés")
+        || normalized.contains("frances")
+        || normalized.contains("francese")
+        || normalized.contains("frans")
+        || normalized.contains("fransızca")
+        || normalized.contains("fransizca")
+        || normalized.contains("法语")
+        || normalized.contains("法文")
+    {
         Some("fr")
-    } else if normalized.contains("итальянск") || normalized.contains("italian") {
+    } else if normalized.contains("итальянск")
+        || normalized.contains("italian")
+        || normalized.contains("italiano")
+        || normalized.contains("italien")
+        || normalized.contains("italienisch")
+        || normalized.contains("italiaans")
+        || normalized.contains("italyanca")
+        || normalized.contains("意大利语")
+        || normalized.contains("意语")
+    {
         Some("it")
-    } else if normalized.contains("китайск") || normalized.contains("chinese") {
+    } else if normalized.contains("китайск")
+        || normalized.contains("chinese")
+        || normalized.contains("chinois")
+        || normalized.contains("chinesisch")
+        || normalized.contains("chino")
+        || normalized.contains("chinês")
+        || normalized.contains("chines")
+        || normalized.contains("chinees")
+        || normalized.contains("çince")
+        || normalized.contains("cince")
+        || normalized.contains("中文")
+        || normalized.contains("汉语")
+    {
         Some("zh")
-    } else if normalized.contains("португальск") || normalized.contains("portuguese") {
+    } else if normalized.contains("португальск")
+        || normalized.contains("portuguese")
+        || normalized.contains("portugais")
+        || normalized.contains("portugiesisch")
+        || normalized.contains("português")
+        || normalized.contains("portugues")
+        || normalized.contains("portoghese")
+        || normalized.contains("portugees")
+        || normalized.contains("portekizce")
+        || normalized.contains("葡萄牙语")
+        || normalized.contains("葡语")
+    {
         Some("pt")
-    } else if normalized.contains("турецк") || normalized.contains("turkish") {
+    } else if normalized.contains("турецк")
+        || normalized.contains("turkish")
+        || normalized.contains("turc")
+        || normalized.contains("türkisch")
+        || normalized.contains("turkisch")
+        || normalized.contains("turco")
+        || normalized.contains("turks")
+        || normalized.contains("türkçe")
+        || normalized.contains("turkce")
+        || normalized.contains("土耳其语")
+    {
         Some("tr")
-    } else if normalized.contains("нидерландск") || normalized.contains("голландск") || normalized.contains("dutch") {
+    } else if normalized.contains("нидерландск")
+        || normalized.contains("голландск")
+        || normalized.contains("dutch")
+        || normalized.contains("néerlandais")
+        || normalized.contains("neerlandais")
+        || normalized.contains("niederländisch")
+        || normalized.contains("niederlandisch")
+        || normalized.contains("holandés")
+        || normalized.contains("holandes")
+        || normalized.contains("olandese")
+        || normalized.contains("holandês")
+        || normalized.contains("nederlands")
+        || normalized.contains("hollandaca")
+        || normalized.contains("flemenkçe")
+        || normalized.contains("flemenkce")
+        || normalized.contains("荷兰语")
+    {
         Some("nl")
     } else {
         None
     }
 }
 
-/// Strips conversational polite prefixes like "пожалуйста", "please", "аура".
+/// Strips conversational polite prefixes like "пожалуйста", "please", "bitte", "s'il vous plaît", "por favor".
 fn strip_polite_prefixes(text: &str) -> &str {
     let prefixes = [
         "пожалуйста ",
@@ -161,6 +289,32 @@ fn strip_polite_prefixes(text: &str) -> &str {
         "aura ",
         "can you ",
         "could you ",
+        "bitte ",
+        "kannst du ",
+        "por favor ",
+        "puedes ",
+        "podrias ",
+        "podrías ",
+        "s il vous plait ",
+        "s il vous plaît ",
+        "s il te plait ",
+        "s il te plaît ",
+        "stp ",
+        "svp ",
+        "peux-tu ",
+        "pourriez-vous ",
+        "per favore ",
+        "per piacere ",
+        "puoi ",
+        "pode ",
+        "poderia ",
+        "lütfen ",
+        "lutfen ",
+        "alstublieft ",
+        "alsjeblieft ",
+        "kun je ",
+        "请 ",
+        "请",
     ];
     let mut current = text;
     let mut stripped = true;
@@ -168,9 +322,11 @@ fn strip_polite_prefixes(text: &str) -> &str {
         stripped = false;
         for p in prefixes {
             if let Some(rest) = current.strip_prefix(p) {
-                current = rest.trim_start();
-                stripped = true;
-                break;
+                if !rest.trim().is_empty() {
+                    current = rest.trim_start();
+                    stripped = true;
+                    break;
+                }
             }
         }
     }
@@ -195,40 +351,86 @@ pub fn parse_edit_intent(
     }
 
     let core = strip_polite_prefixes(&normalized);
+    let word_count = core.split_whitespace().count();
+
+    // 0. EXCLUSIONS FOR COMMON CONVERSATIONAL IDIOMS
+    let conversational_starters = [
+        "короче говоря",
+        "проще говоря",
+        "суть в том",
+        "суть дела",
+        "главное чтобы",
+        "главное что",
+        "главное это",
+    ];
+    for starter in conversational_starters {
+        if core == starter || core.starts_with(&format!("{starter} ")) {
+            return EditIntent::NotACommand;
+        }
+    }
 
     // 1. TRANSLATE COMMANDS
     let is_translate_verb = core.starts_with("переведи")
         || core.starts_with("перевести")
         || core.starts_with("перевод")
-        || core.starts_with("translate");
+        || core.starts_with("translate")
+        || core.starts_with("perevedi")
+        || core.starts_with("perevesti")
+        || core.starts_with("transleit")
+        || core.contains("übersetz")
+        || core.contains("ubersetz")
+        || core.starts_with("traduce")
+        || core.starts_with("traducir")
+        || core.starts_with("traduis")
+        || core.starts_with("traduire")
+        || core.starts_with("traduci")
+        || core.starts_with("tradurre")
+        || core.starts_with("traduza")
+        || core.starts_with("traduzir")
+        || core.contains("çevir")
+        || core.contains("cevir")
+        || core.contains("tercüme")
+        || core.contains("tercume")
+        || core.contains("vertaal")
+        || core.contains("vertalen")
+        || core.contains("翻译")
+        || core.contains("翻成");
 
     if is_translate_verb {
         if let Some(target) = detect_translation_target(core) {
-            return EditIntent::Translate {
-                target_lang: target.to_string(),
-            };
-        }
-
-        // Bare "переведи" / "translate" without language
-        let default_target = if default_target_lang.trim().is_empty() {
-            "en"
-        } else {
-            default_target_lang
-        };
-
-        let target = if is_primarily_cyrillic(selected_text) {
-            default_target.to_string()
-        } else if default_target == "en" {
-            if app_ui_lang == "en" {
-                "ru".to_string()
-            } else {
-                app_ui_lang.to_string()
+            if word_count <= 8 {
+                return EditIntent::Translate {
+                    target_lang: target.to_string(),
+                };
             }
-        } else {
-            default_target.to_string()
-        };
+        } else if word_count <= 3 {
+            // Bare "переведи" / "translate" without language
+            let default_target = if default_target_lang.trim().is_empty() {
+                "en"
+            } else {
+                default_target_lang
+            };
 
-        return EditIntent::Translate { target_lang: target };
+            let target = if is_primarily_cyrillic(selected_text) {
+                if default_target == "ru" {
+                    if app_ui_lang != "ru" {
+                        app_ui_lang.to_string()
+                    } else {
+                        "en".to_string()
+                    }
+                } else {
+                    default_target.to_string()
+                }
+            } else if default_target != "en" {
+                default_target.to_string()
+            } else if app_ui_lang != "en" {
+                app_ui_lang.to_string()
+            } else {
+                "ru".to_string()
+            };
+
+            return EditIntent::Translate { target_lang: target };
+        }
     }
 
     // 2. SHORTEN
@@ -243,9 +445,56 @@ pub fn parse_edit_intent(
         "make shorter",
         "make it shorter",
         "cut down",
+        "condense",
+        "sekreti",
+        "sekretit",
+        "sokrati",
+        "sokratit",
+        "kürzen",
+        "kurzen",
+        "kürze",
+        "kurze",
+        "kürzer",
+        "kurzer",
+        "mach kürzer",
+        "mach kurzer",
+        "acortar",
+        "acorta",
+        "hazlo más corto",
+        "hazlo mas corto",
+        "más corto",
+        "mas corto",
+        "raccourcir",
+        "raccourcis",
+        "fais plus court",
+        "plus court",
+        "écourte",
+        "ecourte",
+        "accorcia",
+        "accorciare",
+        "fai più corto",
+        "fai piu corto",
+        "più corto",
+        "piu corto",
+        "encurta",
+        "encurtar",
+        "faça mais curto",
+        "faca mais curto",
+        "mais curto",
+        "kısalt",
+        "kisalt",
+        "daha kısa yap",
+        "daha kisa yap",
+        "inkorten",
+        "kort in",
+        "maak korter",
+        "korter",
+        "精简",
+        "缩短",
+        "精简一点",
     ];
     for kw in shorten_keywords {
-        if core == kw || core.starts_with(&format!("{kw} ")) {
+        if core == kw || (word_count <= 8 && core.starts_with(&format!("{kw} "))) {
             return EditIntent::Shorten;
         }
     }
@@ -262,9 +511,54 @@ pub fn parse_edit_intent(
         "elaborate",
         "make longer",
         "add details",
+        "erweitern",
+        "erweitere",
+        "ausführlicher",
+        "ausfuhrlicher",
+        "mach länger",
+        "mach langer",
+        "mehr details",
+        "expandir",
+        "expande",
+        "elaborar",
+        "elabora",
+        "más detallado",
+        "mas detallado",
+        "más largo",
+        "mas largo",
+        "développer",
+        "developper",
+        "développe",
+        "developpe",
+        "plus détaillé",
+        "plus detaille",
+        "plus long",
+        "espandi",
+        "espandere",
+        "più dettagli",
+        "piu dettagli",
+        "più lungo",
+        "piu lungo",
+        "elabore",
+        "mais detalhes",
+        "mais longo",
+        "genişlet",
+        "genislet",
+        "ayrıntılandır",
+        "ayrintilandir",
+        "detaylandır",
+        "detaylandir",
+        "uitbreiden",
+        "breid uit",
+        "maak langer",
+        "meer details",
+        "uitwerken",
+        "扩写",
+        "展开",
+        "详细说明",
     ];
     for kw in expand_keywords {
-        if core == kw || core.starts_with(&format!("{kw} ")) {
+        if core == kw || (word_count <= 8 && core.starts_with(&format!("{kw} "))) {
             return EditIntent::Expand;
         }
     }
@@ -289,9 +583,54 @@ pub fn parse_edit_intent(
         "correct mistakes",
         "proofread",
         "check grammar",
+        "grammatik korrigieren",
+        "korrigiere grammatik",
+        "fehler korrigieren",
+        "korrigiere fehler",
+        "rechtschreibung prüfen",
+        "rechtschreibung korrigieren",
+        "korrekturlesen",
+        "corregir gramática",
+        "corregir gramatica",
+        "corrige gramática",
+        "corrige gramatica",
+        "corrige errores",
+        "corregir errores",
+        "revisar texto",
+        "corriger la grammaire",
+        "corrige la grammaire",
+        "corriger les erreurs",
+        "corrige les erreurs",
+        "relecture",
+        "correggi grammatica",
+        "correggi la grammatica",
+        "correggi errori",
+        "controlla grammatica",
+        "corrigir gramática",
+        "corrigir gramatica",
+        "corrija a gramática",
+        "corrija a gramatica",
+        "corrija erros",
+        "corrigir erros",
+        "dilbilgisini düzelt",
+        "dilbilgisini duzelt",
+        "hataları düzelt",
+        "hatalari duzelt",
+        "düzelt",
+        "duzelt",
+        "grammatica controleren",
+        "verbeter grammatica",
+        "fouten verbeteren",
+        "verbeter fouten",
+        "corrigeer",
+        "修改病句",
+        "修正语法",
+        "修改语法",
+        "纠错",
+        "纠正错别字",
     ];
     for kw in grammar_keywords {
-        if core == kw || core.starts_with(&format!("{kw} ")) {
+        if core == kw || (word_count <= 8 && core.starts_with(&format!("{kw} "))) {
             return EditIntent::FixGrammar;
         }
     }
@@ -308,9 +647,38 @@ pub fn parse_edit_intent(
         "formal tone",
         "professional tone",
         "more formal",
+        "formeller",
+        "mach formeller",
+        "formeller machen",
+        "offizieller",
+        "más formal",
+        "mas formal",
+        "hazlo formal",
+        "tono formal",
+        "plus formel",
+        "fais plus formel",
+        "rendre formel",
+        "ton formel",
+        "più formale",
+        "piu formale",
+        "fai più formale",
+        "fai piu formale",
+        "mais formal",
+        "faça mais formal",
+        "faca mais formal",
+        "tom formal",
+        "daha resmi",
+        "resmi yap",
+        "daha resmi yap",
+        "formeler",
+        "maak formeler",
+        "formele toon",
+        "更正式",
+        "商务语气",
+        "专业语气",
     ];
     for kw in formal_keywords {
-        if core == kw || core.starts_with(&format!("{kw} ")) {
+        if core == kw || (word_count <= 8 && core.starts_with(&format!("{kw} "))) {
             return EditIntent::RewriteFormal;
         }
     }
@@ -327,9 +695,37 @@ pub fn parse_edit_intent(
         "casual tone",
         "friendly tone",
         "simpler",
+        "lockerer",
+        "mach lockerer",
+        "informeller",
+        "más casual",
+        "mas casual",
+        "hazlo informal",
+        "tono casual",
+        "plus décontracté",
+        "plus decontracte",
+        "plus informel",
+        "ton décontracté",
+        "ton decontracte",
+        "più informale",
+        "piu informale",
+        "fai informale",
+        "mais casual",
+        "mais informal",
+        "tom casual",
+        "daha samimi",
+        "günlük dil",
+        "gunluk dil",
+        "daha rahat",
+        "informeler",
+        "maak informeler",
+        "lossere toon",
+        "口语化",
+        "更随意",
+        "轻松语气",
     ];
     for kw in casual_keywords {
-        if core == kw || core.starts_with(&format!("{kw} ")) {
+        if core == kw || (word_count <= 8 && core.starts_with(&format!("{kw} "))) {
             return EditIntent::RewriteCasual;
         }
     }
@@ -348,9 +744,34 @@ pub fn parse_edit_intent(
         "tldr",
         "key takeaways",
         "key points",
+        "zusammenfassen",
+        "fasse zusammen",
+        "zusammenfassung",
+        "resumir",
+        "resume",
+        "resumen",
+        "résumer",
+        "resumer",
+        "résume",
+        "résumé",
+        "riassumi",
+        "riassumere",
+        "riassunto",
+        "resuma",
+        "resumo",
+        "özetle",
+        "ozetle",
+        "özet",
+        "ozet",
+        "samenvatten",
+        "vat samen",
+        "samenvatting",
+        "总结",
+        "概括",
+        "总结要点",
     ];
     for kw in summarize_keywords {
-        if core == kw || core.starts_with(&format!("{kw} ")) {
+        if core == kw || (word_count <= 8 && core.starts_with(&format!("{kw} "))) {
             return EditIntent::Summarize;
         }
     }
@@ -368,15 +789,37 @@ pub fn parse_edit_intent(
         "as a list",
         "format as list",
         "make a list",
+        "als liste",
+        "stichpunkte",
+        "aufzählung",
+        "aufzahlung",
+        "en viñetas",
+        "en vinetas",
+        "como lista",
+        "en puces",
+        "liste à puces",
+        "liste a puces",
+        "elenco puntato",
+        "in punti",
+        "come elenco",
+        "em tópicos",
+        "em topicos",
+        "madde işaretleri",
+        "madde isaretleri",
+        "liste olarak",
+        "opsommingstekens",
+        "als lijst",
+        "分点列出",
+        "项目符号",
+        "列成清单",
     ];
     for kw in list_keywords {
-        if core == kw || core.starts_with(&format!("{kw} ")) {
+        if core == kw || (word_count <= 8 && core.starts_with(&format!("{kw} "))) {
             return EditIntent::Bulletize;
         }
     }
 
     // 9. CUSTOM COMMANDS (must be imperative and concise: under 12 words)
-    let word_count = core.split_whitespace().count();
     if word_count <= 12 {
         let custom_prefixes = [
             "сделай ",
@@ -387,6 +830,20 @@ pub fn parse_edit_intent(
             "rephrase ",
             "convert to ",
             "format as ",
+            "schreibe um ",
+            "formuliere um ",
+            "reescribe ",
+            "reformula ",
+            "réécris ",
+            "reecris ",
+            "riscrivi ",
+            "riformula ",
+            "reescreva ",
+            "reformule ",
+            "yeniden yaz ",
+            "herschrijf ",
+            "改写 ",
+            "重写 ",
         ];
         for cp in custom_prefixes {
             if core.starts_with(cp) {
@@ -454,6 +911,14 @@ mod tests {
             EditIntent::Shorten
         );
         assert_eq!(
+            parse_edit_intent("Sekreti.", "en", "Текст", "ru"),
+            EditIntent::Shorten
+        );
+        assert_eq!(
+            parse_edit_intent("sokrati", "en", "Текст", "ru"),
+            EditIntent::Shorten
+        );
+        assert_eq!(
             parse_edit_intent("make it shorter", "en", "Text", "en"),
             EditIntent::Shorten
         );
@@ -508,6 +973,204 @@ mod tests {
         assert_eq!(
             parse_edit_intent("hello this is voice dictation test", "en", "Text", "en"),
             EditIntent::NotACommand
+        );
+    }
+
+    #[test]
+    fn parses_multilingual_commands() {
+        // German
+        assert_eq!(
+            parse_edit_intent("Bitte übersetze auf Englisch", "en", "Hallo Welt", "de"),
+            EditIntent::Translate { target_lang: "en".to_string() }
+        );
+        assert_eq!(
+            parse_edit_intent("mach kürzer", "en", "Langer Text", "de"),
+            EditIntent::Shorten
+        );
+        assert_eq!(
+            parse_edit_intent("korrigiere fehler", "en", "Fehlerhafter Text", "de"),
+            EditIntent::FixGrammar
+        );
+        assert_eq!(
+            parse_edit_intent("zusammenfassen", "en", "Langer Text", "de"),
+            EditIntent::Summarize
+        );
+        assert_eq!(
+            parse_edit_intent("als liste", "en", "Text", "de"),
+            EditIntent::Bulletize
+        );
+
+        // French
+        assert_eq!(
+            parse_edit_intent("S'il vous plaît traduis en allemand", "en", "Bonjour", "fr"),
+            EditIntent::Translate { target_lang: "de".to_string() }
+        );
+        assert_eq!(
+            parse_edit_intent("fais plus court", "en", "Texte", "fr"),
+            EditIntent::Shorten
+        );
+        assert_eq!(
+            parse_edit_intent("corrige la grammaire", "en", "Texte", "fr"),
+            EditIntent::FixGrammar
+        );
+        assert_eq!(
+            parse_edit_intent("résumé", "en", "Texte", "fr"),
+            EditIntent::Summarize
+        );
+
+        // Spanish
+        assert_eq!(
+            parse_edit_intent("por favor traduce al francés", "en", "Hola", "es"),
+            EditIntent::Translate { target_lang: "fr".to_string() }
+        );
+        assert_eq!(
+            parse_edit_intent("hazlo más corto", "en", "Texto", "es"),
+            EditIntent::Shorten
+        );
+        assert_eq!(
+            parse_edit_intent("corrige errores", "en", "Texto", "es"),
+            EditIntent::FixGrammar
+        );
+        assert_eq!(
+            parse_edit_intent("en viñetas", "en", "Texto", "es"),
+            EditIntent::Bulletize
+        );
+
+        // Italian
+        assert_eq!(
+            parse_edit_intent("traduci in inglese", "en", "Ciao", "it"),
+            EditIntent::Translate { target_lang: "en".to_string() }
+        );
+        assert_eq!(
+            parse_edit_intent("accorcia", "en", "Testo", "it"),
+            EditIntent::Shorten
+        );
+        assert_eq!(
+            parse_edit_intent("riassunto", "en", "Testo", "it"),
+            EditIntent::Summarize
+        );
+
+        // Portuguese
+        assert_eq!(
+            parse_edit_intent("traduza para espanhol", "en", "Olá", "pt"),
+            EditIntent::Translate { target_lang: "es".to_string() }
+        );
+        assert_eq!(
+            parse_edit_intent("encurta", "en", "Texto", "pt"),
+            EditIntent::Shorten
+        );
+
+        // Turkish
+        assert_eq!(
+            parse_edit_intent("lütfen türkçeye çevir", "en", "Hello", "tr"),
+            EditIntent::Translate { target_lang: "tr".to_string() }
+        );
+        assert_eq!(
+            parse_edit_intent("kısalt", "en", "Metin", "tr"),
+            EditIntent::Shorten
+        );
+        assert_eq!(
+            parse_edit_intent("özetle", "en", "Metin", "tr"),
+            EditIntent::Summarize
+        );
+
+        // Dutch
+        assert_eq!(
+            parse_edit_intent("vertaal naar het engels", "en", "Hallo", "nl"),
+            EditIntent::Translate { target_lang: "en".to_string() }
+        );
+        assert_eq!(
+            parse_edit_intent("kort in", "en", "Tekst", "nl"),
+            EditIntent::Shorten
+        );
+
+        // Chinese
+        assert_eq!(
+            parse_edit_intent("请翻译成英语", "en", "你好世界", "zh"),
+            EditIntent::Translate { target_lang: "en".to_string() }
+        );
+        assert_eq!(
+            parse_edit_intent("请总结", "en", "长文本", "zh"),
+            EditIntent::Summarize
+        );
+        assert_eq!(
+            parse_edit_intent("修改语法", "en", "文本", "zh"),
+            EditIntent::FixGrammar
+        );
+        assert_eq!(
+            parse_edit_intent("分点列出", "en", "文本", "zh"),
+            EditIntent::Bulletize
+        );
+    }
+
+    #[test]
+    fn rejects_conversational_idioms_and_long_sentences() {
+        assert_eq!(
+            parse_edit_intent("короче говоря это было отличное решение", "en", "Текст", "ru"),
+            EditIntent::NotACommand
+        );
+        assert_eq!(
+            parse_edit_intent("суть в том что нам нужно продолжать", "en", "Текст", "ru"),
+            EditIntent::NotACommand
+        );
+        assert_eq!(
+            parse_edit_intent("главное чтобы всё работало без сбоев", "en", "Текст", "ru"),
+            EditIntent::NotACommand
+        );
+        assert_eq!(
+            parse_edit_intent("главное что мы успели вовремя", "en", "Текст", "ru"),
+            EditIntent::NotACommand
+        );
+        assert_eq!(
+            parse_edit_intent("проще говоря это обычный текст", "en", "Текст", "ru"),
+            EditIntent::NotACommand
+        );
+
+        // Long sentences starting with prefix (> 8 words) should not be captured as short edit commands
+        assert_eq!(
+            parse_edit_intent(
+                "короче мы решили переписать этот весь проект на другой язык программирования и выпустить релиз",
+                "en",
+                "Текст",
+                "ru"
+            ),
+            EditIntent::NotACommand
+        );
+        assert_eq!(
+            parse_edit_intent(
+                "главное мы должны закончить эту задачу как можно скорее чтобы успеть к дедлайну",
+                "en",
+                "Текст",
+                "ru"
+            ),
+            EditIntent::NotACommand
+        );
+    }
+
+    #[test]
+    fn bare_translate_target_respects_ui_and_default_lang() {
+        // Cyrillic text -> translates to default target (en)
+        assert_eq!(
+            parse_edit_intent("переведи", "en", "Привет мир", "ru"),
+            EditIntent::Translate { target_lang: "en".to_string() }
+        );
+
+        // English text with German UI and default target "en" -> translates to German UI lang
+        assert_eq!(
+            parse_edit_intent("translate", "en", "Hello world", "de"),
+            EditIntent::Translate { target_lang: "de".to_string() }
+        );
+
+        // English text with German UI and default target "es" -> translates to Spanish
+        assert_eq!(
+            parse_edit_intent("translate", "es", "Hello world", "de"),
+            EditIntent::Translate { target_lang: "es".to_string() }
+        );
+
+        // English text with Russian UI -> translates to Russian
+        assert_eq!(
+            parse_edit_intent("переведи", "en", "Hello world", "ru"),
+            EditIntent::Translate { target_lang: "ru".to_string() }
         );
     }
 }

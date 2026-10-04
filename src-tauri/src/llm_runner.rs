@@ -57,8 +57,9 @@ pub fn is_llm_model_id(model_name: &str) -> bool {
 }
 
 /// Where an edit command on selected text should run for the current
-/// settings. "auto" prefers the local model when it is installed and falls
-/// back to the cloud provider otherwise.
+/// settings. "auto" prefers the local model when model weights are installed,
+/// downloading runtime on-demand if needed, and falls back to cloud or
+/// triggers missing-model notice if copy_context_on_start is active.
 pub fn resolve_ai_edit_route<R: tauri::Runtime>(
     app_handle: &tauri::AppHandle<R>,
     settings: &crate::settings::Settings,
@@ -68,12 +69,20 @@ pub fn resolve_ai_edit_route<R: tauri::Runtime>(
         "cloud" => AiEditRoute::Cloud,
         "local" => AiEditRoute::Local,
         _ => {
-            if llm_model_is_installed(app_handle, &settings.llm_model) {
+            let active_key = if !settings.api_key.trim().is_empty() {
+                settings.api_key.as_str()
+            } else {
+                settings.active_api_key()
+            };
+            let has_cloud = !active_key.trim().is_empty();
+            let has_local_model = llm_model_is_installed(app_handle, &settings.llm_model);
+
+            if has_local_model {
                 AiEditRoute::Local
-            } else if !settings.active_api_key().trim().is_empty()
-                && settings.api_provider != "huggingface"
-            {
+            } else if has_cloud {
                 AiEditRoute::Cloud
+            } else if settings.copy_context_on_start {
+                AiEditRoute::Local
             } else {
                 AiEditRoute::Off
             }
@@ -91,6 +100,14 @@ pub fn needs_edit_pass(
     route: AiEditRoute,
 ) -> bool {
     has_selection && has_text && route != AiEditRoute::Off
+}
+
+/// Whether a failed local edit pass is allowed to fall back to a cloud AI provider.
+///
+/// Only "auto" mode permits cloud fallback. Explicit "local" mode strictly guarantees
+/// that no selected text or transcription is ever transmitted to remote APIs.
+pub fn can_cloud_edit_fallback(ai_edit_mode: &str, active_key: &str) -> bool {
+    ai_edit_mode == "auto" && !active_key.trim().is_empty()
 }
 
 struct LlmArtifactSpec {
@@ -163,6 +180,15 @@ pub fn llm_model_is_installed<R: tauri::Runtime>(
         .unwrap_or(false)
 }
 
+/// Returns true if both the Qwen3 model weights and at least one llama-server
+/// execution backend (Vulkan or CPU) are present and ready to execute.
+pub fn is_local_edit_ready<R: tauri::Runtime>(
+    app_handle: &tauri::AppHandle<R>,
+    model_name: &str,
+) -> bool {
+    llm_model_is_installed(app_handle, model_name) && any_llm_runtime_is_installed(app_handle)
+}
+
 /// Download a pinned Qwen3 GGUF model with resume, size and SHA-256
 /// enforcement and cancellable progress events (same pipeline as Whisper).
 pub async fn download_llm_model<R: tauri::Runtime>(
@@ -230,6 +256,19 @@ pub async fn download_llm_model<R: tauri::Runtime>(
             status: Some("done".to_string()),
         },
     );
+
+    // Automatically ensure the llama-server engine runtime is present alongside model weights
+    if !any_llm_runtime_is_installed(app_handle) {
+        if let Err(error) = ensure_llm_runtime(app_handle).await {
+            crate::logger::log(
+                "WARN",
+                "LLM",
+                None,
+                &format!("Automatic llama-server runtime installation encountered an issue: {error}"),
+            );
+        }
+    }
+
     Ok(outcome.path)
 }
 
@@ -290,6 +329,253 @@ fn find_llama_server<R: tauri::Runtime>(
     Err(format!(
         "llama-server ({backend}) executable was not found in resource dir ({resource_dir:?})."
     ))
+}
+
+pub fn llm_runtime_is_installed<R: tauri::Runtime>(
+    app_handle: &tauri::AppHandle<R>,
+    backend: &str,
+) -> bool {
+    find_llama_server(app_handle, backend).is_ok()
+}
+
+pub fn any_llm_runtime_is_installed<R: tauri::Runtime>(
+    app_handle: &tauri::AppHandle<R>,
+) -> bool {
+    LLM_BACKENDS
+        .iter()
+        .any(|backend| llm_runtime_is_installed(app_handle, backend))
+}
+
+#[derive(Clone, Copy)]
+pub struct LlmRuntimeSpec {
+    pub backend: &'static str,
+    pub archive_name: &'static str,
+    pub url: &'static str,
+    pub expected_size: u64,
+    pub sha256: &'static str,
+}
+
+pub fn llm_runtime_spec(backend: &str) -> Result<LlmRuntimeSpec, String> {
+    match backend {
+        "vulkan" => Ok(LlmRuntimeSpec {
+            backend: "vulkan",
+            archive_name: "llama-b11179-bin-win-vulkan-x64.zip",
+            url: "https://github.com/ggml-org/llama.cpp/releases/download/b11179/llama-b11179-bin-win-vulkan-x64.zip",
+            expected_size: 32_456_716,
+            sha256: "cc70d58f661dccab723a855c78745a99dd5d55102fd8828fe883f070ad3a6f23",
+        }),
+        "cpu" => Ok(LlmRuntimeSpec {
+            backend: "cpu",
+            archive_name: "llama-b11179-bin-win-cpu-x64.zip",
+            url: "https://github.com/ggml-org/llama.cpp/releases/download/b11179/llama-b11179-bin-win-cpu-x64.zip",
+            expected_size: 18_568_260,
+            sha256: "1e488d45478a7734aa9c2dc596238ac914de8d8fbc473df864e533c306ee9332",
+        }),
+        _ => Err(format!("Unsupported llama backend '{backend}'")),
+    }
+}
+
+/// Download and install a pinned prebuilt `llama-server` runtime archive into
+/// `%LOCALAPPDATA%\com.aura.app\binaries\llm-<backend>\`.
+pub async fn download_llm_runtime<R: tauri::Runtime>(
+    app_handle: &tauri::AppHandle<R>,
+    backend: &str,
+) -> Result<PathBuf, String> {
+    let spec = llm_runtime_spec(backend)?;
+    let app_local_data = app_handle
+        .path()
+        .app_local_data_dir()
+        .map_err(|e| format!("Failed to get app local data dir: {e}"))?;
+
+    let destination_dir = app_local_data.join("binaries").join(format!("llm-{backend}"));
+    let exe_path = destination_dir.join(LLM_EXE_NAME);
+    if exe_path.is_file() {
+        return Ok(exe_path);
+    }
+
+    let download_id = format!("llm-runtime-{backend}");
+    let _lease = begin_model_download(&download_id)?;
+    clear_cancel(&download_id);
+
+    // Stop any resident instance before unpacking files
+    stop_llm_server(app_handle);
+
+    let temp_archive_path = app_local_data.join("binaries").join(spec.archive_name);
+    if let Some(parent) = temp_archive_path.parent() {
+        let _ = std::fs::create_dir_all(parent);
+    }
+
+    let client = crate::ai_client::build_download_client();
+    let download_spec = crate::artifact_download::ArtifactSpec {
+        label: spec.archive_name,
+        url: spec.url,
+        expected_size: spec.expected_size,
+        sha256: spec.sha256,
+    };
+
+    crate::logger::log(
+        "INFO",
+        "LLM",
+        None,
+        &format!(
+            "Downloading llama-server ({backend}) runtime ({} bytes)",
+            spec.expected_size
+        ),
+    );
+
+    let download_res = crate::artifact_download::download_verified_artifact(
+        &client,
+        download_spec,
+        &temp_archive_path,
+        crate::artifact_download::DEFAULT_STALL_TIMEOUT,
+        || is_cancel_requested(&download_id),
+        |progress| {
+            let is_verifying = progress.downloaded >= spec.expected_size;
+            let status = if is_verifying {
+                Some("extracting".to_string())
+            } else {
+                Some("downloading".to_string())
+            };
+            let percentage = if is_verifying {
+                100.0
+            } else {
+                (progress.downloaded as f64 / spec.expected_size as f64 * 100.0).min(99.9)
+            };
+            let _ = app_handle.emit(
+                "model-download-progress",
+                DownloadProgress {
+                    model: download_id.clone(),
+                    downloaded: progress.downloaded,
+                    total: Some(spec.expected_size),
+                    percentage,
+                    done: false,
+                    status,
+                },
+            );
+        },
+    )
+    .await;
+
+    let outcome = match download_res {
+        Ok(res) => res,
+        Err(err) => {
+            let _ = std::fs::remove_file(&temp_archive_path);
+            return Err(err);
+        }
+    };
+
+    let extract_res = extract_llm_runtime_zip(&outcome.path, &destination_dir);
+    let _ = std::fs::remove_file(&outcome.path);
+
+    extract_res?;
+
+    let _ = app_handle.emit(
+        "model-download-progress",
+        DownloadProgress {
+            model: download_id,
+            downloaded: spec.expected_size,
+            total: Some(spec.expected_size),
+            percentage: 100.0,
+            done: true,
+            status: Some("done".to_string()),
+        },
+    );
+
+    crate::logger::log(
+        "INFO",
+        "LLM",
+        None,
+        &format!(
+            "Installed llama-server ({backend}) runtime into {}",
+            destination_dir.display()
+        ),
+    );
+
+    Ok(exe_path)
+}
+
+fn extract_llm_runtime_zip(archive_path: &Path, target_dir: &Path) -> Result<(), String> {
+    let file = std::fs::File::open(archive_path)
+        .map_err(|e| format!("Failed to open verified runtime archive: {e}"))?;
+    let mut archive = zip::ZipArchive::new(file)
+        .map_err(|e| format!("Failed to read runtime zip archive: {e}"))?;
+
+    let timestamp = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_millis();
+    let staging_dir = target_dir
+        .parent()
+        .unwrap_or(target_dir)
+        .join(format!(".llm_staging_{}_{}", std::process::id(), timestamp));
+
+    let _ = std::fs::remove_dir_all(&staging_dir);
+    std::fs::create_dir_all(&staging_dir)
+        .map_err(|e| format!("Failed to create staging dir for runtime: {e}"))?;
+
+    for i in 0..archive.len() {
+        let mut entry = archive
+            .by_index(i)
+            .map_err(|e| format!("Failed to read entry {i} in runtime archive: {e}"))?;
+        if entry.is_dir() {
+            continue;
+        }
+        let Some(enclosed) = entry.enclosed_name().map(|p| p.to_owned()) else {
+            continue;
+        };
+        let file_name = enclosed.file_name().unwrap_or(enclosed.as_os_str());
+        let out_path = staging_dir.join(file_name);
+        let mut outfile = std::fs::File::create(&out_path)
+            .map_err(|e| format!("Failed to create runtime file {}: {e}", out_path.display()))?;
+        std::io::copy(&mut entry, &mut outfile)
+            .map_err(|e| format!("Failed to write runtime file {}: {e}", out_path.display()))?;
+    }
+
+    if !staging_dir.join(LLM_EXE_NAME).is_file() {
+        let _ = std::fs::remove_dir_all(&staging_dir);
+        return Err(format!("Runtime archive is missing {LLM_EXE_NAME}"));
+    }
+
+    let _ = std::fs::remove_dir_all(target_dir);
+    if let Some(parent) = target_dir.parent() {
+        let _ = std::fs::create_dir_all(parent);
+    }
+
+    if std::fs::rename(&staging_dir, target_dir).is_err() {
+        let _ = std::fs::create_dir_all(target_dir);
+        if let Ok(entries) = std::fs::read_dir(&staging_dir) {
+            for entry in entries.flatten() {
+                let dest = target_dir.join(entry.file_name());
+                let _ = std::fs::copy(entry.path(), dest);
+            }
+        }
+        let _ = std::fs::remove_dir_all(&staging_dir);
+    }
+
+    Ok(())
+}
+
+/// Ensures at least one llama-server runtime backend (Vulkan or CPU) is
+/// installed on-demand, downloading Vulkan first and falling back to CPU.
+pub async fn ensure_llm_runtime<R: tauri::Runtime>(
+    app_handle: &tauri::AppHandle<R>,
+) -> Result<(), String> {
+    if any_llm_runtime_is_installed(app_handle) {
+        return Ok(());
+    }
+
+    match download_llm_runtime(app_handle, "vulkan").await {
+        Ok(_) => Ok(()),
+        Err(vulkan_err) => {
+            crate::logger::log(
+                "WARN",
+                "LLM",
+                None,
+                &format!("Vulkan runtime download failed ({vulkan_err}); attempting CPU fallback"),
+            );
+            download_llm_runtime(app_handle, "cpu").await.map(|_| ())
+        }
+    }
 }
 
 /// Resident `llama-server` process. Dropping the value kills the child and
@@ -745,6 +1031,16 @@ pub async fn run_local_edit<R: tauri::Runtime>(
         ),
     );
 
+    if !any_llm_runtime_is_installed(&app_handle) {
+        crate::logger::log(
+            "INFO",
+            "LLM",
+            None,
+            "No llama-server runtime detected; downloading required runtime on demand",
+        );
+        ensure_llm_runtime(&app_handle).await?;
+    }
+
     let startup_handle = app_handle.clone();
     let startup_model = model_name.clone();
     tauri::async_runtime::spawn_blocking(move || start_llm_server(&startup_handle, &startup_model))
@@ -759,7 +1055,7 @@ pub async fn run_local_edit<R: tauri::Runtime>(
         return Err("Local editing server is not running".to_string());
     }
 
-    let system_prompt = intent.system_prompt().unwrap_or_else(|| {
+    let system_prompt = intent.system_prompt(selected_text).unwrap_or_else(|| {
         crate::ai_client::build_clean_instructions(language, dictionary, true)
     });
 
@@ -1396,5 +1692,21 @@ mod tests {
         // A leading colon line that is not a known caption is not removed.
         let note = "Note: the meeting went well.";
         assert_eq!(strip_output_label(note), note);
+    }
+
+    #[test]
+    fn test_can_cloud_edit_fallback() {
+        // "auto" mode allows cloud fallback when an API key is present
+        assert!(can_cloud_edit_fallback("auto", "valid_api_key"));
+        assert!(!can_cloud_edit_fallback("auto", "   "));
+        assert!(!can_cloud_edit_fallback("auto", ""));
+
+        // "local" mode strictly forbids cloud fallback even if API key exists
+        assert!(!can_cloud_edit_fallback("local", "valid_api_key"));
+        assert!(!can_cloud_edit_fallback("local", ""));
+
+        // "cloud" mode or "off" mode are not local fallback scenarios
+        assert!(!can_cloud_edit_fallback("cloud", "valid_api_key"));
+        assert!(!can_cloud_edit_fallback("off", "valid_api_key"));
     }
 }

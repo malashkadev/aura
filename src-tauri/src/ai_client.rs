@@ -1089,7 +1089,7 @@ pub async fn edit_text_with_provider(
     }
 
     let client = get_shared_http_client();
-    let system_prompt = intent.system_prompt().unwrap_or_else(|| {
+    let system_prompt = intent.system_prompt(selected_text).unwrap_or_else(|| {
         build_clean_instructions(language, dictionary, true)
     });
 

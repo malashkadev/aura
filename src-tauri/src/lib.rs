@@ -225,113 +225,6 @@ async fn set_ui_language(app_handle: tauri::AppHandle, ui_language: String) -> R
     Ok(())
 }
 
-#[allow(dead_code)]
-#[derive(Clone, Copy)]
-struct TrayTranslations {
-    show: &'static str,
-    recognition_mode: &'static str,
-    cloud: &'static str,
-    local: &'static str,
-    gaming_mode: &'static str,
-    quit: &'static str,
-}
-
-#[allow(dead_code)]
-fn tray_translations(language: &str) -> TrayTranslations {
-    match language {
-        "ru" => TrayTranslations {
-            show: "Открыть настройки",
-            recognition_mode: "Способ распознавания",
-            cloud: "Облачный ИИ",
-            local: "Локальный ИИ (Whisper / Parakeet)",
-            gaming_mode: "Игровой режим",
-            quit: "Выход",
-        },
-        "de" => TrayTranslations {
-            show: "Einstellungen öffnen",
-            recognition_mode: "Erkennungsmodus",
-            cloud: "Cloud-KI",
-            local: "Lokale KI (Whisper / Parakeet)",
-            gaming_mode: "Spielemodus",
-            quit: "Beenden",
-        },
-        "es" => TrayTranslations {
-            show: "Abrir ajustes",
-            recognition_mode: "Modo de reconocimiento",
-            cloud: "IA en la nube",
-            local: "IA local (Whisper / Parakeet)",
-            gaming_mode: "Modo de juego",
-            quit: "Salir",
-        },
-        "fr" => TrayTranslations {
-            show: "Ouvrir les paramètres",
-            recognition_mode: "Mode de reconnaissance",
-            cloud: "IA cloud",
-            local: "IA locale (Whisper / Parakeet)",
-            gaming_mode: "Mode jeu",
-            quit: "Quitter",
-        },
-        "it" => TrayTranslations {
-            show: "Apri impostazioni",
-            recognition_mode: "Modalità di riconoscimento",
-            cloud: "IA cloud",
-            local: "IA locale (Whisper / Parakeet)",
-            gaming_mode: "Modalità gioco",
-            quit: "Esci",
-        },
-        "zh" => TrayTranslations {
-            show: "打开设置",
-            recognition_mode: "识别模式",
-            cloud: "云端 AI",
-            local: "本地 AI (Whisper / Parakeet)",
-            gaming_mode: "游戏模式",
-            quit: "退出",
-        },
-        "pt" => TrayTranslations {
-            show: "Abrir configurações",
-            recognition_mode: "Modo de reconhecimento",
-            cloud: "IA na nuvem",
-            local: "IA local (Whisper / Parakeet)",
-            gaming_mode: "Modo de Jogo",
-            quit: "Sair",
-        },
-        "tr" => TrayTranslations {
-            show: "Ayarları aç",
-            recognition_mode: "Tanıma modu",
-            cloud: "Bulut AI",
-            local: "Yerel AI (Whisper / Parakeet)",
-            gaming_mode: "Oyun Modu",
-            quit: "Çıkış",
-        },
-        "en" => TrayTranslations {
-            show: "Open settings",
-            recognition_mode: "Recognition mode",
-            cloud: "Cloud AI",
-            local: "Local AI (Whisper / Parakeet)",
-            gaming_mode: "Gaming Mode",
-            quit: "Quit",
-        },
-        _ => TrayTranslations {
-            show: "Open settings",
-            recognition_mode: "Recognition mode",
-            cloud: "Cloud AI",
-            local: "Local AI (Whisper / Parakeet)",
-            gaming_mode: "Gaming Mode",
-            quit: "Quit",
-        },
-    }
-}
-
-#[allow(dead_code)]
-trait SetTextMock {
-    fn set_text(&self, text: &str) -> Result<(), ()>;
-}
-
-#[allow(dead_code)]
-fn sync_tray_translations_fallback<T: SetTextMock>(show_sync: &T, text: &TrayTranslations) {
-    let _ = show_sync.set_text(text.show);
-}
-
 fn tray_tooltip(gaming_mode: bool, language: &str) -> &'static str {
     if gaming_mode {
         match language {
@@ -2309,6 +2202,17 @@ fn type_streaming_update_sync(
         return TypingUpdateOutcome::TargetDesynchronized;
     }
 
+    // Selected text guard: when editing selected text, intermediate streaming previews
+    // must never be typed into the active window to avoid corrupting/overwriting the selection.
+    let has_captured_selection = state
+        .selected_text
+        .lock()
+        .map(|s| !s.trim().is_empty())
+        .unwrap_or(false);
+    if has_captured_selection && mode.requires_recording() {
+        return TypingUpdateOutcome::Applied;
+    }
+
     // Focus guard: never type into a window the user switched to mid-dictation
     let start_focus = match state.start_focus.lock() {
         Ok(guard) => *guard,
@@ -3018,7 +2922,10 @@ async fn start_recording_session(app_handle: tauri::AppHandle) {
             // Selection captured and the local route will use it: bring the
             // editing server up in the background while the user is still
             // speaking, so the edit does not have to wait for model loading.
-            if captured_selection && warm_route == llm_runner::AiEditRoute::Local {
+            if captured_selection
+                && warm_route == llm_runner::AiEditRoute::Local
+                && llm_runner::llm_model_is_installed(&app_handle_copy, &warm_model)
+            {
                 crate::logger::log(
                     "INFO",
                     "LLM",
@@ -3410,6 +3317,52 @@ async fn start_recording_session(app_handle: tauri::AppHandle) {
     }
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum EditExecutionTarget {
+    Local,
+    Cloud,
+}
+
+pub fn resolve_history_entry_meta(
+    transcription_mode: &str,
+    local_engine: &str,
+    used_local_fallback: bool,
+    asr_duration_ms: u64,
+    executed_edit_target: Option<EditExecutionTarget>,
+) -> (String, Option<String>, u64) {
+    match executed_edit_target {
+        Some(EditExecutionTarget::Cloud) => (
+            "cloud".to_string(),
+            None,
+            0,
+        ),
+        Some(EditExecutionTarget::Local) => (
+            "local".to_string(),
+            Some(local_engine.to_string()),
+            asr_duration_ms,
+        ),
+        None => {
+            let history_mode = if used_local_fallback {
+                "local (cloud fallback)".to_string()
+            } else {
+                transcription_mode.to_string()
+            };
+            let is_local_text = transcription_mode == "local" || used_local_fallback;
+            let history_engine = if is_local_text {
+                Some(local_engine.to_string())
+            } else {
+                None
+            };
+            let history_processing_ms = if is_local_text {
+                asr_duration_ms
+            } else {
+                0
+            };
+            (history_mode, history_engine, history_processing_ms)
+        }
+    }
+}
+
 /// Stops the recording and runs the final transcription + paste/type pipeline.
 async fn finalize_recording(app_handle: tauri::AppHandle) {
     let Some(state) = app_handle.try_state::<AppState>() else {
@@ -3741,6 +3694,7 @@ async fn finalize_recording(app_handle: tauri::AppHandle) {
         // still holds the raw speech, and pasting it would insert the spoken
         // command ("Сократи") instead of the document it was meant to change.
         let mut edit_failed = false;
+        let mut executed_edit_target: Option<EditExecutionTarget> = None;
         match transcription_result {
             Ok(mut text) => {
                 // Selected-text edit pass: runs whenever a selection and spoken text
@@ -3790,18 +3744,108 @@ async fn finalize_recording(app_handle: tauri::AppHandle) {
                                             ),
                                         );
                                         text = edited;
+                                        executed_edit_target = Some(EditExecutionTarget::Local);
                                     }
                                     Err(error) => {
                                         crate::logger::log(
                                             "WARN",
                                             "LLM",
                                             Some(&session_tag_clone),
+                                            &format!(
+                                                "Local edit pass failed: {error}"
+                                            ),
+                                        );
+                                        let active_key = if !settings.api_key.trim().is_empty() {
+                                            settings.api_key.as_str()
+                                        } else {
+                                            settings.active_api_key()
+                                        };
+                                        let can_cloud_fallback = llm_runner::can_cloud_edit_fallback(
+                                            &settings.ai_edit_mode,
+                                            active_key,
+                                        );
+
+                                        if can_cloud_fallback {
+                                            crate::logger::log(
+                                                "INFO",
+                                                "LLM",
+                                                Some(&session_tag_clone),
                                                 &format!(
-                                                    "Local edit pass failed; keeping the unedited text: {error}"
+                                                    "Falling back to cloud AI ('{}') for text editing pass",
+                                                    settings.api_provider
                                                 ),
                                             );
-                                        edit_failed = true;
-                                        final_notice = Some("edit-failed");
+                                            match tokio::time::timeout(
+                                                std::time::Duration::from_secs(45),
+                                                ai_client::edit_text_with_provider(
+                                                    provider_from(&settings),
+                                                    active_key,
+                                                    &text,
+                                                    &selected_text,
+                                                    &language,
+                                                    &settings.dictionary,
+                                                    &settings.translate_default_target,
+                                                    &settings.ui_language,
+                                                    Some(&settings.custom_api_url),
+                                                    Some(&settings.custom_model_name),
+                                                ),
+                                            )
+                                            .await
+                                            {
+                                                Ok(Ok(edited)) => {
+                                                    crate::logger::log(
+                                                        "INFO",
+                                                        "LLM",
+                                                        Some(&session_tag_clone),
+                                                        &format!(
+                                                            "Cloud fallback edit pass succeeded in {} ms ({} -> {} chars)",
+                                                            edit_started.elapsed().as_millis(),
+                                                            text.chars().count(),
+                                                            edited.chars().count(),
+                                                        ),
+                                                    );
+                                                    text = edited;
+                                                    executed_edit_target = Some(EditExecutionTarget::Cloud);
+                                                }
+                                                Ok(Err(cloud_error)) => {
+                                                    crate::logger::log(
+                                                        "WARN",
+                                                        "LLM",
+                                                        Some(&session_tag_clone),
+                                                        &format!(
+                                                            "Cloud fallback edit pass also failed: {cloud_error}"
+                                                        ),
+                                                    );
+                                                    edit_failed = true;
+                                                    final_notice = Some("edit-cloud-failed");
+                                                }
+                                                Err(_) => {
+                                                    crate::logger::log(
+                                                        "WARN",
+                                                        "LLM",
+                                                        Some(&session_tag_clone),
+                                                        "Cloud fallback edit pass timed out after 45s",
+                                                    );
+                                                    edit_failed = true;
+                                                    final_notice = Some("edit-timeout");
+                                                }
+                                            }
+                                        } else {
+                                            edit_failed = true;
+                                            let lower_err = error.to_lowercase();
+                                            let is_too_large = lower_err.contains("too long")
+                                                || lower_err.contains("limit");
+                                            let is_model_missing = lower_err.contains("missing")
+                                                || lower_err.contains("download")
+                                                || lower_err.contains("incomplete");
+                                            final_notice = Some(if is_too_large {
+                                                "edit-too-large"
+                                            } else if is_model_missing {
+                                                "edit-model-missing"
+                                            } else {
+                                                "edit-local-failed"
+                                            });
+                                        }
                                     }
                                 }
                             }
@@ -3819,7 +3863,7 @@ async fn finalize_recording(app_handle: tauri::AppHandle) {
                                         "No API key for the cloud edit pass; keeping the unedited text",
                                     );
                                     edit_failed = true;
-                                    final_notice = Some("edit-failed");
+                                    final_notice = Some("edit-no-api-key");
                                 } else {
                                     let edit_started = std::time::Instant::now();
                                     match tokio::time::timeout(
@@ -3852,6 +3896,7 @@ async fn finalize_recording(app_handle: tauri::AppHandle) {
                                                 ),
                                             );
                                             text = edited;
+                                            executed_edit_target = Some(EditExecutionTarget::Cloud);
                                         }
                                         Ok(Err(error)) => {
                                             crate::logger::log(
@@ -3863,7 +3908,15 @@ async fn finalize_recording(app_handle: tauri::AppHandle) {
                                                 ),
                                             );
                                             edit_failed = true;
-                                            final_notice = Some("edit-failed");
+                                            let lower_err = error.to_lowercase();
+                                            let is_too_large = lower_err.contains("too long")
+                                                || lower_err.contains("context_length_exceeded")
+                                                || lower_err.contains("maximum context length");
+                                            final_notice = Some(if is_too_large {
+                                                "edit-too-large"
+                                            } else {
+                                                "edit-cloud-failed"
+                                            });
                                         }
                                         Err(_) => {
                                             crate::logger::log(
@@ -3873,7 +3926,7 @@ async fn finalize_recording(app_handle: tauri::AppHandle) {
                                                 "Cloud edit pass timed out after 45s; keeping the unedited text",
                                             );
                                             edit_failed = true;
-                                            final_notice = Some("edit-failed");
+                                            final_notice = Some("edit-timeout");
                                         }
                                     }
                                 }
@@ -3908,23 +3961,14 @@ async fn finalize_recording(app_handle: tauri::AppHandle) {
                 } else if !trimmed.is_empty() && !is_silence_hallucination(&trimmed) {
                     let final_text = trimmed;
 
-                    let history_mode = if used_local_fallback {
-                        "local (cloud fallback)".to_string()
-                    } else {
-                        settings.transcription_mode.clone()
-                    };
-                    let is_local_text =
-                        settings.transcription_mode == "local" || used_local_fallback;
-                    let history_engine = if is_local_text {
-                        Some(settings.local_engine.clone())
-                    } else {
-                        None
-                    };
-                    let history_processing_ms = if is_local_text {
-                        asr_started.elapsed().as_millis().min(u128::from(u64::MAX)) as u64
-                    } else {
-                        0
-                    };
+                    let (history_mode, history_engine, history_processing_ms) =
+                        resolve_history_entry_meta(
+                            &settings.transcription_mode,
+                            &settings.local_engine,
+                            used_local_fallback,
+                            asr_started.elapsed().as_millis().min(u128::from(u64::MAX)) as u64,
+                            executed_edit_target,
+                        );
                     // Deferred: DPAPI + file I/O must not delay the paste, so
                     // the entry is persisted right AFTER insertion completes.
                     let deferred_history = Some((
@@ -6665,5 +6709,46 @@ mod tests {
 
         assert_eq!(tray_tooltip(true, "en"), "Aura — 🎮 Gaming Mode active");
         assert_eq!(tray_tooltip(true, "ru"), "Aura — 🎮 Игровой режим активен");
+    }
+
+    #[test]
+    fn test_resolve_history_entry_meta() {
+        // Normal transcription (no edit pass)
+        let (mode, engine, duration) =
+            resolve_history_entry_meta("local", "whisper", false, 150, None);
+        assert_eq!(mode, "local");
+        assert_eq!(engine, Some("whisper".to_string()));
+        assert_eq!(duration, 150);
+
+        let (mode, engine, duration) =
+            resolve_history_entry_meta("cloud", "whisper", false, 150, None);
+        assert_eq!(mode, "cloud");
+        assert_eq!(engine, None);
+        assert_eq!(duration, 0);
+
+        // Edit pass executed in the cloud: must report "cloud" mode and no local engine,
+        // even if transcription was performed locally by Whisper
+        let (mode, engine, duration) = resolve_history_entry_meta(
+            "local",
+            "whisper",
+            false,
+            150,
+            Some(EditExecutionTarget::Cloud),
+        );
+        assert_eq!(mode, "cloud");
+        assert_eq!(engine, None);
+        assert_eq!(duration, 0);
+
+        // Edit pass executed locally: reports "local" and the local engine
+        let (mode, engine, duration) = resolve_history_entry_meta(
+            "local",
+            "whisper",
+            false,
+            350,
+            Some(EditExecutionTarget::Local),
+        );
+        assert_eq!(mode, "local");
+        assert_eq!(engine, Some("whisper".to_string()));
+        assert_eq!(duration, 350);
     }
 }

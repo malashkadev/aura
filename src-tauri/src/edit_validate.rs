@@ -72,9 +72,14 @@ pub fn validate_edit_result(
                 if !is_primarily_cyrillic(output_trimmed) && original_selection.chars().count() > 8 {
                     return Err(ValidationError::WrongScript);
                 }
-            } else if ["en", "de", "es", "fr", "it", "pt", "nl"].contains(&target_lang.as_str()) {
+            } else if ["en", "de", "es", "fr", "it", "pt", "nl", "tr"].contains(&target_lang.as_str()) {
                 // Should NOT be primarily Cyrillic if translating to Latin-based European languages
                 if is_primarily_cyrillic(output_trimmed) && original_selection.chars().count() > 8 {
+                    return Err(ValidationError::WrongScript);
+                }
+            } else if target_lang == "zh" {
+                let has_cjk = output_trimmed.chars().any(|c| ('\u{4E00}'..='\u{9FFF}').contains(&c));
+                if !has_cjk && original_selection.chars().count() > 8 {
                     return Err(ValidationError::WrongScript);
                 }
             }
@@ -98,7 +103,39 @@ pub fn validate_edit_result(
         _ => {}
     }
 
-    // 2. Output must not be identical to original selection (unless intent was FixGrammar on perfectly correct short text)
+    // 2. Output script must match original selection for all non-translation intents
+    let is_translation_custom = if let EditIntent::Custom(instruction) = intent {
+        let ins_lower = instruction.to_lowercase();
+        ins_lower.contains("перевод")
+            || ins_lower.contains("переведи")
+            || ins_lower.contains("перевести")
+            || ins_lower.contains("translate")
+            || ins_lower.contains("traduc")
+            || ins_lower.contains("übersetz")
+            || ins_lower.contains("ubersetz")
+            || ins_lower.contains("vertal")
+            || ins_lower.contains("çevir")
+            || ins_lower.contains("cevir")
+            || ins_lower.contains("tercüm")
+            || ins_lower.contains("tercum")
+            || ins_lower.contains("翻译")
+    } else {
+        false
+    };
+
+    if !matches!(intent, EditIntent::Translate { .. }) && !is_translation_custom {
+        let orig_alpha = original_selection.chars().filter(|c| c.is_alphabetic()).count();
+        let out_alpha = output_trimmed.chars().filter(|c| c.is_alphabetic()).count();
+        if orig_alpha >= 8 && out_alpha >= 8 {
+            let orig_cyrillic = is_primarily_cyrillic(original_selection);
+            let out_cyrillic = is_primarily_cyrillic(output_trimmed);
+            if orig_cyrillic != out_cyrillic {
+                return Err(ValidationError::WrongScript);
+            }
+        }
+    }
+
+    // 3. Output must not be identical to original selection (unless intent was FixGrammar on perfectly correct short text)
     if norm_output == norm_orig && intent != &EditIntent::FixGrammar {
         return Err(ValidationError::EchoUnmodified);
     }
@@ -152,5 +189,27 @@ mod tests {
             "Это важный рабочий документ для всей команды.",
         );
         assert_eq!(res, Err(ValidationError::WrongScript));
+    }
+
+    #[test]
+    fn rejects_translation_during_shortening() {
+        let res = validate_edit_result(
+            &EditIntent::Shorten,
+            "Найден публичный ключ, но нет приватного ключа. Убедитесь, что переменная установлена.",
+            "сократи",
+            "Public key found, but no private key. Ensure variable is set.",
+        );
+        assert_eq!(res, Err(ValidationError::WrongScript));
+    }
+
+    #[test]
+    fn allows_script_change_for_custom_translation_instruction() {
+        let res = validate_edit_result(
+            &EditIntent::Custom("сделай перевод на английский".to_string()),
+            "Это важный рабочий документ для всей команды.",
+            "сделай перевод на английский",
+            "This is an important working document for the entire team.",
+        );
+        assert!(res.is_ok());
     }
 }

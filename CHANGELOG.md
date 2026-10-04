@@ -12,11 +12,19 @@ The format follows [Keep a Changelog](https://keepachangelog.com/), versions fol
 - **Default Target Translation Language (`translate_default_target`)**: Added configurable target language for bare «переведи» / «translate» commands with intelligent fallback to application UI language when the selected text is already in the target language.
 - **Local LLM Commands on Selected Text (Qwen3 + llama.cpp)**: Voice commands spoken over a selected text run fully offline via resident CPU/Vulkan `llama-server` (Qwen3 0.6B / 1.7B / 4B).
 
+- **Multilingual Voice Editing Across All 10 Supported Languages**: Expanded `edit_intent.rs` and `edit_validate.rs` to support voice editing commands (translation, shortening, grammar correction, formal/casual rewriting, summarization, bullet lists) across all supported languages: Russian, English, German, French, Spanish, Italian, Portuguese, Turkish, Dutch, and Chinese.
+- **Actionable Overlay Notices for Editing Failures**: Replaced generic edit failure notifications with specific, actionable overlay statuses (`edit-model-missing`, `edit-no-api-key`, `edit-local-failed`, `edit-cloud-failed`, `edit-timeout`, `edit-too-large`), fully localized across all 10 languages.
+
 ### Fixed
+- **Strict Local Privacy Isolation for Text Editing**: Fixed fallback routing so that selecting explicit "Local" edit mode strictly isolates all text from remote APIs without fallback to cloud AI under any error condition.
+- **Accurate Model Card Active Highlighting**: Eliminated default active outline on uninstalled local Qwen3 models. Active state is strictly gated on downloaded status, auto-selecting models upon download completion and gracefully adjusting on deletion.
 - **Command Self-Translation Bug**: Fixed issue where saying "переведи на английский" translated the command phrase itself into "Translate to English." and pasted it over user selection instead of translating the selected text.
 - **Echo Detection False Failures**: Fixed false `edit-failed` aborts on "сократи" and "исправь грамматику" caused by over-aggressive echo heuristics and classifier ambiguity.
 - **Keyboard Layout Language Leak in Voice Editing**: Fixed issue where holding the hotkey with an English keyboard layout forced Whisper into English transcription mode for Russian edit commands.
 - **Settings Duplication & Conflicts**: Eliminated confusing division between selection capture toggle and selection command options, removing conflicting "Off" dropdown state in favor of a single master toggle.
+- **On-Demand Llama.cpp Runtime Downloader**: Added automatic background download and SHA-256 verification of pinned prebuilt `llama-server` binaries (Vulkan & CPU, b11179) into `%LOCALAPPDATA%\com.aura.app\binaries\llm-<backend>\`, preserving the ~23 MB lightweight base installer invariant while ensuring local editing works out of the box.
+- **Two-Tier Resilient Cloud Fallback for Auto Editing Mode**: In "Auto" text editing mode, Aura now validates both model weights and runtime availability prior to routing. If the local server fails to start or encounters an error during execution, Aura transparently falls back to cloud AI text editing instead of aborting the operation.
+- **Whisper Phonetic Tolerance for Short Commands**: Added phonetic and transliterated keyword variations ("sekreti", "sokrati", "perevedi") to `edit_intent.rs` to prevent Whisper language auto-detection glitches on ultra-short audio from aborting commands into plain dictation.
 
 ## [1.1.1] — 2026-09-15
 

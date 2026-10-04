@@ -40,7 +40,8 @@ const contextIndicatorTranslations = {
   pt: "Editar",
   zh: "编辑",
   ja: "編集",
-  tr: "Düzenle"
+  tr: "Düzenle",
+  nl: "Bewerken"
 };
 
 listen("selection-context-active", (event) => {
@@ -543,7 +544,8 @@ const processingTranslations = {
   pt: "Processamento…",
   zh: "处理中…",
   ja: "処理中…",
-  tr: "İşleniyor…"
+  tr: "İşleniyor…",
+  nl: "Verwerken…"
 };
 
 const noticeTranslations = {
@@ -557,7 +559,86 @@ const noticeTranslations = {
     pt: "Comando não aplicado — texto selecionado inalterado",
     zh: "指令未应用——选中文本未改动",
     ja: "コマンドを適用できません — 選択テキストは変更されていません",
-    tr: "Komut uygulanamadı — seçili metin değiştirilmedi"
+    tr: "Komut uygulanamadı — seçili metin değiştirilmedi",
+    nl: "Opdracht niet toegepast — geselecteerde tekst ongewijzigd"
+  },
+  "edit-model-missing": {
+    ru: "Локальная модель не скачана — скачайте её в настройках",
+    en: "Local model not downloaded — download it in settings",
+    de: "Lokales Modell nicht heruntergeladen — in Einstellungen laden",
+    fr: "Modèle local non téléchargé — téléchargez-le dans les paramètres",
+    it: "Modello locale non scaricato — scaricalo nelle impostazioni",
+    es: "Modelo local no descargado — descárguelo en ajustes",
+    pt: "Modelo local não descarregado — descarregue nas definições",
+    zh: "本地模型未下载——请在设置中下载",
+    ja: "ローカルモデルが未ダウンロードです — 設定からダウンロードしてください",
+    tr: "Yerel model indirilmedi — ayarlardan indirin",
+    nl: "Lokaal model niet gedownload — download het in instellingen"
+  },
+  "edit-no-api-key": {
+    ru: "Укажите API-ключ в настройках для редактирования",
+    en: "Add an API key in settings for text editing",
+    de: "Fügen Sie einen API-Schlüssel in den Einstellungen hinzu",
+    fr: "Ajoutez une clé API dans les paramètres pour modifier le texte",
+    it: "Aggiungi una chiave API nelle impostazioni per modificare il testo",
+    es: "Añada una clave API en los ajustes para editar texto",
+    pt: "Adicione uma chave API nas definições para editar texto",
+    zh: "请在设置中添加 API 密钥以编辑文本",
+    ja: "テキスト編集用のAPIキーを設定で入力してください",
+    tr: "Metin düzenlemek için ayarlara API anahtarı ekleyin",
+    nl: "Voeg een API-sleutel toe in instellingen voor tekstbewerking"
+  },
+  "edit-local-failed": {
+    ru: "Сбой локального сервера — выделенный текст не изменён",
+    en: "Local engine error — selected text left unchanged",
+    de: "Lokaler Serverfehler — ausgewählter Text unverändert",
+    fr: "Erreur du moteur local — texte sélectionné inchangé",
+    it: "Errore motore locale — testo selezionato invariato",
+    es: "Error del motor local — texto seleccionado sin cambios",
+    pt: "Erro no motor local — texto selecionado inalterado",
+    zh: "本地引擎故障——选中文本未改动",
+    ja: "ローカルエンジンのエラー — 選択テキストは変更されていません",
+    tr: "Yerel motor hatası — seçili metin değiştirilmedi",
+    nl: "Fout in lokale server — geselecteerde tekst ongewijzigd"
+  },
+  "edit-cloud-failed": {
+    ru: "Сбой облачного ИИ — проверьте ключ и сеть",
+    en: "Cloud AI error — check network and API key",
+    de: "Cloud-KI-Fehler — Netzwerk und API-Schlüssel prüfen",
+    fr: "Erreur de l'IA cloud — vérifiez le réseau et la clé API",
+    it: "Errore IA cloud — controlla rete e chiave API",
+    es: "Error de IA en la nube — compruebe red y clave API",
+    pt: "Erro de IA na nuvem — verifique a rede e a chave API",
+    zh: "云端 AI 错误——请检查网络和 API 密钥",
+    ja: "クラウドAIエラー — ネットワークとAPIキーを確認してください",
+    tr: "Bulut yapay zeka hatası — ağı ve API anahtarını kontrol edin",
+    nl: "Cloud-AI fout — controleer netwerk en API-sleutel"
+  },
+  "edit-timeout": {
+    ru: "Время ожидания истекло — текст не изменён",
+    en: "Editing timed out — text left unchanged",
+    de: "Zeitüberschreitung — Text unverändert",
+    fr: "Délai dépassé — texte inchangé",
+    it: "Tempo scaduto — testo invariato",
+    es: "Tiempo agotado — texto sin cambios",
+    pt: "Tempo limite excedido — texto inalterado",
+    zh: "处理超时——文本未改动",
+    ja: "タイムアウト — テキストは変更されていません",
+    tr: "Zaman aşımı — metin değiştirilmedi",
+    nl: "Time-out bij bewerking — tekst ongewijzigd"
+  },
+  "edit-too-large": {
+    ru: "Текст слишком длинный для редактирования",
+    en: "Selected text too long for editing",
+    de: "Ausgewählter Text zu lang für Bearbeitung",
+    fr: "Texte sélectionné trop long pour être modifié",
+    it: "Testo selezionato troppo lungo da modificare",
+    es: "Texto seleccionado demasiado largo para editar",
+    pt: "Texto selecionado demasiado longo para editar",
+    zh: "选中文本过长，无法处理",
+    ja: "選択テキストが長すぎます",
+    tr: "Seçili metin düzenleme için çok uzun",
+    nl: "Geselecteerde tekst te lang voor bewerking"
   },
   "elevated-paste-blocked": {
     ru: "Система заблокировала вставку в активное окно. Текст сохранён в буфере обмена",
@@ -569,7 +650,8 @@ const noticeTranslations = {
     pt: "O sistema bloqueou a colagem na janela ativa. Texto mantido na área de transferência",
     zh: "系统阻止了向活动窗口粘贴。文本已保留在剪贴板中",
     ja: "システムがアクティブなウィンドウへの貼り付けをブロックしました。テキストはクリップボードに保持されています",
-    tr: "Sistem etkin pencereye yapıştırmayı engelledi. Metin panoda saklandı"
+    tr: "Sistem etkin pencereye yapıştırmayı engelledi. Metin panoda saklandı",
+    nl: "Het systeem heeft plakken in het actieve venster geblokkeerd. Tekst bewaard op het klembord"
   },
   "Cloud unavailable — used local model instead": {
     ru: "Локальный режим (сбой сети)",
@@ -581,7 +663,8 @@ const noticeTranslations = {
     pt: "Modo local (erro de rede)",
     zh: "本地模式（网络错误）",
     ja: "ローカルモード（ネットワークエラー）",
-    tr: "Yerel mod (ağ hatası)"
+    tr: "Yerel mod (ağ hatası)",
+    nl: "Lokale modus (netwerkfout)"
   },
   "focus-changed-copied": {
     ru: "Скопировано (фокус изменен)",
@@ -593,7 +676,8 @@ const noticeTranslations = {
     pt: "Copiado (foco alterado)",
     zh: "已复制（焦点已更改）",
     ja: "コピー完了（フォーカス変更）",
-    tr: "Kopyalandı (odak değişti)"
+    tr: "Kopyalandı (odak değişti)",
+    nl: "Gekopieerd (focus gewijzigd)"
   },
   "final-copied-after-edit": {
     ru: "Текст скопирован",
@@ -605,7 +689,8 @@ const noticeTranslations = {
     pt: "Texto copiado",
     zh: "文本已复制",
     ja: "テキストをコピーしました",
-    tr: "Metin kopyalandı"
+    tr: "Metin kopyalandı",
+    nl: "Tekst gekopieerd"
   },
   "loading-model": {
     ru: "Загрузка модели…",
@@ -617,7 +702,8 @@ const noticeTranslations = {
     pt: "Carregando modelo…",
     zh: "正在加载模型…",
     ja: "モデルを読み込み中…",
-    tr: "Model yükleniyor…"
+    tr: "Model yükleniyor…",
+    nl: "Model laden…"
   },
   "warming-model": {
     ru: "Инициализация…",
@@ -629,7 +715,8 @@ const noticeTranslations = {
     pt: "Inicializando…",
     zh: "正在初始化…",
     ja: "初期化中…",
-    tr: "Başlatılıyor…"
+    tr: "Başlatılıyor…",
+    nl: "Initialiseren…"
   }
 };
 

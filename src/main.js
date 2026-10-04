@@ -2980,6 +2980,7 @@ const btnSaveSettings = document.getElementById("btn-save-settings");
   let selectedModelName = "base";
   let lastSelectedWhisperModel = "large-v3-turbo-q5_0";
   let selectedLlmModel = "qwen3-1.7b";
+  let downloadedModelList = [];
   let activeLocalAcceleration = "cpu";
 
   let settingsModified = false;
@@ -3287,22 +3288,25 @@ const btnSaveSettings = document.getElementById("btn-save-settings");
     });
   });
 
-  function selectModelCard(model) {
+  function selectModelCard(model, markModified = true) {
     if (model === "punctuation") {
       return;
     }
     if (model.startsWith("qwen3-")) {
       // Local edit models are a separate setting (settings.llm_model); they
       // must never overwrite the ASR model_name selection.
+      const isDownloaded = downloadedModelList.includes(model);
       if (selectedLlmModel !== model) {
         selectedLlmModel = model;
-        markSettingsModified(true);
+        if (markModified) {
+          markSettingsModified(true);
+        }
       }
       modelCards.forEach(c => {
         if (!c.dataset.model.startsWith("qwen3-")) {
           return;
         }
-        const isCurrent = c.dataset.model === model;
+        const isCurrent = c.dataset.model === model && isDownloaded;
         c.classList.toggle("active", isCurrent);
         c.setAttribute("aria-checked", isCurrent ? "true" : "false");
       });
@@ -3313,7 +3317,9 @@ const btnSaveSettings = document.getElementById("btn-save-settings");
     }
     if (selectedModelName !== model) {
       selectedModelName = model;
-      markSettingsModified(true);
+      if (markModified) {
+        markSettingsModified(true);
+      }
     }
     modelCards.forEach(c => {
       if (c.dataset.model.startsWith("qwen3-")) {
@@ -3342,7 +3348,7 @@ const btnSaveSettings = document.getElementById("btn-save-settings");
         if (settings.model_name && settings.model_name !== "parakeet-v3" && settings.model_name !== "punctuation") {
           lastSelectedWhisperModel = settings.model_name;
         }
-        selectModelCard(settings.model_name || "base");
+        selectModelCard(settings.model_name || "base", false);
         if (typeof settings.ai_edit_mode === "string") {
           const aiEditSelect = document.getElementById("select-ai-edit-mode");
           if (aiEditSelect) {
@@ -3374,7 +3380,7 @@ const btnSaveSettings = document.getElementById("btn-save-settings");
         if (typeof settings.llm_model === "string" && settings.llm_model.startsWith("qwen3-")) {
           selectedLlmModel = settings.llm_model;
         }
-        selectModelCard(selectedLlmModel);
+        selectModelCard(selectedLlmModel, false);
         apiKeys = { gemini: "", openai: "", groq: "", huggingface: "", custom: "" };
         apiKeyDirty = { gemini: false, openai: false, groq: false, huggingface: false, custom: false };
         apiKeyPresent = {
@@ -3528,6 +3534,7 @@ activeLocalAcceleration = settings.local_acceleration || "cpu";
   async function refreshDownloadedModels() {
     try {
       const downloaded = await invoke("get_downloaded_models");
+      downloadedModelList = Array.isArray(downloaded) ? downloaded : [];
       const dict = i18nDict[currentLanguage] || i18nDict.ru;
 modelCards.forEach(card => {
         const model = card.dataset.model;
@@ -3536,7 +3543,7 @@ modelCards.forEach(card => {
         if (inFlightModelDownloads.has(model)) {
           return;
         }
-        const isDownloaded = downloaded.includes(model);
+        const isDownloaded = downloadedModelList.includes(model);
         const actionEl = document.getElementById(`action-${model}`);
 
         // Always restore a clean, non-downloading state. Without this, a cancelled
@@ -3580,6 +3587,24 @@ modelCards.forEach(card => {
           });
         }
       });
+
+      // Reconcile Qwen3 LLM cards active state against downloaded models:
+      const downloadedLlm = downloadedModelList.filter(id => id.startsWith("qwen3-"));
+      if (downloadedLlm.length === 0) {
+        modelCards.forEach(c => {
+          if (c.dataset.model.startsWith("qwen3-")) {
+            c.classList.remove("active");
+            c.setAttribute("aria-checked", "false");
+          }
+        });
+      } else {
+        if (downloadedLlm.includes(selectedLlmModel)) {
+          selectModelCard(selectedLlmModel, false);
+        } else {
+          selectModelCard(downloadedLlm[0], false);
+        }
+      }
+
       refreshEngineHealth();
     } catch (err) {
       console.error("Failed to check downloaded models", err);
@@ -3846,8 +3871,13 @@ async function downloadModelCard(model) {
           const replacement = (Array.isArray(downloaded) ? downloaded : []).find(
             id => id.startsWith("qwen3-") && id !== model
           );
-          selectModelCard(replacement || "qwen3-1.7b");
-          markSettingsModified(true);
+          if (replacement) {
+            selectModelCard(replacement);
+            markSettingsModified(true);
+          } else {
+            selectedLlmModel = "qwen3-1.7b";
+            markSettingsModified(true);
+          }
         } catch (err) {
           console.error("Failed to reselect local edit model", err);
         }
@@ -3907,7 +3937,10 @@ async function downloadModelCard(model) {
     }
 
     if (payload.done) {
-      showStatus(getTranslation("model_downloaded_success_pattern", { model }));
+      const isInternalPayload = typeof model === "string" && (model.startsWith("llm-runtime-") || model === "punctuation");
+      if (!isInternalPayload) {
+        showStatus(getTranslation("model_downloaded_success_pattern", { model }));
+      }
       if (progressEl) {
         progressEl.classList.remove("installing");
         const cancelBtn = progressEl.querySelector(".btn-cancel-download");
