@@ -37,6 +37,11 @@ fn capture_caret_context_internal() -> CaretContext {
                                 // Extract up to 100 characters before the cursor / selection
                                 let mut text_before = String::new();
                                 if let Ok(prefix_range) = range.Clone() {
+                                    let _ = prefix_range.MoveEndpointByRange(
+                                        TextPatternRangeEndpoint_End,
+                                        &range,
+                                        TextPatternRangeEndpoint_Start,
+                                    );
                                     let _ = prefix_range.MoveEndpointByUnit(
                                         TextPatternRangeEndpoint_Start,
                                         TextUnit_Character,
@@ -55,6 +60,11 @@ fn capture_caret_context_internal() -> CaretContext {
                                 // Extract up to 100 characters after the cursor / selection
                                 let mut text_after = String::new();
                                 if let Ok(suffix_range) = range.Clone() {
+                                    let _ = suffix_range.MoveEndpointByRange(
+                                        TextPatternRangeEndpoint_Start,
+                                        &range,
+                                        TextPatternRangeEndpoint_End,
+                                    );
                                     let _ = suffix_range.MoveEndpointByUnit(
                                         TextPatternRangeEndpoint_End,
                                         TextUnit_Character,

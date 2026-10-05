@@ -2913,65 +2913,88 @@ async fn start_recording_session(app_handle: tauri::AppHandle) {
         // -> copy -> read -> restore sequence must stay serialized (C7).
         tauri::async_runtime::spawn_blocking(move || {
             // Sleep 50ms to let the OS keyboard state settle after the physical hotkey down
+            // and allow the parallel UIA caret capture (20ms timeout) to complete.
             std::thread::sleep(std::time::Duration::from_millis(50));
 
-            // Without the shared clipboard mutex, a session whose paste window
-            // overlaps this copy could capture this temporary text as its
-            // "original" and the user's real clipboard content would be lost.
-            let clipboard_mutex_guard = if let Some(state) = app_handle_copy.try_state::<AppState>()
-            {
-                match state.inner().clipboard_mutex.lock() {
-                    Ok(guard) => Some(guard),
-                    Err(poisoned) => Some(poisoned.into_inner()),
-                }
+            // If UI Automation already captured a non-empty selection, skip synthetic Ctrl+C
+            // and clipboard clearing entirely (Zero Clipboard Pollution).
+            let already_captured = if let Some(state) = app_handle_copy.try_state::<AppState>() {
+                state
+                    .inner()
+                    .selected_text
+                    .lock()
+                    .map(|g| !g.trim().is_empty())
+                    .unwrap_or(false)
             } else {
-                None
+                false
             };
 
-            let mut clipboard_guard = ClipboardGuard {
-                backup: backup_clipboard(),
-                expected_temporary_text: None,
-                session: Some((app_handle_copy.clone(), gen)),
-            };
+            let mut captured_selection = already_captured;
+            if already_captured {
+                crate::logger::log(
+                    "INFO",
+                    "Context",
+                    Some(&session_tag_copy),
+                    "Selected text already captured non-invasively via UI Automation; skipping synthetic Ctrl+C clipboard copy",
+                );
+            } else {
+                // Without the shared clipboard mutex, a session whose paste window
+                // overlaps this copy could capture this temporary text as its
+                // "original" and the user's real clipboard content would be lost.
+                let clipboard_mutex_guard = if let Some(state) = app_handle_copy.try_state::<AppState>()
+                {
+                    match state.inner().clipboard_mutex.lock() {
+                        Ok(guard) => Some(guard),
+                        Err(poisoned) => Some(poisoned.into_inner()),
+                    }
+                } else {
+                    None
+                };
 
-            if let Ok(mut cb) = arboard::Clipboard::new() {
-                let _ = cb.clear();
-            }
-            keyboard_simulator::simulate_copy();
-            std::thread::sleep(std::time::Duration::from_millis(200));
+                let mut clipboard_guard = ClipboardGuard {
+                    backup: backup_clipboard(),
+                    expected_temporary_text: None,
+                    session: Some((app_handle_copy.clone(), gen)),
+                };
 
-            let copied = arboard::Clipboard::new()
-                .ok()
-                .and_then(|mut cb| cb.get_text().ok())
-                .unwrap_or_default();
-            clipboard_guard.expected_temporary_text = Some(copied.clone());
+                if let Ok(mut cb) = arboard::Clipboard::new() {
+                    let _ = cb.clear();
+                }
+                keyboard_simulator::simulate_copy();
+                std::thread::sleep(std::time::Duration::from_millis(200));
 
-            let mut captured_selection = false;
-            if let Some(state) = app_handle_copy.try_state::<AppState>() {
-                let state = state.inner();
-                let session_is_current = state.session_gen.load(Ordering::SeqCst) == gen
-                    && state.is_recording.load(Ordering::SeqCst);
-                if session_is_current {
-                    if let Ok(mut guard) = state.selected_text.lock() {
-                        *guard = copied.clone();
-                        crate::logger::log(
-                            "INFO",
-                            "Context",
-                            Some(&session_tag_copy),
-                            &format!("Captured selected text ({} chars)", copied.chars().count()),
-                        );
-                        if !copied.trim().is_empty() {
-                            captured_selection = true;
-                            let _ = app_handle_copy.emit("selection-context-active", true);
+                let copied = arboard::Clipboard::new()
+                    .ok()
+                    .and_then(|mut cb| cb.get_text().ok())
+                    .unwrap_or_default();
+                clipboard_guard.expected_temporary_text = Some(copied.clone());
+
+                if let Some(state) = app_handle_copy.try_state::<AppState>() {
+                    let state = state.inner();
+                    let session_is_current = state.session_gen.load(Ordering::SeqCst) == gen
+                        && state.is_recording.load(Ordering::SeqCst);
+                    if session_is_current {
+                        if let Ok(mut guard) = state.selected_text.lock() {
+                            *guard = copied.clone();
+                            crate::logger::log(
+                                "INFO",
+                                "Context",
+                                Some(&session_tag_copy),
+                                &format!("Captured selected text ({} chars)", copied.chars().count()),
+                            );
+                            if !copied.trim().is_empty() {
+                                captured_selection = true;
+                                let _ = app_handle_copy.emit("selection-context-active", true);
+                            }
                         }
                     }
                 }
-            }
 
-            // Restore first, then release the mutex: the Drop of the guard
-            // performs the clipboard restore while still serialized.
-            drop(clipboard_guard);
-            drop(clipboard_mutex_guard);
+                // Restore first, then release the mutex: the Drop of the guard
+                // performs the clipboard restore while still serialized.
+                drop(clipboard_guard);
+                drop(clipboard_mutex_guard);
+            }
 
             // Selection captured and the local route will use it: bring the
             // editing server up in the background while the user is still
@@ -6849,5 +6872,29 @@ mod tests {
         };
         let adapted = smart_insertion::adapt_transcription_to_context(raw, &ctx, true);
         assert_eq!(adapted, "пачку чая.");
+    }
+
+    #[test]
+    fn test_pipeline_smart_context_mid_sentence_english_i() {
+        let raw = "I think so.";
+        let ctx = smart_insertion::CaretContext {
+            text_before: "As ".to_string(),
+            text_after: " said before.".to_string(),
+            ..Default::default()
+        };
+        let adapted = smart_insertion::adapt_transcription_to_context(raw, &ctx, true);
+        assert_eq!(adapted, "I think so");
+    }
+
+    #[test]
+    fn test_pipeline_smart_context_quotes() {
+        let raw = "это новый факт.";
+        let ctx = smart_insertion::CaretContext {
+            text_before: "Он сказал: \"Конец!\" ".to_string(),
+            text_after: "".to_string(),
+            ..Default::default()
+        };
+        let adapted = smart_insertion::adapt_transcription_to_context(raw, &ctx, true);
+        assert_eq!(adapted, "Это новый факт.");
     }
 }

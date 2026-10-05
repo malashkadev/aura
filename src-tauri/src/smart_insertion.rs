@@ -39,7 +39,11 @@ pub fn classify_insertion_mode(ctx: &CaretContext) -> InsertionMode {
     }
 
     let before_trimmed = ctx.text_before.trim_end();
-    let last_char = before_trimmed.chars().last().unwrap_or('\0');
+    // Strip trailing closing quotes and closing brackets before inspecting terminal punctuation
+    let punct_candidate = before_trimmed.trim_end_matches([
+        '"', '\'', '»', '”', '’', ')', ']', '}', '›', '“', '‘',
+    ]);
+    let last_char = punct_candidate.chars().last().unwrap_or('\0');
     let is_terminal = matches!(last_char, '.' | '!' | '?' | '…');
 
     if is_terminal {
@@ -62,12 +66,38 @@ fn is_acronym(word: &str) -> bool {
     clean.chars().all(|c| c.is_uppercase())
 }
 
-fn lowercase_first_char(text: &str) -> String {
+fn preserves_leading_capital(text: &str) -> bool {
     let mut words = text.split_whitespace();
     if let Some(first_word) = words.next() {
         if is_acronym(first_word) {
-            return text.to_string();
+            return true;
         }
+        let clean = first_word.trim_matches(|c: char| !c.is_alphabetic());
+        if clean == "I" || first_word.starts_with("I'") || first_word.starts_with("I’") {
+            return true;
+        }
+    }
+    false
+}
+
+fn ends_with_known_abbreviation(text: &str) -> bool {
+    let lower = text.to_lowercase();
+    const ABBREVIATIONS: &[&str] = &[
+        "т.д.", "т.п.", "т.е.", "т.к.", "др.", "пр.", "руб.", "коп.", "г.", "ул.",
+        "etc.", "e.g.", "i.e.", "vs.", "al.", "approx.", "dept.", "fig.", "inc.",
+        "ltd.", "prof.", "vol.",
+    ];
+    for &abbr in ABBREVIATIONS {
+        if lower.ends_with(abbr) {
+            return true;
+        }
+    }
+    false
+}
+
+fn lowercase_first_char(text: &str) -> String {
+    if preserves_leading_capital(text) {
+        return text.to_string();
     }
     let mut chars = text.chars();
     match chars.next() {
@@ -104,8 +134,11 @@ pub fn adapt_transcription_to_context(
         }
         InsertionMode::SelectionReplacement => {
             let before_trimmed = ctx.text_before.trim_end();
-            let is_terminal = before_trimmed.is_empty()
-                || matches!(before_trimmed.chars().last(), Some('.' | '!' | '?' | '…'));
+            let punct_candidate = before_trimmed.trim_end_matches([
+                '"', '\'', '»', '”', '’', ')', ']', '}', '›', '“', '‘',
+            ]);
+            let is_terminal = punct_candidate.is_empty()
+                || matches!(punct_candidate.chars().last(), Some('.' | '!' | '?' | '…'));
             if is_terminal {
                 uppercase_first_char(trimmed)
             } else {
@@ -116,32 +149,41 @@ pub fn adapt_transcription_to_context(
 
     // 2. Trailing punctuation adjustment
     let after_trimmed = ctx.text_after.trim_start();
-    let after_starts_with_punct = after_trimmed.starts_with(|c: char| {
-        matches!(c, '.' | ',' | '!' | '?' | ':' | ';' | '-' | '—' | ')' | ']' | '}' | '»' | '"')
+    let after_starts_with_dot = after_trimmed.starts_with('.');
+    let after_starts_with_other_punct = after_trimmed.starts_with(|c: char| {
+        matches!(c, ',' | '!' | '?' | ':' | ';' | '-' | '—' | ')' | ']' | '}' | '»' | '"')
     });
 
-    if after_starts_with_punct {
-        // Prevent punctuation collision (e.g. "текст., " or "текст..")
+    if after_starts_with_dot {
+        // Prevent duplicate dots ("..")
         while text.ends_with('.') {
             text.pop();
+        }
+    } else if after_starts_with_other_punct {
+        // Prevent punctuation collision unless preserving an established abbreviation dot (e.g. "и т.д., ")
+        if !ends_with_known_abbreviation(&text) {
+            while text.ends_with('.') {
+                text.pop();
+            }
         }
     } else {
         match mode {
             InsertionMode::MidSentenceInsertion => {
-                // Mid-sentence insertions must never inject terminal periods
-                while text.ends_with('.') {
-                    text.pop();
+                if !ends_with_known_abbreviation(&text) {
+                    while text.ends_with('.') {
+                        text.pop();
+                    }
                 }
             }
             InsertionMode::SentenceContinuation => {
-                if !trailing_period_on_continuation {
+                if !trailing_period_on_continuation && !ends_with_known_abbreviation(&text) {
                     while text.ends_with('.') {
                         text.pop();
                     }
                 }
             }
             InsertionMode::SelectionReplacement => {
-                if !after_trimmed.is_empty() {
+                if !after_trimmed.is_empty() && !ends_with_known_abbreviation(&text) {
                     while text.ends_with('.') {
                         text.pop();
                     }
@@ -302,5 +344,51 @@ mod tests {
         };
         let adapted = adapt_transcription_to_context("постараться.", &ctx, true);
         assert_eq!(adapted, "постараться");
+    }
+
+    #[test]
+    fn test_adapt_preserves_english_i_pronoun() {
+        let ctx = CaretContext {
+            text_before: "As ".to_string(),
+            text_after: " said earlier.".to_string(),
+            ..Default::default()
+        };
+        let adapted = adapt_transcription_to_context("I think so.", &ctx, true);
+        assert_eq!(adapted, "I think so");
+    }
+
+    #[test]
+    fn test_classify_new_sentence_after_closing_quotes_and_brackets() {
+        let ctx_quotes = CaretContext {
+            text_before: "Он сказал: \"Пора.\" ".to_string(),
+            ..Default::default()
+        };
+        assert_eq!(classify_insertion_mode(&ctx_quotes), InsertionMode::NewSentence);
+
+        let ctx_guillemets = CaretContext {
+            text_before: "«Это важно!» ".to_string(),
+            ..Default::default()
+        };
+        assert_eq!(classify_insertion_mode(&ctx_guillemets), InsertionMode::NewSentence);
+
+        let ctx_brackets = CaretContext {
+            text_before: "(См. главу 1.) ".to_string(),
+            ..Default::default()
+        };
+        assert_eq!(classify_insertion_mode(&ctx_brackets), InsertionMode::NewSentence);
+    }
+
+    #[test]
+    fn test_adapt_preserves_abbreviation_dots() {
+        let ctx = CaretContext {
+            text_before: "Купи фрукты, овощи ".to_string(),
+            text_after: "для праздника.".to_string(),
+            ..Default::default()
+        };
+        let adapted_ru = adapt_transcription_to_context("и т.д.", &ctx, true);
+        assert_eq!(adapted_ru, "и т.д. ");
+
+        let adapted_en = adapt_transcription_to_context("etc.", &ctx, true);
+        assert_eq!(adapted_en, "etc. ");
     }
 }
