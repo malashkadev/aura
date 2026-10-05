@@ -903,6 +903,82 @@ pub fn strip_hallucinated_prefixes(text: &str) -> String {
     current_text.trim().to_string()
 }
 
+/// Strips hallucinated closing/trailing artifacts that Whisper routinely appends
+/// during end-of-speech silence (e.g. "Спасибо.", "Спасибо за просмотр.", "Thank you for watching.").
+pub fn strip_trailing_hallucinations(text: &str) -> String {
+    let trimmed = text.trim();
+    if trimmed.is_empty() {
+        return String::new();
+    }
+
+    let lower = trimmed.to_lowercase();
+
+    // 1. Definite media/YouTube suffixes: strip whenever preceded by substantive text
+    const MEDIA_SUFFIXES: &[&str] = &[
+        "спасибо за просмотр",
+        "спасибо за внимание",
+        "подписывайтесь на канал",
+        "подпишитесь на канал",
+        "ставьте лайки",
+        "продолжение следует",
+        "thank you for watching",
+        "thanks for watching",
+        "to be continued",
+        "subscribe to my channel",
+    ];
+
+    for &suffix in MEDIA_SUFFIXES {
+        let clean_lower = lower.trim_end_matches(['.', '!', '?', '…', ' ']);
+        if clean_lower.ends_with(suffix) && clean_lower.len() > suffix.len() {
+            let cut_pos = clean_lower.len() - suffix.len();
+            let head = trimmed[..cut_pos].trim_end();
+            let clean_head = head.trim_end_matches([' ', '\t', ':', '-', '—']);
+            if !clean_head.is_empty() {
+                return clean_head.to_string();
+            }
+        }
+    }
+
+    // 2. Trailing closure single-token hallucinations: "Спасибо." / "Thank you."
+    // Only strip when appended as a detached sentence after a complete thought ending in terminal punctuation (. ! ? …).
+    const CLOSURE_WORDS: &[&str] = &[
+        "спасибо",
+        "thank you",
+    ];
+
+    for &closure in CLOSURE_WORDS {
+        let clean_lower = lower.trim_end_matches(['.', '!', '?', '…', ' ']);
+        if clean_lower.ends_with(closure) && clean_lower.len() > closure.len() {
+            let cut_pos = clean_lower.len() - closure.len();
+            let prefix = &trimmed[..cut_pos];
+            let prefix_trimmed = prefix.trim_end();
+            let last_char = prefix_trimmed.chars().last().unwrap_or('\0');
+            let is_terminal = matches!(last_char, '.' | '!' | '?' | '…');
+
+            if is_terminal {
+                // Must not be preceded by genuine gratitude modifiers like "большое", "огромное", "вам", "тебе"
+                let words: Vec<&str> = prefix_trimmed.split_whitespace().collect();
+                if let Some(&last_word) = words.last() {
+                    let clean_last = last_word
+                        .trim_matches(|c: char| !c.is_alphabetic())
+                        .to_lowercase();
+                    if clean_last == "большое"
+                        || clean_last == "огромное"
+                        || clean_last == "сердечное"
+                        || clean_last == "тебе"
+                        || clean_last == "вам"
+                    {
+                        continue;
+                    }
+                }
+                return prefix_trimmed.to_string();
+            }
+        }
+    }
+
+    trimmed.to_string()
+}
+
 /// Full comprehensive normalization pipeline for speech recognition transcripts.
 pub fn normalize_transcription_text(raw_text: &str, language: &str) -> String {
     let unbracketed = clean_hallucinated_brackets(raw_text);
@@ -921,8 +997,9 @@ pub fn normalize_transcription_text(raw_text: &str, language: &str) -> String {
     let cased = normalize_sentence_boundaries_and_case(&spaced, language);
     let final_spaced = normalize_punctuation_spacing(&cased);
     let formatted = collapse_number_and_version_spacings(&final_spaced);
+    let detrailed = strip_trailing_hallucinations(&formatted);
 
-    formatted.trim().to_string()
+    detrailed.trim().to_string()
 }
 
 /// Smooths speech boundaries between committed left text and newly decoded right text in streaming mode.
@@ -1367,5 +1444,71 @@ mod tests {
         let res3 = apply_text_replacements(text3, &replacements);
         assert!(!res3.contains("{date}"));
         assert!(res3.starts_with("Дата релиза 20"));
+    }
+
+    #[test]
+    fn test_strip_trailing_hallucinated_spasibo() {
+        // Hallucinated "Спасибо." after a complete sentence
+        let res1 = normalize_transcription_text(
+            "Нам нужно отправить отчет клиенту до конца рабочего дня. Спасибо.",
+            "ru",
+        );
+        assert_eq!(
+            res1,
+            "Нам нужно отправить отчет клиенту до конца рабочего дня."
+        );
+
+        // Hallucinated "Спасибо!" after an exclamation mark
+        let res2 = normalize_transcription_text(
+            "Отличная работа над релизом! Спасибо!",
+            "ru",
+        );
+        assert_eq!(res2, "Отличная работа над релизом!");
+
+        // Hallucinated "Спасибо за просмотр." after a sentence
+        let res3 = normalize_transcription_text(
+            "Мы рассмотрели все детали проекта. Спасибо за просмотр.",
+            "ru",
+        );
+        assert_eq!(res3, "Мы рассмотрели все детали проекта.");
+
+        // Hallucinated "Спасибо за внимание." after a sentence
+        let res4 = normalize_transcription_text(
+            "На этом наш обзор завершен. Спасибо за внимание.",
+            "ru",
+        );
+        assert_eq!(res4, "На этом наш обзор завершен.");
+
+        // English trailing hallucination
+        let res5 = normalize_transcription_text(
+            "Here is the final version of the document. Thank you for watching.",
+            "en",
+        );
+        assert_eq!(res5, "Here is the final version of the document.");
+    }
+
+    #[test]
+    fn test_preserve_legitimate_gratitude() {
+        // Standalone "Спасибо."
+        assert_eq!(normalize_transcription_text("Спасибо.", "ru"), "Спасибо.");
+        assert_eq!(normalize_transcription_text("Спасибо!", "ru"), "Спасибо!");
+
+        // "Большое спасибо."
+        assert_eq!(
+            normalize_transcription_text("Большое спасибо.", "ru"),
+            "Большое спасибо."
+        );
+
+        // "Иван, спасибо."
+        assert_eq!(
+            normalize_transcription_text("Иван, спасибо.", "ru"),
+            "Иван, спасибо."
+        );
+
+        // "Спасибо за помощь."
+        assert_eq!(
+            normalize_transcription_text("Спасибо за помощь.", "ru"),
+            "Спасибо за помощь."
+        );
     }
 }
