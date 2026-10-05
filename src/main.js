@@ -253,7 +253,28 @@ const i18nDict = {
     "history_copy_title": "Скопировать в буфер обмена",
     "history_search_clear": "Очистить поиск",
     "api_key_toggle_visibility": "Показать/скрыть ключ",
-    "history_filters_label": "Фильтры истории"
+    "history_filters_label": "Фильтры истории",
+    "onboarding_skip": "Пропустить обучение",
+    "onboarding_prev": "Назад",
+    "onboarding_next": "Далее",
+    "onboarding_finish": "Начать работу",
+    "onboarding_replay": "Вводный экскурс по возможностям",
+    "onboarding_step_tag": "{current} / {total}",
+    "onboarding_step_1_title": "Быстрый старт диктовки",
+    "onboarding_step_1_desc": "Нажимайте или удерживайте Alt+V в любом приложении Windows для ввода текста голосом. Доступны режимы Push-to-Talk (удержание) и Toggle (клик старт/стоп). При записи на экране появляется компактный оверлей.",
+    "onboarding_step_2_title": "Способы распознавания речи",
+    "onboarding_step_2_desc": "Используйте автономное распознавание на своём компьютере без отправки данных в сеть либо подключите облачные модели (Gemini, OpenAI, Groq) для быстрой обработки без нагрузки на систему.",
+    "onboarding_step_3_title": "Редактирование выделенного текста",
+    "onboarding_step_3_desc": "Выделите текст в любой программе, нажмите Alt+V и произнесите команду: «сократи», «переведи на английский» или «исправь ошибки». Если же команды нет, а вы просто надиктовываете речь, Aura вставит наговорённый текст на место выделенного.",
+    "onboarding_step_4_title": "Работа в фоне и системный трей",
+    "onboarding_step_4_desc": "Aura тихо работает в фоне. Игровой режим временно приостанавливает горячие клавиши, чтобы сохранить FPS в играх, а при простое память видеокарты автоматически освобождается. Индикация активности игрового режима отображается прямо на иконке в трее Windows.",
+    "commands_guide_title": "Справочник голосовых команд",
+    "commands_guide_desc": "Управляйте доступными действиями над выделенным текстом. Отключённые команды вставляются как обычная речь.",
+    "commands_guide_label": "Голосовые команды",
+    "commands_guide_sub": "Справочник действий и включение/отключение отдельных команд",
+    "commands_guide_btn": "Справочник команд",
+    "commands_guide_close": "Закрыть",
+    "commands_guide_active_summary": "{active} из {total} команд активно"
   },
   "en": {
     "title_settings": "Settings",
@@ -497,7 +518,28 @@ const i18nDict = {
     "history_copy_title": "Copy to clipboard",
     "history_search_clear": "Clear search",
     "api_key_toggle_visibility": "Show/hide key",
-    "history_filters_label": "History filters"
+    "history_filters_label": "History filters",
+    "onboarding_skip": "Skip tutorial",
+    "onboarding_prev": "Back",
+    "onboarding_next": "Next",
+    "onboarding_finish": "Get started",
+    "onboarding_replay": "Feature walkthrough tour",
+    "onboarding_step_tag": "{current} / {total}",
+    "onboarding_step_1_title": "Quick Start Dictation",
+    "onboarding_step_1_desc": "Press or hold Alt+V in any Windows application to dictate text. Push-to-Talk (hold) and Toggle (click start/stop) modes are supported. A compact overlay appears on screen during recording.",
+    "onboarding_step_2_title": "Speech Recognition Engines",
+    "onboarding_step_2_desc": "Use offline recognition on your PC without sending data over the network, or connect cloud models (Gemini, OpenAI, Groq) for fast processing with zero system load.",
+    "onboarding_step_3_title": "Selected Text Voice Editing",
+    "onboarding_step_3_desc": "Select text in any application, press Alt+V, and speak a command: 'shorten', 'translate to english', or 'fix grammar'. If no command is given and you just speak, Aura will replace the selection with your dictated text.",
+    "onboarding_step_4_title": "Background Operation & System Tray",
+    "onboarding_step_4_desc": "Aura runs quietly in the background. Gaming mode pauses hotkeys to preserve FPS, and video memory is freed during idle time. An indicator on the Windows tray icon always shows when gaming mode is active.",
+    "commands_guide_title": "Voice Commands Guide",
+    "commands_guide_desc": "Manage actions available for selected text. Disabled commands are typed out as normal speech.",
+    "commands_guide_label": "Voice Commands",
+    "commands_guide_sub": "Action reference and per-command enable/disable toggles",
+    "commands_guide_btn": "Commands Guide",
+    "commands_guide_close": "Close",
+    "commands_guide_active_summary": "{active} of {total} commands active"
   },
   "de": {
     "gpu_accel_label": "Lokale Hardware-Beschleunigung",
@@ -741,7 +783,28 @@ const i18nDict = {
     "history_copy_title": "In die Zwischenablage kopieren",
     "history_search_clear": "Suche löschen",
     "api_key_toggle_visibility": "Schlüssel anzeigen/ausblenden",
-    "history_filters_label": "Verlaufsfilter"
+    "history_filters_label": "Verlaufsfilter",
+    "onboarding_skip": "Tutorial überspringen",
+    "onboarding_prev": "Zurück",
+    "onboarding_next": "Weiter",
+    "onboarding_finish": "Loslegen",
+    "onboarding_replay": "Funktionsüberblick starten",
+    "onboarding_step_tag": "{current} / {total}",
+    "onboarding_step_1_title": "Schnellstart Diktat",
+    "onboarding_step_1_desc": "Drücken oder halten Sie Alt+V in jeder Windows-Anwendung, um Text per Sprache einzugeben. Push-to-Talk (Halten) und Umschaltmodus (Klick Start/Stopp) werden unterstützt. Während der Aufnahme erscheint ein kompaktes Overlay.",
+    "onboarding_step_2_title": "Spracherkennungs-Engines",
+    "onboarding_step_2_desc": "Nutzen Sie die Offline-Erkennung direkt auf Ihrem PC ohne Datenübertragung ins Netzwerk oder verbinden Sie Cloud-Modelle (Gemini, OpenAI, Groq) für eine schnelle Verarbeitung ohne Systemlast.",
+    "onboarding_step_3_title": "Sprachbearbeitung von markiertem Text",
+    "onboarding_step_3_desc": "Markieren Sie Text in beliebigen Programmen, drücken Sie Alt+V und sprechen Sie einen Befehl: „kürze“, „übersetze ins Englische“ oder „korrigiere Fehler“. Erfolgt kein Befehl, wird der markierte Text durch das Diktierte ersetzt.",
+    "onboarding_step_4_title": "Hintergrundbetrieb & System-Tray",
+    "onboarding_step_4_desc": "Aura läuft leise im Hintergrund. Der Spielmodus pausiert Hotkeys für stabile FPS in Spielen, und bei Inaktivität wird der Grafikspeicher freigegeben. Ein Symbol im Windows-Tray zeigt jederzeit an, wenn der Spielmodus aktiv ist.",
+    "commands_guide_title": "Sprachbefehle-Übersicht",
+    "commands_guide_desc": "Aktionen für markierten Text verwalten. Deaktivierte Befehle werden als normaler Text eingegeben.",
+    "commands_guide_label": "Sprachbefehle",
+    "commands_guide_sub": "Referenz der Aktionen und Ein-/Ausschalten einzelner Befehle",
+    "commands_guide_btn": "Befehlsübersicht",
+    "commands_guide_close": "Schließen",
+    "commands_guide_active_summary": "{active} von {total} Befehlen aktiv"
   },
   "es": {
     "title_settings": "Ajustes",
@@ -985,7 +1048,28 @@ const i18nDict = {
     "history_copy_title": "Copiar al portapapeles",
     "history_search_clear": "Borrar búsqueda",
     "api_key_toggle_visibility": "Mostrar/ocultar clave",
-    "history_filters_label": "Filtros del historial"
+    "history_filters_label": "Filtros del historial",
+    "onboarding_skip": "Omitir aprendizaje",
+    "onboarding_prev": "Atrás",
+    "onboarding_next": "Siguiente",
+    "onboarding_finish": "Comenzar",
+    "onboarding_replay": "Recorrido de funciones",
+    "onboarding_step_tag": "{current} / {total}",
+    "onboarding_step_1_title": "Inicio rápido de dictado",
+    "onboarding_step_1_desc": "Presione o mantenga presionado Alt+V en cualquier aplicación de Windows para dictar texto. Admite Push-to-Talk (mantener) y Alternar (clic inicio/parada). Durante la grabación aparece una superposición compacta en pantalla.",
+    "onboarding_step_2_title": "Motores de reconocimiento de voz",
+    "onboarding_step_2_desc": "Use el reconocimiento sin conexión en su PC sin enviar datos a la red o conecte modelos en la nube (Gemini, OpenAI, Groq) para un procesamiento rápido sin carga del sistema.",
+    "onboarding_step_3_title": "Edición de texto seleccionado por voz",
+    "onboarding_step_3_desc": "Seleccione texto en cualquier programa, presione Alt+V y pronuncie un comando: 'acorta', 'traduce al inglés' o 'corrige la gramática'. Si no da una orden y solo dicta, Aura reemplazará la selección con el texto dictado.",
+    "onboarding_step_4_title": "Operación en segundo plano y bandeja del sistema",
+    "onboarding_step_4_desc": "Aura funciona discretamente en segundo plano. El modo juego pausa los atajos para mantener los FPS, y la memoria gráfica se libera en reposo. Un indicador en la bandeja del sistema muestra siempre si el modo juego está activo.",
+    "commands_guide_title": "Guía de comandos de voz",
+    "commands_guide_desc": "Gestione las acciones sobre el texto seleccionado. Los comandos desactivados se insertan como texto normal.",
+    "commands_guide_label": "Comandos de voz",
+    "commands_guide_sub": "Referencia de acciones y activación/desactivación por comando",
+    "commands_guide_btn": "Guía de comandos",
+    "commands_guide_close": "Cerrar",
+    "commands_guide_active_summary": "{active} de {total} comandos activos"
   },
   "fr": {
     "title_settings": "Paramètres",
@@ -1229,7 +1313,28 @@ const i18nDict = {
     "history_copy_title": "Copier dans le presse-papiers",
     "history_search_clear": "Effacer la recherche",
     "api_key_toggle_visibility": "Afficher/masquer la clé",
-    "history_filters_label": "Filtres de l'historique"
+    "history_filters_label": "Filtres de l'historique",
+    "onboarding_skip": "Ignorer le tutoriel",
+    "onboarding_prev": "Retour",
+    "onboarding_next": "Suivant",
+    "onboarding_finish": "Commencer",
+    "onboarding_replay": "Visite guidée des fonctionnalités",
+    "onboarding_step_tag": "{current} / {total}",
+    "onboarding_step_1_title": "Démarrage rapide de la dictée",
+    "onboarding_step_1_desc": "Appuyez ou maintenez Alt+V dans n'importe quelle application Windows pour dicter du texte. Modes Push-to-Talk (maintien) et Bascule (clic départ/arrêt). Un overlay compact apparaît à l'écran pendant l'enregistrement.",
+    "onboarding_step_2_title": "Moteurs de reconnaissance vocale",
+    "onboarding_step_2_desc": "Utilisez la reconnaissance hors ligne sur votre PC sans transfert de données ou connectez des modèles cloud (Gemini, OpenAI, Groq) pour un traitement rapide sans charger le système.",
+    "onboarding_step_3_title": "Modification de texte sélectionné à la voix",
+    "onboarding_step_3_desc": "Sélectionnez du texte dans n'importe quel logiciel, appuyez sur Alt+V et dictez un ordre : « raccourcis », « traduis en anglais » ou « corrige les erreurs ». Sans ordre particulier, le texte dicté remplacera la sélection.",
+    "onboarding_step_4_title": "Fonctionnement en arrière-plan et zone de notification",
+    "onboarding_step_4_desc": "Aura tourne discrètement en arrière-plan. Le mode jeu suspend les raccourcis pour préserver les FPS, et la mémoire graphique est libérée en veille. Une icône dans la barre d'état indique en permanence si le mode jeu est actif.",
+    "commands_guide_title": "Guide des commandes vocales",
+    "commands_guide_desc": "Gérez les actions sur le texte sélectionné. Les commandes désactivées sont saisies comme du texte ordinaire.",
+    "commands_guide_label": "Commandes vocales",
+    "commands_guide_sub": "Répertoire des actions et activation/désactivation par commande",
+    "commands_guide_btn": "Guide des commandes",
+    "commands_guide_close": "Fermer",
+    "commands_guide_active_summary": "{active} sur {total} commandes actives"
   },
   "it": {
     "title_settings": "Impostazioni",
@@ -1473,7 +1578,28 @@ const i18nDict = {
     "history_copy_title": "Copia negli appunti",
     "history_search_clear": "Cancella ricerca",
     "api_key_toggle_visibility": "Mostra/nascondi chiave",
-    "history_filters_label": "Filtri della cronologia"
+    "history_filters_label": "Filtri della cronologia",
+    "onboarding_skip": "Salta introduzione",
+    "onboarding_prev": "Indietro",
+    "onboarding_next": "Avanti",
+    "onboarding_finish": "Inizia",
+    "onboarding_replay": "Tour guidato delle funzionalità",
+    "onboarding_step_tag": "{current} / {total}",
+    "onboarding_step_1_title": "Avvio rapido dettatura",
+    "onboarding_step_1_desc": "Premi o tieni premuto Alt+V in qualsiasi applicazione Windows per dettare testo. Supporta Push-to-Talk (pressione continua) e Toggle (clic avvio/arresto). Durante la registrazione appare un overlay compatto sullo schermo.",
+    "onboarding_step_2_title": "Motori di riconoscimento vocale",
+    "onboarding_step_2_desc": "Usa il riconoscimento offline sul tuo PC senza inviare dati in rete oppure collega modelli cloud (Gemini, OpenAI, Groq) per un'elaborazione rapida senza carico sul sistema.",
+    "onboarding_step_3_title": "Modifica del testo selezionato con la voce",
+    "onboarding_step_3_desc": "Seleziona testo in qualsiasi programma, premi Alt+V e pronuncia un comando: 'accorcia', 'traduci in inglese' o 'correggi errori'. Se non fornisci un comando e ti limiti a dettare, il testo dettato sostituirà la selezione.",
+    "onboarding_step_4_title": "Funzionamento in background e barra delle applicazioni",
+    "onboarding_step_4_desc": "Aura opera silenziosamente in background. La modalità gioco sospende le scorciatoie per mantenere gli FPS, e la memoria video viene liberata in standby. Un'icona nella barra di sistema mostra sempre se la modalità gioco è attiva.",
+    "commands_guide_title": "Guida ai comandi vocali",
+    "commands_guide_desc": "Gestisci le azioni sul testo selezionato. I comandi disabilitati vengono inseriti come normale testo.",
+    "commands_guide_label": "Comandi vocali",
+    "commands_guide_sub": "Riferimento azioni e attivazione/disattivazione dei singoli comandi",
+    "commands_guide_btn": "Guida comandi",
+    "commands_guide_close": "Chiudi",
+    "commands_guide_active_summary": "{active} su {total} comandi attivi"
   },
   "zh": {
     "title_settings": "设置",
@@ -1717,7 +1843,28 @@ const i18nDict = {
     "history_copy_title": "复制到剪贴板",
     "history_search_clear": "清除搜索",
     "api_key_toggle_visibility": "显示/隐藏密钥",
-    "history_filters_label": "历史记录筛选"
+    "history_filters_label": "历史记录筛选",
+    "onboarding_skip": "跳过教程",
+    "onboarding_prev": "上一步",
+    "onboarding_next": "下一步",
+    "onboarding_finish": "开始使用",
+    "onboarding_replay": "功能入门导览",
+    "onboarding_step_tag": "{current} / {total}",
+    "onboarding_step_1_title": "快速开始听写",
+    "onboarding_step_1_desc": "在任何 Windows 程序中按住或轻按 Alt+V 即可进行语音输入。支持按住说话（Push-to-Talk）与点击启停（Toggle）两种模式。录音时屏幕上会显示紧凑的悬浮覆盖层（Overlay）。",
+    "onboarding_step_2_title": "语音识别引擎模式",
+    "onboarding_step_2_desc": "可在电脑本地离线运行语音识别，无需连接网络；亦可连接云端 AI（Gemini、OpenAI、Groq）进行快速处理且不占用本机系统资源。",
+    "onboarding_step_3_title": "选中文本语音指令编辑",
+    "onboarding_step_3_desc": "在任何软件中选中文本，按 Alt+V 并说出指令：“缩短”、“翻译成英语”或“修正错误”。若未给出指令直接说话，Aura 会直接用听写文本替换选中部分。",
+    "onboarding_step_4_title": "后台静默运行与系统托盘",
+    "onboarding_step_4_desc": "Aura 在后台静默运行。游戏时自动暂停快捷键以保证游戏 FPS，空闲时自动释放显存。系统托盘图标会始终显示游戏模式的运行状态。",
+    "commands_guide_title": "语音指令指南",
+    "commands_guide_desc": "管理选中文本可用的语音操作。停用的指令将作为普通语音直接输入。",
+    "commands_guide_label": "语音指令",
+    "commands_guide_sub": "操作参考及单项指令启用/停用开关",
+    "commands_guide_btn": "指令指南",
+    "commands_guide_close": "关闭",
+    "commands_guide_active_summary": "{active} / {total} 个指令已启用"
   },
   "pt": {
     "title_settings": "Configurações",
@@ -1961,7 +2108,28 @@ const i18nDict = {
     "history_copy_title": "Copiar para a área de transferência",
     "history_search_clear": "Limpar pesquisa",
     "api_key_toggle_visibility": "Mostrar/ocultar chave",
-    "history_filters_label": "Filtros do histórico"
+    "history_filters_label": "Filtros do histórico",
+    "onboarding_skip": "Pular tutorial",
+    "onboarding_prev": "Voltar",
+    "onboarding_next": "Avançar",
+    "onboarding_finish": "Começar",
+    "onboarding_replay": "Visita guiada de recursos",
+    "onboarding_step_tag": "{current} / {total}",
+    "onboarding_step_1_title": "Início rápido de ditado",
+    "onboarding_step_1_desc": "Pressione ou segure Alt+V em qualquer aplicativo do Windows para ditar texto. Suporta Push-to-Talk (segurar) e Alternar (clique início/parada). Durante a gravação, uma sobreposição compacta (overlay) aparece na tela.",
+    "onboarding_step_2_title": "Mecanismos de reconhecimento de voz",
+    "onboarding_step_2_desc": "Use o reconhecimento offline em seu PC sem envio de dados pela rede ou conecte modelos em nuvem (Gemini, OpenAI, Groq) para processamento rápido sem carga no sistema.",
+    "onboarding_step_3_title": "Edição de texto selecionado por voz",
+    "onboarding_step_3_desc": "Selecione o texto em qualquer aplicativo, pressione Alt+V e pronuncie um comando: 'encurte', 'traduza para inglês' ou 'corrija a gramática'. Caso nenhum comando seja dado, o texto ditado substituirá a seleção.",
+    "onboarding_step_4_title": "Operação em segundo plano e bandeja do sistema",
+    "onboarding_step_4_desc": "O Aura roda discretamente em segundo plano. O modo de jogo pausa atalhos para manter o FPS, e a memória de vídeo é liberada em inatividade. Um ícone na bandeja do sistema indica quando o modo de jogo está ativo.",
+    "commands_guide_title": "Guia de comandos de voz",
+    "commands_guide_desc": "Gerencie as ações no texto selecionado. Comandos desativados são inseridos como fala comum.",
+    "commands_guide_label": "Comandos de voz",
+    "commands_guide_sub": "Referência de ações e ativação/desativação por comando",
+    "commands_guide_btn": "Guia de comandos",
+    "commands_guide_close": "Fechar",
+    "commands_guide_active_summary": "{active} de {total} comandos ativos"
   },
   "tr": {
     "title_settings": "Ayarlar",
@@ -2205,7 +2373,28 @@ const i18nDict = {
     "history_copy_title": "Panoya kopyala",
     "history_search_clear": "Aramayı temizle",
     "api_key_toggle_visibility": "Anahtarı göster/gizle",
-    "history_filters_label": "Geçmiş filtreleri"
+    "history_filters_label": "Geçmiş filtreleri",
+    "onboarding_skip": "Öğreticiyi atla",
+    "onboarding_prev": "Geri",
+    "onboarding_next": "İleri",
+    "onboarding_finish": "Başla",
+    "onboarding_replay": "Özellik tanıtım turu",
+    "onboarding_step_tag": "{current} / {total}",
+    "onboarding_step_1_title": "Hızlı Dikte Başlatma",
+    "onboarding_step_1_desc": "Metin dikte etmek için herhangi bir Windows uygulamasında Alt+V tuşuna basın veya basılı tutun. Bas-Konuş (Push-to-Talk) ve Aç/Kapat (Toggle) modları desteklenir. Kayıt sırasında ekranda kompakt bir yer paylaşımı (overlay) görünür.",
+    "onboarding_step_2_title": "Konuşma Tanıma Motorları",
+    "onboarding_step_2_desc": "Ağa veri göndermeden doğrudan bilgisayarınızda çevrimdışı tanımayı kullanın veya sistem yükü olmadan hızlı işlem için bulut modellerini (Gemini, OpenAI, Groq) bağlayın.",
+    "onboarding_step_3_title": "Seçili Metni Sesle Düzenleme",
+    "onboarding_step_3_desc": "Herhangi bir uygulamada metni seçin, Alt+V tuşuna basın ve bir komut verin: 'kısalt', 'ingilizceye çevir' veya 'hataları düzelt'. Komut verilmezse, dikte edilen metin seçimin yerine eklenir.",
+    "onboarding_step_4_title": "Arka Planda Çalışma ve Sistem Tepsisi",
+    "onboarding_step_4_desc": "Aura arka planda sessizce çalışır. Oyun modu FPS'yi korumak için kısayolları duraklatır, boşta kalındığında video belleği serbest bırakılır. Sistem tepsisindeki simge oyun modunun etkin olup olmadığını gösterir.",
+    "commands_guide_title": "Sesli Komut Rehberi",
+    "commands_guide_desc": "Seçilen metin üzerindeki sesli eylemleri yönetin. Devre dışı bırakılan komutlar normal konuşma olarak yazılır.",
+    "commands_guide_label": "Sesli Komutlar",
+    "commands_guide_sub": "Eylem referansı ve komut bazında açma/kapatma anahtarları",
+    "commands_guide_btn": "Komut Rehberi",
+    "commands_guide_close": "Kapat",
+    "commands_guide_active_summary": "{active} / {total} komut aktif"
   }
 };
 
@@ -2392,6 +2581,297 @@ function initSelectPanels() {
   });
   rebuildSelectPanels();
 }
+
+const COMMANDS_METADATA = [
+  {
+    id: "fix_grammar",
+    names: {
+      ru: "Исправление грамматики",
+      en: "Fix Grammar & Typos",
+      de: "Grammatik & Tippfehler korrigieren",
+      es: "Corregir gramática y erratas",
+      fr: "Corriger la grammaire et les fautes",
+      it: "Correggi grammatica e refusi",
+      zh: "修正语法和错别字",
+      pt: "Corrigir gramática e digitação",
+      tr: "Dilbilgisi ve Yazım Hatalarını Düzelt"
+    },
+    descriptions: {
+      ru: "Исправляет орфографию, пунктуацию и опечатки в выделенном фрагменте, сохраняя стиль и смысл автора.",
+      en: "Corrects spelling, punctuation, and typos in the selection while preserving original meaning and voice.",
+      de: "Korrigiert Rechtschreibung, Zeichensetzung und Tippfehler unter Beibehaltung von Ton und Sinn.",
+      es: "Corrige ortografía, puntuación y erratas en el texto seleccionado manteniendo el estilo y significado.",
+      fr: "Corrige l'orthographe, la ponctuation et les coquilles dans la sélection en conservant le sens et le ton.",
+      it: "Corregge ortografia, punteggiatura ed errori di battitura preservando stile e significato originari.",
+      zh: "纠正选中文本中的拼写、标点和错别字，同时保留原有语调和含义。",
+      pt: "Corrige ortografia, pontuação e erros de digitação mantendo o tom e sentido originais.",
+      tr: "Seçilen metindeki yazım, noktalama ve yazım hatalarını yazarın üslubunu koruyarak düzeltir."
+    },
+    chips: {
+      ru: ["«исправь ошибки»", "«проверь текст»", "«исправь пунктуацию»"],
+      en: ['"fix grammar"', '"fix errors"', '"proofread"'],
+      de: ['„Grammatik korrigieren“', '„Fehler beheben“', '„Text prüfen“'],
+      es: ['«corrige errores»', '«revisa la gramática»', '«corrige el texto»'],
+      fr: ['« corrige les fautes »', '« vérifie le texte »', '« corrige la grammaire »'],
+      it: ['"correggi errori"', '"controlla grammatica"', '"correggi il testo"'],
+      zh: ['“修正语法”', '“检查错误”', '“修改语病”'],
+      pt: ['«corrija erros»', '«corrija a gramática»', '«revise o texto»'],
+      tr: ['"hataları düzelt"', '"dilbilgisini düzelt"', '"metni kontrol et"']
+    }
+  },
+  {
+    id: "translate",
+    names: {
+      ru: "Перевод текста",
+      en: "Translate",
+      de: "Übersetzen",
+      es: "Traducir",
+      fr: "Traduire",
+      it: "Traduci",
+      zh: "翻译文本",
+      pt: "Traduzir",
+      tr: "Metni Çevir"
+    },
+    descriptions: {
+      ru: "Переводит выделенный текст на указанный язык («на немецкий») или на язык перевода по умолчанию.",
+      en: "Translates the selection to the specified language (e.g. 'to German') or default translation target.",
+      de: "Übersetzt den ausgewählten Text in die gewünschte Sprache (z. B. „auf Deutsch“) oder Standardsprache.",
+      es: "Traduce el texto seleccionado al idioma indicado (p. ej. «al alemán») o al idioma predeterminado.",
+      fr: "Traduit la sélection dans la langue demandée (ex. « en allemand ») ou la langue par défaut.",
+      it: "Traduce la selezione nella lingua richiesta (es. 'in tedesco') o nella lingua predefinita.",
+      zh: "将选中文本翻译成指定语言（如“翻译成德语”）或默认目标语言。",
+      pt: "Traduz o texto selecionado para o idioma especificado (ex.: «para alemão») ou idioma padrão.",
+      tr: "Seçilen metni belirtilen dile (ör. 'Almancaya çevir') veya varsayılan çeviri diline çevirir."
+    },
+    chips: {
+      ru: ["«переведи»", "«переведи на английский»", "«переведи на немецкий»"],
+      en: ['"translate"', '"translate to english"', '"translate to german"'],
+      de: ['„übersetzen“', '„auf Englisch übersetzen“', '„auf Spanisch übersetzen“'],
+      es: ['«traduce»', '«traduce al inglés»', '«traduce al francés»'],
+      fr: ['« traduis »', '« traduis en anglais »', '« traduis en espagnol »'],
+      it: ['"traduci"', '"traduci in inglese"', '"traduci in tedesco"'],
+      zh: ['“翻译”', '“翻译成英文”', '“翻译成中文”'],
+      pt: ['«traduza»', '«traduza para inglês»', '«traduza para espanhol»'],
+      tr: ['"çevir"', '"İngilizceye çevir"', '"Almancaya çevir"']
+    }
+  },
+  {
+    id: "shorten",
+    names: {
+      ru: "Сокращение текста",
+      en: "Shorten & Condense",
+      de: "Kürzen & Verdichten",
+      es: "Acortar y resumir",
+      fr: "Raccourcir et condenser",
+      it: "Accorcia e condensa",
+      zh: "精简缩短",
+      pt: "Encurtar e resumir",
+      tr: "Kısalt ve Özetle"
+    },
+    descriptions: {
+      ru: "Делает текст лаконичнее и короче, удаляя лишние слова и сохраняя все важные мысли.",
+      en: "Makes the text concise and punchy, removing filler words while keeping core ideas intact.",
+      de: "Macht den Text prägnanter und kürzer, entfernt Füllwörter und bewahrt Kernaussagen.",
+      es: "Hace el texto más conciso y breve, eliminando redundancias y manteniendo las ideas clave.",
+      fr: "Rend le texte concis, supprime le remplissage tout en préservant les idées clés.",
+      it: "Rende il testo più sintetico ed essenziale, eliminando il superfluo e mantenendo i punti chiave.",
+      zh: "精简语句，剔除冗余修饰，完整保留核心事实与要点。",
+      pt: "Torna o texto mais sucinto e direto, removendo excessos e mantendo o essencial.",
+      tr: "Gereksiz sözcükleri çıkararak metni daha kısa ve öz hale getirir, ana fikri korur."
+    },
+    chips: {
+      ru: ["«сократи»", "«сделай короче»", "«сожми текст»"],
+      en: ['"shorten"', '"make shorter"', '"condense"'],
+      de: ['„kürzen“', '„kürzer machen“', '„Text verdichten“'],
+      es: ['«acorta»', '«hazlo más corto»', '«resume el texto»'],
+      fr: ['« raccourcis »', '« fais plus court »', '« condense »'],
+      it: ['"accorcia"', '"fai più corto"', '"sintetizza"'],
+      zh: ['“缩短”', '“精简文本”', '“写短一点”'],
+      pt: ['«encurte»', '«faça mais curto»', '«resuma»'],
+      tr: ['"kısalt"', '"daha kısa yap"', '"özetle"']
+    }
+  },
+  {
+    id: "expand",
+    names: {
+      ru: "Развёртывание текста",
+      en: "Expand & Elaborate",
+      de: "Ausformulieren & Erweitern",
+      es: "Ampliar y detallar",
+      fr: "Développer et étoffer",
+      it: "Espandi e approfondisci",
+      zh: "扩充展开",
+      pt: "Expandir e detalhar",
+      tr: "Genişlet ve Detaylandır"
+    },
+    descriptions: {
+      ru: "Дополняет текст полезными деталями, делает формулировки более ясными и обстоятельными.",
+      en: "Elaborates on ideas with helpful details and clarity while preserving the original intent.",
+      de: "Formuliert Ideen detaillierter und anschaulicher aus unter Beibehaltung der Absicht.",
+      es: "Amplía y detalla las ideas con claridad sin perder el propósito original.",
+      fr: "Développe les idées avec plus de clarté et de précision tout en conservant l'intention d'origine.",
+      it: "Arricchisce il testo con dettagli e maggiore chiarezza preservando l'intento iniziale.",
+      zh: "扩充文本细节，让表达更加清晰详实，同时保持原意不变。",
+      pt: "Desenvolve o texto com detalhes e clareza sem perder a mensagem original.",
+      tr: "Metni faydalı detaylarla zenginleştirir, anlatımı daha açık ve kapsamlı kılar."
+    },
+    chips: {
+      ru: ["«распиши подробнее»", "«разверни мысль»", "«добавь деталей»"],
+      en: ['"expand"', '"elaborate"', '"add details"'],
+      de: ['„ausführlicher“', '„Gedanken ausführen“', '„Details hinzufügen“'],
+      es: ['«amplía»', '«explica con más detalle»', '«añade деталей»'],
+      fr: ['« développe »', '« détaille »', '« ajoute des détails »'],
+      it: ['"espandi"', '"approfondisci"', '"aggiungi dettagli"'],
+      zh: ['“展开说明”', '“写详细一点”', '“补充细节”'],
+      pt: ['«expanda»', '«detalhe mais»', '«adicione detalhes»'],
+      tr: ['"detaylandır"', '"daha ayrıntılı yaz"', '"genişlet"']
+    }
+  },
+  {
+    id: "bulletize",
+    names: {
+      ru: "Форматирование списком",
+      en: "Bullet List",
+      de: "Als Aufzählung formatieren",
+      es: "Formato de lista",
+      fr: "Formater en liste à puces",
+      it: "Elenco puntato",
+      zh: "项目符号列表",
+      pt: "Formatar em tópicos",
+      tr: "Madde İmleri Listesi"
+    },
+    descriptions: {
+      ru: "Преобразует сплошной текст в структурированный маркированный список с ключевыми пунктами.",
+      en: "Formats unstructured paragraphs into a clean, easy-to-read bulleted list.",
+      de: "Verwandelt Fließtext in eine übersichtliche, strukturierte Liste mit Aufzählungspunkten.",
+      es: "Convierte párrafos continuos en una lista ordenada y limpia con puntos clave.",
+      fr: "Transforme un texte continu en une liste à puces claire et facile à lire.",
+      it: "Trasforma il testo discorsivo in un elenco puntato ordinato e ben strutturato.",
+      zh: "将连续段落转换成清晰工整、易于阅读的项目符号列表。",
+      pt: "Converte o texto contínuo em uma lista ordenada com tópicos bem definidos.",
+      tr: "Düz metni okunması kolay, maddeler halinde düzenli bir listeye dönüştürür."
+    },
+    chips: {
+      ru: ["«сделай список»", "«по пунктам»", "«оформи списком»"],
+      en: ['"bulletize"', '"make a list"', '"bullet points"'],
+      de: ['„Liste erstellen“', '„in Stichpunkten“', '„Aufzählung“'],
+      es: ['«haz una lista»', '«en viñetas»', '«formatea como lista»'],
+      fr: ['« fais une liste »', '« sous forme de liste »', '« liste à puces »'],
+      it: ['"fai un elenco"', '"in punti"', '"elenco puntato"'],
+      zh: ['“做成列表”', '“列要点”', '“项目符号”'],
+      pt: ['«faça uma lista»', '«em tópicos»', '«formate em lista»'],
+      tr: ['"liste yap"', '"maddeler halinde"', '"madde imleri"']
+    }
+  },
+  {
+    id: "summarize",
+    names: {
+      ru: "Выжимка и тезисы",
+      en: "Summarize & TL;DR",
+      de: "Kernaussagen & Zusammenfassung",
+      es: "Resumen y puntos clave",
+      fr: "Résumé et points clés",
+      it: "Sintesi e punti chiave",
+      zh: "核心摘要与提炼",
+      pt: "Resumo e pontos-chave",
+      tr: "Özet ve Ana Başlıklar"
+    },
+    descriptions: {
+      ru: "Выделяет главную суть и ключевые выводы из длинного текста в кратком и понятном виде.",
+      en: "Extracts essential takeaways and main ideas into an instant concise briefing.",
+      de: "Fasst die wichtigsten Kernaussagen und Erkenntnisse kurz und verständlich zusammen.",
+      es: "Extrae las conclusiones esenciales y las ideas principales de manera concisa.",
+      fr: "Extrait l'essentiel et les conclusions clés sous une forme brève et percutante.",
+      it: "Estrae il significato essenziale e le conclusioni principali in modo rapido e chiaro.",
+      zh: "快速提炼长文本的关键结论和核心思想，形成简明摘要。",
+      pt: "Extrai as conclusões essenciais e ideias principais de forma rápida e clara.",
+      tr: "Uzun metinlerden ana fikri ve önemli sonuçları kısa ve anlaşılır bir özette toplar."
+    },
+    chips: {
+      ru: ["«главные тезисы»", "«краткая суть»", "«сделай саммари»"],
+      en: ['"summarize"', '"key takeaways"', '"tldr"'],
+      de: ['„zusammenfassen“', '„Kernaussagen“', '„Kurzfassung“'],
+      es: ['«resume»', '«puntos clave»', '«haz un resumen»'],
+      fr: ['« résume »', '« points essentiels »', '« fais un résumé »'],
+      it: ['"riassumi"', '"punti chiave"', '"fai un sommario"'],
+      zh: ['“总结要点”', '“核心摘要”', '“提炼精髓”'],
+      pt: ['«resuma»', '«principais pontos»', '«faça um resumo»'],
+      tr: ['"özetle"', '"ana noktalar"', '"özet çıkar"']
+    }
+  },
+  {
+    id: "rewrite_formal",
+    names: {
+      ru: "Деловой стиль",
+      en: "Formal Tone",
+      de: "Geschäftlicher Ton",
+      es: "Tono formal",
+      fr: "Ton formel et professionnel",
+      it: "Tono formale",
+      zh: "正式商务语气",
+      pt: "Tom formal",
+      tr: "Resmi Dil"
+    },
+    descriptions: {
+      ru: "Переформулирует текст в строгом, вежливом и профессиональном деловом ключе.",
+      en: "Rewrites the text into a polished, respectful, and professional business tone.",
+      de: "Formuliert den Text in einem höflichen, professionellen Geschäftston neu.",
+      es: "Reescribe el texto en un estilo pulido, respetuoso y formal para entornos profesionales.",
+      fr: "Réécrit le texte dans un registre soutenu, courtois et adapté au milieu professionnel.",
+      it: "Riscrive il testo con un registro accurato, formale e adatto alla comunicazione professionale.",
+      zh: "将文本改写为严谨、得体、适合职场与商务沟通的专业语气。",
+      pt: "Reescreve o texto em tom polido, respeitoso e profissional para o trabalho.",
+      tr: "Metni kurumsal ve iş iletişimine uygun, saygılı ve resmi bir dille yeniden yazar."
+    },
+    chips: {
+      ru: ["«деловой стиль»", "«сделай официально»", "«вежливый тон»"],
+      en: ['"make formal"', '"business tone"', '"professional"'],
+      de: ['„formell machen“', '„geschäftlicher Ton“', '„höflich formulieren“'],
+      es: ['«hazlo formal»', '«tono profesional»', '«estilo formal»'],
+      fr: ['« ton formel »', '« style professionnel »', '« rends formel »'],
+      it: ['"rendi formale"', '"tono professionale"', '"stile formale"'],
+      zh: ['“正式语气”', '“商务风格”', '“书面语”'],
+      pt: ['«torne formal»', '«tom profissional»', '«estilo corporativo»'],
+      tr: ['"resmi yap"', '"kurumsal üslup"', '"profesyonel dil"']
+    }
+  },
+  {
+    id: "rewrite_casual",
+    names: {
+      ru: "Непринуждённый стиль",
+      en: "Casual Tone",
+      de: "Lockerer Ton",
+      es: "Tono informal",
+      fr: "Ton décontracté",
+      it: "Tono informale",
+      zh: "随和口语语气",
+      pt: "Tom informal",
+      tr: "Samimi / Günlük Dil"
+    },
+    descriptions: {
+      ru: "Переписывает текст в простом, тёплом и естественном разговорном стиле.",
+      en: "Rewrites the text into an approachable, friendly, and conversational voice.",
+      de: "Formuliert den Text in einer sympathischen, lockeren und natürlichen Umgangssprache.",
+      es: "Reescribe el texto en un tono cercano, natural y amigable de conversación diaria.",
+      fr: "Réécrit le texte avec un style chaleureux, fluide et accessible entre collègues ou amis.",
+      it: "Riscrive il testo con un tono amichevole, spontaneo e colloquiale.",
+      zh: "将文本改写为亲切自然、生动流畅的日常口语与随和语气。",
+      pt: "Reescreve o texto com uma linguagem natural, amigável e descontraída.",
+      tr: "Metni sıcak, doğal ve günlük konuşma diline uygun bir üslupla yeniden yazar."
+    },
+    chips: {
+      ru: ["«простыми словами»", "«дружеский тон»", "«неформально»"],
+      en: ['"make casual"', '"friendly tone"', '"conversational"'],
+      de: ['„lockerer Ton“', '„freundlich“', '„einfache Sprache“'],
+      es: ['«hazlo informal»', '«tono amigable»', '«más natural»'],
+      fr: ['« ton amical »', '« fais décontracté »', '« simple et naturel »'],
+      it: ['"rendi informale"', '"tono amichevole"', '"più naturale"'],
+      zh: ['“通俗点”', '“随和语气”', '“口语化”'],
+      pt: ['«torne informal»', '«tom amigável»', '«mais natural»'],
+      tr: ['"samimi yap"', '"günlük dil"', '"daha doğal"']
+    }
+  }
+];
 
 function getTranslation(key, params = {}) {
   const dict = i18nDict[currentLanguage] || i18nDict.ru;
@@ -2980,11 +3460,13 @@ const btnSaveSettings = document.getElementById("btn-save-settings");
   let selectedModelName = "base";
   let lastSelectedWhisperModel = "large-v3-turbo-q5_0";
   let selectedLlmModel = "qwen3-1.7b";
+  let disabledEditCommands = [];
   let downloadedModelList = [];
   let activeLocalAcceleration = "cpu";
 
   let settingsModified = false;
   let isSettingsLoaded = false;
+  let hasCompletedOnboarding = false;
   let autoSaveTimeout = null;
   let settingsRevision = 0;
   let engineHealthTimer = null;
@@ -3112,6 +3594,153 @@ const btnSaveSettings = document.getElementById("btn-save-settings");
         }
       });
     }
+  }
+
+  // --- Voice Commands Guide & Toggle Modal ---
+  function updateCommandsSummary() {
+    const total = COMMANDS_METADATA.length;
+    const active = total - disabledEditCommands.length;
+    const badge = document.getElementById("badge-active-commands-count");
+    if (badge) {
+      badge.textContent = String(active);
+    }
+    const summary = document.getElementById("commands-guide-summary");
+    if (summary) {
+      summary.textContent = getTranslation("commands_guide_active_summary", { active, total });
+    }
+  }
+
+  function renderCommandsGuideList() {
+    const listEl = document.getElementById("commands-guide-list");
+    if (!listEl) return;
+    listEl.innerHTML = "";
+
+    const lang = i18nDict[currentLanguage] ? currentLanguage : "ru";
+
+    COMMANDS_METADATA.forEach(cmd => {
+      const isDisabled = disabledEditCommands.includes(cmd.id);
+      const row = document.createElement("div");
+      row.className = `command-row${isDisabled ? " disabled" : ""}`;
+      row.dataset.commandId = cmd.id;
+
+      const info = document.createElement("div");
+      info.className = "command-info";
+
+      const header = document.createElement("div");
+      header.className = "command-header";
+      const name = document.createElement("span");
+      name.className = "command-name";
+      name.textContent = (cmd.names && (cmd.names[lang] || cmd.names.ru)) || cmd.id;
+      header.appendChild(name);
+      info.appendChild(header);
+
+      const desc = document.createElement("p");
+      desc.className = "command-desc";
+      desc.textContent = (cmd.descriptions && (cmd.descriptions[lang] || cmd.descriptions.ru)) || "";
+      info.appendChild(desc);
+
+      const chipsContainer = document.createElement("div");
+      chipsContainer.className = "command-chips";
+      const chipsList = (cmd.chips && (cmd.chips[lang] || cmd.chips.ru)) || [];
+      chipsList.forEach(chipText => {
+        const chip = document.createElement("span");
+        chip.className = "chip";
+        chip.textContent = chipText;
+        chipsContainer.appendChild(chip);
+      });
+      info.appendChild(chipsContainer);
+
+      const toggleLabel = document.createElement("label");
+      toggleLabel.className = "toggle-switch command-toggle";
+      toggleLabel.title = (cmd.names && (cmd.names[lang] || cmd.names.ru)) || "";
+
+      const checkbox = document.createElement("input");
+      checkbox.type = "checkbox";
+      checkbox.checked = !isDisabled;
+      checkbox.dataset.commandId = cmd.id;
+
+      checkbox.addEventListener("change", () => {
+        const checked = checkbox.checked;
+        if (checked) {
+          disabledEditCommands = disabledEditCommands.filter(id => id !== cmd.id);
+          row.classList.remove("disabled");
+        } else {
+          if (!disabledEditCommands.includes(cmd.id)) {
+            disabledEditCommands.push(cmd.id);
+          }
+          row.classList.add("disabled");
+        }
+        updateCommandsSummary();
+        markSettingsModified(false);
+      });
+
+      const track = document.createElement("span");
+      track.className = "toggle-track";
+      const thumb = document.createElement("span");
+      thumb.className = "toggle-thumb";
+      track.appendChild(thumb);
+
+      toggleLabel.appendChild(checkbox);
+      toggleLabel.appendChild(track);
+
+      row.appendChild(info);
+      row.appendChild(toggleLabel);
+      listEl.appendChild(row);
+    });
+
+    updateCommandsSummary();
+  }
+
+  function openCommandsGuideModal() {
+    const modal = document.getElementById("modal-commands-guide");
+    if (!(modal instanceof HTMLDialogElement)) return;
+    renderCommandsGuideList();
+    if (modal.open) modal.close();
+    modal.showModal();
+    requestAnimationFrame(() => modal.classList.add("active"));
+  }
+
+  function closeCommandsGuideModal() {
+    const modal = document.getElementById("modal-commands-guide");
+    if (!(modal instanceof HTMLDialogElement) || !modal.open) return;
+    modal.classList.remove("active");
+    setTimeout(() => {
+      if (modal.open) modal.close();
+    }, 200);
+  }
+
+  const btnOpenCommandsGuide = document.getElementById("btn-open-commands-guide");
+  if (btnOpenCommandsGuide) {
+    btnOpenCommandsGuide.addEventListener("click", () => {
+      openCommandsGuideModal();
+    });
+  }
+
+  const btnCloseCommandsGuide = document.getElementById("btn-close-commands-guide");
+  if (btnCloseCommandsGuide) {
+    btnCloseCommandsGuide.addEventListener("click", () => {
+      closeCommandsGuideModal();
+    });
+  }
+
+  const btnCloseCommandsGuideX = document.getElementById("btn-close-commands-guide-x");
+  if (btnCloseCommandsGuideX) {
+    btnCloseCommandsGuideX.addEventListener("click", () => {
+      closeCommandsGuideModal();
+    });
+  }
+
+  const modalCommandsGuide = document.getElementById("modal-commands-guide");
+  if (modalCommandsGuide) {
+    modalCommandsGuide.addEventListener("click", (e) => {
+      if (e.target === modalCommandsGuide) {
+        closeCommandsGuideModal();
+      }
+    });
+    modalCommandsGuide.addEventListener("cancel", (e) => {
+      e.preventDefault();
+      closeCommandsGuideModal();
+    });
   }
 
   let isSettingsListenersBound = false;
@@ -3339,6 +3968,17 @@ const btnSaveSettings = document.getElementById("btn-save-settings");
       const settings = preFetchedSettings || await invoke("get_settings");
       
       if (settings) {
+        if (typeof settings.has_completed_onboarding === "boolean") {
+          hasCompletedOnboarding = settings.has_completed_onboarding;
+        }
+        if (localStorage.getItem("aura_onboarding_completed") === "true") {
+          hasCompletedOnboarding = true;
+        }
+        if (hasCompletedOnboarding) {
+          try {
+            localStorage.setItem("aura_onboarding_completed", "true");
+          } catch (_) {}
+        }
         if (settings.transcription_mode === "local") {
           radioLocal.checked = true;
         } else {
@@ -3502,9 +4142,12 @@ const btnSaveSettings = document.getElementById("btn-save-settings");
         await loadAudioDevices(settings.audio_input_device || "default");
         await refreshDownloadedModels();
 
-activeLocalAcceleration = settings.local_acceleration || "cpu";
+        activeLocalAcceleration = settings.local_acceleration || "cpu";
         selectGpuProvider(activeLocalAcceleration);
         await updateGpuCardStates();
+
+        disabledEditCommands = Array.isArray(settings.disabled_edit_commands) ? [...settings.disabled_edit_commands] : [];
+        updateCommandsSummary();
         
         isSettingsLoaded = true;
         settingsModified = false;
@@ -3695,7 +4338,9 @@ modelCards.forEach(card => {
       return el ? el.value : "auto";
     })(),
     translate_default_target: selectTranslateTarget ? selectTranslateTarget.value : "en",
-    llm_model: selectedLlmModel
+    llm_model: selectedLlmModel,
+    has_completed_onboarding: hasCompletedOnboarding || localStorage.getItem("aura_onboarding_completed") === "true",
+    disabled_edit_commands: disabledEditCommands
   };
 
 await invoke("set_settings", { settings });
@@ -4405,6 +5050,13 @@ if (e.button === 0 && !e.target.closest(".window-control-btn") && !e.target.clos
       btnClose.setAttribute("aria-label", closeText);
     }
 
+    const btnCloseCommandsGuideX = document.getElementById("btn-close-commands-guide-x");
+    if (btnCloseCommandsGuideX) {
+      const closeText = dict.window_close || (lang === "ru" ? "Закрыть" : "Close");
+      btnCloseCommandsGuideX.setAttribute("title", closeText);
+      btnCloseCommandsGuideX.setAttribute("aria-label", closeText);
+    }
+
     const btnClearSearch = document.getElementById("btn-clear-history-search");
     if (btnClearSearch) {
       const clearSearchText = dict.history_search_clear || "Clear search";
@@ -4501,6 +5153,11 @@ if (e.button === 0 && !e.target.closest(".window-control-btn") && !e.target.clos
     // Refresh model cards status/actions
     refreshDownloadedModels();
     updateGpuCardStates();
+    updateCommandsSummary();
+    const modalCommandsGuide = document.getElementById("modal-commands-guide");
+    if (modalCommandsGuide && modalCommandsGuide.open) {
+      renderCommandsGuideList();
+    }
     
     // If settings modified status is showing, update it
     if (settingsModified) {
@@ -4997,6 +5654,13 @@ if (e.button === 0 && !e.target.closest(".window-control-btn") && !e.target.clos
       console.error(err);
     }
 
+    if (settings?.has_completed_onboarding === true || localStorage.getItem("aura_onboarding_completed") === "true") {
+      hasCompletedOnboarding = true;
+      try {
+        localStorage.setItem("aura_onboarding_completed", "true");
+      } catch (_) {}
+    }
+
     const backendUiLang = supportedLangs.includes(settings?.ui_language) ? settings.ui_language : null;
     const savedUiLang = legacyUiLang || backendUiLang || provisionalUiLang;
     localStorage.setItem("aura_ui_lang", savedUiLang);
@@ -5031,8 +5695,237 @@ if (e.button === 0 && !e.target.closest(".window-control-btn") && !e.target.clos
     setupReplacementsUI();
     initSelectPanels();
 
+    // Spotlight Tour Controller
+    const TOUR_STEPS = [
+      {
+        tab: "hotkeys",
+        targetSelector: "#card-hotkey .hotkey-field-wrapper",
+        titleKey: "onboarding_step_1_title",
+        descKey: "onboarding_step_1_desc"
+      },
+      {
+        tab: "speech",
+        targetSelector: "#card-engine .engine-toggle-group",
+        titleKey: "onboarding_step_2_title",
+        descKey: "onboarding_step_2_desc"
+      },
+      {
+        tab: "text",
+        targetSelector: "#card-selection-edit",
+        titleKey: "onboarding_step_3_title",
+        descKey: "onboarding_step_3_desc"
+      },
+      {
+        tab: "general",
+        targetSelector: "#card-gaming-mode .gaming-status-card",
+        titleKey: "onboarding_step_4_title",
+        descKey: "onboarding_step_4_desc"
+      }
+    ];
+
+    let currentTourStep = 0;
+    let isTourActive = false;
+
+    function initSpotlightTour() {
+      const overlay = document.getElementById("spotlight-tour-overlay");
+      const cutout = document.getElementById("spotlight-cutout");
+      const popover = document.getElementById("spotlight-popover");
+      const stepIndicator = document.getElementById("spotlight-step-indicator");
+      const segmentsContainer = document.getElementById("spotlight-segments");
+      const titleEl = document.getElementById("spotlight-title");
+      const descEl = document.getElementById("spotlight-desc");
+      const btnPrev = document.getElementById("btn-spotlight-prev");
+      const btnNext = document.getElementById("btn-spotlight-next");
+      const btnSkip = document.getElementById("btn-spotlight-skip");
+      const btnReplay = document.getElementById("btn-replay-onboarding");
+      const backdrop = document.getElementById("spotlight-backdrop");
+
+      if (!overlay || !cutout || !popover || !btnPrev || !btnNext || !btnSkip) {
+        return {
+          startTour: () => {},
+          checkAutoStart: () => {}
+        };
+      }
+
+      function renderSegments() {
+        if (!segmentsContainer) return;
+        segmentsContainer.innerHTML = "";
+        TOUR_STEPS.forEach((_, idx) => {
+          const seg = document.createElement("span");
+          seg.className = "spotlight-seg" + (idx <= currentTourStep ? " filled" : "");
+          segmentsContainer.appendChild(seg);
+        });
+      }
+
+      function updateTourPosition() {
+        if (!isTourActive) return;
+        const step = TOUR_STEPS[currentTourStep];
+        const target = document.querySelector(step.targetSelector);
+        if (!target) return;
+
+        target.scrollIntoView({ block: "nearest", inline: "nearest" });
+
+        const rect = target.getBoundingClientRect();
+        const padding = 6;
+        const cutoutTop = Math.max(0, rect.top - padding);
+        const cutoutLeft = Math.max(0, rect.left - padding);
+        const cutoutWidth = rect.width + padding * 2;
+        const cutoutHeight = rect.height + padding * 2;
+
+        cutout.style.top = `${Math.round(cutoutTop)}px`;
+        cutout.style.left = `${Math.round(cutoutLeft)}px`;
+        cutout.style.width = `${Math.round(cutoutWidth)}px`;
+        cutout.style.height = `${Math.round(cutoutHeight)}px`;
+
+        const popoverRect = popover.getBoundingClientRect();
+        const popoverHeight = popoverRect.height || 180;
+        const popoverWidth = popoverRect.width || 440;
+        const windowHeight = window.innerHeight;
+        const windowWidth = window.innerWidth;
+
+        const spaceBelow = windowHeight - (cutoutTop + cutoutHeight) - 14;
+        const spaceAbove = cutoutTop - 14;
+
+        let popoverTop;
+        if (spaceBelow >= popoverHeight + 8) {
+          popoverTop = cutoutTop + cutoutHeight + 12;
+        } else if (spaceAbove >= popoverHeight + 8) {
+          popoverTop = cutoutTop - popoverHeight - 12;
+        } else {
+          // If tight on both sides, place strictly on whichever side offers more clearance
+          if (spaceBelow >= spaceAbove) {
+            popoverTop = cutoutTop + cutoutHeight + 8;
+          } else {
+            popoverTop = Math.max(8, cutoutTop - popoverHeight - 8);
+          }
+        }
+
+        let popoverLeft = cutoutLeft;
+        if (popoverLeft + popoverWidth > windowWidth - 16) {
+          popoverLeft = Math.max(16, windowWidth - popoverWidth - 16);
+        }
+        if (popoverLeft < 16) popoverLeft = 16;
+
+        popover.style.top = `${Math.round(popoverTop)}px`;
+        popover.style.left = `${Math.round(popoverLeft)}px`;
+      }
+
+      function showTourStep(index) {
+        currentTourStep = index;
+        const step = TOUR_STEPS[currentTourStep];
+
+        const tabBtn = document.getElementById(`tab-btn-${step.tab}`);
+        if (tabBtn) {
+          activateTab(tabBtn);
+        }
+
+        const total = TOUR_STEPS.length;
+        stepIndicator.textContent = getTranslation("onboarding_step_tag", {
+          current: String(currentTourStep + 1),
+          total: String(total)
+        });
+        titleEl.textContent = getTranslation(step.titleKey);
+        descEl.textContent = getTranslation(step.descKey);
+
+        btnPrev.style.display = currentTourStep === 0 ? "none" : "inline-flex";
+        btnNext.textContent = currentTourStep === total - 1
+          ? getTranslation("onboarding_finish")
+          : getTranslation("onboarding_next");
+
+        renderSegments();
+
+        updateTourPosition();
+        requestAnimationFrame(() => {
+          updateTourPosition();
+        });
+      }
+
+      function startTour() {
+        isTourActive = true;
+        overlay.hidden = false;
+        currentTourStep = 0;
+        showTourStep(0);
+      }
+
+      function finishTour() {
+        isTourActive = false;
+        overlay.hidden = true;
+        hasCompletedOnboarding = true;
+        try {
+          localStorage.setItem("aura_onboarding_completed", "true");
+        } catch (_) {}
+        invoke("complete_onboarding").catch(err => {
+          console.error("Failed to mark onboarding as completed", err);
+        });
+      }
+
+      btnNext.addEventListener("click", () => {
+        if (currentTourStep < TOUR_STEPS.length - 1) {
+          showTourStep(currentTourStep + 1);
+        } else {
+          finishTour();
+        }
+      });
+
+      btnPrev.addEventListener("click", () => {
+        if (currentTourStep > 0) {
+          showTourStep(currentTourStep - 1);
+        }
+      });
+
+      btnSkip.addEventListener("click", () => {
+        finishTour();
+      });
+
+      if (backdrop) {
+        backdrop.addEventListener("click", () => {
+          finishTour();
+        });
+      }
+
+      if (btnReplay) {
+        btnReplay.addEventListener("click", () => {
+          startTour();
+        });
+      }
+
+      window.addEventListener("keydown", (e) => {
+        if (!isTourActive) return;
+        if (e.key === "Escape") {
+          e.preventDefault();
+          finishTour();
+        } else if (e.key === "ArrowRight") {
+          e.preventDefault();
+          if (currentTourStep < TOUR_STEPS.length - 1) showTourStep(currentTourStep + 1);
+        } else if (e.key === "ArrowLeft") {
+          e.preventDefault();
+          if (currentTourStep > 0) showTourStep(currentTourStep - 1);
+        }
+      });
+
+      window.addEventListener("resize", () => {
+        if (isTourActive) updateTourPosition();
+      });
+
+      return {
+        startTour,
+        finishTour,
+        checkAutoStart: (settingsSnapshot) => {
+          const isCompleted = settingsSnapshot?.has_completed_onboarding === true
+            || hasCompletedOnboarding
+            || localStorage.getItem("aura_onboarding_completed") === "true";
+          if (!isCompleted) {
+            startTour();
+          }
+        }
+      };
+    }
+
     // Initialize Settings
     await loadSettings(settings);
+
+    const spotlightTour = initSpotlightTour();
+    spotlightTour.checkAutoStart(settings);
 
     if (settings?.automatic_update_checks) {
       await checkForUpdates(false);

@@ -7,6 +7,7 @@ const APP_COMMANDS: &[&str] = &[
     "set_provider_key",
     "set_settings",
     "set_ui_language",
+    "complete_onboarding",
     "download_model_command",
     "cancel_model_download",
     "delete_model_command",

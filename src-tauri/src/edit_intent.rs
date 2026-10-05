@@ -82,6 +82,30 @@ impl EditIntent {
             EditIntent::NotACommand => None,
         }
     }
+
+    /// Returns the canonical command identifier for user toggles (e.g. "fix_grammar", "translate").
+    pub fn command_id(&self) -> Option<&'static str> {
+        match self {
+            EditIntent::FixGrammar => Some("fix_grammar"),
+            EditIntent::Translate { .. } => Some("translate"),
+            EditIntent::Shorten => Some("shorten"),
+            EditIntent::Expand => Some("expand"),
+            EditIntent::Bulletize => Some("bulletize"),
+            EditIntent::Summarize => Some("summarize"),
+            EditIntent::RewriteFormal => Some("rewrite_formal"),
+            EditIntent::RewriteCasual => Some("rewrite_casual"),
+            _ => None,
+        }
+    }
+}
+
+/// Checks if an edit intent has been explicitly disabled by the user in settings.
+pub fn is_command_disabled(intent: &EditIntent, disabled: &[String]) -> bool {
+    if let Some(id) = intent.command_id() {
+        disabled.iter().any(|d| d == id)
+    } else {
+        false
+    }
 }
 
 pub fn lang_code_to_name(code: &str) -> &'static str {

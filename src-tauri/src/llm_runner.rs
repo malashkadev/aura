@@ -1006,6 +1006,19 @@ pub async fn run_local_edit<R: tauri::Runtime>(
         ),
     );
 
+    // If command was disabled in settings, treat as normal dictation
+    let intent = if crate::edit_intent::is_command_disabled(&intent, &settings.disabled_edit_commands) {
+        crate::logger::log(
+            "INFO",
+            "LLM",
+            None,
+            &format!("Command {:?} is disabled in settings; treating as normal dictation", intent),
+        );
+        crate::edit_intent::EditIntent::NotACommand
+    } else {
+        intent
+    };
+
     // If the speech is recognized as ordinary dictation, return it immediately without an LLM call.
     // This provides zero latency, zero hallucination risk, and preserves speech 1:1.
     if intent == crate::edit_intent::EditIntent::NotACommand {
@@ -1149,7 +1162,72 @@ pub async fn run_local_edit<R: tauri::Runtime>(
     // doing the edit: they echo the selection (a misclassified dictation) or
     // echo the spoken command itself (saying "Сократи" and getting "Сократи"
     // back). Both cases are decided by one cheap classifier round trip.
-    let echoes_selection = texts_resemble(&edited, selected_text);
+    //
+    // Critical invariant: For grammar correction / proofreading (FixGrammar, typo /
+    // punctuation / spelling fixes), the edited text is INTENDED to resemble the original
+    // selection with only minor corrections. Flagging high text resemblance on grammar
+    // edits discards legitimate model corrections (like fixing commas or spelling errors).
+    let is_grammar_or_proofreading = matches!(intent, crate::edit_intent::EditIntent::FixGrammar)
+        || if let crate::edit_intent::EditIntent::Custom(ref ins) = intent {
+            let lower = ins.to_lowercase();
+            // RU
+            lower.contains("ошибк")
+                || lower.contains("опечатк")
+                || lower.contains("пунктуац")
+                || lower.contains("грамматик")
+                || lower.contains("запят")
+                || lower.contains("букв")
+                || lower.contains("пробел")
+                || lower.contains("регистр")
+                // EN
+                || lower.contains("typo")
+                || lower.contains("grammar")
+                || lower.contains("spelling")
+                || lower.contains("punctua")
+                || lower.contains("comma")
+                || lower.contains("mistake")
+                || lower.contains("proofread")
+                || lower.contains("capitalize")
+                // DE
+                || lower.contains("fehler")
+                || lower.contains("rechtschreib")
+                || lower.contains("punktua")
+                || lower.contains("komma")
+                || lower.contains("satzzeichen")
+                // FR
+                || lower.contains("erreur")
+                || lower.contains("faute")
+                || lower.contains("orthograph")
+                || lower.contains("ponctuat")
+                || lower.contains("virgule")
+                // ES & IT & PT
+                || lower.contains("ortograf")
+                || lower.contains("puntuac")
+                || lower.contains("punteggiat")
+                || lower.contains("pontuaç")
+                || lower.contains("pontuac")
+                || lower.contains("virgol")
+                // TR
+                || lower.contains("hata")
+                || lower.contains("noktalam")
+                || lower.contains("yazım")
+                || lower.contains("yazim")
+                // NL
+                || lower.contains("leesteken")
+                // ZH
+                || lower.contains("错")
+                || lower.contains("标点")
+                || lower.contains("逗号")
+                || lower.contains("纠正")
+        } else {
+            false
+        };
+
+    let echoes_selection = if is_grammar_or_proofreading {
+        false
+    } else {
+        texts_resemble(&edited, selected_text)
+    };
     let echoes_command = texts_resemble(&edited, transcribed_text);
     if echoes_selection || echoes_command {
         let echoes = if echoes_command {
@@ -1516,12 +1594,36 @@ fn is_answer_caption(candidate: &str) -> bool {
         .any(|caption| lowered == *caption || lowered.starts_with(&format!("{caption} ")))
 }
 
-/// Removes a caption the model put in front of its answer, e.g.
+/// Removes prompt delimiters and captions the model put around or in front of its answer,
+/// e.g. `<<<SELECTED_TEXT_START>>>. Текст <<<SELECTED_TEXT_END>>>` or
 /// `Translated to English: The meeting went well.` or
 /// `Исправленный текст:\nThe meeting went well.`.
-/// Returns the input unchanged when no caption is recognised.
 pub(crate) fn strip_output_label(text: &str) -> String {
-    let trimmed = text.trim_start();
+    // 1. Remove leaked prompt delimiters and surrounding markers
+    let mut cleaned = text.to_string();
+    const PROMPT_DELIMITERS: &[&str] = &[
+        "<<<SELECTED_TEXT_START>>>",
+        "<<<SELECTED_TEXT_END>>>",
+        "Text to process:",
+        "Selected text context:",
+    ];
+
+    for delim in PROMPT_DELIMITERS {
+        cleaned = cleaned.replace(delim, "");
+    }
+
+    let mut trimmed = cleaned.trim();
+
+    // Clean orphaned leading punctuation left when model attaches punctuation to tags:
+    // e.g. "<<<SELECTED_TEXT_START>>>. Текст" -> ". Текст" -> "Текст"
+    while let Some(stripped) = trimmed
+        .strip_prefix('.')
+        .or_else(|| trimmed.strip_prefix(':'))
+        .or_else(|| trimmed.strip_prefix('-'))
+    {
+        trimmed = stripped.trim_start();
+    }
+
     let line_end = trimmed.find('\n').unwrap_or(trimmed.len());
     let first_line = &trimmed[..line_end];
     let remainder = &trimmed[line_end..];
@@ -1538,10 +1640,12 @@ pub(crate) fn strip_output_label(text: &str) -> String {
         None
     };
 
-    match answer {
+    let result = match answer {
         Some(answer) => format!("{answer}{remainder}").trim_start().to_string(),
-        None => text.to_string(),
-    }
+        None => trimmed.to_string(),
+    };
+
+    result.trim().to_string()
 }
 
 #[cfg(test)]
@@ -1692,6 +1796,16 @@ mod tests {
         // A leading colon line that is not a known caption is not removed.
         let note = "Note: the meeting went well.";
         assert_eq!(strip_output_label(note), note);
+
+        // Prompt delimiters leaked by small models are stripped cleanly
+        assert_eq!(
+            strip_output_label("<<<SELECTED_TEXT_START>>>. Текст с исправлением. <<<SELECTED_TEXT_END>>>"),
+            "Текст с исправлением."
+        );
+        assert_eq!(
+            strip_output_label("Text to process:\n<<<SELECTED_TEXT_START>>>\nHello world\n<<<SELECTED_TEXT_END>>>"),
+            "Hello world"
+        );
     }
 
     #[test]
@@ -1708,5 +1822,25 @@ mod tests {
         // "cloud" mode or "off" mode are not local fallback scenarios
         assert!(!can_cloud_edit_fallback("cloud", "valid_api_key"));
         assert!(!can_cloud_edit_fallback("off", "valid_api_key"));
+    }
+
+    #[test]
+    fn test_grammar_resemblance_is_not_treated_as_echo() {
+        let original = "В визуалах по комбикорму укажите пожалуйста возможность реализации проекта";
+        let corrected = "В визуалах по комбикорму укажите, пожалуйста, возможность реализации проекта.";
+
+        // High bigram similarity is expected for grammar corrections
+        assert!(texts_resemble(corrected, original));
+
+        let grammar_intent = crate::edit_intent::EditIntent::FixGrammar;
+        let is_grammar_or_proofreading = matches!(grammar_intent, crate::edit_intent::EditIntent::FixGrammar);
+        assert!(is_grammar_or_proofreading);
+
+        let echoes_selection = if is_grammar_or_proofreading {
+            false
+        } else {
+            texts_resemble(corrected, original)
+        };
+        assert!(!echoes_selection, "Grammar correction must never be flagged as an invalid selection echo");
     }
 }

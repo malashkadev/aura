@@ -43,6 +43,7 @@ test("Tauri capabilities isolate main, overlay, and tray-menu with least privile
   assert.ok(main.permissions.includes("allow-set-provider-key"));
   assert.ok(main.permissions.includes("allow-check-for-app-update"));
   assert.ok(main.permissions.includes("allow-install-app-update"));
+  assert.ok(main.permissions.includes("allow-complete-onboarding"));
   assert.equal(main.permissions.some((permission) => permission.startsWith("updater:")), false);
   assert.deepEqual(
     overlay.permissions.toSorted(),
@@ -232,6 +233,9 @@ test("settings UI exposes native accessible controls and responsive motion-safe 
   assert.match(html, /role="tab"/);
   assert.match(html, /role="tabpanel"/);
   assert.match(html, /<dialog[^>]+id="custom-confirm-modal"/);
+  assert.match(html, /<dialog[^>]+id="modal-commands-guide"/);
+  assert.match(html, /id="spotlight-tour-overlay"/);
+  assert.match(main, /initSpotlightTour/);
   assert.match(html, /aria-live="polite"/);
   assert.match(html, /id="input-history-search"/);
   assert.match(html, /id="btn-clear-history-search"/);

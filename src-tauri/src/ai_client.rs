@@ -1055,6 +1055,7 @@ pub async fn edit_text_with_provider(
     ui_language: &str,
     custom_endpoint_url: Option<&str>,
     custom_model_name: Option<&str>,
+    disabled_commands: &[String],
 ) -> Result<String, String> {
     if selected_text.trim().is_empty() {
         return Ok(transcribed_text.to_string());
@@ -1076,6 +1077,19 @@ pub async fn edit_text_with_provider(
             intent, transcribed_text, default_target_lang
         ),
     );
+
+    // If command was disabled in settings, treat as normal dictation
+    let intent = if crate::edit_intent::is_command_disabled(&intent, disabled_commands) {
+        crate::logger::log(
+            "INFO",
+            "LLM",
+            None,
+            &format!("Cloud command {:?} is disabled in settings; treating as normal dictation", intent),
+        );
+        crate::edit_intent::EditIntent::NotACommand
+    } else {
+        intent
+    };
 
     // If the speech is recognized as ordinary dictation, return it immediately without calling cloud LLM.
     if intent == crate::edit_intent::EditIntent::NotACommand {
@@ -1508,8 +1522,29 @@ mod tests {
             "ru",
             None,
             None,
+            &[],
         )
         .await;
         assert_eq!(res.unwrap(), "Привет это обычная диктовка для проверки");
+    }
+
+    #[tokio::test]
+    async fn test_edit_text_with_provider_disabled_command_passthrough() {
+        // When a command like 'shorten' is disabled in settings, it must pass through as speech
+        let res = edit_text_with_provider(
+            ApiProvider::Gemini,
+            "invalid_dummy_key",
+            "сократи",
+            "Некоторый выделенный текст в документе",
+            "ru",
+            "",
+            "en",
+            "ru",
+            None,
+            None,
+            &["shorten".to_string()],
+        )
+        .await;
+        assert_eq!(res.unwrap(), "сократи");
     }
 }

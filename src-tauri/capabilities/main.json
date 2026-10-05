@@ -37,6 +37,7 @@
     "allow-reprocess-history-text",
     "allow-get-audio-input-devices",
     "allow-toggle-gaming-mode",
-    "allow-get-gaming-mode-state"
+    "allow-get-gaming-mode-state",
+    "allow-complete-onboarding"
   ]
 }

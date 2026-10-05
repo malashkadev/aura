@@ -192,7 +192,7 @@
             </div>
           </div>
 
-          <div class="card">
+          <div class="card" id="card-engine">
             <h2 class="card-title" data-i18n="engine_title">Способ распознавания</h2>
             <p class="card-desc" data-i18n="engine_desc">Выберите между облачной обработкой высокого качества или полностью автономным локальным распознаванием речи.</p>
             
@@ -619,13 +619,25 @@
                   <a href="https://aistudio.google.com/" target="_blank" class="help-link" id="link-get-key-edit" data-i18n="api_get_key">Получить ключ API</a>
                 </div>
               </div>
+
+              <div class="commands-guide-entry" style="margin-top: 10px; padding-top: 14px; border-top: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; gap: 12px;">
+                <div>
+                  <span class="field-label" data-i18n="commands_guide_label">Голосовые команды</span>
+                  <p class="switch-desc" data-i18n="commands_guide_sub" style="margin-top: 2px;">Справочник действий и включение/отключение отдельных команд</p>
+                </div>
+                <button type="button" class="btn btn-secondary" id="btn-open-commands-guide" style="margin-top: 0; flex-shrink: 0;">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0;"><path d="M4 6h16M4 12h16M4 18h7"/></svg>
+                  <span data-i18n="commands_guide_btn">Справочник команд</span>
+                  <span class="badge-count" id="badge-active-commands-count">8</span>
+                </button>
+              </div>
             </div>
           </div>
         </section>
 
         <!-- 4. HOTKEYS PANEL -->
         <section class="tab-panel" id="panel-hotkeys" role="tabpanel" tabindex="0" aria-labelledby="tab-btn-hotkeys" style="display: none;">
-          <div class="card">
+          <div class="card" id="card-hotkey">
             <h2 class="card-title" data-i18n="hotkey_title">Глобальная горячая клавиша</h2>
             <p class="card-desc" data-i18n="hotkey_desc">Зажмите выбранную комбинацию для начала записи, отпустите для распознавания.</p>
             <div class="form-group">
@@ -748,6 +760,16 @@
               Инструмент глобального голосового ввода для Windows. Программа переводит речь в текст и вставляет его в любое активное окно с автоматическим форматированием и расстановкой пунктуации.
             </p>
 
+            <div class="about-tour-wrap">
+              <button type="button" class="btn btn-secondary btn-replay-tour" id="btn-replay-onboarding">
+                <svg class="btn-tour-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <polygon points="10 8 16 12 10 16 10 8"></polygon>
+                </svg>
+                <span data-i18n="onboarding_replay">Вводный экскурс по возможностям</span>
+              </button>
+            </div>
+
             <div class="about-gratitude-wrap">
               <div class="gratitude-divider"></div>
               <p class="gratitude-text" data-i18n="about_gratitude_text">
@@ -790,6 +812,28 @@
     </footer>
   </div>
 
+  <!-- Modal for Voice Commands Guide & Toggle -->
+  <dialog id="modal-commands-guide" class="modal-overlay" aria-labelledby="commands-guide-title">
+    <div class="modal-card modal-card-commands">
+      <div class="modal-header-row">
+        <div>
+          <h3 class="modal-title" id="commands-guide-title" data-i18n="commands_guide_title">Справочник голосовых команд</h3>
+          <p class="modal-message" data-i18n="commands_guide_desc" style="margin-top: 4px;">Управляйте доступными действиями над выделенным текстом. Отключённые команды вставляются как обычная речь.</p>
+        </div>
+        <button type="button" class="btn-close-modal" id="btn-close-commands-guide-x" title="Закрыть" aria-label="Закрыть">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+      </div>
+
+      <div class="commands-guide-list" id="commands-guide-list"></div>
+
+      <div class="modal-actions" style="margin-top: 4px;">
+        <span class="commands-guide-summary" id="commands-guide-summary">8 из 8 команд активно</span>
+        <button type="button" class="btn btn-secondary" id="btn-close-commands-guide" data-i18n="commands_guide_close">Закрыть</button>
+      </div>
+    </div>
+  </dialog>
+
   <!-- Custom modal overlay for confirmation dialogs -->
   <dialog id="custom-confirm-modal" class="modal-overlay" aria-labelledby="confirm-modal-title">
     <div class="modal-card">
@@ -802,5 +846,28 @@
       </div>
     </div>
   </dialog>
+
+  <!-- Interactive Spotlight Tour Overlay -->
+  <div id="spotlight-tour-overlay" class="spotlight-overlay" hidden aria-modal="true" role="dialog" aria-labelledby="spotlight-title">
+    <div class="spotlight-backdrop" id="spotlight-backdrop"></div>
+    <div id="spotlight-cutout" class="spotlight-cutout"></div>
+    <div id="spotlight-popover" class="spotlight-popover" role="region" aria-live="polite">
+      <div class="spotlight-header">
+        <div class="spotlight-step-tag">
+          <div class="spotlight-segments" id="spotlight-segments" aria-hidden="true"></div>
+          <span id="spotlight-step-indicator" class="spotlight-step-text"></span>
+        </div>
+        <button type="button" class="spotlight-btn-skip" id="btn-spotlight-skip" data-i18n="onboarding_skip">Пропустить обучение</button>
+      </div>
+      <h3 id="spotlight-title" class="spotlight-title"></h3>
+      <p id="spotlight-desc" class="spotlight-desc"></p>
+      <div class="spotlight-footer">
+        <div class="spotlight-actions">
+          <button type="button" class="btn btn-secondary" id="btn-spotlight-prev" data-i18n="onboarding_prev">Назад</button>
+          <button type="button" class="btn btn-primary" id="btn-spotlight-next" data-i18n="onboarding_next">Далее</button>
+        </div>
+      </div>
+    </div>
+  </div>
 </body>
 </html>

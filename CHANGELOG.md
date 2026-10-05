@@ -5,7 +5,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/), versions fol
 
 ## [1.1.2] — 2026-10-03
 
-### Added
+- **Interactive Spotlight Onboarding Tour**: Added a 4-step guided feature walkthrough for first-time users highlighting recording hotkey (F8), private local & cloud engines, voice text editing, and stealth gaming mode. Features adaptive popover positioning with collision avoidance, dark backdrop cutout, full keyboard control (`Escape`, `ArrowLeft`, `ArrowRight`), and manual replay from the About tab.
+- **Voice Commands Guide Modal & Granular Disabling**: Added an accessible catalog dialog accessible from the Text settings tab detailing all 8 canonical voice editing commands with localized descriptions, example phrase chips in 9 languages, and per-command toggles. Disabled commands cleanly pass through as plain dictation.
 - **Deterministic Intent Parsing for Voice Editing (`edit_intent.rs`)**: Replaced single-prompt classification with deterministic command parsing for voice editing over selected text ("переведи", "сократи", "исправь грамматику", "формальнее", "сделай списком"). Separates command instructions from document data so models receive only the selected text and never mistake the command itself for content to translate or edit.
 - **Output Quality & Echo Gate (`edit_validate.rs`)**: Validates editing results by target language alphabet match, length invariants (shortening must be shorter, grammar fixes must preserve semantic similarity), and rejects echo leaks before touching user document.
 - **Unified «Редактирование выделенного текста» Settings Card**: Consolidated duplicate cards on the Text tab into a single unified card with master toggle, route selector (`Auto` / `Local` / `Cloud`), default translation language selector, and local model downloader cards.

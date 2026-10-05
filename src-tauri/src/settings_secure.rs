@@ -111,6 +111,10 @@ pub struct Settings {
     pub gaming_mode_auto_detect: bool,
     #[serde(default)]
     pub text_replacements: Vec<TextReplacement>,
+    #[serde(default)]
+    pub has_completed_onboarding: bool,
+    #[serde(default)]
+    pub disabled_edit_commands: Vec<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
@@ -180,6 +184,8 @@ impl Default for Settings {
             gaming_mode_enabled: false,
             gaming_mode_auto_detect: false,
             text_replacements: Vec::new(),
+            has_completed_onboarding: false,
+            disabled_edit_commands: Vec::new(),
         }
     }
 }
@@ -708,6 +714,7 @@ mod tests {
         assert_eq!(settings.active_api_key(), "");
         assert_eq!(settings.ai_edit_mode, "auto");
         assert_eq!(settings.llm_model, "qwen3-1.7b");
+        assert!(!settings.has_completed_onboarding);
         settings.validate().unwrap();
     }
 

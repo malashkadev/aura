@@ -178,6 +178,14 @@ async fn set_settings(
     let mut saved_settings = settings.clone();
     tauri::async_runtime::spawn_blocking(move || {
         let result: Result<(), String> = (|| {
+            // Critical invariant: set_settings must never accidentally reset completed onboarding status
+            if !saved_settings.has_completed_onboarding {
+                if let Ok(current) = settings::load_settings(&save_handle) {
+                    if current.has_completed_onboarding {
+                        saved_settings.has_completed_onboarding = true;
+                    }
+                }
+            }
             settings::save_settings(&save_handle, &saved_settings)?;
             sync_autostart(&save_handle, saved_settings.autostart);
             Ok(())
@@ -223,6 +231,21 @@ async fn set_ui_language(app_handle: tauri::AppHandle, ui_language: String) -> R
     .map_err(|error| format!("Interface language storage worker failed: {error}"))??;
     let _ = app_handle.emit("settings-changed", ());
     Ok(())
+}
+
+#[tauri::command]
+async fn complete_onboarding(app_handle: tauri::AppHandle) -> Result<(), String> {
+    let save_handle = app_handle.clone();
+    tauri::async_runtime::spawn_blocking(move || {
+        let mut settings = settings::load_settings(&save_handle)?;
+        if !settings.has_completed_onboarding {
+            settings.has_completed_onboarding = true;
+            settings::save_settings(&save_handle, &settings)?;
+        }
+        Ok(())
+    })
+    .await
+    .map_err(|error| format!("Failed to complete onboarding: {error}"))?
 }
 
 fn tray_tooltip(gaming_mode: bool, language: &str) -> &'static str {
@@ -3788,6 +3811,7 @@ async fn finalize_recording(app_handle: tauri::AppHandle) {
                                                     &settings.ui_language,
                                                     Some(&settings.custom_api_url),
                                                     Some(&settings.custom_model_name),
+                                                    &settings.disabled_edit_commands,
                                                 ),
                                             )
                                             .await
@@ -3879,6 +3903,7 @@ async fn finalize_recording(app_handle: tauri::AppHandle) {
                                             &settings.ui_language,
                                             Some(&settings.custom_api_url),
                                             Some(&settings.custom_model_name),
+                                            &settings.disabled_edit_commands,
                                         ),
                                     )
                                     .await
@@ -4659,6 +4684,7 @@ pub fn run() {
             set_provider_key,
             set_settings,
             set_ui_language,
+            complete_onboarding,
             download_model_command,
             cancel_model_download,
             delete_model_command,
