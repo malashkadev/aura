@@ -98,6 +98,8 @@ pub struct Settings {
     #[serde(default = "default_translate_default_target")]
     pub translate_default_target: String,
     pub local_acceleration: String,
+    pub smart_context_enabled: bool,
+    pub smart_context_trailing_period: bool,
     pub log_speech_text: bool,
     pub overlay_show_timer: bool,
     pub whisper_keep_in_memory: bool,
@@ -176,6 +178,8 @@ impl Default for Settings {
             llm_model: default_llm_model(),
             translate_default_target: default_translate_default_target(),
             local_acceleration: "cpu".to_string(),
+            smart_context_enabled: true,
+            smart_context_trailing_period: true,
             log_speech_text: false,
             overlay_show_timer: true,
             whisper_keep_in_memory: true,
@@ -849,5 +853,17 @@ mod tests {
         assert!(replacement.is_empty());
 
         let _ = fs::remove_dir_all(directory);
+    }
+
+    #[test]
+    fn test_smart_context_settings_defaults() {
+        let settings = Settings::default();
+        assert!(settings.smart_context_enabled);
+        assert!(settings.smart_context_trailing_period);
+
+        let json = serde_json::json!({});
+        let loaded: Settings = serde_json::from_value(json).unwrap();
+        assert!(loaded.smart_context_enabled);
+        assert!(loaded.smart_context_trailing_period);
     }
 }

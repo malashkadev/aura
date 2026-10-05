@@ -38,6 +38,7 @@ struct ParakeetStreamingSession {
 struct AppState {
     audio_recorder: audio_recorder::AudioRecorder,
     selected_text: Mutex<String>,
+    caret_context: Mutex<Option<smart_insertion::CaretContext>>,
     press_time: Mutex<Option<std::time::Instant>>,
     is_recording: AtomicBool,
     toggle_enabled: AtomicBool,
@@ -2832,6 +2833,9 @@ async fn start_recording_session(app_handle: tauri::AppHandle) {
     };
     let typed_recovered = reset_session_mutex("typed_so_far", &state.typed_so_far);
     let selection_recovered = reset_session_mutex("selected_text", &state.selected_text);
+    if let Ok(mut guard) = state.caret_context.lock() {
+        *guard = None;
+    }
     let _ = app_handle.emit("selection-context-active", false);
     if typed_recovered || selection_recovered {
         // The mirror was rebuilt from scratch; do not trust destructive
@@ -2864,6 +2868,31 @@ async fn start_recording_session(app_handle: tauri::AppHandle) {
     state
         .live_target_monitoring
         .store(session_settings.streaming_enabled, Ordering::Release);
+
+    // Parallel background capture of caret context via Windows UI Automation
+    if session_settings.smart_context_enabled {
+        let app_handle_caret = app_handle.clone();
+        let caret_gen = gen;
+        tauri::async_runtime::spawn_blocking(move || {
+            let ctx = caret_context::capture_caret_context(20);
+            if let Some(state) = app_handle_caret.try_state::<AppState>() {
+                let state = state.inner();
+                if state.session_gen.load(Ordering::SeqCst) == caret_gen {
+                    if let Ok(mut guard) = state.caret_context.lock() {
+                        *guard = Some(ctx.clone());
+                    }
+                    if !ctx.selected_text.trim().is_empty() {
+                        if let Ok(mut sel_guard) = state.selected_text.lock() {
+                            if sel_guard.trim().is_empty() {
+                                *sel_guard = ctx.selected_text.clone();
+                                let _ = app_handle_caret.emit("selection-context-active", true);
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
     // Selected-text context is captured whenever an edit route will actually
     // consume it: the cloud provider (cloud or cloud-after-local cleanup) or
     // the local Qwen3 server. Route "off" never needs the selection.
@@ -3968,14 +3997,42 @@ async fn finalize_recording(app_handle: tauri::AppHandle) {
                     &normalized_text,
                     &settings.text_replacements,
                 );
-                let trimmed = replaced_text.trim().to_string();
+
+                let session_caret_ctx = if settings.smart_context_enabled {
+                    app_handle_clone
+                        .try_state::<AppState>()
+                        .and_then(|s| s.caret_context.lock().ok().and_then(|g| g.clone()))
+                } else {
+                    None
+                };
+
+                let (final_candidate, is_empty_speech) = if settings.smart_context_enabled {
+                    if let Some(ref ctx) = session_caret_ctx {
+                        let adapted = smart_insertion::adapt_transcription_to_context(
+                            &replaced_text,
+                            ctx,
+                            settings.smart_context_trailing_period,
+                        );
+                        let empty = adapted.trim().is_empty();
+                        (adapted, empty)
+                    } else {
+                        let trimmed = replaced_text.trim().to_string();
+                        let empty = trimmed.is_empty();
+                        (trimmed, empty)
+                    }
+                } else {
+                    let trimmed = replaced_text.trim().to_string();
+                    let empty = trimmed.is_empty();
+                    (trimmed, empty)
+                };
+
                 crate::logger::log(
                     "INFO",
                     "ASR",
                     Some(&session_tag_clone),
                     &format!(
                         "Final result: {}",
-                        crate::logger::anonymize_speech(&trimmed, settings.log_speech_text)
+                        crate::logger::anonymize_speech(&final_candidate, settings.log_speech_text)
                     ),
                 );
                 if edit_failed {
@@ -3985,8 +4042,8 @@ async fn finalize_recording(app_handle: tauri::AppHandle) {
                         Some(&session_tag_clone),
                         "Text editing failed; nothing was inserted and the selection was left unchanged",
                     );
-                } else if !trimmed.is_empty() && !is_silence_hallucination(&trimmed) {
-                    let final_text = trimmed;
+                } else if !is_empty_speech && !is_silence_hallucination(&final_candidate.trim()) {
+                    let final_text = final_candidate;
 
                     let (history_mode, history_engine, history_processing_ms) =
                         resolve_history_entry_meta(
@@ -4472,6 +4529,7 @@ pub fn run() {
             app.manage(AppState {
                 audio_recorder: audio_recorder::AudioRecorder::new(),
                 selected_text: Mutex::new(String::new()),
+                caret_context: Mutex::new(None),
                 press_time: Mutex::new(None),
                 is_recording: AtomicBool::new(false),
                 toggle_enabled: AtomicBool::new(startup_settings.toggle_enabled),
@@ -6670,6 +6728,7 @@ mod tests {
         crate::AppState {
             audio_recorder: audio_recorder::AudioRecorder::new(),
             selected_text: Mutex::new(String::new()),
+            caret_context: Mutex::new(None),
             press_time: Mutex::new(None),
             is_recording: AtomicBool::new(false),
             toggle_enabled: AtomicBool::new(false),
@@ -6778,5 +6837,17 @@ mod tests {
         assert_eq!(mode, "local");
         assert_eq!(engine, Some("whisper".to_string()));
         assert_eq!(duration, 350);
+    }
+
+    #[test]
+    fn test_pipeline_smart_context_flow() {
+        let raw = "Пачку чая.";
+        let ctx = smart_insertion::CaretContext {
+            text_before: "Я пошел и купил ".to_string(),
+            text_after: "".to_string(),
+            ..Default::default()
+        };
+        let adapted = smart_insertion::adapt_transcription_to_context(raw, &ctx, true);
+        assert_eq!(adapted, "пачку чая.");
     }
 }
