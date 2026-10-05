@@ -4042,7 +4042,7 @@ async fn finalize_recording(app_handle: tauri::AppHandle) {
                         Some(&session_tag_clone),
                         "Text editing failed; nothing was inserted and the selection was left unchanged",
                     );
-                } else if !is_empty_speech && !is_silence_hallucination(&final_candidate.trim()) {
+                } else if !is_empty_speech && !is_silence_hallucination(final_candidate.trim()) {
                     let final_text = final_candidate;
 
                     let (history_mode, history_engine, history_processing_ms) =

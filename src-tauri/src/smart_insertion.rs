@@ -30,7 +30,7 @@ pub fn classify_insertion_mode(ctx: &CaretContext) -> InsertionMode {
     }
 
     // Check if cursor is at the start of text or following a newline/paragraph break
-    let trimmed_horizontal_spaces = ctx.text_before.trim_end_matches(|c: char| c == ' ' || c == '\t');
+    let trimmed_horizontal_spaces = ctx.text_before.trim_end_matches([' ', '\t']);
     if trimmed_horizontal_spaces.is_empty()
         || trimmed_horizontal_spaces.ends_with('\n')
         || trimmed_horizontal_spaces.ends_with('\r')
