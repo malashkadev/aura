@@ -178,6 +178,8 @@ test("settings translations cover every supported locale without fallback gaps",
     "update_installing", "update_installed_restarting", "update_install_error_open_release",
     "window_minimize", "window_close", "history_copy_title", "history_search_clear",
     "api_key_toggle_visibility", "history_filters_label",
+    "smart_context_title", "smart_context_desc", "smart_context_checkbox", "smart_context_subdesc",
+    "smart_context_trailing_period_checkbox", "smart_context_trailing_period_subdesc",
   ];
   for (const locale of expectedLocales.slice(1)) {
     for (const key of newlyLocalizedSettings) {
@@ -489,5 +491,20 @@ test("typography reset and button font consistency across application UI", () =>
 
   // Overlay status must use Segoe UI Variable font stack
   assert.match(overlayHtml, /#overlay-status\s*\{[^}]*font-family:\s*"Segoe UI Variable Text"/);
+});
+
+test("smart context insertion settings controls are declared and wired in main.js and index.html", () => {
+  const html = read("src/index.html");
+  const main = read("src/main.js");
+
+  assert.match(html, /id="card-smart-context"/);
+  assert.match(html, /id="checkbox-smart-context-enabled"/);
+  assert.match(html, /id="smart-context-suboptions"/);
+  assert.match(html, /id="checkbox-smart-context-trailing-period"/);
+
+  assert.match(main, /checkboxSmartContext\.checked\s*=\s*settings\.smart_context_enabled !== false/);
+  assert.match(main, /checkboxSmartContextTrailingPeriod\.checked\s*=\s*settings\.smart_context_trailing_period !== false/);
+  assert.match(main, /smart_context_enabled:\s*\(\(\)\s*=>/);
+  assert.match(main, /smart_context_trailing_period:\s*\(\(\)\s*=>/);
 });
 

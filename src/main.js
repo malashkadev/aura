@@ -274,7 +274,13 @@ const i18nDict = {
     "commands_guide_sub": "Справочник действий и включение/отключение отдельных команд",
     "commands_guide_btn": "Справочник команд",
     "commands_guide_close": "Закрыть",
-    "commands_guide_active_summary": "{active} из {total} команд активно"
+    "commands_guide_active_summary": "{active} из {total} команд активно",
+    "smart_context_title": "Умная контекстная вставка",
+    "smart_context_desc": "Автоматически адаптирует регистр букв, знаки препинания и пробелы под положение курсора в документе.",
+    "smart_context_checkbox": "Учитывать контекст вокруг курсора",
+    "smart_context_subdesc": "Начинает со строчной буквы при вставке в середину предложения, убирает лишние точки и аккуратно расставляет пробелы.",
+    "smart_context_trailing_period_checkbox": "Завершать точкой при дополнении в конце предложения",
+    "smart_context_trailing_period_subdesc": "Если курсор стоит в конце незавершенной фразы, завершает фразу точкой. При выключении оставляет конец открытым для дальнейшей речи."
   },
   "en": {
     "title_settings": "Settings",
@@ -539,7 +545,13 @@ const i18nDict = {
     "commands_guide_sub": "Action reference and per-command enable/disable toggles",
     "commands_guide_btn": "Commands Guide",
     "commands_guide_close": "Close",
-    "commands_guide_active_summary": "{active} of {total} commands active"
+    "commands_guide_active_summary": "{active} of {total} commands active",
+    "smart_context_title": "Smart Context-Aware Insertion",
+    "smart_context_desc": "Automatically adapts letter case, punctuation, and boundary whitespace based on cursor position.",
+    "smart_context_checkbox": "Adapt to surrounding cursor context",
+    "smart_context_subdesc": "Starts with lowercase when inserting mid-sentence, strips trailing periods, and ensures clean spacing.",
+    "smart_context_trailing_period_checkbox": "End with a period when continuing at the end of a sentence",
+    "smart_context_trailing_period_subdesc": "When cursor is at the end of an open sentence, completes with a period. When unchecked, leaves open for further dictation."
   },
   "de": {
     "gpu_accel_label": "Lokale Hardware-Beschleunigung",
@@ -804,7 +816,13 @@ const i18nDict = {
     "commands_guide_sub": "Referenz der Aktionen und Ein-/Ausschalten einzelner Befehle",
     "commands_guide_btn": "Befehlsübersicht",
     "commands_guide_close": "Schließen",
-    "commands_guide_active_summary": "{active} von {total} Befehlen aktiv"
+    "commands_guide_active_summary": "{active} von {total} Befehlen aktiv",
+    "smart_context_title": "Intelligente kontextbezogene Einfügung",
+    "smart_context_desc": "Passt Groß-/Kleinschreibung, Zeichensetzung und Leerzeichen automatisch an die Cursorposition an.",
+    "smart_context_checkbox": "Kontext um den Cursor berücksichtigen",
+    "smart_context_subdesc": "Beginnt mitten im Satz mit Kleinbuchstaben, entfernt überflüssige Punkte und formatiert Leerzeichen sauber.",
+    "smart_context_trailing_period_checkbox": "Bei Fortsetzung am Satzende mit Punkt abschließen",
+    "smart_context_trailing_period_subdesc": "Schließt den Satz mit einem Punkt ab, wenn der Cursor am Ende steht. Deaktiviert lassen, um weitersprechen zu können."
   },
   "es": {
     "title_settings": "Ajustes",
@@ -1069,7 +1087,13 @@ const i18nDict = {
     "commands_guide_sub": "Referencia de acciones y activación/desactivación por comando",
     "commands_guide_btn": "Guía de comandos",
     "commands_guide_close": "Cerrar",
-    "commands_guide_active_summary": "{active} de {total} comandos activos"
+    "commands_guide_active_summary": "{active} de {total} comandos activos",
+    "smart_context_title": "Inserción contextual inteligente",
+    "smart_context_desc": "Adapta automáticamente mayúsculas/minúsculas, puntuación y espacios según la posición del cursor.",
+    "smart_context_checkbox": "Tener en cuenta el contexto del cursor",
+    "smart_context_subdesc": "Comienza con minúscula en mitad de una frase, elimina puntos finales y ajusta los espacios limpios.",
+    "smart_context_trailing_period_checkbox": "Finalizar con punto al continuar al final de la oración",
+    "smart_context_trailing_period_subdesc": "Completa la frase con un punto si el cursor está al final. Desactívelo para seguir dictando."
   },
   "fr": {
     "title_settings": "Paramètres",
@@ -1334,7 +1358,13 @@ const i18nDict = {
     "commands_guide_sub": "Répertoire des actions et activation/désactivation par commande",
     "commands_guide_btn": "Guide des commandes",
     "commands_guide_close": "Fermer",
-    "commands_guide_active_summary": "{active} sur {total} commandes actives"
+    "commands_guide_active_summary": "{active} sur {total} commandes actives",
+    "smart_context_title": "Insertion contextuelle intelligente",
+    "smart_context_desc": "Adapte automatiquement la casse, la ponctuation et les espaces selon la position du curseur.",
+    "smart_context_checkbox": "Prendre en compte le contexte autour du curseur",
+    "smart_context_subdesc": "Commence par une minuscule au milieu d'une phrase, supprime les points inutiles et ajuste les espaces.",
+    "smart_context_trailing_period_checkbox": "Terminer par un point lors de la continuation en fin de phrase",
+    "smart_context_trailing_period_subdesc": "Termine par un point si le curseur est en fin de phrase. Désactivez pour poursuivre la dictée."
   },
   "it": {
     "title_settings": "Impostazioni",
@@ -1599,7 +1629,13 @@ const i18nDict = {
     "commands_guide_sub": "Riferimento azioni e attivazione/disattivazione dei singoli comandi",
     "commands_guide_btn": "Guida comandi",
     "commands_guide_close": "Chiudi",
-    "commands_guide_active_summary": "{active} su {total} comandi attivi"
+    "commands_guide_active_summary": "{active} su {total} comandi attivi",
+    "smart_context_title": "Inserimento contestuale intelligente",
+    "smart_context_desc": "Adatta automaticamente maiuscole/minuscole, punteggiatura e spaziatura in base alla posizione del cursore.",
+    "smart_context_checkbox": "Adatta al contesto attorno al cursore",
+    "smart_context_subdesc": "Inizia con la minuscola a metà frase, rimuove i punti finali superflui e gestisce gli spazi in modo pulito.",
+    "smart_context_trailing_period_checkbox": "Termina con un punto quando si continua alla fine della frase",
+    "smart_context_trailing_period_subdesc": "Se il cursore si trova alla fine di una frase aperta, termina con un punto. Se disattivato, lascia la frase aperta per continuare la dettatura."
   },
   "zh": {
     "title_settings": "设置",
@@ -1864,7 +1900,13 @@ const i18nDict = {
     "commands_guide_sub": "操作参考及单项指令启用/停用开关",
     "commands_guide_btn": "指令指南",
     "commands_guide_close": "关闭",
-    "commands_guide_active_summary": "{active} / {total} 个指令已启用"
+    "commands_guide_active_summary": "{active} / {total} 个指令已启用",
+    "smart_context_title": "智能光标上下文插入",
+    "smart_context_desc": "根据光标在文档中的位置，自动调整大小写、标点符号及前后空格。",
+    "smart_context_checkbox": "根据光标上下文智能调整",
+    "smart_context_subdesc": "在句中插入时自动使用小写并去除结尾句号，精确处理两端空格。",
+    "smart_context_trailing_period_checkbox": "句末续写时自动添加句号",
+    "smart_context_trailing_period_subdesc": "若光标处于未完成句子末尾，则以句号结束。关闭时保持开放以便继续语音输入。"
   },
   "pt": {
     "title_settings": "Configurações",
@@ -2129,7 +2171,13 @@ const i18nDict = {
     "commands_guide_sub": "Referência de ações e ativação/desativação por comando",
     "commands_guide_btn": "Guia de comandos",
     "commands_guide_close": "Fechar",
-    "commands_guide_active_summary": "{active} de {total} comandos ativos"
+    "commands_guide_active_summary": "{active} de {total} comandos ativos",
+    "smart_context_title": "Inserção contextual inteligente",
+    "smart_context_desc": "Adapta automaticamente maiúsculas/minúsculas, pontuação e espaçamento de acordo com a posição do cursor.",
+    "smart_context_checkbox": "Adaptar ao contexto ao redor do cursor",
+    "smart_context_subdesc": "Inicia com letra minúscula no meio da frase, remove pontos finais extras e ajusta os espaços de forma limpa.",
+    "smart_context_trailing_period_checkbox": "Finalizar com ponto ao continuar no fim da frase",
+    "smart_context_trailing_period_subdesc": "Se o cursor estiver no fim de uma frase aberta, finaliza com ponto. Quando desativado, mantém aberto para mais ditado."
   },
   "tr": {
     "title_settings": "Ayarlar",
@@ -2394,7 +2442,13 @@ const i18nDict = {
     "commands_guide_sub": "Eylem referansı ve komut bazında açma/kapatma anahtarları",
     "commands_guide_btn": "Komut Rehberi",
     "commands_guide_close": "Kapat",
-    "commands_guide_active_summary": "{active} / {total} komut aktif"
+    "commands_guide_active_summary": "{active} / {total} komut aktif",
+    "smart_context_title": "Akıllı Bağlamsal Ekleme",
+    "smart_context_desc": "İmleç konumuna göre harf boyutunu, noktalama işaretlerini ve boşlukları otomatik olarak uyarlar.",
+    "smart_context_checkbox": "İmleç çevresindeki bağlama göre uyarla",
+    "smart_context_subdesc": "Cümle ortasında küçük harfle başlar, fazladan noktaları kaldırır ve boşlukları düzenler.",
+    "smart_context_trailing_period_checkbox": "Cümle sonunda devam ederken nokta ile bitir",
+    "smart_context_trailing_period_subdesc": "İmleç tamamlanmamış cümlenin sonundaysa nokta ekler. Kapatılırsa dikteye devam etmek için açık bırakır."
   }
 };
 
@@ -3135,6 +3189,14 @@ const btnSaveSettings = document.getElementById("btn-save-settings");
       selectionEditInner.style.display = checkboxCopyContext.checked ? "flex" : "none";
     }
   };
+  const checkboxSmartContext = document.getElementById("checkbox-smart-context-enabled");
+  const checkboxSmartContextTrailingPeriod = document.getElementById("checkbox-smart-context-trailing-period");
+  const smartContextSuboptions = document.getElementById("smart-context-suboptions");
+  const syncSmartContextSuboptions = () => {
+    if (smartContextSuboptions && checkboxSmartContext) {
+      smartContextSuboptions.style.display = checkboxSmartContext.checked ? "block" : "none";
+    }
+  };
   const selectSoundTheme = document.getElementById("select-sound-theme");
   const rangeVolume = document.getElementById("range-sound-volume");
   const volumeLabel = document.getElementById("volume-value-label");
@@ -3763,7 +3825,8 @@ const btnSaveSettings = document.getElementById("btn-save-settings");
       selectLanguage, textareaDictionary, checkboxToggle, checkboxCloudFallback,
       checkboxAutostart, checkboxAutomaticUpdateChecks, checkboxStreaming, checkboxSounds,
       selectSoundTheme, rangeVolume, selectLocalEngine, checkboxCopyContext, checkboxLogSpeechText,
-      checkboxOverlayTimer, checkboxGamingAuto, selectVramStandby, selectAiEditMode, selectTranslateTarget
+      checkboxOverlayTimer, checkboxGamingAuto, selectVramStandby, selectAiEditMode, selectTranslateTarget,
+      checkboxSmartContext, checkboxSmartContextTrailingPeriod
     ];
     inputs.forEach(input => {
       if (input) {
@@ -3802,6 +3865,10 @@ const btnSaveSettings = document.getElementById("btn-save-settings");
     if (checkboxCopyContext) {
       checkboxCopyContext.addEventListener("change", syncSelectionEditInner);
       syncSelectionEditInner();
+    }
+    if (checkboxSmartContext) {
+      checkboxSmartContext.addEventListener("change", syncSmartContextSuboptions);
+      syncSmartContextSuboptions();
     }
 
     const btnToggleGaming = document.getElementById("btn-toggle-gaming-mode");
@@ -4095,6 +4162,13 @@ const btnSaveSettings = document.getElementById("btn-save-settings");
     checkboxCopyContext.checked = settings.ai_edit_mode !== "off" && !!settings.copy_context_on_start;
     syncSelectionEditInner();
   }
+  if (checkboxSmartContext) {
+    checkboxSmartContext.checked = settings.smart_context_enabled !== false;
+  }
+  if (checkboxSmartContextTrailingPeriod) {
+    checkboxSmartContextTrailingPeriod.checked = settings.smart_context_trailing_period !== false;
+  }
+  syncSmartContextSuboptions();
         const checkboxLogSpeechText = document.getElementById("setting-log-speech-text");
         if (checkboxLogSpeechText) {
           checkboxLogSpeechText.checked = !!settings.log_speech_text;
@@ -4340,7 +4414,15 @@ modelCards.forEach(card => {
     translate_default_target: selectTranslateTarget ? selectTranslateTarget.value : "en",
     llm_model: selectedLlmModel,
     has_completed_onboarding: hasCompletedOnboarding || localStorage.getItem("aura_onboarding_completed") === "true",
-    disabled_edit_commands: disabledEditCommands
+    disabled_edit_commands: disabledEditCommands,
+    smart_context_enabled: (() => {
+      const el = document.getElementById("checkbox-smart-context-enabled");
+      return el ? el.checked : true;
+    })(),
+    smart_context_trailing_period: (() => {
+      const el = document.getElementById("checkbox-smart-context-trailing-period");
+      return el ? el.checked : true;
+    })()
   };
 
 await invoke("set_settings", { settings });

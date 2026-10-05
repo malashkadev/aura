@@ -492,6 +492,34 @@
             </div>
           </div>
 
+          <div class="card" id="card-smart-context">
+            <h2 class="card-title" data-i18n="smart_context_title">Умная контекстная вставка</h2>
+            <p class="card-desc" data-i18n="smart_context_desc">Автоматически адаптирует регистр букв, знаки препинания и пробелы под положение курсора в документе.</p>
+            <label class="toggle-switch">
+              <input type="checkbox" id="checkbox-smart-context-enabled" />
+              <span class="toggle-track">
+                <span class="toggle-thumb"></span>
+              </span>
+              <span class="toggle-label" data-i18n="smart_context_checkbox">Учитывать контекст вокруг курсора</span>
+            </label>
+            <p class="switch-desc" data-i18n="smart_context_subdesc">
+              Начинает со строчной буквы при вставке в середину предложения, убирает лишние точки и аккуратно расставляет пробелы.
+            </p>
+
+            <div id="smart-context-suboptions" style="display: none; margin-top: 12px; padding-left: 8px; border-left: 2px solid var(--border-color);">
+              <label class="toggle-switch">
+                <input type="checkbox" id="checkbox-smart-context-trailing-period" />
+                <span class="toggle-track">
+                  <span class="toggle-thumb"></span>
+                </span>
+                <span class="toggle-label" data-i18n="smart_context_trailing_period_checkbox">Завершать точкой при дополнении в конце предложения</span>
+              </label>
+              <p class="switch-desc" data-i18n="smart_context_trailing_period_subdesc">
+                Если курсор стоит в конце незавершенной фразы, завершает фразу точкой. При выключении оставляет конец открытым для дальнейшей речи.
+              </p>
+            </div>
+          </div>
+
           <div class="card" id="card-selection-edit">
             <h2 class="card-title" data-i18n="copy_context_title">Редактирование выделенного текста</h2>
             <p class="card-desc" data-i18n="copy_context_desc">Голосовые команды над выделенным текстом: «переведи», «сократи», «исправь грамматику». Обычная диктовка вставляется без изменений. Примечание: программа отправляет Ctrl+C для захвата контекста, отключите при работе в терминале.</p>
