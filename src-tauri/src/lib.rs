@@ -3,6 +3,7 @@
 pub mod ai_client;
 pub mod artifact_download;
 pub mod audio_recorder;
+pub mod caret_context;
 pub mod edit_intent;
 pub mod edit_validate;
 #[path = "history_secure.rs"]
