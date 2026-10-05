@@ -16,6 +16,7 @@ pub mod secure_storage;
 #[path = "settings_secure.rs"]
 pub mod settings;
 pub mod text_normalizer;
+pub mod smart_insertion;
 pub mod vad;
 pub mod whisper_runner;
 
