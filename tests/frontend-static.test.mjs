@@ -508,3 +508,42 @@ test("smart context insertion settings controls are declared and wired in main.j
   assert.match(main, /smart_context_trailing_period:\s*\(\(\)\s*=>/);
 });
 
+test("desktop app maintains strict design-system isolation from website palette and enforces user-select rules", () => {
+  const styleCss = read("src/style.css");
+  const trayCss = read("src/tray-menu.css");
+  const html = read("src/index.html");
+
+  // Banned website colors (blue/indigo/velvet tinted dark tones)
+  const bannedWebsiteColors = [
+    "#030305", "#0a0a0c", "#0e0e12", "#111114", "#131317", "#121214", "rgba(20, 20, 26",
+  ];
+  for (const banned of bannedWebsiteColors) {
+    assert.equal(
+      styleCss.toLowerCase().includes(banned.toLowerCase()),
+      false,
+      `src/style.css must not leak website color ${banned}`,
+    );
+    assert.equal(
+      trayCss.toLowerCase().includes(banned.toLowerCase()),
+      false,
+      `src/tray-menu.css must not leak website color ${banned}`,
+    );
+  }
+
+  // Achromatic modal backgrounds
+  assert.match(styleCss, /\.modal-card\s*\{[^}]*background-color:\s*#0f0f0f;/);
+  assert.match(styleCss, /\.spotlight-popover\s*\{[^}]*background-color:\s*#0f0f0f;/);
+
+  // Global user-select reset
+  assert.match(styleCss, /\*,\s*\*::before,\s*\*::after\s*\{[^}]*user-select:\s*none;/);
+
+  // Commands guide button is placed near the top of the selection edit section (before select-ai-edit-mode)
+  const commandsGuideIdx = html.indexOf('id="btn-open-commands-guide"');
+  const aiEditModeIdx = html.indexOf('id="select-ai-edit-mode"');
+  assert.ok(commandsGuideIdx > 0 && aiEditModeIdx > 0, "Both controls must exist in index.html");
+  assert.ok(
+    commandsGuideIdx < aiEditModeIdx,
+    "Voice commands guide entry must appear above AI edit mode selector for immediate discoverability",
+  );
+});
+

@@ -49,8 +49,11 @@ pub fn classify_insertion_mode(ctx: &CaretContext) -> InsertionMode {
     if is_terminal {
         InsertionMode::NewSentence
     } else {
-        let after_trimmed = ctx.text_after.trim_start();
-        if after_trimmed.is_empty() {
+        let after_on_current_line = ctx.text_after.trim_start_matches([' ', '\t']);
+        if after_on_current_line.is_empty()
+            || after_on_current_line.starts_with('\n')
+            || after_on_current_line.starts_with('\r')
+        {
             InsertionMode::SentenceContinuation
         } else {
             InsertionMode::MidSentenceInsertion
@@ -176,7 +179,14 @@ pub fn adapt_transcription_to_context(
                 }
             }
             InsertionMode::SentenceContinuation => {
-                if !trailing_period_on_continuation && !ends_with_known_abbreviation(&text) {
+                if trailing_period_on_continuation {
+                    while text.ends_with([',', ';', ':', '-', '—']) {
+                        text.pop();
+                    }
+                    if !text.ends_with(['.', '!', '?', '…']) {
+                        text.push('.');
+                    }
+                } else if !ends_with_known_abbreviation(&text) {
                     while text.ends_with('.') {
                         text.pop();
                     }
@@ -390,5 +400,41 @@ mod tests {
 
         let adapted_en = adapt_transcription_to_context("etc.", &ctx, true);
         assert_eq!(adapted_en, "etc. ");
+    }
+
+    #[test]
+    fn test_adapt_continuation_enforces_period_when_raw_text_lacks_dot() {
+        let ctx = CaretContext {
+            text_before: "Я купил ".to_string(),
+            text_after: "".to_string(),
+            ..Default::default()
+        };
+        // Raw text without any punctuation should have a period pushed
+        let adapted = adapt_transcription_to_context("пачку чая", &ctx, true);
+        assert_eq!(adapted, "пачку чая.");
+
+        // Trailing comma/colon replaced by period
+        let adapted_comma = adapt_transcription_to_context("пачку чая,", &ctx, true);
+        assert_eq!(adapted_comma, "пачку чая.");
+
+        // Exclamation / question marks preserved
+        let adapted_excl = adapt_transcription_to_context("пачку чая!", &ctx, true);
+        assert_eq!(adapted_excl, "пачку чая!");
+    }
+
+    #[test]
+    fn test_classify_sentence_continuation_before_newline() {
+        let ctx_newline = CaretContext {
+            text_before: "Мы обсудили это ".to_string(),
+            text_after: "\nСледующий раздел документа".to_string(),
+            ..Default::default()
+        };
+        assert_eq!(
+            classify_insertion_mode(&ctx_newline),
+            InsertionMode::SentenceContinuation
+        );
+
+        let adapted = adapt_transcription_to_context("и приняли решение", &ctx_newline, true);
+        assert_eq!(adapted, "и приняли решение.");
     }
 }

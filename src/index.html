@@ -506,17 +506,21 @@
               Начинает со строчной буквы при вставке в середину предложения, убирает лишние точки и аккуратно расставляет пробелы.
             </p>
 
-            <div id="smart-context-suboptions" style="display: none; margin-top: 12px; padding-left: 8px; border-left: 2px solid var(--border-color);">
-              <label class="toggle-switch">
-                <input type="checkbox" id="checkbox-smart-context-trailing-period" />
-                <span class="toggle-track">
-                  <span class="toggle-thumb"></span>
+            <div id="smart-context-suboptions" style="display: none; margin-top: 8px;">
+              <label class="sub-checkbox-card" for="checkbox-smart-context-trailing-period">
+                <input type="checkbox" id="checkbox-smart-context-trailing-period" class="sub-checkbox-input" />
+                <span class="custom-checkbox-box" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" class="custom-checkbox-check">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
                 </span>
-                <span class="toggle-label" data-i18n="smart_context_trailing_period_checkbox">Завершать точкой при дополнении в конце предложения</span>
+                <span class="sub-checkbox-content">
+                  <span class="sub-checkbox-title" data-i18n="smart_context_trailing_period_checkbox">Завершать точкой при дополнении в конце предложения</span>
+                  <span class="switch-desc" data-i18n="smart_context_trailing_period_subdesc">
+                    Если курсор стоит в конце незавершенной фразы, завершает фразу точкой. При выключении оставляет конец открытым для дальнейшей речи.
+                  </span>
+                </span>
               </label>
-              <p class="switch-desc" data-i18n="smart_context_trailing_period_subdesc">
-                Если курсор стоит в конце незавершенной фразы, завершает фразу точкой. При выключении оставляет конец открытым для дальнейшей речи.
-              </p>
             </div>
           </div>
 
@@ -533,6 +537,18 @@
 
             <!-- Inner settings container: visible only when the toggle is enabled -->
             <div id="selection-edit-inner" style="display: none; flex-direction: column; gap: 12px; margin-top: 4px;">
+              <div class="commands-guide-entry">
+                <div class="commands-guide-entry-info">
+                  <span class="field-label" data-i18n="commands_guide_label">Голосовые команды</span>
+                  <p class="switch-desc" data-i18n="commands_guide_sub">Справочник действий и включение/отключение отдельных команд</p>
+                </div>
+                <button type="button" class="btn btn-secondary" id="btn-open-commands-guide">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0;"><path d="M4 6h16M4 12h16M4 18h7"/></svg>
+                  <span data-i18n="commands_guide_btn">Справочник команд</span>
+                  <span class="badge-count" id="badge-active-commands-count">8</span>
+                </button>
+              </div>
+
               <div class="form-group">
                 <label for="select-ai-edit-mode" class="field-label" data-i18n="ai_edit_mode_label">Режим редактирования</label>
                 <div class="select-wrap">
@@ -647,18 +663,6 @@
                   <a href="https://aistudio.google.com/" target="_blank" class="help-link" id="link-get-key-edit" data-i18n="api_get_key">Получить ключ API</a>
                 </div>
               </div>
-
-              <div class="commands-guide-entry" style="margin-top: 10px; padding-top: 14px; border-top: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; gap: 12px;">
-                <div>
-                  <span class="field-label" data-i18n="commands_guide_label">Голосовые команды</span>
-                  <p class="switch-desc" data-i18n="commands_guide_sub" style="margin-top: 2px;">Справочник действий и включение/отключение отдельных команд</p>
-                </div>
-                <button type="button" class="btn btn-secondary" id="btn-open-commands-guide" style="margin-top: 0; flex-shrink: 0;">
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0;"><path d="M4 6h16M4 12h16M4 18h7"/></svg>
-                  <span data-i18n="commands_guide_btn">Справочник команд</span>
-                  <span class="badge-count" id="badge-active-commands-count">8</span>
-                </button>
-              </div>
             </div>
           </div>
         </section>
@@ -712,8 +716,13 @@
             <div class="form-group" id="sound-volume-group" style="margin-top: 10px;">
               <label for="range-sound-volume" class="field-label" data-i18n="sound_volume_label">Громкость звука</label>
               <div class="volume-slider-container">
-                <input type="range" id="range-sound-volume" min="0" max="100" value="80" class="custom-slider" />
-                <span id="volume-value-label" class="volume-value-text">80%</span>
+                <button type="button" class="btn-mute" id="btn-sound-mute" title="Заглушить / Включить звук" aria-label="Заглушить / Включить звук">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" id="sound-mute-icon"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
+                </button>
+                <div class="volume-track-wrap">
+                  <input type="range" id="range-sound-volume" min="0" max="100" value="80" class="custom-slider" />
+                  <span id="volume-value-label" class="volume-value-text">80%</span>
+                </div>
               </div>
             </div>
             <div class="form-group" id="sound-theme-group" style="margin-top: 10px;">

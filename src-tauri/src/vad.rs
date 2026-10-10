@@ -299,6 +299,81 @@ pub fn gate_and_trim_wav_file(path: &str, session_tag: Option<&str>) -> Result<b
     gate_wav_file(path, session_tag)
 }
 
+/// Trims trailing silence from a WAV audio recording, preserving a safe padding window of 600 ms
+/// after the last frame containing speech. Prevents feeding long empty 30-second trailing silence
+/// windows into Whisper, which triggers hallucination runaway loops in models like large-v3-turbo.
+///
+/// Returns `Ok(true)` if trailing silence was trimmed, `Ok(false)` if no trimming was necessary,
+/// or an error if reading/writing failed.
+pub fn trim_trailing_silence_wav(
+    input_wav: &std::path::Path,
+    output_wav: &std::path::Path,
+) -> Result<bool, String> {
+    let mut reader = hound::WavReader::open(input_wav)
+        .map_err(|e| format!("Failed to open WAV file for trimming: {e}"))?;
+    let spec = reader.spec();
+    if spec.sample_rate != 16000 || spec.channels != 1 {
+        // Only 16 kHz mono is processed by Silero VAD. Leave other formats untouched.
+        return Ok(false);
+    }
+    let samples_i16: Vec<i16> = reader
+        .samples::<i16>()
+        .collect::<Result<Vec<i16>, hound::Error>>()
+        .map_err(|e| format!("Failed to read WAV samples for trimming: {e}"))?;
+    drop(reader);
+
+    if samples_i16.is_empty() {
+        return Ok(false);
+    }
+
+    let samples_f32: Vec<f32> = samples_i16.iter().map(|&s| s as f32 / 32768.0).collect();
+
+    let Some(frame_speech) = predict_vad_frames(&samples_f32, 16000) else {
+        return Ok(false);
+    };
+
+    // Find the last frame with speech
+    let Some(last_speech_frame) = frame_speech.iter().rposition(|&is_speech| is_speech) else {
+        // No speech detected at all - gate_wav_file handles empty sessions.
+        return Ok(false);
+    };
+
+    let chunk_size = vad_chunk_size(16000);
+    // 600ms padding: 0.60 * 16000 = 9600 samples
+    let padding_samples = (0.60 * 16000.0) as usize;
+    let speech_end_sample = (last_speech_frame + 1) * chunk_size;
+    let keep_len = (speech_end_sample + padding_samples).min(samples_i16.len());
+
+    // Only trim if there is meaningful trailing silence (> 300ms removed)
+    if samples_i16.len().saturating_sub(keep_len) < 4800 {
+        return Ok(false);
+    }
+
+    // Write to a temporary file in the same directory then replace to ensure atomic write on Windows
+    let temp_output = output_wav.with_extension("trim_tmp");
+    {
+        let mut writer = hound::WavWriter::create(&temp_output, spec)
+            .map_err(|e| format!("Failed to create trimmed WAV writer: {e}"))?;
+        for &sample in &samples_i16[..keep_len] {
+            writer
+                .write_sample(sample)
+                .map_err(|e| format!("Failed to write trimmed WAV sample: {e}"))?;
+        }
+        writer
+            .finalize()
+            .map_err(|e| format!("Failed to finalize trimmed WAV: {e}"))?;
+    }
+
+    if let Err(e) = std::fs::rename(&temp_output, output_wav) {
+        // On Windows rename over existing file can fail if open or across volumes, fallback to copy + delete
+        std::fs::copy(&temp_output, output_wav)
+            .map_err(|copy_err| format!("Failed to copy trimmed WAV ({e}; {copy_err})"))?;
+        let _ = std::fs::remove_file(&temp_output);
+    }
+
+    Ok(true)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -475,5 +550,37 @@ mod tests {
 
         let _ = std::fs::remove_file(&speech);
         let _ = std::fs::remove_file(&silence);
+    }
+
+    #[test]
+    fn test_trim_trailing_silence_wav() {
+        let dir = std::env::temp_dir();
+        let test_wav = dir.join("aura-vad-trim-trailing-silence-test.wav");
+        let _ = std::fs::remove_file(&test_wav);
+
+        // 1 sec speech chirp + 2 sec silence (32,000 samples)
+        let mut samples = chirp_samples();
+        let speech_samples_len = samples.len();
+        samples.extend(vec![0.0f32; 32_000]);
+
+        write_test_wav(&test_wav, samples.as_slice());
+        let orig_duration = {
+            let r = hound::WavReader::open(&test_wav).unwrap();
+            r.duration() as usize
+        };
+        assert_eq!(orig_duration, speech_samples_len + 32_000);
+
+        let trimmed = trim_trailing_silence_wav(&test_wav, &test_wav).unwrap();
+        assert!(trimmed, "Trailing silence should be trimmed");
+
+        let trimmed_duration = {
+            let r = hound::WavReader::open(&test_wav).unwrap();
+            r.duration() as usize
+        };
+        let _ = std::fs::remove_file(&test_wav);
+
+        // 32,000 trailing silence samples should be largely stripped, leaving speech + padding
+        assert!(trimmed_duration < orig_duration - 15_000);
+        assert!(trimmed_duration >= 8_000);
     }
 }

@@ -4,8 +4,8 @@
   --font-sans: "Segoe UI Variable Text", "Segoe UI", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
 
   /* Desktop App Native Dark Graphite Palette */
-  --bg-menu: #0a0a0c;
-  --surface-card: #121214;
+  --bg-menu: #0a0a0a;
+  --surface-card: #121212;
   --surface-hover: rgba(255, 255, 255, 0.06);
   --border-color: rgba(255, 255, 255, 0.09);
   --border-subtle: rgba(255, 255, 255, 0.05);

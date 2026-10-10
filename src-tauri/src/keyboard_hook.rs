@@ -232,17 +232,33 @@ mod windows_impl {
         }
     }
 
-    fn modifiers_satisfied(mask: u32, event_vk: u32, event_is_down: bool) -> bool {
+    fn modifiers_satisfied_state<F>(
+        mask: u32,
+        event_vk: u32,
+        event_is_down: bool,
+        mut is_mod_down: F,
+    ) -> bool
+    where
+        F: FnMut(u32) -> bool,
+    {
         [MOD_CTRL, MOD_ALT, MOD_SHIFT, MOD_WIN]
             .into_iter()
-            .filter(|modifier| mask & modifier != 0)
             .all(|modifier| {
-                if modifier_bit(event_vk) == Some(modifier) {
+                let is_down = if modifier_bit(event_vk) == Some(modifier) {
                     event_is_down
                 } else {
-                    modifier_is_down(modifier)
+                    is_mod_down(modifier)
+                };
+                if mask & modifier != 0 {
+                    is_down
+                } else {
+                    !is_down
                 }
             })
+    }
+
+    fn modifiers_satisfied(mask: u32, event_vk: u32, event_is_down: bool) -> bool {
+        modifiers_satisfied_state(mask, event_vk, event_is_down, modifier_is_down)
     }
 
     fn is_any_modifier_key(vk_code: u32) -> bool {
@@ -648,6 +664,61 @@ mod windows_impl {
             assert!(is_any_modifier_key(0x5B)); // Left Win
             assert!(!is_any_modifier_key(0x5A)); // Z in Ctrl+Z
             assert!(!is_any_modifier_key(0x08)); // Backspace
+        }
+
+        #[test]
+        fn test_strict_modifier_mask_satisfaction() {
+            use super::modifiers_satisfied_state;
+
+            // Target hotkey: Alt+V (mask = MOD_ALT, event_vk = 0x56)
+            let alt_mask = MOD_ALT;
+            let v_key = 0x56;
+
+            // Scenario 1: Only Alt is down -> satisfies
+            assert!(modifiers_satisfied_state(alt_mask, v_key, true, |m| m == MOD_ALT));
+
+            // Scenario 2: Alt is down, BUT Ctrl is also down (e.g. user pressed Ctrl+V while Alt stuck, or Ctrl+Alt+V) -> REJECTED!
+            assert!(!modifiers_satisfied_state(
+                alt_mask,
+                v_key,
+                true,
+                |m| m == MOD_ALT || m == MOD_CTRL
+            ));
+
+            // Scenario 3: Alt is down, but Shift is also down -> REJECTED!
+            assert!(!modifiers_satisfied_state(
+                alt_mask,
+                v_key,
+                true,
+                |m| m == MOD_ALT || m == MOD_SHIFT
+            ));
+
+            // Scenario 4: Alt is down, but Win is also down -> REJECTED!
+            assert!(!modifiers_satisfied_state(
+                alt_mask,
+                v_key,
+                true,
+                |m| m == MOD_ALT || m == MOD_WIN
+            ));
+
+            // Scenario 5: Alt is not down -> REJECTED!
+            assert!(!modifiers_satisfied_state(alt_mask, v_key, true, |_| false));
+
+            // Multi-modifier hotkey: Ctrl+Alt+V (mask = MOD_CTRL | MOD_ALT)
+            let ctrl_alt_mask = MOD_CTRL | MOD_ALT;
+            assert!(modifiers_satisfied_state(
+                ctrl_alt_mask,
+                v_key,
+                true,
+                |m| m == MOD_CTRL || m == MOD_ALT
+            ));
+            // Fails if Shift also pressed
+            assert!(!modifiers_satisfied_state(
+                ctrl_alt_mask,
+                v_key,
+                true,
+                |m| m == MOD_CTRL || m == MOD_ALT || m == MOD_SHIFT
+            ));
         }
     }
 }

@@ -2819,7 +2819,10 @@ pub async fn transcribe_via_whisper_server(
         .part("file", file_part)
         .text("language", lang.to_string())
         .text("response_format", "json")
-        .text("temperature", "0.0");
+        .text("temperature", "0.0")
+        .text("no_speech_thold", "0.6")
+        .text("suppress_nst", "true")
+        .text("entropy_thold", "2.4");
 
     if !primed_prompt.is_empty() {
         form = form.text("prompt", primed_prompt);

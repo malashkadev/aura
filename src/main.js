@@ -2737,12 +2737,12 @@ const COMMANDS_METADATA = [
       ru: ["«сократи»", "«сделай короче»", "«сожми текст»"],
       en: ['"shorten"', '"make shorter"', '"condense"'],
       de: ['„kürzen“', '„kürzer machen“', '„Text verdichten“'],
-      es: ['«acorta»', '«hazlo más corto»', '«resume el texto»'],
+      es: ['«acorta»', '«hazlo más corto»', '«hazlo breve»'],
       fr: ['« raccourcis »', '« fais plus court »', '« condense »'],
       it: ['"accorcia"', '"fai più corto"', '"sintetizza"'],
       zh: ['“缩短”', '“精简文本”', '“写短一点”'],
-      pt: ['«encurte»', '«faça mais curto»', '«resuma»'],
-      tr: ['"kısalt"', '"daha kısa yap"', '"özetle"']
+      pt: ['«encurte»', '«faça mais curto»', '«mais breve»'],
+      tr: ['"kısalt"', '"daha kısa yap"', '"kısa tut"']
     }
   },
   {
@@ -3200,7 +3200,119 @@ const btnSaveSettings = document.getElementById("btn-save-settings");
   const selectSoundTheme = document.getElementById("select-sound-theme");
   const rangeVolume = document.getElementById("range-sound-volume");
   const volumeLabel = document.getElementById("volume-value-label");
+  const btnSoundMute = document.getElementById("btn-sound-mute");
+  const soundMuteIcon = document.getElementById("sound-mute-icon");
   const selectAudioDevice = document.getElementById("select-audio-device");
+  let lastSoundVolume = 80;
+
+  const muteIconSvg = '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line>';
+  const soundIconSvg = '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>';
+
+  let settingsAudioCtx = null;
+  function playSettingsThemePreview(vol) {
+    if (vol <= 0) return;
+    const theme = (selectSoundTheme && selectSoundTheme.value) || "zen";
+    try {
+      if (!settingsAudioCtx) {
+        settingsAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (settingsAudioCtx.state === "suspended") {
+        settingsAudioCtx.resume();
+      }
+      const now = settingsAudioCtx.currentTime;
+      const gainNode = settingsAudioCtx.createGain();
+      const peakGain = (vol / 100) * 0.22;
+      gainNode.gain.setValueAtTime(0.0001, now);
+      gainNode.connect(settingsAudioCtx.destination);
+
+      if (theme === "rhodes") {
+        const osc1 = settingsAudioCtx.createOscillator();
+        const osc2 = settingsAudioCtx.createOscillator();
+        osc1.type = "sine";
+        osc2.type = "triangle";
+        osc1.frequency.setValueAtTime(440.0, now);
+        osc2.frequency.setValueAtTime(554.37, now + 0.08);
+        gainNode.gain.linearRampToValueAtTime(peakGain, now + 0.02);
+        gainNode.gain.exponentialRampToValueAtTime(0.0001, now + 0.35);
+        osc1.connect(gainNode);
+        osc2.connect(gainNode);
+        osc1.start(now);
+        osc2.start(now + 0.08);
+        osc1.stop(now + 0.36);
+        osc2.stop(now + 0.36);
+      } else if (theme === "scifi") {
+        const osc = settingsAudioCtx.createOscillator();
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(440.0, now);
+        osc.frequency.exponentialRampToValueAtTime(880.0, now + 0.12);
+        gainNode.gain.linearRampToValueAtTime(peakGain, now + 0.01);
+        gainNode.gain.exponentialRampToValueAtTime(0.0001, now + 0.25);
+        osc.connect(gainNode);
+        osc.start(now);
+        osc.stop(now + 0.26);
+      } else if (theme === "classic") {
+        const osc = settingsAudioCtx.createOscillator();
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(523.25, now);
+        gainNode.gain.linearRampToValueAtTime(peakGain, now + 0.005);
+        gainNode.gain.exponentialRampToValueAtTime(0.0001, now + 0.4);
+        osc.connect(gainNode);
+        osc.start(now);
+        osc.stop(now + 0.41);
+      } else if (theme === "bubble") {
+        const osc = settingsAudioCtx.createOscillator();
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(400, now);
+        osc.frequency.exponentialRampToValueAtTime(950, now + 0.08);
+        gainNode.gain.linearRampToValueAtTime(peakGain, now + 0.008);
+        gainNode.gain.exponentialRampToValueAtTime(0.0001, now + 0.14);
+        osc.connect(gainNode);
+        osc.start(now);
+        osc.stop(now + 0.15);
+      } else if (theme === "haptic") {
+        const osc = settingsAudioCtx.createOscillator();
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(320, now);
+        osc.frequency.exponentialRampToValueAtTime(160, now + 0.04);
+        gainNode.gain.linearRampToValueAtTime(peakGain * 1.5, now + 0.003);
+        gainNode.gain.exponentialRampToValueAtTime(0.0001, now + 0.05);
+        osc.connect(gainNode);
+        osc.start(now);
+        osc.stop(now + 0.06);
+      } else {
+        // Default: zen
+        const osc = settingsAudioCtx.createOscillator();
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(587.33, now);
+        osc.frequency.exponentialRampToValueAtTime(880.0, now + 0.1);
+        gainNode.gain.linearRampToValueAtTime(peakGain, now + 0.01);
+        gainNode.gain.exponentialRampToValueAtTime(0.0001, now + 0.35);
+        osc.connect(gainNode);
+        osc.start(now);
+        osc.stop(now + 0.36);
+      }
+    } catch (_) {}
+  }
+
+  function updateVolumeSliderVisuals(val) {
+    const v = Math.max(0, Math.min(100, Math.round(val)));
+    if (rangeVolume) {
+      rangeVolume.value = v;
+      rangeVolume.style.background = `linear-gradient(to right, var(--accent-color) 0%, var(--accent-color) ${v}%, hsl(0, 0%, 20%) ${v}%, hsl(0, 0%, 20%) 100%)`;
+    }
+    if (volumeLabel) {
+      volumeLabel.textContent = `${v}%`;
+    }
+    if (btnSoundMute && soundMuteIcon) {
+      if (v === 0) {
+        btnSoundMute.classList.add("muted");
+        soundMuteIcon.innerHTML = muteIconSvg;
+      } else {
+        btnSoundMute.classList.remove("muted");
+        soundMuteIcon.innerHTML = soundIconSvg;
+      }
+    }
+  }
 
   if (selectAudioDevice) {
     selectAudioDevice.addEventListener("change", () => {
@@ -3238,8 +3350,45 @@ const btnSaveSettings = document.getElementById("btn-save-settings");
 
   if (rangeVolume) {
     rangeVolume.addEventListener("input", () => {
-      if (volumeLabel) {
-        volumeLabel.textContent = `${rangeVolume.value}%`;
+      const v = Number(rangeVolume.value);
+      updateVolumeSliderVisuals(v);
+    });
+
+    rangeVolume.addEventListener("change", () => {
+      const v = Number(rangeVolume.value);
+      updateVolumeSliderVisuals(v);
+      if (v > 0) {
+        lastSoundVolume = v;
+      }
+      if (checkboxSounds && checkboxSounds.checked && v > 0) {
+        playSettingsThemePreview(v);
+      }
+    });
+  }
+
+  if (btnSoundMute) {
+    btnSoundMute.addEventListener("click", () => {
+      const cur = Number(rangeVolume ? rangeVolume.value : 80);
+      if (cur > 0) {
+        lastSoundVolume = cur;
+        updateVolumeSliderVisuals(0);
+        markSettingsModified(true);
+      } else {
+        const restored = lastSoundVolume > 0 ? lastSoundVolume : 80;
+        updateVolumeSliderVisuals(restored);
+        markSettingsModified(true);
+        if (checkboxSounds && checkboxSounds.checked) {
+          playSettingsThemePreview(restored);
+        }
+      }
+    });
+  }
+
+  if (selectSoundTheme) {
+    selectSoundTheme.addEventListener("change", () => {
+      const cur = Number(rangeVolume ? rangeVolume.value : 80);
+      if (checkboxSounds && checkboxSounds.checked && cur > 0) {
+        playSettingsThemePreview(cur);
       }
     });
   }
@@ -4205,10 +4354,8 @@ const btnSaveSettings = document.getElementById("btn-save-settings");
         }
         if (rangeVolume) {
           const volumeVal = typeof settings.overlay_sound_volume === "number" ? Math.round(settings.overlay_sound_volume * 100) : 80;
-          rangeVolume.value = volumeVal;
-          if (volumeLabel) {
-            volumeLabel.textContent = `${volumeVal}%`;
-          }
+          updateVolumeSliderVisuals(volumeVal);
+          if (volumeVal > 0) lastSoundVolume = volumeVal;
         }
         updateSoundUI();
  

@@ -312,13 +312,16 @@ mod windows_impl {
     fn restore_modifiers(released: &[u16]) {
         unsafe {
             for &vk in released {
-                // Only re-press a modifier that the OS still reports as
-                // released: if the user already physically pressed it again
-                // during the typing window, synthesizing a key-down with no
-                // matching key-up would stick the modifier for everyone
-                // (menu bars, shortcuts, selection).
+                // Never synthesize KeyDown for VK_MENU (Alt). Doing so can stick Alt down
+                // in the OS state machine and activate application menu bars.
+                if vk == VK_MENU {
+                    continue;
+                }
+                // Only re-press a modifier if the user is STILL physically holding it down!
+                // If the user physically released it during the typing/copy window,
+                // synthesizing KeyDown would create an orphaned down-state without a matching KeyUp.
                 let state = GetAsyncKeyState(vk as i32);
-                if (state as u16 & 0x8000) != 0 {
+                if (state as u16 & 0x8000) == 0 {
                     continue;
                 }
                 let mut input = std::mem::zeroed::<INPUT>();

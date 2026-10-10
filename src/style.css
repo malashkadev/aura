@@ -36,10 +36,14 @@
   --transition: background-color 0.25s var(--ease-out), border-color 0.25s var(--ease-out), transform 0.25s var(--ease-out), box-shadow 0.25s var(--ease-out), color 0.25s var(--ease-out), opacity 0.25s var(--ease-out);
 }
 
-* {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 button,
@@ -49,6 +53,13 @@ textarea {
   font-family: inherit;
   font-size: inherit;
   color: inherit;
+}
+
+input,
+textarea,
+[contenteditable="true"] {
+  -webkit-user-select: text;
+  user-select: text;
 }
 
 body {
@@ -61,6 +72,7 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
+  -webkit-user-select: none;
   user-select: none;
 }
 
@@ -861,6 +873,95 @@ body {
 .toggle-switch input:focus-visible + .toggle-track {
   outline: 2px solid var(--accent-color);
   outline-offset: 2px;
+}
+
+/* Sub-checkbox Component (Aura Desktop) */
+.sub-checkbox-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 10px 14px;
+  background-color: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.sub-checkbox-card:hover {
+  background-color: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.14);
+}
+
+.sub-checkbox-input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+.custom-checkbox-box {
+  width: 18px;
+  height: 18px;
+  border: 1.5px solid rgba(255, 255, 255, 0.28);
+  border-radius: 4px;
+  background-color: rgba(0, 0, 0, 0.4);
+  flex-shrink: 0;
+  margin-top: 1px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s var(--ease-out);
+}
+
+.sub-checkbox-card:hover .custom-checkbox-box {
+  border-color: rgba(255, 255, 255, 0.45);
+}
+
+.sub-checkbox-input:focus-visible ~ .custom-checkbox-box {
+  outline: 2px solid var(--accent-color);
+  outline-offset: 2px;
+}
+
+.sub-checkbox-input:checked ~ .custom-checkbox-box {
+  background-color: var(--accent-color);
+  border-color: var(--accent-color);
+}
+
+.custom-checkbox-check {
+  display: none;
+  width: 12px;
+  height: 12px;
+  stroke: #ffffff;
+  stroke-width: 2.8;
+}
+
+.sub-checkbox-input:checked ~ .custom-checkbox-box .custom-checkbox-check {
+  display: block;
+}
+
+.sub-checkbox-content {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.sub-checkbox-title {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  line-height: 1.35;
+}
+
+.sub-checkbox-content .switch-desc {
+  margin-top: 0;
+  font-size: 0.80rem;
+  color: var(--text-secondary);
+  line-height: 1.42;
 }
 
 /* Tactile Active States */
@@ -1720,6 +1821,8 @@ body {
   z-index: 9999;
   opacity: 0;
   transition: opacity 0.2s ease;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 .modal-overlay:not([open]) {
@@ -1735,7 +1838,7 @@ body {
 }
 
 .modal-card {
-  background-color: #111114;
+  background-color: #0f0f0f;
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
   padding: 24px 26px;
@@ -1747,6 +1850,8 @@ body {
   display: flex;
   flex-direction: column;
   gap: 14px;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 .modal-overlay.active .modal-card {
@@ -1883,6 +1988,33 @@ body {
 
 .modal-actions .btn:active {
   transform: scale(0.97);
+}
+
+/* Voice Commands Guide Entry (Flat Form-Group - Variant 2A) */
+.commands-guide-entry {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 10px 0 12px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  margin-top: 2px;
+  margin-bottom: 4px;
+}
+
+.commands-guide-entry-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.commands-guide-entry-info .field-label {
+  margin-bottom: 0;
+}
+
+.commands-guide-entry-info .switch-desc {
+  margin: 0;
 }
 
 /* Voice Commands Guide Modal */
@@ -2044,34 +2176,69 @@ body {
   display: flex;
   align-items: center;
   gap: 12px;
+  max-width: 320px;
+}
+
+.btn-mute {
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+  padding: 0;
+}
+
+.btn-mute:hover {
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.btn-mute.muted {
+  color: var(--status-error);
+}
+
+.volume-track-wrap {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
 }
 
 .volume-value-text {
   font-family: var(--font-display);
-  font-weight: 700;
-  font-size: 0.85rem;
-  color: var(--accent-color);
-  min-width: 40px;
+  font-weight: 600;
+  font-size: 0.84rem;
+  color: var(--text-primary);
+  min-width: 38px;
   text-align: right;
+  font-variant-numeric: tabular-nums;
 }
 
 .custom-slider {
   flex: 1;
   -webkit-appearance: none;
   appearance: none;
-  height: 6px;
-  border-radius: var(--radius-full);
-  background: hsl(0, 0%, 15%);
+  height: 4px;
+  border-radius: 2px;
+  background: linear-gradient(to right, var(--accent-color) 0%, var(--accent-color) 80%, hsl(0, 0%, 20%) 80%, hsl(0, 0%, 20%) 100%);
   outline: none;
-  transition: var(--transition);
+  cursor: pointer;
+  transition: background 0.05s ease;
 }
 
 .custom-slider::-webkit-slider-runnable-track {
   width: 100%;
-  height: 6px;
+  height: 4px;
   cursor: pointer;
-  background: hsl(0, 0%, 15%);
-  border-radius: var(--radius-full);
+  background: transparent;
+  border-radius: 2px;
 }
 
 .custom-slider::-webkit-slider-thumb {
@@ -2081,13 +2248,16 @@ body {
   height: 14px;
   border-radius: 50%;
   background: var(--accent-color);
+  border: none;
   cursor: pointer;
-  margin-top: -4px; /* Align with center of 6px track */
-  transition: background-color 0.15s ease;
+  margin-top: -5px; /* Align with center of 4px track */
+  box-shadow: 0 0 6px rgba(0, 0, 0, 0.6);
+  transition: transform 0.1s ease, box-shadow 0.15s ease;
 }
 
 .custom-slider::-webkit-slider-thumb:hover {
-  background: var(--accent-hover);
+  transform: scale(1.15);
+  box-shadow: 0 0 8px rgba(255, 66, 0, 0.4);
 }
 
 /* Hotkey recorder widget styling */
@@ -2223,13 +2393,13 @@ body {
   outline-offset: 2px;
 }
 
-/* Replacements & Macro Chips Styles */
+/* Replacements & Macro Chips Styles (Variant 1A - Chip Cards) */
 .replacements-list {
-  max-height: 180px;
+  max-height: 190px;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
   padding-right: 4px;
 }
 
@@ -2237,17 +2407,17 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 8px 12px;
-  background: hsl(0, 0%, 7%);
+  padding: 7px 10px;
+  background: hsl(0, 0%, 8%);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-sm);
-  font-size: 0.88rem;
+  font-size: 0.86rem;
   transition: var(--transition);
 }
 
 .replacement-item:hover {
-  background: hsl(0, 0%, 9%);
-  border-color: hsla(0, 0%, 100%, 0.12);
+  background: hsl(0, 0%, 10%);
+  border-color: rgba(255, 255, 255, 0.14);
 }
 
 .replacement-info {
@@ -2257,12 +2427,19 @@ body {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  min-width: 0;
 }
 
 .replacement-trigger {
   font-weight: 500;
-  color: var(--text-primary);
-  font-size: 0.88rem;
+  color: #ffffff;
+  font-size: 0.82rem;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 2px 8px;
+  border-radius: 4px;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .replacement-arrow {
@@ -2271,29 +2448,32 @@ body {
   justify-content: center;
   color: var(--text-muted);
   flex-shrink: 0;
+  font-size: 0.82rem;
 }
 
 .replacement-value {
   color: var(--text-secondary);
   font-weight: 400;
-  font-size: 0.88rem;
+  font-size: 0.84rem;
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .replacement-delete {
   background: transparent;
   border: 1px solid transparent;
   color: var(--text-muted);
-  width: 28px;
-  height: 28px;
-  border-radius: var(--radius-sm);
+  width: 26px;
+  height: 26px;
+  border-radius: 4px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   transition: var(--transition);
   flex-shrink: 0;
+  padding: 0;
 }
 
 .replacement-delete:hover {
@@ -2310,21 +2490,23 @@ body {
 }
 
 .replacement-add-row {
-  display: flex;
-  gap: 10px;
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 8px;
   align-items: center;
+  margin-top: 8px;
 }
 
 .replacement-add-row .custom-input {
-  flex: 1;
-  height: 38px;
-  padding: 0 12px;
-  font-size: 0.88rem;
+  height: 34px;
+  padding: 0 10px;
+  font-size: 0.84rem;
 }
 
 .replacement-add-row .btn-add-replacement {
   margin-top: 0;
-  padding: 8px 16px;
+  height: 34px;
+  padding: 0 14px;
   font-family: var(--font-display);
   font-size: 13px;
   font-weight: 600;
@@ -2470,7 +2652,7 @@ body {
   position: absolute;
   z-index: 1002;
   width: min(460px, calc(100vw - 32px));
-  background-color: #131317;
+  background-color: #0f0f0f;
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
   padding: 16px 18px;
@@ -2480,6 +2662,8 @@ body {
   gap: 8px;
   transition: top 0.25s var(--ease-out), left 0.25s var(--ease-out);
   pointer-events: auto;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 .spotlight-header {

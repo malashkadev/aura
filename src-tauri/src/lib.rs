@@ -27,6 +27,7 @@ use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent}
 use tauri::{Emitter, Manager};
 use tauri_plugin_autostart::MacosLauncher;
 use tauri_plugin_autostart::ManagerExt;
+use tauri_plugin_notification::NotificationExt;
 use tauri_plugin_updater::UpdaterExt;
 
 struct ParakeetStreamingSession {
@@ -572,16 +573,83 @@ async fn query_app_update(
         .map_err(|error| format!("Update check failed: {error}"))
 }
 
+pub fn notify_app_update_available(app: &tauri::AppHandle, new_version: &str) {
+    if let Some(state) = app.try_state::<AppState>() {
+        if state.gaming_mode_active.load(Ordering::Acquire) {
+            crate::logger::log(
+                "INFO",
+                "Updater",
+                None,
+                &format!("Suppressing update notification for v{new_version} because Gaming Mode is active"),
+            );
+            return;
+        }
+    }
+
+    let settings = settings::load_settings(app).ok();
+    let lang = settings.as_ref().map(|s| s.ui_language.as_str()).unwrap_or("ru");
+
+    let (title, body) = match lang {
+        "en" => (
+            "Aura Update Available".to_string(),
+            format!("Version {new_version} is available. Click to open Settings and update."),
+        ),
+        "de" => (
+            "Aura-Update verfügbar".to_string(),
+            format!("Version {new_version} ist verfügbar. Klicken Sie hier, um zu aktualisieren."),
+        ),
+        "es" => (
+            "Actualización de Aura disponible".to_string(),
+            format!("La versión {new_version} está disponible. Haga clic para actualizar."),
+        ),
+        "fr" => (
+            "Mise à jour Aura disponible".to_string(),
+            format!("La version {new_version} est disponible. Cliquez pour mettre à jour."),
+        ),
+        "it" => (
+            "Aggiornamento di Aura disponibile".to_string(),
+            format!("La versione {new_version} è disponibile. Fai clic per aggiornare."),
+        ),
+        "zh" => (
+            "Aura 有新版本可用".to_string(),
+            format!("版本 {new_version} 已发布。点击打开设置进行更新。"),
+        ),
+        "pt" => (
+            "Atualização do Aura disponível".to_string(),
+            format!("A versão {new_version} está disponível. Clique para atualizar."),
+        ),
+        "tr" => (
+            "Aura Güncellemesi Mevcut".to_string(),
+            format!("Sürüm {new_version} mevcut. Güncellemek için tıklayın."),
+        ),
+        _ => (
+            "Доступно обновление Aura".to_string(),
+            format!("Доступна версия {new_version}. Нажмите, чтобы открыть настройки и обновить."),
+        ),
+    };
+
+    if let Err(e) = app.notification().builder().title(title).body(body).show() {
+        crate::logger::log(
+            "WARN",
+            "Updater",
+            None,
+            &format!("Failed to show update notification: {e}"),
+        );
+    }
+}
+
 #[tauri::command]
 async fn check_for_app_update(
     app_handle: tauri::AppHandle,
 ) -> Result<Option<AppUpdateInfo>, String> {
-    Ok(query_app_update(&app_handle)
-        .await?
-        .map(|update| AppUpdateInfo {
-            current_version: update.current_version,
-            version: update.version,
-        }))
+    let update = query_app_update(&app_handle).await?;
+    if let Some(ref upd) = update {
+        notify_app_update_available(&app_handle, &upd.version);
+    }
+    Ok(update.map(|update| AppUpdateInfo {
+        current_version: update.current_version,
+        version: update.version,
+    }))
 }
 
 #[tauri::command]
@@ -976,6 +1044,7 @@ fn is_silence_hallucination(text: &str) -> bool {
         "субтитры создал",
         "редактор субтитров",
         "подпишитесь на канал",
+        "подписывайтесь на канал",
         "blank_audio",
         "текст фильма",
     ];
@@ -993,17 +1062,61 @@ fn is_silence_hallucination(text: &str) -> bool {
         .collect();
     let normalized = normalized.split_whitespace().collect::<Vec<_>>().join(" ");
     let exact_markers = [
+        // Russian
         "спасибо за просмотр",
         "спасибо за внимание",
+        "спасибо что посмотрели",
+        "до новых встреч",
         "продолжение следует",
         "подпишитесь",
+        "подпишитесь на канал",
+        "подписывайтесь на канал",
+        "ставьте лайки",
+        "жми колокольчик",
+        "используйте что это не так",
+        "используйтесь что это не так",
+        "убедитесь что это не так",
+        "я не знаю что я здесь делаю",
+        // English
         "thank you for watching",
         "thanks for watching",
+        "thank you for watching please subscribe",
+        "to be continued",
+        "subscribe to my channel",
+        "dont forget to subscribe",
+        "transcript provided by",
+        "i m not sure what i m doing here",
+        "i am not sure what i am doing here",
+        "i m not sure what to do with this",
         "thank you",
         "you",
         "you you",
         "you you you",
         "you you you you",
+        // German
+        "danke fürs zuschauen",
+        "danke furs zuschauen",
+        "danke fürs ansehen",
+        "danke furs ansehen",
+        "bitte abonnieren",
+        "abonniere meinen kanal",
+        "das wars",
+        // French
+        "sous titrage société radio canada",
+        "sous titrage societe radio canada",
+        "merci davoir regardé cette vidéo",
+        "merci davoir regarde cette video",
+        "merci davoir regardé",
+        "merci davoir regarde",
+        "abonnez vous à ma chaîne",
+        "abonnez vous a ma chaine",
+        // Spanish
+        "gracias por ver el video",
+        "gracias por su atención",
+        "gracias por su atencion",
+        "cc por antarctica films argentina",
+        "dale like y suscríbete",
+        "dale like y suscribete",
         // NVIDIA Parakeet tends to emit a single affirmative word on silence
         // or on a near-empty clip (e.g. a say-nothing quick hotkey press).
         // Whole-utterance match only, so real dictation containing these as
@@ -1021,7 +1134,29 @@ fn is_silence_hallucination(text: &str) -> bool {
         "мм мм",
         "s",
     ];
-    exact_markers.contains(&normalized.as_str())
+    if exact_markers.contains(&normalized.as_str()) {
+        return true;
+    }
+
+    // Also catch repeated loops where the whole utterance consists solely of repeating an exact marker
+    let norm_words: Vec<&str> = normalized.split_whitespace().collect();
+    if norm_words.len() >= 2 {
+        for marker in &exact_markers {
+            let marker_words: Vec<&str> = marker.split_whitespace().collect();
+            if !marker_words.is_empty()
+                && norm_words.len() >= marker_words.len() * 2
+                && norm_words.len().is_multiple_of(marker_words.len())
+            {
+                let all_match = norm_words
+                    .chunks(marker_words.len())
+                    .all(|chunk| chunk == marker_words.as_slice());
+                if all_match {
+                    return true;
+                }
+            }
+        }
+    }
+    false
 }
 
 fn capitalize_word(s: &str) -> String {
@@ -3651,6 +3786,32 @@ async fn finalize_recording(app_handle: tauri::AppHandle) {
                     "No speech detected in recording; skipping transcription (empty session)",
                 );
                 empty_session = true;
+            } else {
+                let trim_path = temp_path.clone();
+                let trim_tag = session_tag_clone.clone();
+                let _ = tauri::async_runtime::spawn_blocking(move || {
+                    match vad::trim_trailing_silence_wav(&trim_path, &trim_path) {
+                        Ok(trimmed) => {
+                            if trimmed {
+                                crate::logger::log(
+                                    "INFO",
+                                    "VAD",
+                                    Some(&trim_tag),
+                                    "Trimmed trailing silence from audio WAV (>600ms padding preserved)",
+                                );
+                            }
+                        }
+                        Err(e) => {
+                            crate::logger::log(
+                                "WARN",
+                                "VAD",
+                                Some(&trim_tag),
+                                &format!("Failed to trim trailing silence from WAV: {e}"),
+                            );
+                        }
+                    }
+                })
+                .await;
             }
         }
 
@@ -4307,6 +4468,7 @@ pub fn run() {
             Some(vec!["--autostart"]),
         ))
         .plugin(tauri_plugin_updater::Builder::new().build())
+        .plugin(tauri_plugin_notification::init())
         .setup(|app| {
             #[cfg(target_os = "macos")]
             app.set_activation_policy(tauri::ActivationPolicy::Accessory);
@@ -4649,6 +4811,23 @@ pub fn run() {
                     interval.tick().await;
                     check_vram_standby_and_gaming(&standby_handle).await;
                     check_audio_devices_hotplug(&standby_handle).await;
+                }
+            });
+
+            // Periodic background update checker (every 4 hours, starts after 30s)
+            let update_checker_handle = app_handle.clone();
+            tauri::async_runtime::spawn(async move {
+                tokio::time::sleep(std::time::Duration::from_secs(30)).await;
+                let mut interval = tokio::time::interval(std::time::Duration::from_secs(4 * 3600));
+                loop {
+                    interval.tick().await;
+                    if let Ok(settings) = settings::load_settings(&update_checker_handle) {
+                        if settings.automatic_update_checks {
+                            if let Ok(Some(update)) = query_app_update(&update_checker_handle).await {
+                                notify_app_update_available(&update_checker_handle, &update.version);
+                            }
+                        }
+                    }
                 }
             });
             // Esc cancels an active recording
@@ -6355,6 +6534,18 @@ mod tests {
         assert!(is_silence_hallucination("Mm, Mm."));
         assert!(is_silence_hallucination("S"));
         assert!(is_silence_hallucination("Мм"));
+        assert!(is_silence_hallucination("Используйте, что это не так"));
+        assert!(is_silence_hallucination("Используйтесь, что это не так"));
+        assert!(is_silence_hallucination("Убедитесь, что это не так"));
+        assert!(is_silence_hallucination(
+            "Используйтесь, что это не так. Используйтесь, что это не так."
+        ));
+        assert!(is_silence_hallucination("Danke fürs Zuschauen!"));
+        assert!(is_silence_hallucination("Merci d'avoir regardé cette vidéo"));
+        assert!(is_silence_hallucination("¡Gracias por ver el video!"));
+        assert!(is_silence_hallucination("Подпишитесь, подпишитесь."));
+        assert!(is_silence_hallucination("Dale like y suscribete. Dale like y suscribete."));
+        assert!(is_silence_hallucination("Abonnez vous a ma chaine. Abonnez vous a ma chaine."));
     }
 
     #[test]
@@ -6896,5 +7087,18 @@ mod tests {
         };
         let adapted = smart_insertion::adapt_transcription_to_context(raw, &ctx, true);
         assert_eq!(adapted, "Это новый факт.");
+    }
+
+    #[test]
+    fn test_update_notification_gaming_mode_suppression_logic() {
+        let gaming_active = AtomicBool::new(true);
+        assert!(gaming_active.load(Ordering::Acquire), "Gaming mode must be active");
+        
+        let should_suppress = gaming_active.load(Ordering::Acquire);
+        assert!(should_suppress, "When gaming mode is active, notification MUST be suppressed");
+
+        gaming_active.store(false, Ordering::Release);
+        let should_suppress_disabled = gaming_active.load(Ordering::Acquire);
+        assert!(!should_suppress_disabled, "When gaming mode is inactive, notification is allowed");
     }
 }
