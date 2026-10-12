@@ -3004,6 +3004,13 @@ async fn start_recording_session(app_handle: tauri::AppHandle) {
         .live_target_monitoring
         .store(session_settings.streaming_enabled, Ordering::Release);
 
+    // Selected-text context is captured whenever an edit route will actually
+    // consume it: the cloud provider (cloud or cloud-after-local cleanup) or
+    // the local Qwen3 server. Route "off" never needs the selection.
+    let edit_route = llm_runner::resolve_ai_edit_route(&app_handle, &session_settings);
+    let copy_context = session_settings.copy_context_on_start
+        && edit_route != llm_runner::AiEditRoute::Off;
+
     // Parallel background capture of caret context via Windows UI Automation
     if session_settings.smart_context_enabled {
         let app_handle_caret = app_handle.clone();
@@ -3016,7 +3023,7 @@ async fn start_recording_session(app_handle: tauri::AppHandle) {
                     if let Ok(mut guard) = state.caret_context.lock() {
                         *guard = Some(ctx.clone());
                     }
-                    if !ctx.selected_text.trim().is_empty() {
+                    if copy_context && !ctx.selected_text.trim().is_empty() {
                         if let Ok(mut sel_guard) = state.selected_text.lock() {
                             if sel_guard.trim().is_empty() {
                                 *sel_guard = ctx.selected_text.clone();
@@ -3028,12 +3035,6 @@ async fn start_recording_session(app_handle: tauri::AppHandle) {
             }
         });
     }
-    // Selected-text context is captured whenever an edit route will actually
-    // consume it: the cloud provider (cloud or cloud-after-local cleanup) or
-    // the local Qwen3 server. Route "off" never needs the selection.
-    let edit_route = llm_runner::resolve_ai_edit_route(&app_handle, &session_settings);
-    let copy_context = session_settings.copy_context_on_start
-        && edit_route != llm_runner::AiEditRoute::Off;
 
     if copy_context {
         let app_handle_copy = app_handle.clone();

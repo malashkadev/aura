@@ -727,6 +727,22 @@ body {
   margin: 8px 0;
 }
 
+.card-section {
+  display: flex;
+  flex-direction: column;
+}
+
+.card-section .toggle-switch,
+#card-gaming-mode .toggle-switch,
+#smart-context-suboptions .toggle-switch {
+  margin-top: 0;
+}
+
+#smart-context-suboptions .divider {
+  margin-top: 8px;
+  margin-bottom: 21px;
+}
+
 /* Footer */
 .app-footer {
   padding: 16px 24px;
@@ -2176,7 +2192,7 @@ body {
   display: flex;
   align-items: center;
   gap: 12px;
-  max-width: 320px;
+  width: 100%;
 }
 
 .btn-mute {
@@ -2257,7 +2273,7 @@ body {
 
 .custom-slider::-webkit-slider-thumb:hover {
   transform: scale(1.15);
-  box-shadow: 0 0 8px rgba(255, 66, 0, 0.4);
+  box-shadow: 0 0 6px rgba(0, 0, 0, 0.6);
 }
 
 /* Hotkey recorder widget styling */

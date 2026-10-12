@@ -45,29 +45,29 @@ impl EditIntent {
             EditIntent::Translate { target_lang } => {
                 let lang_name = lang_code_to_name(target_lang);
                 Some(format!(
-                    "You are an expert translator. Translate the user's text into {lang_name}. Output ONLY the direct translation. Never add explanations, greetings, quotes, or markdown commentary."
+                    "You are an expert translator. Translate the user's text into {lang_name}. Output ONLY the direct translation. Do NOT wrap output in tags or delimiters. Never add explanations, greetings, quotes, or markdown commentary."
                 ))
             }
             EditIntent::Shorten => Some(format!(
-                "You are an expert editor. Condense and shorten the user's text while preserving its core meaning and key facts. Output MUST be significantly shorter than input. {lang_rule} Output ONLY the shortened text without commentary."
+                "You are an expert editor. Condense and shorten the user's text while preserving its core meaning and key facts. Output MUST be significantly shorter than input. {lang_rule} Do NOT wrap output in tags or delimiters. Output ONLY the shortened text without commentary."
             )),
             EditIntent::Expand => Some(format!(
-                "You are an expert writer. Expand and elaborate on the user's text with helpful details and clarity while preserving the original intent. {lang_rule} Output ONLY the expanded text without commentary."
+                "You are an expert writer. Expand and elaborate on the user's text with helpful details and clarity while preserving the original intent. {lang_rule} Do NOT wrap output in tags or delimiters. Output ONLY the expanded text without commentary."
             )),
             EditIntent::FixGrammar => Some(format!(
-                "You are an expert proofreader. Correct all grammar, spelling, punctuation, and typographical errors in the user's text. Preserve the original voice and meaning. {lang_rule} Output ONLY the corrected text without commentary."
+                "You are an expert proofreader. Correct all grammar, spelling, punctuation, capitalization, and typographical errors in the user's text. Preserve sentence boundaries and punctuation; ensure every sentence ends with proper terminal punctuation. Preserve the original voice, phrasing, and meaning without unnecessary rewriting. {lang_rule} Do NOT wrap your output in delimiter tags, markers, or brackets. Output ONLY the corrected text without commentary."
             )),
             EditIntent::RewriteFormal => Some(format!(
-                "You are a professional editor. Rewrite the user's text in a polished, formal, and professional tone suitable for business communication. {lang_rule} Output ONLY the rewritten text without commentary."
+                "You are a professional editor. Rewrite the user's text in a polished, formal, and professional tone suitable for business communication. {lang_rule} Do NOT wrap output in tags or delimiters. Output ONLY the rewritten text without commentary."
             )),
             EditIntent::RewriteCasual => Some(format!(
-                "You are a creative editor. Rewrite the user's text in a natural, friendly, and casual tone. {lang_rule} Output ONLY the rewritten text without commentary."
+                "You are a creative editor. Rewrite the user's text in a natural, friendly, and casual tone. {lang_rule} Do NOT wrap output in tags or delimiters. Output ONLY the rewritten text without commentary."
             )),
             EditIntent::Summarize => Some(format!(
-                "You are an expert analyst. Provide a concise summary capturing the key points and essential takeaways of the user's text. {lang_rule} Output ONLY the summary without commentary."
+                "You are an expert analyst. Provide a concise summary capturing the key points and essential takeaways of the user's text. {lang_rule} Do NOT wrap output in tags or delimiters. Output ONLY the summary without commentary."
             )),
             EditIntent::Bulletize => Some(format!(
-                "You are an organizational assistant. Format the user's text into clear, readable bullet points (- item). {lang_rule} Output ONLY the bulleted list without commentary."
+                "You are an organizational assistant. Format the user's text into clear, readable bullet points (- item). {lang_rule} Do NOT wrap output in tags or delimiters. Output ONLY the bulleted list without commentary."
             )),
             EditIntent::Custom(instruction) => {
                 let custom_rule = if is_cyrillic {
@@ -76,7 +76,7 @@ impl EditIntent {
                     "CRITICAL: Maintain the exact same language as the input text unless the instruction explicitly specifies translation."
                 };
                 Some(format!(
-                    "You are an expert text editor. Apply this instruction to the user's text: {instruction}. {custom_rule} Output ONLY the resulting text without explanations or conversational filler."
+                    "You are an expert text editor. Apply this instruction to the user's text: {instruction}. {custom_rule} Do NOT wrap output in tags or delimiters. Output ONLY the resulting text without explanations or conversational filler."
                 ))
             }
             EditIntent::NotACommand => None,

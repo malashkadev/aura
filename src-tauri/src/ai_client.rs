@@ -296,7 +296,7 @@ pub(crate) fn build_clean_instructions(
     let mut prompt = String::from(
         "You are an elite voice dictation and text-editing assistant.\n\
         Rules:\n\
-        1. Output ONLY the final processed text. Never add explanations, conversation, greetings, or markdown commentary.\n\
+        1. Output ONLY the final processed text. Never add explanations, conversation, greetings, markdown commentary, or delimiter tags (such as <<<SELECTED_TEXT_START>>>).\n\
         2. Clean up speech by removing stutters, filler words, and applying natural punctuation and capitalization.\n"
     );
 
@@ -1108,7 +1108,7 @@ pub async fn edit_text_with_provider(
     });
 
     let user_content = format!(
-        "Text to process:\n<<<SELECTED_TEXT_START>>>\n{}\n<<<SELECTED_TEXT_END>>>",
+        "Text to process:\n<<<SELECTED_TEXT_START>>>\n{}\n<<<SELECTED_TEXT_END>>>\n\nOutput ONLY the processed replacement text. Do NOT wrap output in tags or markers.",
         selected_text
     );
 

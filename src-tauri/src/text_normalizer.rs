@@ -881,6 +881,10 @@ pub fn strip_hallucinated_prefixes(text: &str) -> String {
         "субтитры",
         "автор субтитров",
         "продолжение следует",
+        "создавал dimatorzok",
+        "создавал dima torzok",
+        "создавал dimatorzhok",
+        "dimatorzok",
         "конец фильма",
         "спасибо за просмотр",
         "спасибо что посмотрели",
@@ -943,6 +947,8 @@ pub fn strip_hallucinated_prefixes(text: &str) -> String {
         "текст записи",
         "текст диалога",
         "продолжение следует",
+        "создавал dimatorzok",
+        "создавал dima torzok",
         "субтитры созданы",
         "субтитры делал",
         "субтитры делала",
@@ -1054,6 +1060,9 @@ pub fn strip_trailing_hallucinations(text: &str) -> String {
         "субтитры создал",
         "редактор субтитров",
         "текст фильма",
+        "создавал dimatorzok",
+        "создавал dima torzok",
+        "dimatorzok",
         // English
         "thank you for watching please subscribe",
         "thank you for watching",
@@ -1207,6 +1216,9 @@ pub const HALLUCINATION_BLACKLIST: &[&str] = &[
     "субтитры создал",
     "редактор субтитров",
     "текст фильма",
+    "создавал dimatorzok",
+    "создавал dima torzok",
+    "dimatorzok",
     // English
     "thank you for watching",
     "thanks for watching",
@@ -1842,6 +1854,18 @@ mod tests {
         let watching = "Спасибо за просмотр!";
         let output_watching = normalize_transcription_text(watching, "ru");
         assert_eq!(output_watching, "");
+
+        // Hallucinated "Создавал DimaTorzok"
+        assert_eq!(normalize_transcription_text("Создавал DimaTorzok", "ru"), "");
+        assert_eq!(normalize_transcription_text("Создавал DimaTorzok.", "ru"), "");
+        assert_eq!(
+            normalize_transcription_text("Создавал DimaTorzok: Всем привет.", "ru"),
+            "Всем привет."
+        );
+        assert_eq!(
+            normalize_transcription_text("Отличный текст. Создавал DimaTorzok.", "ru"),
+            "Отличный текст."
+        );
     }
 
     #[test]

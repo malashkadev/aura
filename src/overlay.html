@@ -18,22 +18,152 @@
       overflow: hidden;
       display: flex;
       flex-direction: column;
-      justify-content: center;
+      justify-content: flex-start;
       align-items: center;
+      padding-top: 10px;
       user-select: none;
     }
 
-    svg {
+    body.no-timer:not(.has-status) {
+      padding-top: 31px;
+    }
+
+    @property --beam-angle {
+      syntax: '<angle>';
+      initial-value: 0deg;
+      inherits: false;
+    }
+
+    @property --edit-beam-angle {
+      syntax: '<angle>';
+      initial-value: 0deg;
+      inherits: false;
+    }
+
+    @property --beam-opacity {
+      syntax: '<number>';
+      initial-value: 0;
+      inherits: false;
+    }
+
+    .overlay-card {
       width: 134px;
       height: 39px;
+      position: relative;
+      border-radius: 12.5px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1.2px solid rgba(255, 255, 255, 0.05);
+      box-shadow: none;
+      animation: spin-beam 1.2s linear infinite;
+      overflow: hidden;
+      transition: border-color 0.45s ease;
+      background: linear-gradient(#090909, #090909) padding-box,
+                  conic-gradient(
+                    from var(--beam-angle, 0deg),
+                    transparent 0deg,
+                    transparent 110deg,
+                    rgba(254, 66, 0, var(--beam-opacity, 0)) 160deg,
+                    transparent 180deg,
+                    transparent 290deg,
+                    rgba(254, 66, 0, var(--beam-opacity, 0)) 340deg,
+                    transparent 360deg
+                  ) border-box;
+    }
+
+    .overlay-card::before {
+      content: "";
+      position: absolute;
+      inset: -32px;
+      background: conic-gradient(
+        from var(--edit-beam-angle, 0deg),
+        transparent 0deg,
+        rgba(254, 66, 0, 0.6) 80deg,
+        rgba(255, 120, 50, 0.85) 100deg,
+        rgba(254, 66, 0, 0.4) 140deg,
+        transparent 200deg,
+        transparent 360deg
+      );
+      animation: spin-edit-beam 2.5s linear infinite;
+      filter: blur(14px);
+      z-index: 1;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .overlay-card::after {
+      content: "";
+      position: absolute;
+      inset: 1px;
+      background: rgba(9, 9, 9, 0.68);
+      border-radius: 11.5px;
+      z-index: 2;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .overlay-card.edit-context {
+      border-color: transparent;
+    }
+
+    .overlay-card.edit-context::before,
+    .overlay-card.edit-context::after {
+      opacity: 1;
+      transition: opacity 0.25s ease-out;
+    }
+
+    .overlay-card.square::before,
+    .overlay-card.square::after {
+      opacity: 0;
+      transition: opacity 0.2s ease-out;
+    }
+
+    .overlay-card.processing {
+      animation: spin-beam 1.1s linear infinite;
+    }
+
+    .overlay-card.square {
+      border: 1.2px solid transparent;
+      background: #090909;
+      animation: none;
+    }
+
+    @keyframes spin-beam {
+      to {
+        --beam-angle: 360deg;
+      }
+    }
+
+    @keyframes spin-edit-beam {
+      to {
+        --edit-beam-angle: 360deg;
+      }
+    }
+
+    svg {
+      width: 100%;
+      height: 100%;
       display: block;
-      background-color: #090909;
-      border-radius: 12.5px; /* GPU-composited smooth rounding matching scaled rx 9.6 */
+      background: transparent;
+      border-radius: 11.3px;
+      position: relative;
+      z-index: 5;
+    }
+
+    #bars-group {
+      transition: opacity 0.22s ease;
     }
 
     #overlay-status {
       display: none;
-      margin-top: 8px;
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      margin-top: 6px;
       font-family: "Segoe UI Variable Text", "Segoe UI", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
       font-size: 9px;
       line-height: 11px;
@@ -42,8 +172,11 @@
       border-radius: 6px;
       padding: 2px 7px;
       text-align: center;
-      max-width: 140px;
+      max-width: 150px;
       word-wrap: break-word;
+      white-space: nowrap;
+      pointer-events: none;
+      transition: opacity 0.22s ease, transform 0.22s ease;
     }
 
     #overlay-status.error {
@@ -51,25 +184,11 @@
       font-weight: 600;
     }
 
-    .context-indicator {
-      display: none;
-      align-items: center;
-      gap: 3.5px;
-      color: #fe4200;
-      font-family: "Segoe UI Variable Display", "Segoe UI", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
-      font-weight: 600;
-      font-size: 8.5px;
-      line-height: 11px;
-      margin-left: 4px;
-      vertical-align: middle;
+    .overlay-card.square ~ #overlay-status {
+      opacity: 0;
+      transform: translateX(-50%) translateY(4px);
     }
 
-    .sparkle-icon {
-      width: 10px;
-      height: 10px;
-      fill: #fe4200;
-      flex-shrink: 0;
-    }
 
     html, body {
       background: transparent !important;
@@ -84,6 +203,7 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
+      position: relative;
     }
 
     .overlay-pill.visible {
@@ -95,43 +215,43 @@
       .overlay-pill {
         transition: none;
       }
+      .overlay-card,
+      .overlay-card::before {
+        animation: none;
+      }
     }
   </style>
 </head>
 <body>
   <div class="overlay-pill">
-    <!-- Inline SVG from Overlay.svg design (transparent inside HTML card) -->
-    <svg width="103" height="30" viewBox="0 0 103 30" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <g clip-path="url(#clip0_63_427)" transform="translate(3.0, 3.825) scale(0.75)">
-        <path d="M12.2707 20.7875C10.4925 19.2829 9.39822 17.0943 9.39822 14.6322C9.39822 10.1183 13.0914 6.42505 17.6054 6.42505C22.1193 6.42505 25.8125 10.1183 25.8125 14.6322C25.8125 17.0943 24.7182 19.2829 22.94 20.7875" stroke="#FF4200" stroke-width="2.7434"/>
-        <path d="M20.3763 11.601L25.6238 24.1871H21.844L19.6927 18.2358L17.9033 13.7724C17.796 13.4776 17.6955 13.3301 17.6017 13.3301C17.5213 13.3301 17.4274 13.4776 17.3202 13.7724L15.5308 18.2358L13.3795 24.1871H9.57961L14.8472 11.601C15.1153 10.9577 15.4705 10.522 15.9128 10.2942C16.3418 10.0663 16.9047 9.95239 17.6017 9.95239C18.4193 9.95239 19.0292 10.0797 19.4313 10.3344C19.82 10.5891 20.135 11.0113 20.3763 11.601Z" fill="#FE4200"/>
-      </g>
-      <rect class="sound-bar" x="32.4" y="11.6001" width="3" height="6" rx="1.5" fill="#FE4200"/>
-      <rect class="sound-bar" x="38.7" y="11.6001" width="3" height="6" rx="1.5" fill="#FE4200"/>
-      <rect class="sound-bar" x="45.0" y="11.6001" width="3" height="6" rx="1.5" fill="#FE4200"/>
-      <rect class="sound-bar" x="51.3" y="11.6001" width="3" height="6" rx="1.5" fill="#FE4200"/>
-      <rect class="sound-bar" x="57.6" y="11.6001" width="3" height="6" rx="1.5" fill="#FE4200"/>
-      <rect class="sound-bar" x="63.9" y="11.6001" width="3" height="6" rx="1.5" fill="#FE4200"/>
-      <rect class="sound-bar" x="70.2" y="11.6001" width="3" height="6" rx="1.5" fill="#FE4200"/>
-      <rect class="sound-bar" x="76.5" y="11.6001" width="3" height="6" rx="1.5" fill="#FE4200"/>
-      <rect class="sound-bar" x="82.8" y="11.6001" width="3" height="6" rx="1.5" fill="#FE4200"/>
-      <rect class="sound-bar" x="89.1" y="11.6001" width="3" height="6" rx="1.5" fill="#FE4200"/>
-      <defs>
-        <clipPath id="clip0_63_427">
-          <rect width="19.2" height="19.2" fill="white" transform="matrix(-1 0 0 1 27.2 5)"/>
-        </clipPath>
-      </defs>
-    </svg>
+    <div class="overlay-card" style="--beam-opacity: 0;">
+      <!-- Inline SVG from Overlay.svg design (transparent inside HTML card) -->
+      <svg id="aura-svg" width="103" height="30" viewBox="0 0 103 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <g clip-path="url(#clip0_63_427)" transform="translate(3.0, 3.825) scale(0.75)">
+          <path d="M12.2707 20.7875C10.4925 19.2829 9.39822 17.0943 9.39822 14.6322C9.39822 10.1183 13.0914 6.42505 17.6054 6.42505C22.1193 6.42505 25.8125 10.1183 25.8125 14.6322C25.8125 17.0943 24.7182 19.2829 22.94 20.7875" stroke="#FF4200" stroke-width="2.7434"/>
+          <path d="M20.3763 11.601L25.6238 24.1871H21.844L19.6927 18.2358L17.9033 13.7724C17.796 13.4776 17.6955 13.3301 17.6017 13.3301C17.5213 13.3301 17.4274 13.4776 17.3202 13.7724L15.5308 18.2358L13.3795 24.1871H9.57961L14.8472 11.601C15.1153 10.9577 15.4705 10.522 15.9128 10.2942C16.3418 10.0663 16.9047 9.95239 17.6017 9.95239C18.4193 9.95239 19.0292 10.0797 19.4313 10.3344C19.82 10.5891 20.135 11.0113 20.3763 11.601Z" fill="#FE4200"/>
+        </g>
+        <g id="bars-group">
+          <rect class="sound-bar" x="32.4" y="11.6001" width="3" height="6" rx="1.5" fill="#FE4200"/>
+          <rect class="sound-bar" x="38.7" y="11.6001" width="3" height="6" rx="1.5" fill="#FE4200"/>
+          <rect class="sound-bar" x="45.0" y="11.6001" width="3" height="6" rx="1.5" fill="#FE4200"/>
+          <rect class="sound-bar" x="51.3" y="11.6001" width="3" height="6" rx="1.5" fill="#FE4200"/>
+          <rect class="sound-bar" x="57.6" y="11.6001" width="3" height="6" rx="1.5" fill="#FE4200"/>
+          <rect class="sound-bar" x="63.9" y="11.6001" width="3" height="6" rx="1.5" fill="#FE4200"/>
+          <rect class="sound-bar" x="70.2" y="11.6001" width="3" height="6" rx="1.5" fill="#FE4200"/>
+          <rect class="sound-bar" x="76.5" y="11.6001" width="3" height="6" rx="1.5" fill="#FE4200"/>
+          <rect class="sound-bar" x="82.8" y="11.6001" width="3" height="6" rx="1.5" fill="#FE4200"/>
+          <rect class="sound-bar" x="89.1" y="11.6001" width="3" height="6" rx="1.5" fill="#FE4200"/>
+        </g>
+        <defs>
+          <clipPath id="clip0_63_427">
+            <rect width="19.2" height="19.2" fill="white" transform="matrix(-1 0 0 1 27.2 5)"/>
+          </clipPath>
+        </defs>
+      </svg>
+    </div>
     <div id="overlay-status">
       <span id="overlay-status-text"></span>
-      <span id="overlay-context-badge" class="context-indicator" title="Редактирование">
-        <svg class="sparkle-icon" viewBox="0 0 16 16">
-          <path d="M8 0C8 3.3 6 5.5 2 6.5C6 7.5 8 9.7 8 13C8 9.7 10 7.5 14 6.5C10 5.5 8 3.3 8 0Z"/>
-          <path d="M13.5 1C13.5 2.1 12.7 2.8 11.5 3.2C12.7 3.7 13.5 4.4 13.5 5.5C13.5 4.4 14.3 3.7 15.5 3.2C14.3 2.8 13.5 2.1 13.5 1Z"/>
-          <path d="M3 10.5C3 11.2 2.5 11.7 1.5 12C2.5 12.3 3 12.8 3 13.5C3 12.8 3.5 12.3 4.5 12C3.5 11.7 3 11.2 3 10.5Z"/>
-        </svg>
-        <span id="overlay-context-text">Редактирование</span>
-      </span>
     </div>
   </div>
 

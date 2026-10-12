@@ -279,39 +279,43 @@ html, body {
   border-color: rgba(var(--accent-color-rgb), 0.35);
 }
 
-/* Toggle Switch (Desktop Minimalist) */
+/* Toggle Switch (Identical to Desktop Settings) */
 .menu-toggle {
   width: 28px;
   height: 16px;
-  background: #1f2024;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background-color: hsl(0, 0%, 15%);
+  border: 1px solid var(--border-color);
   border-radius: var(--radius-full);
   position: relative;
   flex-shrink: 0;
   margin-left: auto;
-  transition: background-color 0.15s ease, border-color 0.15s ease;
+  transition: background-color 0.2s ease-out, border-color 0.2s ease-out;
+}
+
+.aura-menu-item:hover .menu-toggle {
+  border-color: rgba(var(--accent-color-rgb), 0.45);
 }
 
 .menu-toggle-thumb {
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  background: #717684;
+  background-color: var(--text-secondary);
   position: absolute;
   top: 2px;
   left: 2px;
-  transition: transform 0.15s cubic-bezier(0.25, 0.8, 0.25, 1), background-color 0.15s ease;
+  transition: transform 0.2s cubic-bezier(0.25, 0.8, 0.25, 1), background-color 0.2s ease-out;
 }
 
-/* Gaming Mode Active Switch */
+/* Gaming Mode Active Switch (Identical to Settings Checked State) */
 .aura-menu-item.gaming-active .menu-toggle {
-  background-color: var(--accent-color);
+  background-color: rgba(var(--accent-color-rgb), 0.1);
   border-color: var(--accent-color);
 }
 
 .aura-menu-item.gaming-active .menu-toggle-thumb {
   transform: translateX(12px);
-  background-color: #ffffff;
+  background-color: var(--accent-color);
 }
 
 .aura-menu-item.gaming-active .menu-icon.gaming-icon {

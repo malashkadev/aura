@@ -229,9 +229,10 @@ const i18nDict = {
     "macro_chip_datetime": "+ Дата и время",
     "btn_add": "Добавить",
     "replacements_empty": "Правила автозамены пока не настроены",
+    "replacements_delete_aria": "Удалить правило автозамены",
     "gaming_title": "Игровой режим",
     "gaming_desc": "Автоматическая пауза перехвата клавиш и выгрузка моделей для максимального FPS в играх.",
-    "gaming_mode_label": "Игровой режим",
+    "gaming_mode_label": "Включить игровой режим вручную",
     "gaming_mode_subdesc": "Отключает перехват клавиатуры и выгружает модели из видеопамяти (VRAM).",
     "gaming_auto_label": "Автоматический игровой режим",
     "gaming_auto_desc": "Приостанавливает горячие клавиши и освобождает видеопамять при запуске полноэкранных 3D-игр.",
@@ -500,9 +501,10 @@ const i18nDict = {
     "macro_chip_datetime": "+ Date & Time",
     "btn_add": "Add",
     "replacements_empty": "No replacement rules configured yet",
+    "replacements_delete_aria": "Delete replacement rule",
     "gaming_title": "Gaming Mode",
     "gaming_desc": "Automatically pauses hotkey hooks and unloads models from video memory for maximum FPS in games.",
-    "gaming_mode_label": "Gaming Mode",
+    "gaming_mode_label": "Enable Gaming Mode manually",
     "gaming_mode_subdesc": "Disables keyboard hooks and unloads models from video memory (VRAM).",
     "gaming_auto_label": "Automatic Gaming Mode",
     "gaming_auto_desc": "Suspends hotkeys and frees video memory (VRAM) when launching fullscreen 3D games.",
@@ -771,9 +773,10 @@ const i18nDict = {
     "macro_chip_datetime": "+ Datum & Zeit",
     "btn_add": "Hinzufügen",
     "replacements_empty": "Noch keine Ersetzungsregeln eingerichtet",
+    "replacements_delete_aria": "Ersetzungsregel löschen",
     "gaming_title": "Spielemodus",
     "gaming_desc": "Pausiert Tastatur-Hooks automatisch und gibt Videospeicher frei für maximale FPS in Spielen.",
-    "gaming_mode_label": "Spielemodus",
+    "gaming_mode_label": "Spielemodus manuell aktivieren",
     "gaming_mode_subdesc": "Deaktiviert Tastatur-Hooks und entlädt Modelle aus dem Grafikspeicher (VRAM).",
     "gaming_auto_label": "Automatischer Spielemodus",
     "gaming_auto_desc": "Pausiert Hotkeys und gibt Videospeicher (VRAM) frei, wenn Vollbild-3D-Spiele gestartet werden.",
@@ -1042,9 +1045,10 @@ const i18nDict = {
     "macro_chip_datetime": "+ Fecha y hora",
     "btn_add": "Añadir",
     "replacements_empty": "Aún no hay reglas de sustitución configuradas",
+    "replacements_delete_aria": "Eliminar regla de sustitución",
     "gaming_title": "Modo de juego",
     "gaming_desc": "Pausa automáticamente los ganchos de teclado y descarga modelos de la VRAM para el máximo FPS en juegos.",
-    "gaming_mode_label": "Modo de juego",
+    "gaming_mode_label": "Activar modo de juego manualmente",
     "gaming_mode_subdesc": "Desactiva los ganchos de teclado y descarga modelos de la memoria de video (VRAM).",
     "gaming_auto_label": "Modo de juego automático",
     "gaming_auto_desc": "Suspende las teclas de acceso rápido y libera memoria de video (VRAM) al iniciar juegos 3D a pantalla completa.",
@@ -1313,9 +1317,10 @@ const i18nDict = {
     "macro_chip_datetime": "+ Date et heure",
     "btn_add": "Ajouter",
     "replacements_empty": "Aucune règle de remplacement configurée pour l'instant",
+    "replacements_delete_aria": "Supprimer la règle de remplacement",
     "gaming_title": "Mode Jeu",
     "gaming_desc": "Met en pause automatiquement les hooks clavier et décharge les modèles de la VRAM pour un FPS maximal en jeu.",
-    "gaming_mode_label": "Mode Jeu",
+    "gaming_mode_label": "Activer le mode Jeu manuellement",
     "gaming_mode_subdesc": "Désactive les hooks clavier et décharge les modèles de la mémoire vidéo (VRAM).",
     "gaming_auto_label": "Mode Jeu automatique",
     "gaming_auto_desc": "Suspend les raccourcis clavier et libère la mémoire vidéo (VRAM) lors du lancement de jeux 3D en plein écran.",
@@ -1584,9 +1589,10 @@ const i18nDict = {
     "macro_chip_datetime": "+ Data e ora",
     "btn_add": "Aggiungi",
     "replacements_empty": "Nessuna regola di sostituzione configurata",
+    "replacements_delete_aria": "Elimina regola di sostituzione",
     "gaming_title": "Modalità Gioco",
     "gaming_desc": "Mette in pausa automaticamente gli hook della tastiera e scarica i modelli dalla VRAM per il massimo FPS nei giochi.",
-    "gaming_mode_label": "Modalità Gioco",
+    "gaming_mode_label": "Attiva modalità Gioco manualmente",
     "gaming_mode_subdesc": "Disattiva gli hook della tastiera e scarica i modelli dalla memoria video (VRAM).",
     "gaming_auto_label": "Modalità Gioco automatica",
     "gaming_auto_desc": "Sospende i tasti di scelta rapida e libera la memoria video (VRAM) all'avvio di giochi 3D a schermo intero.",
@@ -1855,9 +1861,10 @@ const i18nDict = {
     "macro_chip_datetime": "+ 日期与时间",
     "btn_add": "添加",
     "replacements_empty": "暂未配置自动替换规则",
+    "replacements_delete_aria": "删除替换规则",
     "gaming_title": "游戏模式",
     "gaming_desc": "自动暂停按键拦截并从显存中卸载模型，以保证游戏中的最高帧率。",
-    "gaming_mode_label": "游戏模式",
+    "gaming_mode_label": "手动开启游戏模式",
     "gaming_mode_subdesc": "禁用键盘钩子并从显存中卸载模型。",
     "gaming_auto_label": "全屏 3D 游戏自动检测",
     "gaming_auto_desc": "启动全屏 3D 游戏时暂停快捷键并释放显存 (VRAM)。",
@@ -2126,9 +2133,10 @@ const i18nDict = {
     "macro_chip_datetime": "+ Data e hora",
     "btn_add": "Adicionar",
     "replacements_empty": "Nenhuma regra de substituição configurada ainda",
+    "replacements_delete_aria": "Excluir regra de substituição",
     "gaming_title": "Modo de Jogo",
     "gaming_desc": "Pausa automaticamente os ganchos de teclado e descarrega modelos da VRAM para FPS máximo em jogos.",
-    "gaming_mode_label": "Modo de Jogo",
+    "gaming_mode_label": "Ativar Modo de Jogo manualmente",
     "gaming_mode_subdesc": "Desativa ganchos de teclado e descarrega modelos da memória de vídeo (VRAM).",
     "gaming_auto_label": "Modo de Jogo Automático",
     "gaming_auto_desc": "Suspende as teclas de atalho e libera memória de vídeo (VRAM) ao iniciar jogos 3D em tela cheia.",
@@ -2397,9 +2405,10 @@ const i18nDict = {
     "macro_chip_datetime": "+ Tarih ve saat",
     "btn_add": "Ekle",
     "replacements_empty": "Henüz yapılandırılmış değiştirme kuralı yok",
+    "replacements_delete_aria": "Değiştirme kuralını sil",
     "gaming_title": "Oyun Modu",
     "gaming_desc": "Oyunlarda maksimum FPS için klavye kancalarını otomatik duraklatır ve modelleri video belleğinden kaldırır.",
-    "gaming_mode_label": "Oyun Modu",
+    "gaming_mode_label": "Oyun Modunu manuel etkinleştir",
     "gaming_mode_subdesc": "Klavye kancalarını devre dışı bırakır ve modelleri video belleğinden (VRAM) kaldırır.",
     "gaming_auto_label": "Otomatik Oyun Modu",
     "gaming_auto_desc": "Tam ekran 3D oyunlar başlatıldığında kısayol tuşlarını askıya alır ve video belleğini (VRAM) serbest bırakır.",
@@ -3200,96 +3209,249 @@ const btnSaveSettings = document.getElementById("btn-save-settings");
   const selectSoundTheme = document.getElementById("select-sound-theme");
   const rangeVolume = document.getElementById("range-sound-volume");
   const volumeLabel = document.getElementById("volume-value-label");
-  const btnSoundMute = document.getElementById("btn-sound-mute");
-  const soundMuteIcon = document.getElementById("sound-mute-icon");
   const selectAudioDevice = document.getElementById("select-audio-device");
   let lastSoundVolume = 80;
 
-  const muteIconSvg = '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line>';
-  const soundIconSvg = '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>';
-
   let settingsAudioCtx = null;
+  let settingsGlobalGain = null;
+
+  function initSettingsAudioCtx(vol) {
+    if (!settingsAudioCtx) {
+      settingsAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      settingsGlobalGain = settingsAudioCtx.createGain();
+      settingsGlobalGain.connect(settingsAudioCtx.destination);
+    }
+    if (settingsAudioCtx.state === "suspended") {
+      settingsAudioCtx.resume();
+    }
+    const safeVol = Math.max(0, Math.min(1.0, vol / 100));
+    settingsGlobalGain.gain.setValueAtTime(safeVol, settingsAudioCtx.currentTime);
+  }
+
+  function playSettingsBowl(freq, duration, gainStart = 0.08) {
+    const now = settingsAudioCtx.currentTime;
+    const components = [
+      { f: freq, gain: gainStart, decay: duration },
+      { f: freq * 1.5, gain: gainStart * 0.45, decay: duration * 0.8 },
+      { f: freq * 2.76, gain: gainStart * 0.3, decay: duration * 0.55 }
+    ];
+    components.forEach(comp => {
+      const oscA = settingsAudioCtx.createOscillator();
+      const gainA = settingsAudioCtx.createGain();
+      oscA.type = "sine";
+      oscA.frequency.setValueAtTime(comp.f - 0.7, now);
+
+      const oscB = settingsAudioCtx.createOscillator();
+      const gainB = settingsAudioCtx.createGain();
+      oscB.type = "sine";
+      oscB.frequency.setValueAtTime(comp.f + 0.7, now);
+
+      const attack = 0.015;
+      gainA.gain.setValueAtTime(0.0001, now);
+      gainA.gain.linearRampToValueAtTime(comp.gain, now + attack);
+      gainA.gain.exponentialRampToValueAtTime(0.0001, now + comp.decay);
+
+      gainB.gain.setValueAtTime(0.0001, now);
+      gainB.gain.linearRampToValueAtTime(comp.gain, now + attack);
+      gainB.gain.exponentialRampToValueAtTime(0.0001, now + comp.decay);
+
+      oscA.connect(gainA);
+      gainA.connect(settingsGlobalGain);
+      oscB.connect(gainB);
+      gainB.connect(settingsGlobalGain);
+
+      oscA.start(now);
+      oscA.stop(now + comp.decay + 0.1);
+      oscB.start(now);
+      oscB.stop(now + comp.decay + 0.1);
+    });
+  }
+
+  function playSettingsRhodes(freq, duration, gainStart = 0.08) {
+    const now = settingsAudioCtx.currentTime;
+    const osc1 = settingsAudioCtx.createOscillator();
+    const osc2 = settingsAudioCtx.createOscillator();
+    const gain1 = settingsAudioCtx.createGain();
+    const gain2 = settingsAudioCtx.createGain();
+
+    osc1.type = "triangle";
+    osc1.frequency.setValueAtTime(freq, now);
+    osc2.type = "sine";
+    osc2.frequency.setValueAtTime(freq, now);
+
+    const attack = 0.010;
+    gain1.gain.setValueAtTime(0.0001, now);
+    gain1.gain.linearRampToValueAtTime(gainStart * 0.4, now + attack);
+    gain1.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+    gain2.gain.setValueAtTime(0.0001, now);
+    gain2.gain.linearRampToValueAtTime(gainStart * 0.7, now + attack);
+    gain2.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+    osc1.connect(gain1);
+    gain1.connect(settingsGlobalGain);
+    osc2.connect(gain2);
+    gain2.connect(settingsGlobalGain);
+
+    osc1.start(now);
+    osc1.stop(now + duration + 0.1);
+    osc2.start(now);
+    osc2.stop(now + duration + 0.1);
+  }
+
+  function playSettingsSciFi(freqStart, freqEnd, duration, gainStart = 0.06) {
+    const now = settingsAudioCtx.currentTime;
+    const osc1 = settingsAudioCtx.createOscillator();
+    const osc2 = settingsAudioCtx.createOscillator();
+    const gainNode = settingsAudioCtx.createGain();
+
+    osc1.type = "sine";
+    osc1.frequency.setValueAtTime(freqStart, now);
+    osc1.frequency.exponentialRampToValueAtTime(freqEnd, now + duration);
+
+    osc2.type = "sine";
+    osc2.frequency.setValueAtTime(freqStart + 3.0, now);
+    osc2.frequency.exponentialRampToValueAtTime(freqEnd + 3.0, now + duration);
+
+    const attack = 0.012;
+    gainNode.gain.setValueAtTime(0.0001, now);
+    gainNode.gain.linearRampToValueAtTime(gainStart, now + attack);
+    gainNode.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+    osc1.connect(gainNode);
+    osc2.connect(gainNode);
+    gainNode.connect(settingsGlobalGain);
+
+    osc1.start(now);
+    osc1.stop(now + duration + 0.1);
+    osc2.start(now);
+    osc2.stop(now + duration + 0.1);
+  }
+
+  function playSettingsBell(freq, duration, gainStart = 0.07) {
+    const now = settingsAudioCtx.currentTime;
+    const osc1 = settingsAudioCtx.createOscillator();
+    const osc2 = settingsAudioCtx.createOscillator();
+    const osc3 = settingsAudioCtx.createOscillator();
+    const gain1 = settingsAudioCtx.createGain();
+    const gain2 = settingsAudioCtx.createGain();
+    const gain3 = settingsAudioCtx.createGain();
+
+    osc1.type = "sine";
+    osc1.frequency.setValueAtTime(freq, now);
+    osc2.type = "sine";
+    osc2.frequency.setValueAtTime(freq * 2.0, now);
+    osc3.type = "sine";
+    osc3.frequency.setValueAtTime(freq * 3.0, now);
+
+    const attack = 0.006;
+    gain1.gain.setValueAtTime(0.0001, now);
+    gain1.gain.linearRampToValueAtTime(gainStart, now + attack);
+    gain1.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+    gain2.gain.setValueAtTime(0.0001, now);
+    gain2.gain.linearRampToValueAtTime(gainStart * 0.45, now + attack);
+    gain2.gain.exponentialRampToValueAtTime(0.0001, now + duration * 0.7);
+
+    gain3.gain.setValueAtTime(0.0001, now);
+    gain3.gain.linearRampToValueAtTime(gainStart * 0.25, now + attack);
+    gain3.gain.exponentialRampToValueAtTime(0.0001, now + duration * 0.4);
+
+    osc1.connect(gain1);
+    gain1.connect(settingsGlobalGain);
+    osc2.connect(gain2);
+    gain2.connect(settingsGlobalGain);
+    osc3.connect(gain3);
+    gain3.connect(settingsGlobalGain);
+
+    osc1.start(now);
+    osc1.stop(now + duration + 0.1);
+    osc2.start(now);
+    osc2.stop(now + duration + 0.1);
+    osc3.start(now);
+    osc3.stop(now + duration + 0.1);
+  }
+
+  function playSettingsWaterDrop(fStart, fEnd, duration, gainStart = 0.08) {
+    const now = settingsAudioCtx.currentTime;
+    const osc = settingsAudioCtx.createOscillator();
+    const gain = settingsAudioCtx.createGain();
+
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(fStart, now);
+    osc.frequency.exponentialRampToValueAtTime(fEnd, now + (duration * 0.65));
+    osc.frequency.exponentialRampToValueAtTime(fEnd * 0.9, now + duration);
+
+    gain.gain.setValueAtTime(0.0001, now);
+    gain.gain.linearRampToValueAtTime(gainStart, now + 0.008);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+    osc.connect(gain);
+    gain.connect(settingsGlobalGain);
+
+    osc.start(now);
+    osc.stop(now + duration + 0.02);
+  }
+
+  function playSettingsHapticClick(clickFreq, duration, gainStart = 0.10) {
+    const now = settingsAudioCtx.currentTime;
+    const osc = settingsAudioCtx.createOscillator();
+    const gain = settingsAudioCtx.createGain();
+
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(clickFreq * 2.5, now);
+    osc.frequency.exponentialRampToValueAtTime(clickFreq * 0.6, now + duration);
+
+    gain.gain.setValueAtTime(0.0001, now);
+    gain.gain.linearRampToValueAtTime(gainStart, now + 0.002);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+    const bufferSize = Math.floor(settingsAudioCtx.sampleRate * 0.008);
+    const noiseBuffer = settingsAudioCtx.createBuffer(1, bufferSize, settingsAudioCtx.sampleRate);
+    const output = noiseBuffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+      output[i] = Math.random() * 2 - 1;
+    }
+    const noise = settingsAudioCtx.createBufferSource();
+    noise.buffer = noiseBuffer;
+    const filter = settingsAudioCtx.createBiquadFilter();
+    filter.type = "bandpass";
+    filter.frequency.value = 2800;
+    const noiseGain = settingsAudioCtx.createGain();
+    noiseGain.gain.setValueAtTime(gainStart * 0.35, now);
+    noiseGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.008);
+
+    noise.connect(filter);
+    filter.connect(noiseGain);
+    noiseGain.connect(settingsGlobalGain);
+    noise.start(now);
+
+    osc.connect(gain);
+    gain.connect(settingsGlobalGain);
+    osc.start(now);
+    osc.stop(now + duration);
+  }
+
   function playSettingsThemePreview(vol) {
     if (vol <= 0) return;
     const theme = (selectSoundTheme && selectSoundTheme.value) || "zen";
     try {
-      if (!settingsAudioCtx) {
-        settingsAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      }
-      if (settingsAudioCtx.state === "suspended") {
-        settingsAudioCtx.resume();
-      }
-      const now = settingsAudioCtx.currentTime;
-      const gainNode = settingsAudioCtx.createGain();
-      const peakGain = (vol / 100) * 0.22;
-      gainNode.gain.setValueAtTime(0.0001, now);
-      gainNode.connect(settingsAudioCtx.destination);
-
+      initSettingsAudioCtx(vol);
       if (theme === "rhodes") {
-        const osc1 = settingsAudioCtx.createOscillator();
-        const osc2 = settingsAudioCtx.createOscillator();
-        osc1.type = "sine";
-        osc2.type = "triangle";
-        osc1.frequency.setValueAtTime(440.0, now);
-        osc2.frequency.setValueAtTime(554.37, now + 0.08);
-        gainNode.gain.linearRampToValueAtTime(peakGain, now + 0.02);
-        gainNode.gain.exponentialRampToValueAtTime(0.0001, now + 0.35);
-        osc1.connect(gainNode);
-        osc2.connect(gainNode);
-        osc1.start(now);
-        osc2.start(now + 0.08);
-        osc1.stop(now + 0.36);
-        osc2.stop(now + 0.36);
+        playSettingsRhodes(440.00, 0.65, 0.07);
+        setTimeout(() => { playSettingsRhodes(554.37, 0.80, 0.07); }, 90);
       } else if (theme === "scifi") {
-        const osc = settingsAudioCtx.createOscillator();
-        osc.type = "sine";
-        osc.frequency.setValueAtTime(440.0, now);
-        osc.frequency.exponentialRampToValueAtTime(880.0, now + 0.12);
-        gainNode.gain.linearRampToValueAtTime(peakGain, now + 0.01);
-        gainNode.gain.exponentialRampToValueAtTime(0.0001, now + 0.25);
-        osc.connect(gainNode);
-        osc.start(now);
-        osc.stop(now + 0.26);
+        playSettingsSciFi(440.00, 880.00, 0.22, 0.055);
       } else if (theme === "classic") {
-        const osc = settingsAudioCtx.createOscillator();
-        osc.type = "sine";
-        osc.frequency.setValueAtTime(523.25, now);
-        gainNode.gain.linearRampToValueAtTime(peakGain, now + 0.005);
-        gainNode.gain.exponentialRampToValueAtTime(0.0001, now + 0.4);
-        osc.connect(gainNode);
-        osc.start(now);
-        osc.stop(now + 0.41);
+        playSettingsBell(440.00, 0.45, 0.06);
+        setTimeout(() => { playSettingsBell(659.25, 0.60, 0.06); }, 90);
       } else if (theme === "bubble") {
-        const osc = settingsAudioCtx.createOscillator();
-        osc.type = "sine";
-        osc.frequency.setValueAtTime(400, now);
-        osc.frequency.exponentialRampToValueAtTime(950, now + 0.08);
-        gainNode.gain.linearRampToValueAtTime(peakGain, now + 0.008);
-        gainNode.gain.exponentialRampToValueAtTime(0.0001, now + 0.14);
-        osc.connect(gainNode);
-        osc.start(now);
-        osc.stop(now + 0.15);
+        playSettingsWaterDrop(400, 950, 0.12, 0.08);
       } else if (theme === "haptic") {
-        const osc = settingsAudioCtx.createOscillator();
-        osc.type = "sine";
-        osc.frequency.setValueAtTime(320, now);
-        osc.frequency.exponentialRampToValueAtTime(160, now + 0.04);
-        gainNode.gain.linearRampToValueAtTime(peakGain * 1.5, now + 0.003);
-        gainNode.gain.exponentialRampToValueAtTime(0.0001, now + 0.05);
-        osc.connect(gainNode);
-        osc.start(now);
-        osc.stop(now + 0.06);
+        playSettingsHapticClick(180, 0.03, 0.12);
       } else {
         // Default: zen
-        const osc = settingsAudioCtx.createOscillator();
-        osc.type = "sine";
-        osc.frequency.setValueAtTime(587.33, now);
-        osc.frequency.exponentialRampToValueAtTime(880.0, now + 0.1);
-        gainNode.gain.linearRampToValueAtTime(peakGain, now + 0.01);
-        gainNode.gain.exponentialRampToValueAtTime(0.0001, now + 0.35);
-        osc.connect(gainNode);
-        osc.start(now);
-        osc.stop(now + 0.36);
+        playSettingsBowl(174.61, 1.2, 0.08);
       }
     } catch (_) {}
   }
@@ -3302,15 +3464,6 @@ const btnSaveSettings = document.getElementById("btn-save-settings");
     }
     if (volumeLabel) {
       volumeLabel.textContent = `${v}%`;
-    }
-    if (btnSoundMute && soundMuteIcon) {
-      if (v === 0) {
-        btnSoundMute.classList.add("muted");
-        soundMuteIcon.innerHTML = muteIconSvg;
-      } else {
-        btnSoundMute.classList.remove("muted");
-        soundMuteIcon.innerHTML = soundIconSvg;
-      }
     }
   }
 
@@ -3362,24 +3515,6 @@ const btnSaveSettings = document.getElementById("btn-save-settings");
       }
       if (checkboxSounds && checkboxSounds.checked && v > 0) {
         playSettingsThemePreview(v);
-      }
-    });
-  }
-
-  if (btnSoundMute) {
-    btnSoundMute.addEventListener("click", () => {
-      const cur = Number(rangeVolume ? rangeVolume.value : 80);
-      if (cur > 0) {
-        lastSoundVolume = cur;
-        updateVolumeSliderVisuals(0);
-        markSettingsModified(true);
-      } else {
-        const restored = lastSoundVolume > 0 ? lastSoundVolume : 80;
-        updateVolumeSliderVisuals(restored);
-        markSettingsModified(true);
-        if (checkboxSounds && checkboxSounds.checked) {
-          playSettingsThemePreview(restored);
-        }
       }
     });
   }
@@ -3749,7 +3884,9 @@ const btnSaveSettings = document.getElementById("btn-save-settings");
       const btnDel = document.createElement("button");
       btnDel.type = "button";
       btnDel.className = "replacement-delete";
-      btnDel.setAttribute("aria-label", "Delete replacement");
+      const delLabel = getTranslation("replacements_delete_aria") || "Delete replacement";
+      btnDel.setAttribute("aria-label", delLabel);
+      btnDel.setAttribute("title", delLabel);
       btnDel.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>';
       btnDel.addEventListener("click", () => {
         currentReplacements.splice(index, 1);
@@ -4020,46 +4157,30 @@ const btnSaveSettings = document.getElementById("btn-save-settings");
       syncSmartContextSuboptions();
     }
 
-    const btnToggleGaming = document.getElementById("btn-toggle-gaming-mode");
     const checkboxGamingMode = document.getElementById("checkbox-gaming-mode");
-    const gamingStatusText = document.getElementById("gaming-status-text");
-    const gamingStatusDot = document.getElementById("gaming-status-dot");
 
     updateGamingModeUi = function(isActive) {
       if (checkboxGamingMode) {
         checkboxGamingMode.checked = isActive;
       }
-      if (gamingStatusText) {
-        gamingStatusText.textContent = isActive
-          ? (getTranslation("gaming_status_active") || "Активен (пауза)")
-          : (getTranslation("gaming_status_inactive") || "Не активен");
-        gamingStatusText.classList.toggle("active", isActive);
-      }
-      if (gamingStatusDot) {
-        gamingStatusDot.classList.toggle("active", isActive);
-      }
-      if (btnToggleGaming) {
-        btnToggleGaming.textContent = isActive
-          ? (getTranslation("gaming_btn_toggle_off") || "Выключить")
-          : (getTranslation("gaming_btn_toggle_on") || "Включить вручную");
-      }
     };
 
     let isTogglingGaming = false;
-    if (btnToggleGaming) {
-      btnToggleGaming.addEventListener("click", async () => {
+    if (checkboxGamingMode) {
+      checkboxGamingMode.addEventListener("change", async () => {
         if (isTogglingGaming) return;
         isTogglingGaming = true;
-        btnToggleGaming.disabled = true;
+        checkboxGamingMode.disabled = true;
         try {
           const newState = await invoke("toggle_gaming_mode");
           updateGamingModeUi(!!newState);
           refreshEngineHealth();
         } catch (err) {
           console.error("Failed to toggle gaming mode:", err);
+          checkboxGamingMode.checked = !checkboxGamingMode.checked;
         } finally {
           isTogglingGaming = false;
-          btnToggleGaming.disabled = false;
+          checkboxGamingMode.disabled = false;
         }
       });
     }
@@ -5946,7 +6067,7 @@ if (e.button === 0 && !e.target.closest(".window-control-btn") && !e.target.clos
       },
       {
         tab: "general",
-        targetSelector: "#card-gaming-mode .gaming-status-card",
+        targetSelector: "#card-gaming-mode",
         titleKey: "onboarding_step_4_title",
         descKey: "onboarding_step_4_desc"
       }

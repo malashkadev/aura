@@ -3,21 +3,23 @@ const { listen } = window.__TAURI__.event;
 const bars = document.querySelectorAll(".sound-bar");
 const statusEl = document.getElementById("overlay-status");
 const statusTextEl = document.getElementById("overlay-status-text");
-const contextBadgeEl = document.getElementById("overlay-context-badge");
 const pill = document.querySelector(".overlay-pill");
+const cardEl = document.querySelector(".overlay-card");
+const auraSvg = document.getElementById("aura-svg");
+const barsGroup = document.getElementById("bars-group");
 let currentState = "recording";
+
+let isEditContext = false;
 
 function updateStatusVisibility() {
   const hasText = statusTextEl
     ? Boolean(statusTextEl.textContent && statusTextEl.textContent.trim())
     : Boolean(statusEl && statusEl.textContent && statusEl.textContent.trim());
-  const hasContext = Boolean(
-    contextBadgeEl &&
-    contextBadgeEl.style.display !== "none" &&
-    contextBadgeEl.style.display !== ""
-  );
   if (statusEl) {
-    statusEl.style.display = (hasText || hasContext) ? "inline-block" : "none";
+    statusEl.style.display = hasText ? "inline-flex" : "none";
+  }
+  if (document.body) {
+    document.body.classList.toggle("has-status", hasText);
   }
 }
 
@@ -30,31 +32,12 @@ function setOverlayText(text) {
   updateStatusVisibility();
 }
 
-const contextIndicatorTranslations = {
-  ru: "Редактирование",
-  en: "Edit",
-  de: "Bearbeiten",
-  fr: "Modifier",
-  it: "Modifica",
-  es: "Editar",
-  pt: "Editar",
-  zh: "编辑",
-  ja: "編集",
-  tr: "Düzenle",
-  nl: "Bewerken"
-};
-
 listen("selection-context-active", (event) => {
-  const active = Boolean(event.payload);
-  if (contextBadgeEl) {
-    contextBadgeEl.style.display = active ? "inline-flex" : "none";
-    const textEl = document.getElementById("overlay-context-text");
-    if (textEl) {
-      const uiLang = localStorage.getItem("aura_ui_lang") || "ru";
-      const txt = contextIndicatorTranslations[uiLang] || contextIndicatorTranslations.en;
-      textEl.textContent = txt;
-      if (contextBadgeEl) contextBadgeEl.title = txt;
-    }
+  const newEditContext = Boolean(event.payload);
+  if (isEditContext === newEditContext) return;
+  isEditContext = newEditContext;
+  if (cardEl) {
+    cardEl.classList.toggle("edit-context", isEditContext && currentState === "recording");
   }
   updateStatusVisibility();
 });
@@ -336,17 +319,14 @@ function applyActiveThemeSettings(settings) {
     try {
       localStorage.setItem("aura_ui_lang", settings.ui_language);
     } catch (_) {}
-    const textEl = document.getElementById("overlay-context-text");
-    if (textEl) {
-      const txt = contextIndicatorTranslations[settings.ui_language] || contextIndicatorTranslations.en;
-      textEl.textContent = txt;
-      if (contextBadgeEl) contextBadgeEl.title = txt;
-    }
   }
   soundsEnabled = settings.overlay_sounds !== false;
   soundTheme = settings.overlay_sound_theme || "zen";
   soundVolume = typeof settings.overlay_sound_volume === "number" ? settings.overlay_sound_volume : 0.8;
   overlayShowTimer = settings.overlay_show_timer !== false;
+  if (document.body) {
+    document.body.classList.toggle("no-timer", !overlayShowTimer);
+  }
   if (
     !overlayShowTimer &&
     !currentState.startsWith("error") &&
@@ -447,26 +427,90 @@ function playThemeError() {
   }
 }
 
+const restHeight = 2.5;
+const maxHeight = 16.0;
+
 // Track current and target heights for smooth linear interpolation (lerp)
 const barStates = Array.from(bars).map(() => ({
-  currentHeight: 6.0,
-  targetHeight: 6.0
+  currentHeight: restHeight,
+  targetHeight: restHeight
 }));
 
 // Reset all bars to default quiet state
 function resetBars() {
   barStates.forEach(state => {
-    state.targetHeight = 6.0;
-    state.currentHeight = 6.0;
+    state.targetHeight = restHeight;
+    state.currentHeight = restHeight;
   });
   bars.forEach(bar => {
-    bar.setAttribute("height", "6");
-    bar.setAttribute("y", "11.6001");
+    bar.setAttribute("height", restHeight.toString());
+    bar.setAttribute("y", (14.6001 - restHeight / 2).toString());
+    bar.setAttribute("rx", (restHeight / 2).toString());
   });
 }
 
 function setBarColor(color) {
   bars.forEach(bar => bar.setAttribute("fill", color));
+}
+
+// State Crossfade Tracker (550ms silky smooth transition for beam & wave)
+let transitionState = {
+  active: false,
+  startTime: 0,
+  duration: 550,
+  startBeam: 0.0,
+  targetBeam: 0.0,
+  currentBeam: 0.0,
+  startWave: 0.0, // 0.0 = live mic, 1.0 = processing breathing
+  targetWave: 0.0,
+  currentWave: 0.0
+};
+
+// Lockstep Morph Tracker (Pill ↔ Square, ZERO SCALE CHANGE: currentW / vbW == 1.30097)
+let morphState = {
+  active: false,
+  startProgress: 0.0,
+  targetProgress: 0.0, // 0 = Pill (134px), 1 = Square (39px)
+  startTime: 0,
+  duration: 380,
+  currentProgress: 0.0
+};
+
+function solveCubicBezier(t) {
+  const c1 = 1 - t;
+  return 1 - Math.pow(c1, 3.2);
+}
+
+function startMorph(target, duration = 380) {
+  if (duration === 0) {
+    morphState.active = false;
+    morphState.currentProgress = target;
+    morphState.targetProgress = target;
+    morphState.startProgress = target;
+    applyMorphProgress(target);
+    return;
+  }
+  morphState = {
+    active: true,
+    startProgress: morphState.currentProgress,
+    targetProgress: target,
+    startTime: performance.now(),
+    duration: duration,
+    currentProgress: morphState.currentProgress
+  };
+}
+
+function applyMorphProgress(prog) {
+  const currentWidth = 134 - (134 - 39) * prog;
+  if (cardEl) {
+    cardEl.style.width = currentWidth.toFixed(2) + "px";
+  }
+  const vbW = currentWidth / (134 / 103);
+  const vbX = 0 + (1.2 - 0) * prog;
+  const vbY = 0 + (-0.2 - 0) * prog;
+  if (auraSvg) {
+    auraSvg.setAttribute("viewBox", `${vbX.toFixed(3)} ${vbY.toFixed(3)} ${vbW.toFixed(3)} 30`);
+  }
 }
 
 // Recording timer shown under the pill
@@ -487,46 +531,81 @@ setInterval(updateTimer, 500);
 // Main animation and physics loop (60fps)
 function updateAnimation() {
   if (reduceMotionQuery.matches) {
-    // Static rendering: no lerping, no breathing wave. Volume still moves the
-    // bars in recording state, but instantly and without oscillation.
     if (currentState === "recording") {
       bars.forEach((bar, index) => {
         const h = barStates[index].targetHeight;
         bar.setAttribute("height", h.toString());
-        bar.setAttribute("y", (14.6 - h / 2).toString());
+        bar.setAttribute("y", (14.6001 - h / 2).toString());
       });
     } else if (currentState === "processing") {
       bars.forEach(bar => {
-        bar.setAttribute("height", "10.5");
-        bar.setAttribute("y", "9.35");
+        bar.setAttribute("height", "4.0");
+        bar.setAttribute("y", "12.6");
       });
     }
     requestAnimationFrame(updateAnimation);
     return;
   }
 
-  if (currentState === "processing") {
-    // Slow, organic breathing wave centered around the middle bar (index 4)
-    bars.forEach((bar, index) => {
-      const distFromCenter = Math.abs(index - 4);
-      const h = 5 + Math.sin(angle - distFromCenter * 0.45) * 5.5;
-      const y = 14.6 - (h / 2);
-      bar.setAttribute("height", h.toString());
-      bar.setAttribute("y", y.toString());
-    });
-    angle += 0.05;
-  } else if (currentState === "recording") {
-    // Smoothly slide currentHeight towards targetHeight
-    bars.forEach((bar, index) => {
-      const state = barStates[index];
-      // Lerp: current = current + (target - current) * factor
-      state.currentHeight += (state.targetHeight - state.currentHeight) * 0.20;
+  // 1. Handle Morphing Progress (Pill ↔ Square lockstep)
+  if (morphState.active) {
+    const elapsed = performance.now() - morphState.startTime;
+    const t = Math.min(1, elapsed / morphState.duration);
+    const ease = solveCubicBezier(t);
+    morphState.currentProgress = morphState.startProgress + (morphState.targetProgress - morphState.startProgress) * ease;
+    applyMorphProgress(morphState.currentProgress);
 
-      const y = 14.6 - (state.currentHeight / 2);
-      bar.setAttribute("height", state.currentHeight.toString());
-      bar.setAttribute("y", y.toString());
-    });
+    if (t >= 1) {
+      morphState.active = false;
+      morphState.currentProgress = morphState.targetProgress;
+      applyMorphProgress(morphState.targetProgress);
+    }
+  } else if (morphState.currentProgress > 0 && morphState.currentProgress < 1) {
+    applyMorphProgress(morphState.currentProgress);
   }
+
+  // 2. Handle Crossfade Transition Progress (550ms smooth cubic ease-in-out)
+  if (transitionState.active) {
+    const elapsed = performance.now() - transitionState.startTime;
+    const t = Math.min(1, elapsed / transitionState.duration);
+    const ease = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+
+    transitionState.currentBeam = transitionState.startBeam + (transitionState.targetBeam - transitionState.startBeam) * ease;
+    transitionState.currentWave = transitionState.startWave + (transitionState.targetWave - transitionState.startWave) * ease;
+
+    if (cardEl) {
+      cardEl.style.setProperty("--beam-opacity", transitionState.currentBeam.toFixed(3));
+    }
+
+    if (t >= 1) {
+      transitionState.active = false;
+      transitionState.currentBeam = transitionState.targetBeam;
+      transitionState.currentWave = transitionState.targetWave;
+      if (cardEl) {
+        cardEl.style.setProperty("--beam-opacity", transitionState.targetBeam.toFixed(3));
+      }
+    }
+  }
+
+  const procFactor = transitionState.currentWave;
+  const recFactor = 1 - procFactor;
+
+  // 3. Audio & wave animation
+  angle += 0.05;
+
+  bars.forEach((bar, index) => {
+    const state = barStates[index];
+    const distFromCenter = Math.abs(index - 4.5);
+    const targetProcH = 4.0 + Math.sin(angle - distFromCenter * 0.45) * 3.5;
+
+    const blendedTarget = state.targetHeight * recFactor + targetProcH * procFactor;
+    state.currentHeight += (blendedTarget - state.currentHeight) * 0.16;
+
+    const y = 14.6001 - (state.currentHeight / 2);
+    bar.setAttribute("height", state.currentHeight.toFixed(2));
+    bar.setAttribute("y", y.toFixed(2));
+    bar.setAttribute("rx", (Math.min(1.5, state.currentHeight / 2)).toFixed(2));
+  });
 
   requestAnimationFrame(updateAnimation);
 }
@@ -904,6 +983,24 @@ listen("recording-state", (event) => {
   stateCycle += 1;
 
   if (currentState === "recording") {
+    if (cardEl) {
+      cardEl.classList.remove("processing");
+      cardEl.classList.remove("square");
+      cardEl.classList.toggle("edit-context", isEditContext);
+    }
+    if (barsGroup) barsGroup.style.opacity = "1";
+    startMorph(0.0, 0);
+    transitionState = {
+      active: true,
+      startTime: performance.now(),
+      duration: 550,
+      startBeam: transitionState.currentBeam,
+      targetBeam: 0.0,
+      currentBeam: transitionState.currentBeam,
+      startWave: transitionState.currentWave,
+      targetWave: 0.0,
+      currentWave: transitionState.currentWave
+    };
     recordStart = Date.now();
     setOverlayText(overlayShowTimer ? "0:00" : "");
     statusEl.classList.remove("error");
@@ -914,18 +1011,43 @@ listen("recording-state", (event) => {
     pill.classList.add("visible");
     playThemeStart();
   } else if (currentState === "processing") {
-    angle = 0;
-    if (contextBadgeEl) {
-      contextBadgeEl.style.display = "none";
+    isEditContext = false;
+    if (cardEl) {
+      cardEl.classList.add("processing");
+      cardEl.classList.remove("square");
+      cardEl.classList.remove("edit-context");
     }
+    if (barsGroup) barsGroup.style.opacity = "1";
+    transitionState = {
+      active: true,
+      startTime: performance.now(),
+      duration: 550,
+      startBeam: transitionState.currentBeam,
+      targetBeam: 0.75,
+      currentBeam: transitionState.currentBeam,
+      startWave: transitionState.currentWave,
+      targetWave: 1.0,
+      currentWave: transitionState.currentWave
+    };
+    angle = 0;
     const uiLang = localStorage.getItem("aura_ui_lang") || "ru";
     setOverlayText(overlayShowTimer ? (processingTranslations[uiLang] || processingTranslations.en) : "");
     statusEl.classList.remove("error");
   } else if (currentState.startsWith("notice:")) {
-    // Non-alarming transient message (e.g. cloud->local fallback); no error sound.
-    if (contextBadgeEl) {
-      contextBadgeEl.style.display = "none";
+    isEditContext = false;
+    if (cardEl) {
+      cardEl.classList.remove("processing");
+      cardEl.classList.remove("square");
+      cardEl.classList.remove("edit-context");
+      cardEl.style.setProperty("--beam-opacity", "0");
     }
+    transitionState.active = false;
+    transitionState.currentBeam = 0.0;
+    transitionState.targetBeam = 0.0;
+    transitionState.currentWave = 0.0;
+    transitionState.targetWave = 0.0;
+    startMorph(0.0, 0);
+    // Non-alarming transient message (e.g. cloud->local fallback); no error sound.
     const notice = currentState.substring("notice:".length);
     const uiLang = localStorage.getItem("aura_ui_lang") || "ru";
     const translations = noticeTranslations[notice];
@@ -937,10 +1059,20 @@ listen("recording-state", (event) => {
     setBarColor("#FE4200");
     pill.classList.add("visible");
   } else if (currentState.startsWith("error")) {
-    recordStart = null;
-    if (contextBadgeEl) {
-      contextBadgeEl.style.display = "none";
+    if (cardEl) {
+      cardEl.classList.remove("processing");
+      cardEl.classList.remove("square");
+      cardEl.classList.remove("edit-context");
+      cardEl.style.setProperty("--beam-opacity", "0");
     }
+    isEditContext = false;
+    transitionState.active = false;
+    transitionState.currentBeam = 0.0;
+    transitionState.targetBeam = 0.0;
+    transitionState.currentWave = 0.0;
+    transitionState.targetWave = 0.0;
+    startMorph(0.0, 0);
+    recordStart = null;
     let errMsg = "Ошибка распознавания";
     if (currentState.includes(":")) {
       errMsg = currentState.substring(currentState.indexOf(":") + 1);
@@ -979,9 +1111,6 @@ function hideOverlayAfterPillFade(expectedState, expectedCycle) {
 
   const hideNow = () => {
     if (guardExpired()) return;
-    if (contextBadgeEl) {
-      contextBadgeEl.style.display = "none";
-    }
     window.__TAURI__.core
       .invoke("hide_overlay_window")
       .catch((err) => console.error("hide_overlay_window failed:", err));
@@ -1011,23 +1140,51 @@ listen("hide-overlay-requested", (event) => {
   const payload = event.payload || {};
   const status = payload.status || "success";
 
-  if (contextBadgeEl) {
-    contextBadgeEl.style.display = "none";
+  isEditContext = false;
+  if (cardEl) {
+    cardEl.classList.remove("edit-context");
   }
   updateStatusVisibility();
 
   if (status === "success") {
     playThemeSuccess();
+    currentState = "square";
+    if (cardEl) {
+      cardEl.classList.add("square");
+      cardEl.style.setProperty("--beam-opacity", "0");
+    }
+    if (barsGroup) barsGroup.style.opacity = "0";
+    transitionState.active = false;
+    transitionState.currentBeam = 0.0;
+    transitionState.targetBeam = 0.0;
+    transitionState.currentWave = 0.0;
+    transitionState.targetWave = 0.0;
+    startMorph(1.0, 380);
+
+    const stateAtRequest = currentState;
+    const cycleAtRequest = stateCycle;
+    setTimeout(() => {
+      if (stateCycle !== cycleAtRequest) return;
+      pill.classList.remove("visible");
+      hideOverlayAfterPillFade(stateAtRequest, cycleAtRequest);
+    }, 520);
   } else {
     playThemeError();
+    const stateAtRequest = currentState;
+    const cycleAtRequest = stateCycle;
+    if (cardEl) {
+      cardEl.classList.remove("processing");
+      cardEl.classList.remove("square");
+      cardEl.style.setProperty("--beam-opacity", "0");
+    }
+    transitionState.active = false;
+    transitionState.currentBeam = 0.0;
+    transitionState.targetBeam = 0.0;
+    transitionState.currentWave = 0.0;
+    transitionState.targetWave = 0.0;
+    pill.classList.remove("visible");
+    hideOverlayAfterPillFade(stateAtRequest, cycleAtRequest);
   }
-
-  const stateAtRequest = currentState;
-  const cycleAtRequest = stateCycle;
-  pill.classList.remove("visible");
-  // A brand-new recording may have started while the overlay was playing
-  // its hide animation — never hide a newer session's pill.
-  hideOverlayAfterPillFade(stateAtRequest, cycleAtRequest);
 });
 
 
@@ -1043,7 +1200,7 @@ listen("volume-level", (event) => {
   }
 
   barStates.forEach((state, index) => {
-    let h = 6.0;
+    let h = restHeight;
     // Make wave react to even tiny volume fluctuations
     if (volume > 0.00005) {
       const boosted = Math.sqrt(volume); // e.g. sqrt(0.001) = 0.031
@@ -1054,9 +1211,9 @@ listen("volume-level", (event) => {
         Math.sin(time * (0.9 + index * 0.12) + index * 1.6) * 0.4 +
         Math.cos(time * 0.65 - index * 0.95) * 0.25;
 
-      // Apply multiplier (32.0) to normalized wave coefficient
-      h = 6.0 + (boosted * 32.0 * Math.max(0.05, wave));
-      h = Math.min(16.0, Math.max(6.0, h));
+      // Apply multiplier to normalized wave coefficient
+      h = restHeight + (boosted * 36.0 * Math.max(0.05, wave));
+      h = Math.min(maxHeight, Math.max(restHeight, h));
     }
     state.targetHeight = h;
   });

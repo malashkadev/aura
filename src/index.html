@@ -108,26 +108,31 @@
             <h2 class="card-title" data-i18n="gaming_title">Игровой режим</h2>
             <p class="card-desc" data-i18n="gaming_desc">Автоматическая пауза перехвата клавиш и выгрузка моделей для максимального FPS в играх.</p>
             
-            <label class="toggle-switch">
-              <input type="checkbox" id="checkbox-gaming-mode-auto-detect" />
-              <span class="toggle-track">
-                <span class="toggle-thumb"></span>
-              </span>
-              <span class="toggle-label" data-i18n="gaming_auto_label">Автоматический игровой режим</span>
-            </label>
-
-            <div class="gaming-status-card">
-              <div class="gaming-status-info">
-                <span class="field-label" data-i18n="gaming_status_label">Текущее состояние</span>
-                <div class="gaming-status-value-wrap">
-                  <span class="gaming-status-dot" id="gaming-status-dot"></span>
-                  <span class="gaming-status-badge" id="gaming-status-text" data-i18n="gaming_status_inactive">Не активен</span>
-                </div>
-              </div>
-              <button type="button" class="btn btn-secondary btn-toggle-gaming" id="btn-toggle-gaming-mode" data-i18n="gaming_btn_toggle_on">Включить вручную</button>
-              <input type="checkbox" id="checkbox-gaming-mode" style="display: none;" />
+            <div class="card-section">
+              <label class="toggle-switch">
+                <input type="checkbox" id="checkbox-gaming-mode-auto-detect" />
+                <span class="toggle-track">
+                  <span class="toggle-thumb"></span>
+                </span>
+                <span class="toggle-label" data-i18n="gaming_auto_label">Автоматический игровой режим</span>
+              </label>
             </div>
-            <p class="field-hint" data-i18n="gaming_tray_hint">Ручное переключение также доступно через меню Aura в трее Windows.</p>
+
+            <hr class="divider" />
+
+            <div class="card-section">
+              <label class="toggle-switch">
+                <input type="checkbox" id="checkbox-gaming-mode" />
+                <span class="toggle-track">
+                  <span class="toggle-thumb"></span>
+                </span>
+                <span class="toggle-label" data-i18n="gaming_mode_label">Включить игровой режим вручную</span>
+              </label>
+              <p class="switch-desc" data-i18n="gaming_mode_subdesc">
+                Отключает перехват клавиатуры и выгружает модели из видеопамяти (VRAM).
+              </p>
+            </div>
+            <p class="field-hint" data-i18n="gaming_tray_hint" style="margin-top: 12px;">Ручное переключение также доступно через меню Aura в трее Windows.</p>
           </div>
 
           <div class="card" id="card-vram-standby">
@@ -495,32 +500,33 @@
           <div class="card" id="card-smart-context">
             <h2 class="card-title" data-i18n="smart_context_title">Умная контекстная вставка</h2>
             <p class="card-desc" data-i18n="smart_context_desc">Автоматически адаптирует регистр букв, знаки препинания и пробелы под положение курсора в документе.</p>
-            <label class="toggle-switch">
-              <input type="checkbox" id="checkbox-smart-context-enabled" />
-              <span class="toggle-track">
-                <span class="toggle-thumb"></span>
-              </span>
-              <span class="toggle-label" data-i18n="smart_context_checkbox">Учитывать контекст вокруг курсора</span>
-            </label>
-            <p class="switch-desc" data-i18n="smart_context_subdesc">
-              Начинает со строчной буквы при вставке в середину предложения, убирает лишние точки и аккуратно расставляет пробелы.
-            </p>
-
-            <div id="smart-context-suboptions" style="display: none; margin-top: 8px;">
-              <label class="sub-checkbox-card" for="checkbox-smart-context-trailing-period">
-                <input type="checkbox" id="checkbox-smart-context-trailing-period" class="sub-checkbox-input" />
-                <span class="custom-checkbox-box" aria-hidden="true">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" class="custom-checkbox-check">
-                    <polyline points="20 6 9 17 4 12"></polyline>
-                  </svg>
+            <div class="card-section">
+              <label class="toggle-switch">
+                <input type="checkbox" id="checkbox-smart-context-enabled" />
+                <span class="toggle-track">
+                  <span class="toggle-thumb"></span>
                 </span>
-                <span class="sub-checkbox-content">
-                  <span class="sub-checkbox-title" data-i18n="smart_context_trailing_period_checkbox">Завершать точкой при дополнении в конце предложения</span>
-                  <span class="switch-desc" data-i18n="smart_context_trailing_period_subdesc">
-                    Если курсор стоит в конце незавершенной фразы, завершает фразу точкой. При выключении оставляет конец открытым для дальнейшей речи.
-                  </span>
-                </span>
+                <span class="toggle-label" data-i18n="smart_context_checkbox">Учитывать контекст вокруг курсора</span>
               </label>
+              <p class="switch-desc" data-i18n="smart_context_subdesc">
+                Начинает со строчной буквы при вставке в середину предложения, убирает лишние точки и аккуратно расставляет пробелы.
+              </p>
+            </div>
+
+            <div id="smart-context-suboptions" style="display: none;">
+              <hr class="divider" />
+              <div class="card-section">
+                <label class="toggle-switch">
+                  <input type="checkbox" id="checkbox-smart-context-trailing-period" />
+                  <span class="toggle-track">
+                    <span class="toggle-thumb"></span>
+                  </span>
+                  <span class="toggle-label" data-i18n="smart_context_trailing_period_checkbox">Завершать точкой при дополнении в конце предложения</span>
+                </label>
+                <p class="switch-desc" data-i18n="smart_context_trailing_period_subdesc">
+                  Если курсор стоит в конце незавершенной фразы, завершает фразу точкой. При выключении оставляет конец открытым для дальнейшей речи.
+                </p>
+              </div>
             </div>
           </div>
 
@@ -716,9 +722,6 @@
             <div class="form-group" id="sound-volume-group" style="margin-top: 10px;">
               <label for="range-sound-volume" class="field-label" data-i18n="sound_volume_label">Громкость звука</label>
               <div class="volume-slider-container">
-                <button type="button" class="btn-mute" id="btn-sound-mute" title="Заглушить / Включить звук" aria-label="Заглушить / Включить звук">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" id="sound-mute-icon"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
-                </button>
                 <div class="volume-track-wrap">
                   <input type="range" id="range-sound-volume" min="0" max="100" value="80" class="custom-slider" />
                   <span id="volume-value-label" class="volume-value-text">80%</span>
