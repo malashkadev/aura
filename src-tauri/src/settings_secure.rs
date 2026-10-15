@@ -25,9 +25,8 @@ const ALLOWED_ACCELERATION: &[&str] = &["cpu", "cuda"];
 const ALLOWED_LANGUAGES: &[&str] = &[
     "auto", "layout", "ru", "en", "de", "es", "fr", "it", "zh", "pt", "tr", "nl",
 ];
-const ALLOWED_TRANSLATE_TARGETS: &[&str] = &[
-    "en", "ru", "de", "es", "fr", "it", "zh", "pt", "tr", "nl",
-];
+const ALLOWED_TRANSLATE_TARGETS: &[&str] =
+    &["en", "ru", "de", "es", "fr", "it", "zh", "pt", "tr", "nl"];
 const ALLOWED_UI_LANGUAGES: &[&str] = &["ru", "en", "de", "es", "fr", "it", "zh", "pt", "tr"];
 const ALLOWED_SOUND_THEMES: &[&str] = &["zen", "rhodes", "scifi", "classic", "bubble", "haptic"];
 const MAX_DICTIONARY_CHARS: usize = 4096;

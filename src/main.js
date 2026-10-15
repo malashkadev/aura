@@ -102,7 +102,7 @@ const i18nDict = {
     "history_group_today": "Сегодня",
     "history_group_yesterday": "Вчера",
     "about_app_title": "Голосовой ввод Aura",
-    "about_version": "v1.1.2",
+    "about_version": "v1.2.0",
     "about_description": "Инструмент глобального голосового ввода для Windows. Программа переводит речь в текст и вставляет его в любое активное окно с автоматическим форматированием и расстановкой пунктуации.",
     "about_gratitude_text": "Спасибо, что пользуетесь Aura! Если программа делает вашу работу быстрее и удобнее — поддержите проект звездой на GitHub.",
     "btn_star_github": "Поставить звезду на GitHub",
@@ -374,7 +374,7 @@ const i18nDict = {
     "history_group_today": "Today",
     "history_group_yesterday": "Yesterday",
     "about_app_title": "Aura Voice Input",
-    "about_version": "v1.1.2",
+    "about_version": "v1.2.0",
     "about_description": "Global voice input tool for Windows. The program transcribes speech to text and inserts it into any active window with automatic formatting and punctuation.",
     "about_gratitude_text": "Thank you for using Aura! If it makes your work faster and easier, please consider supporting the project with a star on GitHub.",
     "btn_star_github": "Star on GitHub",
@@ -656,7 +656,7 @@ const i18nDict = {
     "history_group_today": "Heute",
     "history_group_yesterday": "Gestern",
     "about_app_title": "Aura Spracheingabe",
-    "about_version": "v1.1.2",
+    "about_version": "v1.2.0",
     "about_description": "Globales Spracheingabe-Tool für Windows. Die Anwendung überträgt Sprache in Text und fügt ihn mit automatischer Formatierung und Zeichensetzung in jedes aktive Fenster ein.",
     "about_gratitude_text": "Danke, dass Sie Aura nutzen! Wenn das Tool Ihre Arbeit erleichtert, unterstützen Sie das Projekt gerne mit einem Stern auf GitHub.",
     "btn_star_github": "Stern auf GitHub geben",
@@ -915,7 +915,7 @@ const i18nDict = {
     "history_group_today": "Hoy",
     "history_group_yesterday": "Ayer",
     "about_app_title": "Dictado por voz Aura",
-    "about_version": "v1.1.2",
+    "about_version": "v1.2.0",
     "about_description": "Herramienta de entrada de voz global para Windows. El programa transcribe el habla en texto y lo inserta en cualquier ventana activa con formato y puntuación automáticos.",
     "about_gratitude_text": "¡Gracias por usar Aura! Si hace tu trabajo más rápido y cómodo, apoya el proyecto con una estrella en GitHub.",
     "btn_star_github": "Dar una estrella en GitHub",
@@ -1187,7 +1187,7 @@ const i18nDict = {
     "history_group_today": "Aujourd'hui",
     "history_group_yesterday": "Hier",
     "about_app_title": "Dictée vocale Aura",
-    "about_version": "v1.1.2",
+    "about_version": "v1.2.0",
     "about_description": "Outil de saisie vocale globale pour Windows. Le programme transcrit la parole en texte et l'insère dans n'importe quelle fenêtre active avec un formatage et une ponctuation automatiques.",
     "about_gratitude_text": "Merci d'utiliser Aura ! Si le programme vous fait gagner du temps, soutenez le projet avec une étoile sur GitHub.",
     "btn_star_github": "Mettre une étoile sur GitHub",
@@ -1459,7 +1459,7 @@ const i18nDict = {
     "history_group_today": "Oggi",
     "history_group_yesterday": "Ieri",
     "about_app_title": "Dettatura vocale Aura",
-    "about_version": "v1.1.2",
+    "about_version": "v1.2.0",
     "about_description": "Strumento di inserimento vocale globale per Windows. Il programma trascrive la voce in testo e la inserisce in qualsiasi finestra attiva con formattazione e punteggiatura automatiche.",
     "about_gratitude_text": "Grazie per aver scelto Aura! Se rende il tuo lavoro più veloce e comodo, sostieni il progetto con una stella su GitHub.",
     "btn_star_github": "Lascia una stella su GitHub",
@@ -1731,7 +1731,7 @@ const i18nDict = {
     "history_group_today": "今天",
     "history_group_yesterday": "昨天",
     "about_app_title": "Aura 智能语音输入",
-    "about_version": "v1.1.2",
+    "about_version": "v1.2.0",
     "about_description": "适用于 Windows 的全局语音输入工具。本程序可以将语音转录为文本，并以自动格式和标点符号插入到任何活动窗口中。",
     "about_gratitude_text": "感谢您使用 Aura！如果它让您的输入更高效便捷，欢迎在 GitHub 上为本项目点亮一颗星。",
     "btn_star_github": "在 GitHub 上点亮 Star",
@@ -2003,7 +2003,7 @@ const i18nDict = {
     "history_group_today": "Hoje",
     "history_group_yesterday": "Ontem",
     "about_app_title": "Ditado de voz Aura",
-    "about_version": "v1.1.2",
+    "about_version": "v1.2.0",
     "about_description": "Ferramenta de entrada de voz global para Windows. O programa transcreve a fala em texto e a insere em qualquer janela ativa com formatação e pontuação automáticas.",
     "about_gratitude_text": "Obrigado por usar o Aura! Se ele torna seu dia a dia mais ágil, apoie o projeto com uma estrela no GitHub.",
     "btn_star_github": "Dar uma estrela no GitHub",
@@ -2275,7 +2275,7 @@ const i18nDict = {
     "history_group_today": "Bugün",
     "history_group_yesterday": "Dün",
     "about_app_title": "Aura Sesli Giriş",
-    "about_version": "v1.1.2",
+    "about_version": "v1.2.0",
     "about_description": "Windows için genel sesli giriş aracı. Program, konuşmayı metne dönüştürür ve otomatik biçimlendirme ve noktalama işaretleriyle herhangi bir aktif pencereye ekler.",
     "about_gratitude_text": "Aura'yı kullandığınız için teşekkürler! Çalışmanızı hızlandırıyorsa, projeyi GitHub'da yıldızlayarak destekleyebilirsiniz.",
     "btn_star_github": "GitHub'da Yıldız Ver",
@@ -5650,13 +5650,13 @@ if (e.button === 0 && !e.target.closest(".window-control-btn") && !e.target.clos
 
         try {
           await invoke("start_mic_meter");
-          btnToggleMicMeter.textContent = getTranslation("mic_meter_test_btn_stop") || "Остановить тест";
+          btnToggleMicMeter.textContent = getTranslation("mic_meter_test_btn_stop");
           btnToggleMicMeter.classList.add("active");
           micMeterAnimId = requestAnimationFrame(runMicMeterPhysics);
         } catch (err) {
           console.error("Failed to start mic test:", err);
           await stopMicTesting();
-          showStatus(`${getTranslation("mic_start_error") || "Ошибка микрофона: "}${err}`, true);
+          showStatus(`${getTranslation("mic_start_error")}${err}`, true);
         }
       }
     });

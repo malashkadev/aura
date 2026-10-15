@@ -237,11 +237,7 @@ mod windows_impl {
 
                 idx += units_to_send;
                 if idx < units.len() {
-                    let delay = if idx.is_multiple_of(15) {
-                        10
-                    } else {
-                        1
-                    };
+                    let delay = if idx.is_multiple_of(15) { 10 } else { 1 };
                     std::thread::sleep(std::time::Duration::from_millis(delay));
                 }
             }

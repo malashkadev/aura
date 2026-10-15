@@ -94,11 +94,7 @@ pub fn resolve_ai_edit_route<R: tauri::Runtime>(
 ///
 /// Runs whenever there is a non-empty selection, non-empty speech text,
 /// and the edit route is not Off.
-pub fn needs_edit_pass(
-    has_selection: bool,
-    has_text: bool,
-    route: AiEditRoute,
-) -> bool {
+pub fn needs_edit_pass(has_selection: bool, has_text: bool, route: AiEditRoute) -> bool {
     has_selection && has_text && route != AiEditRoute::Off
 }
 
@@ -264,7 +260,9 @@ pub async fn download_llm_model<R: tauri::Runtime>(
                 "WARN",
                 "LLM",
                 None,
-                &format!("Automatic llama-server runtime installation encountered an issue: {error}"),
+                &format!(
+                    "Automatic llama-server runtime installation encountered an issue: {error}"
+                ),
             );
         }
     }
@@ -338,9 +336,7 @@ pub fn llm_runtime_is_installed<R: tauri::Runtime>(
     find_llama_server(app_handle, backend).is_ok()
 }
 
-pub fn any_llm_runtime_is_installed<R: tauri::Runtime>(
-    app_handle: &tauri::AppHandle<R>,
-) -> bool {
+pub fn any_llm_runtime_is_installed<R: tauri::Runtime>(app_handle: &tauri::AppHandle<R>) -> bool {
     LLM_BACKENDS
         .iter()
         .any(|backend| llm_runtime_is_installed(app_handle, backend))
@@ -387,7 +383,9 @@ pub async fn download_llm_runtime<R: tauri::Runtime>(
         .app_local_data_dir()
         .map_err(|e| format!("Failed to get app local data dir: {e}"))?;
 
-    let destination_dir = app_local_data.join("binaries").join(format!("llm-{backend}"));
+    let destination_dir = app_local_data
+        .join("binaries")
+        .join(format!("llm-{backend}"));
     let exe_path = destination_dir.join(LLM_EXE_NAME);
     if exe_path.is_file() {
         return Ok(exe_path);
@@ -504,10 +502,11 @@ fn extract_llm_runtime_zip(archive_path: &Path, target_dir: &Path) -> Result<(),
         .duration_since(std::time::UNIX_EPOCH)
         .unwrap_or_default()
         .as_millis();
-    let staging_dir = target_dir
-        .parent()
-        .unwrap_or(target_dir)
-        .join(format!(".llm_staging_{}_{}", std::process::id(), timestamp));
+    let staging_dir = target_dir.parent().unwrap_or(target_dir).join(format!(
+        ".llm_staging_{}_{}",
+        std::process::id(),
+        timestamp
+    ));
 
     let _ = std::fs::remove_dir_all(&staging_dir);
     std::fs::create_dir_all(&staging_dir)
@@ -1007,17 +1006,21 @@ pub async fn run_local_edit<R: tauri::Runtime>(
     );
 
     // If command was disabled in settings, treat as normal dictation
-    let intent = if crate::edit_intent::is_command_disabled(&intent, &settings.disabled_edit_commands) {
-        crate::logger::log(
-            "INFO",
-            "LLM",
-            None,
-            &format!("Command {:?} is disabled in settings; treating as normal dictation", intent),
-        );
-        crate::edit_intent::EditIntent::NotACommand
-    } else {
-        intent
-    };
+    let intent =
+        if crate::edit_intent::is_command_disabled(&intent, &settings.disabled_edit_commands) {
+            crate::logger::log(
+                "INFO",
+                "LLM",
+                None,
+                &format!(
+                    "Command {:?} is disabled in settings; treating as normal dictation",
+                    intent
+                ),
+            );
+            crate::edit_intent::EditIntent::NotACommand
+        } else {
+            intent
+        };
 
     // If the speech is recognized as ordinary dictation, return it immediately without an LLM call.
     // This provides zero latency, zero hallucination risk, and preserves speech 1:1.
@@ -1068,9 +1071,9 @@ pub async fn run_local_edit<R: tauri::Runtime>(
         return Err("Local editing server is not running".to_string());
     }
 
-    let system_prompt = intent.system_prompt(selected_text).unwrap_or_else(|| {
-        crate::ai_client::build_clean_instructions(language, dictionary, true)
-    });
+    let system_prompt = intent
+        .system_prompt(selected_text)
+        .unwrap_or_else(|| crate::ai_client::build_clean_instructions(language, dictionary, true));
 
     // Decoupled user content: ONLY the selected text is passed inside the data block.
     // The spoken command words are NEVER passed in the user content block, preventing
@@ -1147,7 +1150,10 @@ pub async fn run_local_edit<R: tauri::Runtime>(
             "WARN",
             "LLM",
             None,
-            &format!("Local editing output rejected by validation gate: {err} (intent={:?})", intent),
+            &format!(
+                "Local editing output rejected by validation gate: {err} (intent={:?})",
+                intent
+            ),
         );
         return Err(format!("{err}; keeping the original text"));
     }
@@ -1673,7 +1679,21 @@ fn strip_prompt_delimiters(text: &str) -> String {
             let mut match_start = kw_start;
             while match_start > 0 {
                 let prev = bytes[match_start - 1];
-                if matches!(prev, b'<' | b'[' | b'{' | b'(' | b'/' | b'\\' | b'#' | b'*' | b'_' | b' ' | b'\t' | b'\r' | b'\n') {
+                if matches!(
+                    prev,
+                    b'<' | b'['
+                        | b'{'
+                        | b'('
+                        | b'/'
+                        | b'\\'
+                        | b'#'
+                        | b'*'
+                        | b'_'
+                        | b' '
+                        | b'\t'
+                        | b'\r'
+                        | b'\n'
+                ) {
                     match_start -= 1;
                 } else {
                     break;
@@ -1686,7 +1706,23 @@ fn strip_prompt_delimiters(text: &str) -> String {
             let mut match_end = kw_end;
             while match_end < cleaned.len() {
                 let next = bytes[match_end];
-                if matches!(next, b'>' | b']' | b'}' | b')' | b'/' | b'\\' | b'#' | b'*' | b'_' | b':' | b'-' | b' ' | b'\t' | b'\r' | b'\n') {
+                if matches!(
+                    next,
+                    b'>' | b']'
+                        | b'}'
+                        | b')'
+                        | b'/'
+                        | b'\\'
+                        | b'#'
+                        | b'*'
+                        | b'_'
+                        | b':'
+                        | b'-'
+                        | b' '
+                        | b'\t'
+                        | b'\r'
+                        | b'\n'
+                ) {
                     match_end += 1;
                 } else {
                     break;
@@ -1913,11 +1949,15 @@ mod tests {
 
         // Prompt delimiters leaked by small models are stripped cleanly
         assert_eq!(
-            strip_output_label("<<<SELECTED_TEXT_START>>>. Текст с исправлением. <<<SELECTED_TEXT_END>>>"),
+            strip_output_label(
+                "<<<SELECTED_TEXT_START>>>. Текст с исправлением. <<<SELECTED_TEXT_END>>>"
+            ),
             "Текст с исправлением."
         );
         assert_eq!(
-            strip_output_label("Text to process:\n<<<SELECTED_TEXT_START>>>\nHello world\n<<<SELECTED_TEXT_END>>>"),
+            strip_output_label(
+                "Text to process:\n<<<SELECTED_TEXT_START>>>\nHello world\n<<<SELECTED_TEXT_END>>>"
+            ),
             "Hello world"
         );
         // Delimiters with 2 angle brackets (user incident: <<SELECTED_TEXT_START>> ... <<SELECTED_TEXT_END>>)
@@ -1997,13 +2037,15 @@ mod tests {
     #[test]
     fn test_grammar_resemblance_is_not_treated_as_echo() {
         let original = "В визуалах по комбикорму укажите пожалуйста возможность реализации проекта";
-        let corrected = "В визуалах по комбикорму укажите, пожалуйста, возможность реализации проекта.";
+        let corrected =
+            "В визуалах по комбикорму укажите, пожалуйста, возможность реализации проекта.";
 
         // High bigram similarity is expected for grammar corrections
         assert!(texts_resemble(corrected, original));
 
         let grammar_intent = crate::edit_intent::EditIntent::FixGrammar;
-        let is_grammar_or_proofreading = matches!(grammar_intent, crate::edit_intent::EditIntent::FixGrammar);
+        let is_grammar_or_proofreading =
+            matches!(grammar_intent, crate::edit_intent::EditIntent::FixGrammar);
         assert!(is_grammar_or_proofreading);
 
         let echoes_selection = if is_grammar_or_proofreading {
@@ -2011,6 +2053,9 @@ mod tests {
         } else {
             texts_resemble(corrected, original)
         };
-        assert!(!echoes_selection, "Grammar correction must never be flagged as an invalid selection echo");
+        assert!(
+            !echoes_selection,
+            "Grammar correction must never be flagged as an invalid selection echo"
+        );
     }
 }

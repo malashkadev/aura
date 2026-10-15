@@ -24,13 +24,31 @@ pub enum InsertionMode {
     SelectionReplacement,
 }
 
+pub fn is_whitespace_or_invisible(c: char) -> bool {
+    c.is_whitespace()
+        || matches!(
+            c,
+            '\u{200B}'..='\u{200D}' | '\u{FEFF}' | '\u{00AD}' | '\u{FFFC}' | '\u{FFFD}' | '\0'
+        )
+}
+
+pub fn is_horizontal_whitespace_or_invisible(c: char) -> bool {
+    c != '\n' && c != '\r' && is_whitespace_or_invisible(c)
+}
+
 pub fn classify_insertion_mode(ctx: &CaretContext) -> InsertionMode {
-    if !ctx.selected_text.trim().is_empty() {
+    if !ctx
+        .selected_text
+        .trim_matches(is_whitespace_or_invisible)
+        .is_empty()
+    {
         return InsertionMode::SelectionReplacement;
     }
 
     // Check if cursor is at the start of text or following a newline/paragraph break
-    let trimmed_horizontal_spaces = ctx.text_before.trim_end_matches([' ', '\t']);
+    let trimmed_horizontal_spaces = ctx
+        .text_before
+        .trim_end_matches(is_horizontal_whitespace_or_invisible);
     if trimmed_horizontal_spaces.is_empty()
         || trimmed_horizontal_spaces.ends_with('\n')
         || trimmed_horizontal_spaces.ends_with('\r')
@@ -38,18 +56,19 @@ pub fn classify_insertion_mode(ctx: &CaretContext) -> InsertionMode {
         return InsertionMode::NewSentence;
     }
 
-    let before_trimmed = ctx.text_before.trim_end();
+    let before_trimmed = ctx.text_before.trim_end_matches(is_whitespace_or_invisible);
     // Strip trailing closing quotes and closing brackets before inspecting terminal punctuation
-    let punct_candidate = before_trimmed.trim_end_matches([
-        '"', '\'', '»', '”', '’', ')', ']', '}', '›', '“', '‘',
-    ]);
+    let punct_candidate =
+        before_trimmed.trim_end_matches(['"', '\'', '»', '”', '’', ')', ']', '}', '›', '“', '‘']);
     let last_char = punct_candidate.chars().last().unwrap_or('\0');
     let is_terminal = matches!(last_char, '.' | '!' | '?' | '…');
 
     if is_terminal {
         InsertionMode::NewSentence
     } else {
-        let after_on_current_line = ctx.text_after.trim_start_matches([' ', '\t']);
+        let after_on_current_line = ctx
+            .text_after
+            .trim_start_matches(is_horizontal_whitespace_or_invisible);
         if after_on_current_line.is_empty()
             || after_on_current_line.starts_with('\n')
             || after_on_current_line.starts_with('\r')
@@ -86,9 +105,8 @@ fn preserves_leading_capital(text: &str) -> bool {
 fn ends_with_known_abbreviation(text: &str) -> bool {
     let lower = text.to_lowercase();
     const ABBREVIATIONS: &[&str] = &[
-        "т.д.", "т.п.", "т.е.", "т.к.", "др.", "пр.", "руб.", "коп.", "г.", "ул.",
-        "etc.", "e.g.", "i.e.", "vs.", "al.", "approx.", "dept.", "fig.", "inc.",
-        "ltd.", "prof.", "vol.",
+        "т.д.", "т.п.", "т.е.", "т.к.", "др.", "пр.", "руб.", "коп.", "г.", "ул.", "etc.", "e.g.",
+        "i.e.", "vs.", "al.", "approx.", "dept.", "fig.", "inc.", "ltd.", "prof.", "vol.",
     ];
     for &abbr in ABBREVIATIONS {
         if lower.ends_with(abbr) {
@@ -136,10 +154,9 @@ pub fn adapt_transcription_to_context(
             lowercase_first_char(trimmed)
         }
         InsertionMode::SelectionReplacement => {
-            let before_trimmed = ctx.text_before.trim_end();
-            let punct_candidate = before_trimmed.trim_end_matches([
-                '"', '\'', '»', '”', '’', ')', ']', '}', '›', '“', '‘',
-            ]);
+            let before_trimmed = ctx.text_before.trim_end_matches(is_whitespace_or_invisible);
+            let punct_candidate = before_trimmed
+                .trim_end_matches(['"', '\'', '»', '”', '’', ')', ']', '}', '›', '“', '‘']);
             let is_terminal = punct_candidate.is_empty()
                 || matches!(punct_candidate.chars().last(), Some('.' | '!' | '?' | '…'));
             if is_terminal {
@@ -151,10 +168,15 @@ pub fn adapt_transcription_to_context(
     };
 
     // 2. Trailing punctuation adjustment
-    let after_trimmed = ctx.text_after.trim_start();
+    let after_trimmed = ctx
+        .text_after
+        .trim_start_matches(is_whitespace_or_invisible);
     let after_starts_with_dot = after_trimmed.starts_with('.');
     let after_starts_with_other_punct = after_trimmed.starts_with(|c: char| {
-        matches!(c, ',' | '!' | '?' | ':' | ';' | '-' | '—' | ')' | ']' | '}' | '»' | '"')
+        matches!(
+            c,
+            ',' | '!' | '?' | ':' | ';' | '-' | '—' | ')' | ']' | '}' | '»' | '"'
+        )
     });
 
     if after_starts_with_dot {
@@ -207,9 +229,15 @@ pub fn adapt_transcription_to_context(
     let mut result = text;
 
     // Leading space check
-    if !ctx.text_before.is_empty() {
-        let last_before = ctx.text_before.chars().last().unwrap_or('\0');
-        let before_has_whitespace = matches!(last_before, ' ' | '\t' | '\n' | '\r');
+    let clean_before = ctx.text_before.trim_end_matches(|c: char| {
+        matches!(
+            c,
+            '\u{200B}'..='\u{200D}' | '\u{FEFF}' | '\u{00AD}' | '\u{FFFC}' | '\u{FFFD}' | '\0'
+        )
+    });
+    if !clean_before.is_empty() {
+        let last_before = clean_before.chars().last().unwrap_or('\0');
+        let before_has_whitespace = is_whitespace_or_invisible(last_before);
         let before_is_open_bracket = matches!(last_before, '(' | '[' | '{' | '«' | '"');
         if !before_has_whitespace && !before_is_open_bracket {
             result = format!(" {}", result);
@@ -217,9 +245,15 @@ pub fn adapt_transcription_to_context(
     }
 
     // Trailing space check
-    if mode == InsertionMode::MidSentenceInsertion && !ctx.text_after.is_empty() {
-        let first_after = ctx.text_after.chars().next().unwrap_or('\0');
-        let after_has_whitespace = matches!(first_after, ' ' | '\t' | '\n' | '\r');
+    let clean_after = ctx.text_after.trim_start_matches(|c: char| {
+        matches!(
+            c,
+            '\u{200B}'..='\u{200D}' | '\u{FEFF}' | '\u{00AD}' | '\u{FFFC}' | '\u{FFFD}' | '\0'
+        )
+    });
+    if mode == InsertionMode::MidSentenceInsertion && !clean_after.is_empty() {
+        let first_after = clean_after.chars().next().unwrap_or('\0');
+        let after_has_whitespace = is_whitespace_or_invisible(first_after);
         let after_is_punct = matches!(
             first_after,
             '.' | ',' | '!' | '?' | ':' | ';' | '-' | '—' | ')' | ']' | '}' | '»' | '"'
@@ -254,7 +288,10 @@ mod tests {
             text_before: "Строка\n".to_string(),
             ..Default::default()
         };
-        assert_eq!(classify_insertion_mode(&ctx_newline), InsertionMode::NewSentence);
+        assert_eq!(
+            classify_insertion_mode(&ctx_newline),
+            InsertionMode::NewSentence
+        );
     }
 
     #[test]
@@ -264,7 +301,10 @@ mod tests {
             text_after: " встретиться завтра.".to_string(),
             ..Default::default()
         };
-        assert_eq!(classify_insertion_mode(&ctx), InsertionMode::MidSentenceInsertion);
+        assert_eq!(
+            classify_insertion_mode(&ctx),
+            InsertionMode::MidSentenceInsertion
+        );
     }
 
     #[test]
@@ -274,7 +314,10 @@ mod tests {
             text_after: "".to_string(),
             ..Default::default()
         };
-        assert_eq!(classify_insertion_mode(&ctx), InsertionMode::SentenceContinuation);
+        assert_eq!(
+            classify_insertion_mode(&ctx),
+            InsertionMode::SentenceContinuation
+        );
     }
 
     #[test]
@@ -285,7 +328,10 @@ mod tests {
             text_after: " встретиться.".to_string(),
             ..Default::default()
         };
-        assert_eq!(classify_insertion_mode(&ctx), InsertionMode::SelectionReplacement);
+        assert_eq!(
+            classify_insertion_mode(&ctx),
+            InsertionMode::SelectionReplacement
+        );
     }
 
     #[test]
@@ -305,7 +351,8 @@ mod tests {
             text_after: " закончить проект.".to_string(),
             ..Default::default()
         };
-        let adapted_clean = adapt_transcription_to_context("Как можно скорее.", &ctx_has_space, true);
+        let adapted_clean =
+            adapt_transcription_to_context("Как можно скорее.", &ctx_has_space, true);
         assert_eq!(adapted_clean, "как можно скорее");
     }
 
@@ -373,19 +420,28 @@ mod tests {
             text_before: "Он сказал: \"Пора.\" ".to_string(),
             ..Default::default()
         };
-        assert_eq!(classify_insertion_mode(&ctx_quotes), InsertionMode::NewSentence);
+        assert_eq!(
+            classify_insertion_mode(&ctx_quotes),
+            InsertionMode::NewSentence
+        );
 
         let ctx_guillemets = CaretContext {
             text_before: "«Это важно!» ".to_string(),
             ..Default::default()
         };
-        assert_eq!(classify_insertion_mode(&ctx_guillemets), InsertionMode::NewSentence);
+        assert_eq!(
+            classify_insertion_mode(&ctx_guillemets),
+            InsertionMode::NewSentence
+        );
 
         let ctx_brackets = CaretContext {
             text_before: "(См. главу 1.) ".to_string(),
             ..Default::default()
         };
-        assert_eq!(classify_insertion_mode(&ctx_brackets), InsertionMode::NewSentence);
+        assert_eq!(
+            classify_insertion_mode(&ctx_brackets),
+            InsertionMode::NewSentence
+        );
     }
 
     #[test]
@@ -436,5 +492,73 @@ mod tests {
 
         let adapted = adapt_transcription_to_context("и приняли решение", &ctx_newline, true);
         assert_eq!(adapted, "и приняли решение.");
+    }
+
+    #[test]
+    fn test_classify_new_sentence_with_invisible_and_unicode_spaces() {
+        // Zero-width space
+        let ctx_zws = CaretContext {
+            text_before: "\u{200B}".to_string(),
+            ..Default::default()
+        };
+        assert_eq!(
+            classify_insertion_mode(&ctx_zws),
+            InsertionMode::NewSentence
+        );
+
+        // Non-breaking space
+        let ctx_nbsp = CaretContext {
+            text_before: "\u{00A0}".to_string(),
+            ..Default::default()
+        };
+        assert_eq!(
+            classify_insertion_mode(&ctx_nbsp),
+            InsertionMode::NewSentence
+        );
+
+        // Object replacement character (UIA embedded object like '+' button in Gemini)
+        let ctx_obj = CaretContext {
+            text_before: "\u{FFFC}".to_string(),
+            ..Default::default()
+        };
+        assert_eq!(
+            classify_insertion_mode(&ctx_obj),
+            InsertionMode::NewSentence
+        );
+
+        // Mixed invisible and whitespace
+        let ctx_mixed = CaretContext {
+            text_before: " \u{200B}\u{00A0}\t\u{FEFF} ".to_string(),
+            ..Default::default()
+        };
+        assert_eq!(
+            classify_insertion_mode(&ctx_mixed),
+            InsertionMode::NewSentence
+        );
+    }
+
+    #[test]
+    fn test_adapt_preserves_capitalization_and_avoids_space_in_empty_field_with_invisibles() {
+        let ctx_zws = CaretContext {
+            text_before: "\u{200B}".to_string(),
+            ..Default::default()
+        };
+        let adapted = adapt_transcription_to_context("Привет, как твои дела?", &ctx_zws, true);
+        assert_eq!(adapted, "Привет, как твои дела?");
+
+        let ctx_obj = CaretContext {
+            text_before: "\u{FFFC}".to_string(),
+            ..Default::default()
+        };
+        let adapted_obj = adapt_transcription_to_context("Привет, как твои дела?", &ctx_obj, true);
+        assert_eq!(adapted_obj, "Привет, как твои дела?");
+
+        let ctx_nbsp = CaretContext {
+            text_before: "\u{00A0}".to_string(),
+            ..Default::default()
+        };
+        let adapted_nbsp =
+            adapt_transcription_to_context("Привет, как твои дела?", &ctx_nbsp, true);
+        assert_eq!(adapted_nbsp, "Привет, как твои дела?");
     }
 }

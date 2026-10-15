@@ -16,8 +16,8 @@ pub mod parakeet_streaming;
 pub mod secure_storage;
 #[path = "settings_secure.rs"]
 pub mod settings;
-pub mod text_normalizer;
 pub mod smart_insertion;
+pub mod text_normalizer;
 pub mod vad;
 pub mod whisper_runner;
 
@@ -587,7 +587,10 @@ pub fn notify_app_update_available(app: &tauri::AppHandle, new_version: &str) {
     }
 
     let settings = settings::load_settings(app).ok();
-    let lang = settings.as_ref().map(|s| s.ui_language.as_str()).unwrap_or("ru");
+    let lang = settings
+        .as_ref()
+        .map(|s| s.ui_language.as_str())
+        .unwrap_or("ru");
 
     let (title, body) = match lang {
         "en" => (
@@ -3008,8 +3011,8 @@ async fn start_recording_session(app_handle: tauri::AppHandle) {
     // consume it: the cloud provider (cloud or cloud-after-local cleanup) or
     // the local Qwen3 server. Route "off" never needs the selection.
     let edit_route = llm_runner::resolve_ai_edit_route(&app_handle, &session_settings);
-    let copy_context = session_settings.copy_context_on_start
-        && edit_route != llm_runner::AiEditRoute::Off;
+    let copy_context =
+        session_settings.copy_context_on_start && edit_route != llm_runner::AiEditRoute::Off;
 
     // Parallel background capture of caret context via Windows UI Automation
     if session_settings.smart_context_enabled {
@@ -3077,15 +3080,15 @@ async fn start_recording_session(app_handle: tauri::AppHandle) {
                 // Without the shared clipboard mutex, a session whose paste window
                 // overlaps this copy could capture this temporary text as its
                 // "original" and the user's real clipboard content would be lost.
-                let clipboard_mutex_guard = if let Some(state) = app_handle_copy.try_state::<AppState>()
-                {
-                    match state.inner().clipboard_mutex.lock() {
-                        Ok(guard) => Some(guard),
-                        Err(poisoned) => Some(poisoned.into_inner()),
-                    }
-                } else {
-                    None
-                };
+                let clipboard_mutex_guard =
+                    if let Some(state) = app_handle_copy.try_state::<AppState>() {
+                        match state.inner().clipboard_mutex.lock() {
+                            Ok(guard) => Some(guard),
+                            Err(poisoned) => Some(poisoned.into_inner()),
+                        }
+                    } else {
+                        None
+                    };
 
                 let mut clipboard_guard = ClipboardGuard {
                     backup: backup_clipboard(),
@@ -3116,7 +3119,10 @@ async fn start_recording_session(app_handle: tauri::AppHandle) {
                                 "INFO",
                                 "Context",
                                 Some(&session_tag_copy),
-                                &format!("Captured selected text ({} chars)", copied.chars().count()),
+                                &format!(
+                                    "Captured selected text ({} chars)",
+                                    copied.chars().count()
+                                ),
                             );
                             if !copied.trim().is_empty() {
                                 captured_selection = true;
@@ -3544,11 +3550,7 @@ pub fn resolve_history_entry_meta(
     executed_edit_target: Option<EditExecutionTarget>,
 ) -> (String, Option<String>, u64) {
     match executed_edit_target {
-        Some(EditExecutionTarget::Cloud) => (
-            "cloud".to_string(),
-            None,
-            0,
-        ),
+        Some(EditExecutionTarget::Cloud) => ("cloud".to_string(), None, 0),
         Some(EditExecutionTarget::Local) => (
             "local".to_string(),
             Some(local_engine.to_string()),
@@ -3566,11 +3568,7 @@ pub fn resolve_history_entry_meta(
             } else {
                 None
             };
-            let history_processing_ms = if is_local_text {
-                asr_duration_ms
-            } else {
-                0
-            };
+            let history_processing_ms = if is_local_text { asr_duration_ms } else { 0 };
             (history_mode, history_engine, history_processing_ms)
         }
     }
@@ -3939,11 +3937,8 @@ async fn finalize_recording(app_handle: tauri::AppHandle) {
                 // Selected-text edit pass: runs whenever a selection and spoken text
                 // are present, for any transcription engine and edit route.
                 let has_selection = !selected_text.trim().is_empty();
-                let needs_edit_pass = llm_runner::needs_edit_pass(
-                    has_selection,
-                    !text.trim().is_empty(),
-                    edit_route,
-                );
+                let needs_edit_pass =
+                    llm_runner::needs_edit_pass(has_selection, !text.trim().is_empty(), edit_route);
                 if needs_edit_pass {
                     let session_ok = app_handle_clone
                         .try_state::<AppState>()
@@ -3990,19 +3985,18 @@ async fn finalize_recording(app_handle: tauri::AppHandle) {
                                             "WARN",
                                             "LLM",
                                             Some(&session_tag_clone),
-                                            &format!(
-                                                "Local edit pass failed: {error}"
-                                            ),
+                                            &format!("Local edit pass failed: {error}"),
                                         );
                                         let active_key = if !settings.api_key.trim().is_empty() {
                                             settings.api_key.as_str()
                                         } else {
                                             settings.active_api_key()
                                         };
-                                        let can_cloud_fallback = llm_runner::can_cloud_edit_fallback(
-                                            &settings.ai_edit_mode,
-                                            active_key,
-                                        );
+                                        let can_cloud_fallback =
+                                            llm_runner::can_cloud_edit_fallback(
+                                                &settings.ai_edit_mode,
+                                                active_key,
+                                            );
 
                                         if can_cloud_fallback {
                                             crate::logger::log(
@@ -4045,7 +4039,8 @@ async fn finalize_recording(app_handle: tauri::AppHandle) {
                                                         ),
                                                     );
                                                     text = edited;
-                                                    executed_edit_target = Some(EditExecutionTarget::Cloud);
+                                                    executed_edit_target =
+                                                        Some(EditExecutionTarget::Cloud);
                                                 }
                                                 Ok(Err(cloud_error)) => {
                                                     crate::logger::log(
@@ -5685,10 +5680,11 @@ async fn check_audio_devices_hotplug(app: &tauri::AppHandle) {
     let Some(state) = app.try_state::<AppState>() else {
         return;
     };
-    let current_devices = match tokio::task::spawn_blocking(audio_recorder::list_audio_input_devices).await {
-        Ok(devices) => devices,
-        Err(_) => return,
-    };
+    let current_devices =
+        match tokio::task::spawn_blocking(audio_recorder::list_audio_input_devices).await {
+            Ok(devices) => devices,
+            Err(_) => return,
+        };
     let changed = {
         let mut guard = state
             .last_audio_devices
@@ -6542,11 +6538,17 @@ mod tests {
             "Используйтесь, что это не так. Используйтесь, что это не так."
         ));
         assert!(is_silence_hallucination("Danke fürs Zuschauen!"));
-        assert!(is_silence_hallucination("Merci d'avoir regardé cette vidéo"));
+        assert!(is_silence_hallucination(
+            "Merci d'avoir regardé cette vidéo"
+        ));
         assert!(is_silence_hallucination("¡Gracias por ver el video!"));
         assert!(is_silence_hallucination("Подпишитесь, подпишитесь."));
-        assert!(is_silence_hallucination("Dale like y suscribete. Dale like y suscribete."));
-        assert!(is_silence_hallucination("Abonnez vous a ma chaine. Abonnez vous a ma chaine."));
+        assert!(is_silence_hallucination(
+            "Dale like y suscribete. Dale like y suscribete."
+        ));
+        assert!(is_silence_hallucination(
+            "Abonnez vous a ma chaine. Abonnez vous a ma chaine."
+        ));
     }
 
     #[test]
@@ -7093,13 +7095,22 @@ mod tests {
     #[test]
     fn test_update_notification_gaming_mode_suppression_logic() {
         let gaming_active = AtomicBool::new(true);
-        assert!(gaming_active.load(Ordering::Acquire), "Gaming mode must be active");
-        
+        assert!(
+            gaming_active.load(Ordering::Acquire),
+            "Gaming mode must be active"
+        );
+
         let should_suppress = gaming_active.load(Ordering::Acquire);
-        assert!(should_suppress, "When gaming mode is active, notification MUST be suppressed");
+        assert!(
+            should_suppress,
+            "When gaming mode is active, notification MUST be suppressed"
+        );
 
         gaming_active.store(false, Ordering::Release);
         let should_suppress_disabled = gaming_active.load(Ordering::Acquire);
-        assert!(!should_suppress_disabled, "When gaming mode is inactive, notification is allowed");
+        assert!(
+            !should_suppress_disabled,
+            "When gaming mode is inactive, notification is allowed"
+        );
     }
 }

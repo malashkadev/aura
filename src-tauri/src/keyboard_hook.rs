@@ -678,40 +678,28 @@ mod windows_impl {
             assert!(modifiers_satisfied_state(alt_mask, v_key, true, |m| m == MOD_ALT));
 
             // Scenario 2: Alt is down, BUT Ctrl is also down (e.g. user pressed Ctrl+V while Alt stuck, or Ctrl+Alt+V) -> REJECTED!
-            assert!(!modifiers_satisfied_state(
-                alt_mask,
-                v_key,
-                true,
-                |m| m == MOD_ALT || m == MOD_CTRL
-            ));
+            assert!(!modifiers_satisfied_state(alt_mask, v_key, true, |m| m
+                == MOD_ALT
+                || m == MOD_CTRL));
 
             // Scenario 3: Alt is down, but Shift is also down -> REJECTED!
-            assert!(!modifiers_satisfied_state(
-                alt_mask,
-                v_key,
-                true,
-                |m| m == MOD_ALT || m == MOD_SHIFT
-            ));
+            assert!(!modifiers_satisfied_state(alt_mask, v_key, true, |m| m
+                == MOD_ALT
+                || m == MOD_SHIFT));
 
             // Scenario 4: Alt is down, but Win is also down -> REJECTED!
-            assert!(!modifiers_satisfied_state(
-                alt_mask,
-                v_key,
-                true,
-                |m| m == MOD_ALT || m == MOD_WIN
-            ));
+            assert!(!modifiers_satisfied_state(alt_mask, v_key, true, |m| m
+                == MOD_ALT
+                || m == MOD_WIN));
 
             // Scenario 5: Alt is not down -> REJECTED!
             assert!(!modifiers_satisfied_state(alt_mask, v_key, true, |_| false));
 
             // Multi-modifier hotkey: Ctrl+Alt+V (mask = MOD_CTRL | MOD_ALT)
             let ctrl_alt_mask = MOD_CTRL | MOD_ALT;
-            assert!(modifiers_satisfied_state(
-                ctrl_alt_mask,
-                v_key,
-                true,
-                |m| m == MOD_CTRL || m == MOD_ALT
-            ));
+            assert!(modifiers_satisfied_state(ctrl_alt_mask, v_key, true, |m| m
+                == MOD_CTRL
+                || m == MOD_ALT));
             // Fails if Shift also pressed
             assert!(!modifiers_satisfied_state(
                 ctrl_alt_mask,

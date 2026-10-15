@@ -633,10 +633,36 @@ pub fn clean_speech_pause_ellipses(text: &str) -> String {
     }
 
     const COMMA_CONJUNCTIONS: &[&str] = &[
-        "что", "чтобы", "но", "а", "хотя", "если", "потому", "потому что", "так как",
-        "когда", "где", "куда", "откуда", "который", "которая", "которое", "которые",
-        "которого", "которой", "которым", "которых", "зачем", "почему", "отчего", "как",
-        "but", "because", "although", "which", "since",
+        "что",
+        "чтобы",
+        "но",
+        "а",
+        "хотя",
+        "если",
+        "потому",
+        "потому что",
+        "так как",
+        "когда",
+        "где",
+        "куда",
+        "откуда",
+        "который",
+        "которая",
+        "которое",
+        "которые",
+        "которого",
+        "которой",
+        "которым",
+        "которых",
+        "зачем",
+        "почему",
+        "отчего",
+        "как",
+        "but",
+        "because",
+        "although",
+        "which",
+        "since",
     ];
 
     let parts: Vec<&str> = s.split("...").collect();
@@ -675,7 +701,11 @@ pub fn clean_speech_pause_ellipses(text: &str) -> String {
             .unwrap_or("")
             .trim_matches(|c: char| !c.is_alphabetic());
         let lower_first = first_word.to_lowercase();
-        let is_capitalized = first_word.chars().next().map(|c| c.is_uppercase()).unwrap_or(false);
+        let is_capitalized = first_word
+            .chars()
+            .next()
+            .map(|c| c.is_uppercase())
+            .unwrap_or(false);
         let ends_with_comma_or_dash = result.ends_with([',', '—', '-']);
         let ends_with_terminal = result.ends_with(['.', '!', '?']);
 
@@ -1121,14 +1151,20 @@ pub fn strip_trailing_hallucinations(text: &str) -> String {
         for &suffix in MEDIA_SUFFIXES {
             let clean_lower = current_lower.trim_end_matches(['.', '!', '?', '…', ' ']);
             if clean_lower.ends_with(suffix) && clean_lower.len() > suffix.len() {
-                let cut_char_count = clean_lower[..clean_lower.len() - suffix.len()].chars().count();
+                let cut_char_count = clean_lower[..clean_lower.len() - suffix.len()]
+                    .chars()
+                    .count();
                 let cut_pos = current
                     .char_indices()
                     .nth(cut_char_count)
                     .map(|(idx, _)| idx)
                     .unwrap_or_else(|| {
                         let raw = clean_lower.len() - suffix.len();
-                        if current.is_char_boundary(raw) { raw } else { current.len() }
+                        if current.is_char_boundary(raw) {
+                            raw
+                        } else {
+                            current.len()
+                        }
                     });
                 if cut_pos < current.len() {
                     let head = current[..cut_pos].trim_end();
@@ -1145,23 +1181,26 @@ pub fn strip_trailing_hallucinations(text: &str) -> String {
 
     // 2. Trailing closure single-token hallucinations: "Спасибо." / "Thank you."
     // Only strip when appended as a detached sentence after a complete thought ending in terminal punctuation (. ! ? …).
-    const CLOSURE_WORDS: &[&str] = &[
-        "спасибо",
-        "thank you",
-    ];
+    const CLOSURE_WORDS: &[&str] = &["спасибо", "thank you"];
 
     for &closure in CLOSURE_WORDS {
         let current_lower = current.to_lowercase();
         let clean_lower = current_lower.trim_end_matches(['.', '!', '?', '…', ' ']);
         if clean_lower.ends_with(closure) && clean_lower.len() > closure.len() {
-            let cut_char_count = clean_lower[..clean_lower.len() - closure.len()].chars().count();
+            let cut_char_count = clean_lower[..clean_lower.len() - closure.len()]
+                .chars()
+                .count();
             let cut_pos = current
                 .char_indices()
                 .nth(cut_char_count)
                 .map(|(idx, _)| idx)
                 .unwrap_or_else(|| {
                     let raw = clean_lower.len() - closure.len();
-                    if current.is_char_boundary(raw) { raw } else { current.len() }
+                    if current.is_char_boundary(raw) {
+                        raw
+                    } else {
+                        current.len()
+                    }
                 });
             if cut_pos < current.len() {
                 let prefix = &current[..cut_pos];
@@ -1446,9 +1485,8 @@ pub fn prune_trailing_repetition_loops(text: &str) -> String {
             }
 
             // Check if unit [n - l..n] matches [n - 2*l..n - l]
-            let matches_once = (0..l).all(|i| {
-                tokens[n - 2 * l + i].normalized == tokens[n - l + i].normalized
-            });
+            let matches_once =
+                (0..l).all(|i| tokens[n - 2 * l + i].normalized == tokens[n - l + i].normalized);
 
             if !matches_once {
                 continue;
@@ -1456,7 +1494,8 @@ pub fn prune_trailing_repetition_loops(text: &str) -> String {
 
             let mut k = 2;
             while n >= (k + 1) * l
-                && (0..l).all(|i| tokens[n - (k + 1) * l + i].normalized == tokens[n - l + i].normalized)
+                && (0..l)
+                    .all(|i| tokens[n - (k + 1) * l + i].normalized == tokens[n - l + i].normalized)
             {
                 k += 1;
             }
@@ -1856,8 +1895,14 @@ mod tests {
         assert_eq!(output_watching, "");
 
         // Hallucinated "Создавал DimaTorzok"
-        assert_eq!(normalize_transcription_text("Создавал DimaTorzok", "ru"), "");
-        assert_eq!(normalize_transcription_text("Создавал DimaTorzok.", "ru"), "");
+        assert_eq!(
+            normalize_transcription_text("Создавал DimaTorzok", "ru"),
+            ""
+        );
+        assert_eq!(
+            normalize_transcription_text("Создавал DimaTorzok.", "ru"),
+            ""
+        );
         assert_eq!(
             normalize_transcription_text("Создавал DimaTorzok: Всем привет.", "ru"),
             "Всем привет."
@@ -2030,10 +2075,7 @@ mod tests {
         );
 
         // Hallucinated "Спасибо!" after an exclamation mark
-        let res2 = normalize_transcription_text(
-            "Отличная работа над релизом! Спасибо!",
-            "ru",
-        );
+        let res2 = normalize_transcription_text("Отличная работа над релизом! Спасибо!", "ru");
         assert_eq!(res2, "Отличная работа над релизом!");
 
         // Hallucinated "Спасибо за просмотр." after a sentence
@@ -2044,10 +2086,8 @@ mod tests {
         assert_eq!(res3, "Мы рассмотрели все детали проекта.");
 
         // Hallucinated "Спасибо за внимание." after a sentence
-        let res4 = normalize_transcription_text(
-            "На этом наш обзор завершен. Спасибо за внимание.",
-            "ru",
-        );
+        let res4 =
+            normalize_transcription_text("На этом наш обзор завершен. Спасибо за внимание.", "ru");
         assert_eq!(res4, "На этом наш обзор завершен.");
 
         // English trailing hallucination
@@ -2138,44 +2178,20 @@ mod tests {
             normalize_transcription_text("Да, да, конечно.", "ru"),
             "Да, да, конечно."
         );
-        assert_eq!(
-            normalize_transcription_text("Да, да.", "ru"),
-            "Да, да."
-        );
-        assert_eq!(
-            normalize_transcription_text("Да. Да.", "ru"),
-            "Да. Да."
-        );
-        assert_eq!(
-            normalize_transcription_text("Yes, yes.", "en"),
-            "Yes, yes."
-        );
-        assert_eq!(
-            normalize_transcription_text("Yes. Yes.", "en"),
-            "Yes. Yes."
-        );
+        assert_eq!(normalize_transcription_text("Да, да.", "ru"), "Да, да.");
+        assert_eq!(normalize_transcription_text("Да. Да.", "ru"), "Да. Да.");
+        assert_eq!(normalize_transcription_text("Yes, yes.", "en"), "Yes, yes.");
+        assert_eq!(normalize_transcription_text("Yes. Yes.", "en"), "Yes. Yes.");
         assert_eq!(
             normalize_transcription_text("Yes, count.", "en"),
             "Yes, count."
         );
 
         // Triplet or more should collapse to 1 copy
-        assert_eq!(
-            normalize_transcription_text("Да, да, да.", "ru"),
-            "Да."
-        );
-        assert_eq!(
-            normalize_transcription_text("Да. Да. Да.", "ru"),
-            "Да."
-        );
-        assert_eq!(
-            normalize_transcription_text("Yes, yes, yes.", "en"),
-            "Yes."
-        );
-        assert_eq!(
-            normalize_transcription_text("Yes. Yes. Yes.", "en"),
-            "Yes."
-        );
+        assert_eq!(normalize_transcription_text("Да, да, да.", "ru"), "Да.");
+        assert_eq!(normalize_transcription_text("Да. Да. Да.", "ru"), "Да.");
+        assert_eq!(normalize_transcription_text("Yes, yes, yes.", "en"), "Yes.");
+        assert_eq!(normalize_transcription_text("Yes. Yes. Yes.", "en"), "Yes.");
 
         // Dash delimiter deduplication
         assert_eq!(
@@ -2225,10 +2241,8 @@ mod tests {
         );
         assert_eq!(fr2, "C'est la fin du cours.");
 
-        let fr3 = normalize_transcription_text(
-            "C'est la fin du cours. Abonnez-vous a ma chaine.",
-            "fr",
-        );
+        let fr3 =
+            normalize_transcription_text("C'est la fin du cours. Abonnez-vous a ma chaine.", "fr");
         assert_eq!(fr3, "C'est la fin du cours.");
 
         // Spanish
@@ -2244,17 +2258,12 @@ mod tests {
         );
         assert_eq!(es2, "Terminamos por hoy.");
 
-        let es3 = normalize_transcription_text(
-            "Terminamos por hoy. Dale like y suscribete.",
-            "es",
-        );
+        let es3 = normalize_transcription_text("Terminamos por hoy. Dale like y suscribete.", "es");
         assert_eq!(es3, "Terminamos por hoy.");
 
         // Russian subtitle media suffixes
-        let ru_sub = normalize_transcription_text(
-            "Мы завершили наш подробный доклад. Текст фильма.",
-            "ru",
-        );
+        let ru_sub =
+            normalize_transcription_text("Мы завершили наш подробный доклад. Текст фильма.", "ru");
         assert_eq!(ru_sub, "Мы завершили наш подробный доклад.");
     }
 
@@ -2317,6 +2326,9 @@ mod tests {
             "...мы закончили... но остались некоторые вопросы...",
             "ru",
         );
-        assert_eq!(full_pipeline_res, "Мы закончили, но остались некоторые вопросы.");
+        assert_eq!(
+            full_pipeline_res,
+            "Мы закончили, но остались некоторые вопросы."
+        );
     }
 }

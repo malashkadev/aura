@@ -23,12 +23,23 @@ impl std::fmt::Display for ValidationError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             ValidationError::EmptyResult => write!(f, "Model returned an empty response"),
-            ValidationError::EchoUnmodified => write!(f, "Model returned the original text without edits"),
-            ValidationError::EchoSpokenCommand => write!(f, "Model answered with the command itself instead of applying it"),
+            ValidationError::EchoUnmodified => {
+                write!(f, "Model returned the original text without edits")
+            }
+            ValidationError::EchoSpokenCommand => write!(
+                f,
+                "Model answered with the command itself instead of applying it"
+            ),
             ValidationError::RepetitionLoop => write!(f, "Model fell into a repetition loop"),
             ValidationError::NotShortened => write!(f, "Model did not shorten the text"),
-            ValidationError::WrongScript => write!(f, "Translation output script did not match the target language"),
-            ValidationError::LengthOutOfBounds => write!(f, "Edited text length deviated excessively from expected bounds"),
+            ValidationError::WrongScript => write!(
+                f,
+                "Translation output script did not match the target language"
+            ),
+            ValidationError::LengthOutOfBounds => write!(
+                f,
+                "Edited text length deviated excessively from expected bounds"
+            ),
         }
     }
 }
@@ -69,16 +80,21 @@ pub fn validate_edit_result(
         EditIntent::Translate { target_lang } => {
             if target_lang == "ru" {
                 // Should have Cyrillic letters
-                if !is_primarily_cyrillic(output_trimmed) && original_selection.chars().count() > 8 {
+                if !is_primarily_cyrillic(output_trimmed) && original_selection.chars().count() > 8
+                {
                     return Err(ValidationError::WrongScript);
                 }
-            } else if ["en", "de", "es", "fr", "it", "pt", "nl", "tr"].contains(&target_lang.as_str()) {
+            } else if ["en", "de", "es", "fr", "it", "pt", "nl", "tr"]
+                .contains(&target_lang.as_str())
+            {
                 // Should NOT be primarily Cyrillic if translating to Latin-based European languages
                 if is_primarily_cyrillic(output_trimmed) && original_selection.chars().count() > 8 {
                     return Err(ValidationError::WrongScript);
                 }
             } else if target_lang == "zh" {
-                let has_cjk = output_trimmed.chars().any(|c| ('\u{4E00}'..='\u{9FFF}').contains(&c));
+                let has_cjk = output_trimmed
+                    .chars()
+                    .any(|c| ('\u{4E00}'..='\u{9FFF}').contains(&c));
                 if !has_cjk && original_selection.chars().count() > 8 {
                     return Err(ValidationError::WrongScript);
                 }
@@ -124,7 +140,10 @@ pub fn validate_edit_result(
     };
 
     if !matches!(intent, EditIntent::Translate { .. }) && !is_translation_custom {
-        let orig_alpha = original_selection.chars().filter(|c| c.is_alphabetic()).count();
+        let orig_alpha = original_selection
+            .chars()
+            .filter(|c| c.is_alphabetic())
+            .count();
         let out_alpha = output_trimmed.chars().filter(|c| c.is_alphabetic()).count();
         if orig_alpha >= 8 && out_alpha >= 8 {
             let orig_cyrillic = is_primarily_cyrillic(original_selection);
@@ -150,7 +169,9 @@ mod tests {
     #[test]
     fn validates_successful_translation() {
         let res = validate_edit_result(
-            &EditIntent::Translate { target_lang: "en".to_string() },
+            &EditIntent::Translate {
+                target_lang: "en".to_string(),
+            },
             "Привет, как дела?",
             "переведи на английский",
             "Hello, how are you?",
@@ -161,7 +182,9 @@ mod tests {
     #[test]
     fn rejects_command_self_translation_echo() {
         let res = validate_edit_result(
-            &EditIntent::Translate { target_lang: "en".to_string() },
+            &EditIntent::Translate {
+                target_lang: "en".to_string(),
+            },
             "Привет, мир!",
             "translate to english",
             "translate to english",
@@ -183,7 +206,9 @@ mod tests {
     #[test]
     fn rejects_wrong_alphabet_for_translation() {
         let res = validate_edit_result(
-            &EditIntent::Translate { target_lang: "en".to_string() },
+            &EditIntent::Translate {
+                target_lang: "en".to_string(),
+            },
             "Это важный рабочий документ для всей команды.",
             "переведи на английский",
             "Это важный рабочий документ для всей команды.",

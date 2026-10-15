@@ -20,11 +20,15 @@ function extractObject(varName) {
 }
 
 const contextObj = extractObject("contextIndicatorTranslations");
-console.log("contextIndicatorTranslations locales:", Object.keys(contextObj));
-for (const loc of expectedLocales) {
-  if (!contextObj[loc]) {
-    console.warn(`[WARN] contextIndicatorTranslations missing locale '${loc}'`);
+if (contextObj) {
+  console.log("contextIndicatorTranslations locales:", Object.keys(contextObj));
+  for (const loc of expectedLocales) {
+    if (!contextObj[loc]) {
+      console.warn(`[WARN] contextIndicatorTranslations missing locale '${loc}'`);
+    }
   }
+} else {
+  console.log("contextIndicatorTranslations not used (edit indicator is handled via amber contour glow).");
 }
 
 // Find processingTranslations

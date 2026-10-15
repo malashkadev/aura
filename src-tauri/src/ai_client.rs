@@ -1084,7 +1084,10 @@ pub async fn edit_text_with_provider(
             "INFO",
             "LLM",
             None,
-            &format!("Cloud command {:?} is disabled in settings; treating as normal dictation", intent),
+            &format!(
+                "Cloud command {:?} is disabled in settings; treating as normal dictation",
+                intent
+            ),
         );
         crate::edit_intent::EditIntent::NotACommand
     } else {
@@ -1103,9 +1106,9 @@ pub async fn edit_text_with_provider(
     }
 
     let client = get_shared_http_client();
-    let system_prompt = intent.system_prompt(selected_text).unwrap_or_else(|| {
-        build_clean_instructions(language, dictionary, true)
-    });
+    let system_prompt = intent
+        .system_prompt(selected_text)
+        .unwrap_or_else(|| build_clean_instructions(language, dictionary, true));
 
     let user_content = format!(
         "Text to process:\n<<<SELECTED_TEXT_START>>>\n{}\n<<<SELECTED_TEXT_END>>>\n\nOutput ONLY the processed replacement text. Do NOT wrap output in tags or markers.",
@@ -1206,9 +1209,8 @@ pub async fn edit_text_with_provider(
                 }
             }
 
-            succeeded.ok_or_else(|| {
-                format!("All Gemini models failed for text editing: {last_error}")
-            })?
+            succeeded
+                .ok_or_else(|| format!("All Gemini models failed for text editing: {last_error}"))?
         }
         ApiProvider::OpenAi => {
             chat_completion_raw(

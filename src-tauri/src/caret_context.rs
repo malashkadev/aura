@@ -29,55 +29,118 @@ fn capture_caret_context_internal() -> CaretContext {
                     if let Ok(count) = selection_array.Length() {
                         if count > 0 {
                             if let Ok(range) = selection_array.GetElement(0) {
-                                let selected_text = range
-                                    .GetText(-1)
-                                    .map(|b| b.to_string())
-                                    .unwrap_or_default();
+                                let selected_text =
+                                    range.GetText(-1).map(|b| b.to_string()).unwrap_or_default();
+
+                                let doc_range = text_pattern.DocumentRange().ok();
 
                                 // Extract up to 100 characters before the cursor / selection
                                 let mut text_before = String::new();
-                                if let Ok(prefix_range) = range.Clone() {
-                                    let _ = prefix_range.MoveEndpointByRange(
-                                        TextPatternRangeEndpoint_End,
-                                        &range,
-                                        TextPatternRangeEndpoint_Start,
-                                    );
-                                    let _ = prefix_range.MoveEndpointByUnit(
-                                        TextPatternRangeEndpoint_Start,
-                                        TextUnit_Character,
-                                        -100,
-                                    );
-                                    if let Ok(bstr) = prefix_range.GetText(-1) {
-                                        let mut s = bstr.to_string();
-                                        if !selected_text.is_empty() && s.ends_with(&selected_text)
-                                        {
-                                            s.truncate(s.len() - selected_text.len());
+                                let at_doc_start = doc_range
+                                    .as_ref()
+                                    .and_then(|doc| {
+                                        range
+                                            .CompareEndpoints(
+                                                TextPatternRangeEndpoint_Start,
+                                                doc,
+                                                TextPatternRangeEndpoint_Start,
+                                            )
+                                            .ok()
+                                    })
+                                    .map(|cmp| cmp <= 0)
+                                    .unwrap_or(false);
+
+                                if !at_doc_start {
+                                    if let Ok(prefix_range) = range.Clone() {
+                                        let _ = prefix_range.MoveEndpointByRange(
+                                            TextPatternRangeEndpoint_End,
+                                            &range,
+                                            TextPatternRangeEndpoint_Start,
+                                        );
+                                        let _ = prefix_range.MoveEndpointByUnit(
+                                            TextPatternRangeEndpoint_Start,
+                                            TextUnit_Character,
+                                            -100,
+                                        );
+                                        if let Some(ref doc) = doc_range {
+                                            if let Ok(cmp) = prefix_range.CompareEndpoints(
+                                                TextPatternRangeEndpoint_Start,
+                                                doc,
+                                                TextPatternRangeEndpoint_Start,
+                                            ) {
+                                                if cmp < 0 {
+                                                    let _ = prefix_range.MoveEndpointByRange(
+                                                        TextPatternRangeEndpoint_Start,
+                                                        doc,
+                                                        TextPatternRangeEndpoint_Start,
+                                                    );
+                                                }
+                                            }
                                         }
-                                        text_before = s;
+                                        if let Ok(bstr) = prefix_range.GetText(-1) {
+                                            let mut s = bstr.to_string();
+                                            if !selected_text.is_empty()
+                                                && s.ends_with(&selected_text)
+                                            {
+                                                s.truncate(s.len() - selected_text.len());
+                                            }
+                                            text_before = s;
+                                        }
                                     }
                                 }
 
                                 // Extract up to 100 characters after the cursor / selection
                                 let mut text_after = String::new();
-                                if let Ok(suffix_range) = range.Clone() {
-                                    let _ = suffix_range.MoveEndpointByRange(
-                                        TextPatternRangeEndpoint_Start,
-                                        &range,
-                                        TextPatternRangeEndpoint_End,
-                                    );
-                                    let _ = suffix_range.MoveEndpointByUnit(
-                                        TextPatternRangeEndpoint_End,
-                                        TextUnit_Character,
-                                        100,
-                                    );
-                                    if let Ok(bstr) = suffix_range.GetText(-1) {
-                                        let mut s = bstr.to_string();
-                                        if !selected_text.is_empty()
-                                            && s.starts_with(&selected_text)
-                                        {
-                                            s = s[selected_text.len()..].to_string();
+                                let at_doc_end = doc_range
+                                    .as_ref()
+                                    .and_then(|doc| {
+                                        range
+                                            .CompareEndpoints(
+                                                TextPatternRangeEndpoint_End,
+                                                doc,
+                                                TextPatternRangeEndpoint_End,
+                                            )
+                                            .ok()
+                                    })
+                                    .map(|cmp| cmp >= 0)
+                                    .unwrap_or(false);
+
+                                if !at_doc_end {
+                                    if let Ok(suffix_range) = range.Clone() {
+                                        let _ = suffix_range.MoveEndpointByRange(
+                                            TextPatternRangeEndpoint_Start,
+                                            &range,
+                                            TextPatternRangeEndpoint_End,
+                                        );
+                                        let _ = suffix_range.MoveEndpointByUnit(
+                                            TextPatternRangeEndpoint_End,
+                                            TextUnit_Character,
+                                            100,
+                                        );
+                                        if let Some(ref doc) = doc_range {
+                                            if let Ok(cmp) = suffix_range.CompareEndpoints(
+                                                TextPatternRangeEndpoint_End,
+                                                doc,
+                                                TextPatternRangeEndpoint_End,
+                                            ) {
+                                                if cmp > 0 {
+                                                    let _ = suffix_range.MoveEndpointByRange(
+                                                        TextPatternRangeEndpoint_End,
+                                                        doc,
+                                                        TextPatternRangeEndpoint_End,
+                                                    );
+                                                }
+                                            }
                                         }
-                                        text_after = s;
+                                        if let Ok(bstr) = suffix_range.GetText(-1) {
+                                            let mut s = bstr.to_string();
+                                            if !selected_text.is_empty()
+                                                && s.starts_with(&selected_text)
+                                            {
+                                                s = s[selected_text.len()..].to_string();
+                                            }
+                                            text_after = s;
+                                        }
                                     }
                                 }
 

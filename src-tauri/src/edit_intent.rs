@@ -147,9 +147,19 @@ fn normalize_utterance(utterance: &str) -> String {
     let trimmed = utterance.trim();
     let cleaned: String = trimmed
         .chars()
-        .map(|c| if c.is_alphanumeric() || c.is_whitespace() || c == '-' { c } else { ' ' })
+        .map(|c| {
+            if c.is_alphanumeric() || c.is_whitespace() || c == '-' {
+                c
+            } else {
+                ' '
+            }
+        })
         .collect();
-    cleaned.split_whitespace().collect::<Vec<_>>().join(" ").to_lowercase()
+    cleaned
+        .split_whitespace()
+        .collect::<Vec<_>>()
+        .join(" ")
+        .to_lowercase()
 }
 
 /// Extracts target language code from a translation utterance across all supported languages.
@@ -453,7 +463,9 @@ pub fn parse_edit_intent(
                 "ru".to_string()
             };
 
-            return EditIntent::Translate { target_lang: target };
+            return EditIntent::Translate {
+                target_lang: target,
+            };
         }
     }
 
@@ -1033,13 +1045,13 @@ mod tests {
 
     #[test]
     fn parses_translate_to_english() {
-        let intent = parse_edit_intent(
-            "Переведи на английский.",
-            "en",
-            "Привет мир",
-            "ru",
+        let intent = parse_edit_intent("Переведи на английский.", "en", "Привет мир", "ru");
+        assert_eq!(
+            intent,
+            EditIntent::Translate {
+                target_lang: "en".to_string()
+            }
         );
-        assert_eq!(intent, EditIntent::Translate { target_lang: "en".to_string() });
 
         let intent2 = parse_edit_intent(
             "пожалуйста переведи на немецкий язык",
@@ -1047,28 +1059,33 @@ mod tests {
             "Привет мир",
             "ru",
         );
-        assert_eq!(intent2, EditIntent::Translate { target_lang: "de".to_string() });
+        assert_eq!(
+            intent2,
+            EditIntent::Translate {
+                target_lang: "de".to_string()
+            }
+        );
     }
 
     #[test]
     fn parses_bare_translate_command() {
         // Cyrillic selection -> default target ("en")
-        let intent = parse_edit_intent(
-            "переведи",
-            "en",
-            "Привет, как твои дела?",
-            "ru",
+        let intent = parse_edit_intent("переведи", "en", "Привет, как твои дела?", "ru");
+        assert_eq!(
+            intent,
+            EditIntent::Translate {
+                target_lang: "en".to_string()
+            }
         );
-        assert_eq!(intent, EditIntent::Translate { target_lang: "en".to_string() });
 
         // English selection -> app UI lang ("ru")
-        let intent2 = parse_edit_intent(
-            "translate",
-            "en",
-            "Hello, how are you doing today?",
-            "ru",
+        let intent2 = parse_edit_intent("translate", "en", "Hello, how are you doing today?", "ru");
+        assert_eq!(
+            intent2,
+            EditIntent::Translate {
+                target_lang: "ru".to_string()
+            }
         );
-        assert_eq!(intent2, EditIntent::Translate { target_lang: "ru".to_string() });
     }
 
     #[test]
@@ -1134,11 +1151,21 @@ mod tests {
     #[test]
     fn rejects_ordinary_dictation_as_not_a_command() {
         assert_eq!(
-            parse_edit_intent("сегодня отличная погода я решил прогуляться", "en", "Текст", "ru"),
+            parse_edit_intent(
+                "сегодня отличная погода я решил прогуляться",
+                "en",
+                "Текст",
+                "ru"
+            ),
             EditIntent::NotACommand
         );
         assert_eq!(
-            parse_edit_intent("мы должны сократить расходы в следующем квартале", "en", "Текст", "ru"),
+            parse_edit_intent(
+                "мы должны сократить расходы в следующем квартале",
+                "en",
+                "Текст",
+                "ru"
+            ),
             EditIntent::NotACommand
         );
         assert_eq!(
@@ -1152,7 +1179,9 @@ mod tests {
         // German
         assert_eq!(
             parse_edit_intent("Bitte übersetze auf Englisch", "en", "Hallo Welt", "de"),
-            EditIntent::Translate { target_lang: "en".to_string() }
+            EditIntent::Translate {
+                target_lang: "en".to_string()
+            }
         );
         assert_eq!(
             parse_edit_intent("mach kürzer", "en", "Langer Text", "de"),
@@ -1174,7 +1203,9 @@ mod tests {
         // French
         assert_eq!(
             parse_edit_intent("S'il vous plaît traduis en allemand", "en", "Bonjour", "fr"),
-            EditIntent::Translate { target_lang: "de".to_string() }
+            EditIntent::Translate {
+                target_lang: "de".to_string()
+            }
         );
         assert_eq!(
             parse_edit_intent("fais plus court", "en", "Texte", "fr"),
@@ -1192,7 +1223,9 @@ mod tests {
         // Spanish
         assert_eq!(
             parse_edit_intent("por favor traduce al francés", "en", "Hola", "es"),
-            EditIntent::Translate { target_lang: "fr".to_string() }
+            EditIntent::Translate {
+                target_lang: "fr".to_string()
+            }
         );
         assert_eq!(
             parse_edit_intent("hazlo más corto", "en", "Texto", "es"),
@@ -1210,7 +1243,9 @@ mod tests {
         // Italian
         assert_eq!(
             parse_edit_intent("traduci in inglese", "en", "Ciao", "it"),
-            EditIntent::Translate { target_lang: "en".to_string() }
+            EditIntent::Translate {
+                target_lang: "en".to_string()
+            }
         );
         assert_eq!(
             parse_edit_intent("accorcia", "en", "Testo", "it"),
@@ -1224,7 +1259,9 @@ mod tests {
         // Portuguese
         assert_eq!(
             parse_edit_intent("traduza para espanhol", "en", "Olá", "pt"),
-            EditIntent::Translate { target_lang: "es".to_string() }
+            EditIntent::Translate {
+                target_lang: "es".to_string()
+            }
         );
         assert_eq!(
             parse_edit_intent("encurta", "en", "Texto", "pt"),
@@ -1234,7 +1271,9 @@ mod tests {
         // Turkish
         assert_eq!(
             parse_edit_intent("lütfen türkçeye çevir", "en", "Hello", "tr"),
-            EditIntent::Translate { target_lang: "tr".to_string() }
+            EditIntent::Translate {
+                target_lang: "tr".to_string()
+            }
         );
         assert_eq!(
             parse_edit_intent("kısalt", "en", "Metin", "tr"),
@@ -1248,7 +1287,9 @@ mod tests {
         // Dutch
         assert_eq!(
             parse_edit_intent("vertaal naar het engels", "en", "Hallo", "nl"),
-            EditIntent::Translate { target_lang: "en".to_string() }
+            EditIntent::Translate {
+                target_lang: "en".to_string()
+            }
         );
         assert_eq!(
             parse_edit_intent("kort in", "en", "Tekst", "nl"),
@@ -1258,7 +1299,9 @@ mod tests {
         // Chinese
         assert_eq!(
             parse_edit_intent("请翻译成英语", "en", "你好世界", "zh"),
-            EditIntent::Translate { target_lang: "en".to_string() }
+            EditIntent::Translate {
+                target_lang: "en".to_string()
+            }
         );
         assert_eq!(
             parse_edit_intent("请总结", "en", "长文本", "zh"),
@@ -1277,7 +1320,12 @@ mod tests {
     #[test]
     fn rejects_conversational_idioms_and_long_sentences() {
         assert_eq!(
-            parse_edit_intent("короче говоря это было отличное решение", "en", "Текст", "ru"),
+            parse_edit_intent(
+                "короче говоря это было отличное решение",
+                "en",
+                "Текст",
+                "ru"
+            ),
             EditIntent::NotACommand
         );
         assert_eq!(
@@ -1323,72 +1371,170 @@ mod tests {
         // Cyrillic text -> translates to default target (en)
         assert_eq!(
             parse_edit_intent("переведи", "en", "Привет мир", "ru"),
-            EditIntent::Translate { target_lang: "en".to_string() }
+            EditIntent::Translate {
+                target_lang: "en".to_string()
+            }
         );
 
         // English text with German UI and default target "en" -> translates to German UI lang
         assert_eq!(
             parse_edit_intent("translate", "en", "Hello world", "de"),
-            EditIntent::Translate { target_lang: "de".to_string() }
+            EditIntent::Translate {
+                target_lang: "de".to_string()
+            }
         );
 
         // English text with German UI and default target "es" -> translates to Spanish
         assert_eq!(
             parse_edit_intent("translate", "es", "Hello world", "de"),
-            EditIntent::Translate { target_lang: "es".to_string() }
+            EditIntent::Translate {
+                target_lang: "es".to_string()
+            }
         );
 
         // English text with Russian UI -> translates to Russian
         assert_eq!(
             parse_edit_intent("переведи", "en", "Hello world", "ru"),
-            EditIntent::Translate { target_lang: "ru".to_string() }
+            EditIntent::Translate {
+                target_lang: "ru".to_string()
+            }
         );
     }
 
     #[test]
     fn test_commands_guide_chips_synchronization() {
         // Fix Grammar chips
-        assert_eq!(parse_edit_intent("исправь ошибки", "en", "Текст", "ru"), EditIntent::FixGrammar);
-        assert_eq!(parse_edit_intent("проверь текст", "en", "Текст", "ru"), EditIntent::FixGrammar);
-        assert_eq!(parse_edit_intent("исправь пунктуацию", "en", "Текст", "ru"), EditIntent::FixGrammar);
+        assert_eq!(
+            parse_edit_intent("исправь ошибки", "en", "Текст", "ru"),
+            EditIntent::FixGrammar
+        );
+        assert_eq!(
+            parse_edit_intent("проверь текст", "en", "Текст", "ru"),
+            EditIntent::FixGrammar
+        );
+        assert_eq!(
+            parse_edit_intent("исправь пунктуацию", "en", "Текст", "ru"),
+            EditIntent::FixGrammar
+        );
 
         // Translate chips
-        assert_eq!(parse_edit_intent("переведи", "en", "Текст", "ru"), EditIntent::Translate { target_lang: "en".into() });
-        assert_eq!(parse_edit_intent("переведи на английский", "en", "Текст", "ru"), EditIntent::Translate { target_lang: "en".into() });
-        assert_eq!(parse_edit_intent("переведи на немецкий", "en", "Текст", "ru"), EditIntent::Translate { target_lang: "de".into() });
+        assert_eq!(
+            parse_edit_intent("переведи", "en", "Текст", "ru"),
+            EditIntent::Translate {
+                target_lang: "en".into()
+            }
+        );
+        assert_eq!(
+            parse_edit_intent("переведи на английский", "en", "Текст", "ru"),
+            EditIntent::Translate {
+                target_lang: "en".into()
+            }
+        );
+        assert_eq!(
+            parse_edit_intent("переведи на немецкий", "en", "Текст", "ru"),
+            EditIntent::Translate {
+                target_lang: "de".into()
+            }
+        );
 
         // Shorten chips
-        assert_eq!(parse_edit_intent("сократи", "en", "Текст", "ru"), EditIntent::Shorten);
-        assert_eq!(parse_edit_intent("сделай короче", "en", "Текст", "ru"), EditIntent::Shorten);
-        assert_eq!(parse_edit_intent("сожми текст", "en", "Текст", "ru"), EditIntent::Shorten);
+        assert_eq!(
+            parse_edit_intent("сократи", "en", "Текст", "ru"),
+            EditIntent::Shorten
+        );
+        assert_eq!(
+            parse_edit_intent("сделай короче", "en", "Текст", "ru"),
+            EditIntent::Shorten
+        );
+        assert_eq!(
+            parse_edit_intent("сожми текст", "en", "Текст", "ru"),
+            EditIntent::Shorten
+        );
 
         // Expand chips
-        assert_eq!(parse_edit_intent("распиши подробнее", "en", "Текст", "ru"), EditIntent::Expand);
-        assert_eq!(parse_edit_intent("разверни мысль", "en", "Текст", "ru"), EditIntent::Expand);
-        assert_eq!(parse_edit_intent("добавь деталей", "en", "Текст", "ru"), EditIntent::Expand);
+        assert_eq!(
+            parse_edit_intent("распиши подробнее", "en", "Текст", "ru"),
+            EditIntent::Expand
+        );
+        assert_eq!(
+            parse_edit_intent("разверни мысль", "en", "Текст", "ru"),
+            EditIntent::Expand
+        );
+        assert_eq!(
+            parse_edit_intent("добавь деталей", "en", "Текст", "ru"),
+            EditIntent::Expand
+        );
 
         // Bulletize chips
-        assert_eq!(parse_edit_intent("сделай список", "en", "Текст", "ru"), EditIntent::Bulletize);
-        assert_eq!(parse_edit_intent("по пунктам", "en", "Текст", "ru"), EditIntent::Bulletize);
-        assert_eq!(parse_edit_intent("оформи списком", "en", "Текст", "ru"), EditIntent::Bulletize);
+        assert_eq!(
+            parse_edit_intent("сделай список", "en", "Текст", "ru"),
+            EditIntent::Bulletize
+        );
+        assert_eq!(
+            parse_edit_intent("по пунктам", "en", "Текст", "ru"),
+            EditIntent::Bulletize
+        );
+        assert_eq!(
+            parse_edit_intent("оформи списком", "en", "Текст", "ru"),
+            EditIntent::Bulletize
+        );
 
         // Summarize chips
-        assert_eq!(parse_edit_intent("главные тезисы", "en", "Текст", "ru"), EditIntent::Summarize);
-        assert_eq!(parse_edit_intent("краткая суть", "en", "Текст", "ru"), EditIntent::Summarize);
-        assert_eq!(parse_edit_intent("сделай саммари", "en", "Текст", "ru"), EditIntent::Summarize);
-        assert_eq!(parse_edit_intent("сделай выжимку", "en", "Текст", "ru"), EditIntent::Summarize);
-        assert_eq!(parse_edit_intent("выжимку", "en", "Текст", "ru"), EditIntent::Summarize);
+        assert_eq!(
+            parse_edit_intent("главные тезисы", "en", "Текст", "ru"),
+            EditIntent::Summarize
+        );
+        assert_eq!(
+            parse_edit_intent("краткая суть", "en", "Текст", "ru"),
+            EditIntent::Summarize
+        );
+        assert_eq!(
+            parse_edit_intent("сделай саммари", "en", "Текст", "ru"),
+            EditIntent::Summarize
+        );
+        assert_eq!(
+            parse_edit_intent("сделай выжимку", "en", "Текст", "ru"),
+            EditIntent::Summarize
+        );
+        assert_eq!(
+            parse_edit_intent("выжимку", "en", "Текст", "ru"),
+            EditIntent::Summarize
+        );
 
         // Rewrite Formal chips
-        assert_eq!(parse_edit_intent("деловой стиль", "en", "Текст", "ru"), EditIntent::RewriteFormal);
-        assert_eq!(parse_edit_intent("в деловом стиле", "en", "Текст", "ru"), EditIntent::RewriteFormal);
-        assert_eq!(parse_edit_intent("сделай официально", "en", "Текст", "ru"), EditIntent::RewriteFormal);
-        assert_eq!(parse_edit_intent("вежливый тон", "en", "Текст", "ru"), EditIntent::RewriteFormal);
+        assert_eq!(
+            parse_edit_intent("деловой стиль", "en", "Текст", "ru"),
+            EditIntent::RewriteFormal
+        );
+        assert_eq!(
+            parse_edit_intent("в деловом стиле", "en", "Текст", "ru"),
+            EditIntent::RewriteFormal
+        );
+        assert_eq!(
+            parse_edit_intent("сделай официально", "en", "Текст", "ru"),
+            EditIntent::RewriteFormal
+        );
+        assert_eq!(
+            parse_edit_intent("вежливый тон", "en", "Текст", "ru"),
+            EditIntent::RewriteFormal
+        );
 
         // Rewrite Casual chips
-        assert_eq!(parse_edit_intent("простыми словами", "en", "Текст", "ru"), EditIntent::RewriteCasual);
-        assert_eq!(parse_edit_intent("дружеский тон", "en", "Текст", "ru"), EditIntent::RewriteCasual);
-        assert_eq!(parse_edit_intent("неформально", "en", "Текст", "ru"), EditIntent::RewriteCasual);
-        assert_eq!(parse_edit_intent("непринужденный стиль", "en", "Текст", "ru"), EditIntent::RewriteCasual);
+        assert_eq!(
+            parse_edit_intent("простыми словами", "en", "Текст", "ru"),
+            EditIntent::RewriteCasual
+        );
+        assert_eq!(
+            parse_edit_intent("дружеский тон", "en", "Текст", "ru"),
+            EditIntent::RewriteCasual
+        );
+        assert_eq!(
+            parse_edit_intent("неформально", "en", "Текст", "ru"),
+            EditIntent::RewriteCasual
+        );
+        assert_eq!(
+            parse_edit_intent("непринужденный стиль", "en", "Текст", "ru"),
+            EditIntent::RewriteCasual
+        );
     }
 }
