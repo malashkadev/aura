@@ -38,7 +38,7 @@ Press and hold the hotkey, speak, and release — Aura instantly transcribes you
 - **Gaming Mode** — automatic detection of 3D games (DirectX / Vulkan) with keyboard hook suspension and model memory unloading for maximum FPS, plus manual tray toggle.
 - **Idle VRAM Standby (Sleep)** — configurable standby timer (15, 30, 60 minutes) to free GPU memory without closing Aura.
 - **Real-time streaming input** — smooth word-level streaming into active fields without flickering or text duplicates (NVIDIA Parakeet).
-- **Text Replacements & Dynamic Macros** — local rules for instant text expansion into snippets, email addresses, or live date/time tokens (`{date}`, `{date_ru}`, `{time}`, `{datetime}`).
+- **Text Replacements & Dynamic Macros** — local rules for instant text expansion into snippets, email addresses, or live date/time tokens (`{date}`, `{date_ru}`, `{time}`, `{datetime}`). A `|` marker in a template sets the final cursor position (e.g. `Hello, |!`).
 - **Focus Guard & Context Editing** — ensures transcribed text is never typed into the wrong window if focus shifts (with safe clipboard handoff), and provides 1-click text editing on selected text with a visual AI sparkle indicator.
 - **Audio device selection, WASAPI Hotplug & Tail Hold** — choose physical microphone input devices with dynamic device hotplugging, 450ms tail grace buffer, and non-destructive Silero VAD silence trimming.
 - **Transcription history with day grouping** — up to 300 encrypted dictations (DPAPI) with day grouping (Today / Yesterday / calendar dates), live search, and source filters.
@@ -131,7 +131,7 @@ cargo test
 
 - **Gaming Mode** — automatic detection of 3D games and graphics APIs (DirectX / Vulkan) with safe suspension of the low-level keyboard hook and model memory unloading to maintain 100% FPS in games, plus manual tray toggle.
 - **Idle VRAM Standby (Sleep)** — automatic model unloading from dedicated GPU memory when idle for 15, 30, or 60 minutes, with instant reload on next activation.
-- **Local Text Replacements & Dynamic Macros** — custom expansion rules to replace spoken triggers with text snippets, email addresses, or live date/time tokens (`{date}`, `{date_ru}`, `{time}`, `{datetime}`).
+- **Local Text Replacements & Dynamic Macros** — custom expansion rules to replace spoken triggers with text snippets, email addresses, or live date/time tokens (`{date}`, `{date_ru}`, `{time}`, `{datetime}`). A `|` marker in a template sets the final cursor position (e.g. `Hello, |!`).
 - **Native High-DPI Tray Menu** — custom WebView2 tray window with per-monitor DPI awareness and multi-monitor cursor placement, featuring instant gaming mode toggle.
 - **Dynamic Microphone Hotplug (WASAPI)** — real-time detection and graceful reconnection when headsets or USB microphones are plugged or unplugged.
 - **300-Item Encrypted History** — day grouping (Today / Yesterday), live search, source filtering, and DPAPI encryption.
