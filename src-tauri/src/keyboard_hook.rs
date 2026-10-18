@@ -128,15 +128,20 @@ fn invoke_bool_callback(
 #[cfg(target_os = "windows")]
 mod windows_impl {
     use super::*;
-    use windows_sys::Win32::Foundation::{LPARAM, LRESULT, WPARAM};
+    use windows_sys::Win32::Foundation::{HWND, LPARAM, LRESULT, WPARAM};
+    use windows_sys::Win32::System::LibraryLoader::GetModuleHandleW;
+    use windows_sys::Win32::System::RemoteDesktop::{
+        WTSRegisterSessionNotification, WTSUnRegisterSessionNotification, NOTIFY_FOR_THIS_SESSION,
+    };
     use windows_sys::Win32::UI::Input::KeyboardAndMouse::{
         GetAsyncKeyState, SendInput, INPUT, INPUT_KEYBOARD, KEYBDINPUT, KEYEVENTF_EXTENDEDKEY,
         KEYEVENTF_KEYUP, VK_CONTROL,
     };
     use windows_sys::Win32::UI::WindowsAndMessaging::{
-        CallNextHookEx, DispatchMessageW, GetMessageW, SetWindowsHookExW, TranslateMessage,
-        UnhookWindowsHookEx, KBDLLHOOKSTRUCT, MSG, WH_KEYBOARD_LL, WM_KEYDOWN, WM_KEYUP,
-        WM_SYSKEYDOWN, WM_SYSKEYUP,
+        CallNextHookEx, CreateWindowExW, DefWindowProcW, DestroyWindow, DispatchMessageW,
+        GetMessageW, RegisterClassW, SetWindowsHookExW, TranslateMessage, UnhookWindowsHookEx,
+        HWND_MESSAGE, KBDLLHOOKSTRUCT, MSG, WH_KEYBOARD_LL, WM_KEYDOWN, WM_KEYUP, WM_SYSKEYDOWN,
+        WM_SYSKEYUP, WM_WTSSESSION_CHANGE, WNDCLASSW, WTS_SESSION_LOCK, WTS_SESSION_UNLOCK,
     };
 
     const MOD_CTRL: u32 = 1 << 0;
@@ -388,6 +393,78 @@ mod windows_impl {
         }
     }
 
+    fn clear_phantom_hotkey_state() {
+        SUPPRESSED_MODIFIERS.store(0, Ordering::SeqCst);
+        SHORTCUT_ACTIVE.store(false, Ordering::SeqCst);
+        KEY_SUPPRESSED.store(false, Ordering::SeqCst);
+        apply_pending_hotkey();
+        crate::logger::log(
+            "INFO",
+            "Hotkey",
+            None,
+            "Session lock/unlock detected; stale hotkey state cleared",
+        );
+    }
+
+    unsafe extern "system" fn session_wnd_proc(
+        hwnd: HWND,
+        msg: u32,
+        wparam: WPARAM,
+        lparam: LPARAM,
+    ) -> LRESULT {
+        if msg == WM_WTSSESSION_CHANGE
+            && (wparam == WTS_SESSION_LOCK as WPARAM || wparam == WTS_SESSION_UNLOCK as WPARAM)
+        {
+            clear_phantom_hotkey_state();
+        }
+        DefWindowProcW(hwnd, msg, wparam, lparam)
+    }
+
+    unsafe fn create_session_notification_window() -> Option<HWND> {
+        let class_name: Vec<u16> = "AuraSessionNotification"
+            .encode_utf16()
+            .chain(std::iter::once(0))
+            .collect();
+        let module = GetModuleHandleW(std::ptr::null());
+        let mut window_class: WNDCLASSW = std::mem::zeroed();
+        window_class.lpfnWndProc = Some(session_wnd_proc);
+        window_class.hInstance = module;
+        window_class.lpszClassName = class_name.as_ptr();
+        RegisterClassW(&window_class);
+        let hwnd = CreateWindowExW(
+            0,
+            class_name.as_ptr(),
+            class_name.as_ptr(),
+            0,
+            0,
+            0,
+            0,
+            0,
+            HWND_MESSAGE,
+            0,
+            module,
+            std::ptr::null(),
+        );
+        if hwnd == 0 {
+            crate::logger::log(
+                "ERROR",
+                "Hotkey",
+                None,
+                "Failed to create session-notification window; lock/unlock recovery is disabled",
+            );
+            return None;
+        }
+        if WTSRegisterSessionNotification(hwnd, NOTIFY_FOR_THIS_SESSION) == 0 {
+            crate::logger::log(
+                "ERROR",
+                "Hotkey",
+                None,
+                "WTSRegisterSessionNotification failed; lock/unlock recovery is disabled",
+            );
+        }
+        Some(hwnd)
+    }
+
     fn notify_hotkey(is_down: bool) {
         invoke_bool_callback(&CALLBACK, is_down, || {
             crate::logger::log(
@@ -425,9 +502,15 @@ mod windows_impl {
         std::thread::Builder::new()
             .name("aura-keyboard-hook".to_string())
             .spawn(move || unsafe {
+                let session_window = create_session_notification_window();
+
                 let hook = SetWindowsHookExW(WH_KEYBOARD_LL, Some(low_level_keyboard_proc), 0, 0);
 
                 if hook == 0 {
+                    if let Some(hwnd) = session_window {
+                        WTSUnRegisterSessionNotification(hwnd);
+                        DestroyWindow(hwnd);
+                    }
                     let _ = ready_tx.send(Err(format!(
                         "Failed to install global keyboard hook: {}",
                         std::io::Error::last_os_error()
@@ -462,6 +545,11 @@ mod windows_impl {
                 }
 
                 UnhookWindowsHookEx(hook);
+
+                if let Some(hwnd) = session_window {
+                    WTSUnRegisterSessionNotification(hwnd);
+                    DestroyWindow(hwnd);
+                }
             })
             .map_err(|error| format!("Failed to spawn keyboard hook thread: {error}"))?;
 
@@ -626,7 +714,10 @@ mod windows_impl {
 
     #[cfg(test)]
     mod tests {
-        use super::{is_any_modifier_key, parse_hotkey, MOD_ALT, MOD_CTRL, MOD_SHIFT, MOD_WIN};
+        use super::{
+            clear_phantom_hotkey_state, is_any_modifier_key, parse_hotkey, KEY_SUPPRESSED, MOD_ALT,
+            MOD_CTRL, MOD_SHIFT, MOD_WIN, SHORTCUT_ACTIVE, SUPPRESSED_MODIFIERS,
+        };
 
         #[test]
         fn test_parse_hotkey_combinations() {
@@ -707,6 +798,21 @@ mod windows_impl {
                 true,
                 |m| m == MOD_CTRL || m == MOD_ALT || m == MOD_SHIFT
             ));
+        }
+
+        #[test]
+        fn session_change_clears_phantom_hotkey_state() {
+            use std::sync::atomic::Ordering;
+
+            SUPPRESSED_MODIFIERS.store(MOD_ALT | MOD_SHIFT, Ordering::SeqCst);
+            SHORTCUT_ACTIVE.store(true, Ordering::SeqCst);
+            KEY_SUPPRESSED.store(true, Ordering::SeqCst);
+
+            clear_phantom_hotkey_state();
+
+            assert_eq!(SUPPRESSED_MODIFIERS.load(Ordering::SeqCst), 0);
+            assert!(!SHORTCUT_ACTIVE.load(Ordering::SeqCst));
+            assert!(!KEY_SUPPRESSED.load(Ordering::SeqCst));
         }
     }
 }
