@@ -44,6 +44,7 @@ test("Tauri capabilities isolate main, overlay, and tray-menu with least privile
   assert.ok(main.permissions.includes("allow-check-for-app-update"));
   assert.ok(main.permissions.includes("allow-install-app-update"));
   assert.ok(main.permissions.includes("allow-complete-onboarding"));
+  assert.ok(main.permissions.includes("allow-exit-app"));
   assert.equal(main.permissions.some((permission) => permission.startsWith("updater:")), false);
   assert.deepEqual(
     overlay.permissions.toSorted(),
@@ -235,7 +236,7 @@ test("settings UI exposes native accessible controls and responsive motion-safe 
   assert.match(html, /role="tab"/);
   assert.match(html, /role="tabpanel"/);
   assert.match(html, /<dialog[^>]+id="custom-confirm-modal"/);
-  assert.match(html, /<dialog[^>]+id="modal-commands-guide"/);
+  assert.match(html, /id="commands-info-guide"/);
   assert.match(html, /id="spotlight-tour-overlay"/);
   assert.match(main, /initSpotlightTour/);
   assert.match(html, /aria-live="polite"/);
@@ -537,8 +538,11 @@ test("desktop app maintains strict design-system isolation from website palette 
   // Global user-select reset
   assert.match(styleCss, /\*,\s*\*::before,\s*\*::after\s*\{[^}]*user-select:\s*none;/);
 
-  // Commands guide button is placed near the top of the selection edit section (before select-ai-edit-mode)
-  const commandsGuideIdx = html.indexOf('id="btn-open-commands-guide"');
+  // Commands guide button or group is placed near the top of the selection edit section (before select-ai-edit-mode)
+  const commandsGuideIdx = Math.max(
+    html.indexOf('id="btn-open-commands-guide"'),
+    html.indexOf('id="group-supported-commands"'),
+  );
   const aiEditModeIdx = html.indexOf('id="select-ai-edit-mode"');
   assert.ok(commandsGuideIdx > 0 && aiEditModeIdx > 0, "Both controls must exist in index.html");
   assert.ok(

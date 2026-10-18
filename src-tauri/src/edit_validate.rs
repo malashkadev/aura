@@ -3,8 +3,7 @@
 //! Guarantees that:
 //! 1. The result is never an empty response or an unedited echo of the input.
 //! 2. For translations, the output script aligns with the target language.
-//! 3. For shortening, the result is actually shorter than the original text.
-//! 4. For grammar fixes, the text does not hallucinate new content or collapse.
+//! 3. For grammar fixes, the text does not hallucinate new content or collapse.
 
 use crate::edit_intent::{is_primarily_cyrillic, EditIntent};
 
@@ -14,7 +13,6 @@ pub enum ValidationError {
     EchoUnmodified,
     EchoSpokenCommand,
     RepetitionLoop,
-    NotShortened,
     WrongScript,
     LengthOutOfBounds,
 }
@@ -31,7 +29,6 @@ impl std::fmt::Display for ValidationError {
                 "Model answered with the command itself instead of applying it"
             ),
             ValidationError::RepetitionLoop => write!(f, "Model fell into a repetition loop"),
-            ValidationError::NotShortened => write!(f, "Model did not shorten the text"),
             ValidationError::WrongScript => write!(
                 f,
                 "Translation output script did not match the target language"
@@ -100,14 +97,6 @@ pub fn validate_edit_result(
                 }
             }
         }
-        EditIntent::Shorten => {
-            let orig_len = original_selection.chars().count();
-            let out_len = output_trimmed.chars().count();
-            // If original had more than 20 characters, shortened text MUST be shorter
-            if orig_len > 20 && out_len >= orig_len {
-                return Err(ValidationError::NotShortened);
-            }
-        }
         EditIntent::FixGrammar => {
             let orig_len = original_selection.chars().count();
             let out_len = output_trimmed.chars().count();
@@ -116,30 +105,11 @@ pub fn validate_edit_result(
                 return Err(ValidationError::LengthOutOfBounds);
             }
         }
-        _ => {}
+        EditIntent::NotACommand => {}
     }
 
     // 2. Output script must match original selection for all non-translation intents
-    let is_translation_custom = if let EditIntent::Custom(instruction) = intent {
-        let ins_lower = instruction.to_lowercase();
-        ins_lower.contains("перевод")
-            || ins_lower.contains("переведи")
-            || ins_lower.contains("перевести")
-            || ins_lower.contains("translate")
-            || ins_lower.contains("traduc")
-            || ins_lower.contains("übersetz")
-            || ins_lower.contains("ubersetz")
-            || ins_lower.contains("vertal")
-            || ins_lower.contains("çevir")
-            || ins_lower.contains("cevir")
-            || ins_lower.contains("tercüm")
-            || ins_lower.contains("tercum")
-            || ins_lower.contains("翻译")
-    } else {
-        false
-    };
-
-    if !matches!(intent, EditIntent::Translate { .. }) && !is_translation_custom {
+    if !matches!(intent, EditIntent::Translate { .. }) {
         let orig_alpha = original_selection
             .chars()
             .filter(|c| c.is_alphabetic())
@@ -193,17 +163,6 @@ mod tests {
     }
 
     #[test]
-    fn rejects_unshortened_text() {
-        let res = validate_edit_result(
-            &EditIntent::Shorten,
-            "Это очень длинный текст, который нужно обязательно сократить для краткости.",
-            "сократи",
-            "Это очень длинный текст, который нужно обязательно сократить для краткости и полноты понимания темы.",
-        );
-        assert_eq!(res, Err(ValidationError::NotShortened));
-    }
-
-    #[test]
     fn rejects_wrong_alphabet_for_translation() {
         let res = validate_edit_result(
             &EditIntent::Translate {
@@ -217,24 +176,24 @@ mod tests {
     }
 
     #[test]
-    fn rejects_translation_during_shortening() {
+    fn validates_successful_grammar_correction() {
         let res = validate_edit_result(
-            &EditIntent::Shorten,
-            "Найден публичный ключ, но нет приватного ключа. Убедитесь, что переменная установлена.",
-            "сократи",
-            "Public key found, but no private key. Ensure variable is set.",
+            &EditIntent::FixGrammar,
+            "Это премер текста с ошыбками который надо исправить",
+            "исправь ошибки",
+            "Это пример текста с ошибками, который надо исправить.",
         );
-        assert_eq!(res, Err(ValidationError::WrongScript));
+        assert!(res.is_ok());
     }
 
     #[test]
-    fn allows_script_change_for_custom_translation_instruction() {
+    fn rejects_language_switch_on_grammar_fix() {
         let res = validate_edit_result(
-            &EditIntent::Custom("сделай перевод на английский".to_string()),
+            &EditIntent::FixGrammar,
             "Это важный рабочий документ для всей команды.",
-            "сделай перевод на английский",
-            "This is an important working document for the entire team.",
+            "исправь ошибки",
+            "This is an important working document for the whole team.",
         );
-        assert!(res.is_ok());
+        assert_eq!(res, Err(ValidationError::WrongScript));
     }
 }

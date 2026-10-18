@@ -38,6 +38,7 @@
     "allow-get-audio-input-devices",
     "allow-toggle-gaming-mode",
     "allow-get-gaming-mode-state",
-    "allow-complete-onboarding"
+    "allow-complete-onboarding",
+    "allow-exit-app"
   ]
 }

@@ -1,4 +1,4 @@
-const { listen } = window.__TAURI__.event;
+const { listen } = (window.__TAURI__ && window.__TAURI__.event) || { listen: () => {} };
 
 const bars = document.querySelectorAll(".sound-bar");
 const statusEl = document.getElementById("overlay-status");
@@ -430,6 +430,18 @@ function playThemeError() {
 const restHeight = 2.5;
 const maxHeight = 16.0;
 
+// Exact silence reference color (#722205) and Aura tactical orange (#FE4200)
+const COLOR_SILENCE = { r: 114, g: 34, b: 5 };
+const COLOR_SPEECH = { r: 254, g: 66, b: 0 };
+
+function getBarHeatColor(energy) {
+  const clamped = Math.max(0, Math.min(1, energy));
+  const r = Math.round(COLOR_SILENCE.r + (COLOR_SPEECH.r - COLOR_SILENCE.r) * clamped);
+  const g = Math.round(COLOR_SILENCE.g + (COLOR_SPEECH.g - COLOR_SILENCE.g) * clamped);
+  const b = Math.round(COLOR_SILENCE.b + (COLOR_SPEECH.b - COLOR_SILENCE.b) * clamped);
+  return `rgb(${r}, ${g}, ${b})`;
+}
+
 // Track current and target heights for smooth linear interpolation (lerp)
 const barStates = Array.from(bars).map(() => ({
   currentHeight: restHeight,
@@ -444,8 +456,11 @@ function resetBars() {
   });
   bars.forEach(bar => {
     bar.setAttribute("height", restHeight.toString());
-    bar.setAttribute("y", (14.6001 - restHeight / 2).toString());
+    bar.setAttribute("y", (15.0 - restHeight / 2).toString());
     bar.setAttribute("rx", (restHeight / 2).toString());
+    if (currentState === "recording") {
+      bar.setAttribute("fill", "rgb(114, 34, 5)");
+    }
   });
 }
 
@@ -535,12 +550,15 @@ function updateAnimation() {
       bars.forEach((bar, index) => {
         const h = barStates[index].targetHeight;
         bar.setAttribute("height", h.toString());
-        bar.setAttribute("y", (14.6001 - h / 2).toString());
+        bar.setAttribute("y", (15.0 - h / 2).toString());
+        const barEnergy = Math.max(0, Math.min(1, (h - restHeight) / 7.0));
+        bar.setAttribute("fill", getBarHeatColor(barEnergy));
       });
     } else if (currentState === "processing") {
       bars.forEach(bar => {
         bar.setAttribute("height", "4.0");
         bar.setAttribute("y", "12.6");
+        bar.setAttribute("fill", "#FE4200");
       });
     }
     requestAnimationFrame(updateAnimation);
@@ -601,10 +619,20 @@ function updateAnimation() {
     const blendedTarget = state.targetHeight * recFactor + targetProcH * procFactor;
     state.currentHeight += (blendedTarget - state.currentHeight) * 0.16;
 
-    const y = 14.6001 - (state.currentHeight / 2);
+    const y = 15.0 - (state.currentHeight / 2);
     bar.setAttribute("height", state.currentHeight.toFixed(2));
     bar.setAttribute("y", y.toFixed(2));
     bar.setAttribute("rx", (Math.min(1.5, state.currentHeight / 2)).toFixed(2));
+
+    // Dynamic bar color (Variant 2: Per-bar heat / energy):
+    // In silence (restHeight = 2.5), energy = 0 -> #722205 (exact silence reference).
+    // As speech elevates bars, energy scales towards 1.0 -> #FE4200 (tactical orange).
+    // During transition to processing or in processing, smoothly illuminate to #FE4200.
+    if (currentState === "recording" || currentState === "processing") {
+      const barEnergy = Math.max(0, Math.min(1, (state.currentHeight - restHeight) / 7.0));
+      const effectiveEnergy = procFactor > 0 ? barEnergy + (1 - barEnergy) * procFactor : barEnergy;
+      bar.setAttribute("fill", getBarHeatColor(effectiveEnergy));
+    }
   });
 
   requestAnimationFrame(updateAnimation);
@@ -1004,7 +1032,7 @@ listen("recording-state", (event) => {
     recordStart = Date.now();
     setOverlayText(overlayShowTimer ? "0:00" : "");
     statusEl.classList.remove("error");
-    setBarColor("#FE4200");
+    setBarColor("rgb(114, 34, 5)");
     resetBars();
 
     // Animate show and play startup sound
@@ -1218,3 +1246,9 @@ listen("volume-level", (event) => {
     state.targetHeight = h;
   });
 });
+
+// Standalone preview fallback (when opened outside Tauri in browser QA or test runner)
+if (!window.__TAURI__ && pill) {
+  pill.classList.add("visible");
+  setOverlayText("0:00");
+}

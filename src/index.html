@@ -102,66 +102,6 @@
               </div>
             </div>
           </div>
-
-
-          <div class="card" id="card-gaming-mode">
-            <h2 class="card-title" data-i18n="gaming_title">Игровой режим</h2>
-            <p class="card-desc" data-i18n="gaming_desc">Автоматическая пауза перехвата клавиш и выгрузка моделей для максимального FPS в играх.</p>
-            
-            <div class="card-section">
-              <label class="toggle-switch">
-                <input type="checkbox" id="checkbox-gaming-mode-auto-detect" />
-                <span class="toggle-track">
-                  <span class="toggle-thumb"></span>
-                </span>
-                <span class="toggle-label" data-i18n="gaming_auto_label">Автоматический игровой режим</span>
-              </label>
-            </div>
-
-            <hr class="divider" />
-
-            <div class="card-section">
-              <label class="toggle-switch">
-                <input type="checkbox" id="checkbox-gaming-mode" />
-                <span class="toggle-track">
-                  <span class="toggle-thumb"></span>
-                </span>
-                <span class="toggle-label" data-i18n="gaming_mode_label">Включить игровой режим вручную</span>
-              </label>
-              <p class="switch-desc" data-i18n="gaming_mode_subdesc">
-                Отключает перехват клавиатуры и выгружает модели из видеопамяти (VRAM).
-              </p>
-            </div>
-            <p class="field-hint" data-i18n="gaming_tray_hint" style="margin-top: 12px;">Ручное переключение также доступно через меню Aura в трее Windows.</p>
-          </div>
-
-          <div class="card" id="card-vram-standby">
-            <h2 class="card-title" data-i18n="standby_title">Выгрузка моделей при бездействии (Сон)</h2>
-            <p class="card-desc" data-i18n="standby_desc">Освобождает видеопамять (VRAM), если голосовой ввод не используется указанное время.</p>
-            <div class="form-group">
-              <label for="select-vram-standby" class="field-label" data-i18n="standby_timeout_label">Время бездействия до перехода в сон</label>
-              <div class="select-wrap">
-                <select id="select-vram-standby" class="custom-select" aria-haspopup="listbox" aria-expanded="false">
-                  <option value="15" data-i18n="standby_15m">Через 15 минут</option>
-                  <option value="30" data-i18n="standby_30m" selected>Через 30 минут (рекомендуется)</option>
-                  <option value="60" data-i18n="standby_60m">Через 1 час</option>
-                  <option value="0" data-i18n="standby_never">Никогда (держать в VRAM)</option>
-                </select>
-                <div class="select-panel" id="panel-select-vram-standby" role="listbox"></div>
-              </div>
-            </div>
-          </div>
-
-          <div class="card">
-            <h2 class="card-title" data-i18n="update_checks_title">Проверка обновлений</h2>
-            <p class="card-desc" data-i18n="update_checks_desc">Aura обращается к GitHub только при ручной проверке или если вы включили автоматическую проверку.</p>
-            <label class="toggle-switch">
-              <input type="checkbox" id="checkbox-automatic-update-checks" />
-              <span class="toggle-track"><span class="toggle-thumb"></span></span>
-              <span class="toggle-label" data-i18n="update_checks_checkbox">Автоматически проверять обновления при запуске</span>
-            </label>
-            <button type="button" class="btn btn-secondary" id="btn-check-updates" data-i18n="update_check_now">Проверить обновления</button>
-          </div>
         </section>
 
         <!-- 2. SPEECH PANEL -->
@@ -299,9 +239,8 @@
                       <span class="model-meta" data-i18n="gpu_accel_cpu_desc">Стандартный режим. Безопасен, но нагружает процессор (CPU).</span>
                     </div>
                     <div class="model-card-action" id="action-gpu-cpu">
-                      <span class="status-ready-badge">
+                      <span class="status-ready-badge" data-i18n-title="model_status_ready" title="Установлено" aria-label="Установлено">
                         <svg class="status-ready-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                        <span data-i18n="model_status_ready">Установлено</span>
                       </span>
                     </div>
                   </div>
@@ -432,6 +371,54 @@
               </div>
             </div>
           </div>
+
+          <div class="card" id="card-vram-standby">
+            <h2 class="card-title" data-i18n="standby_title">Выгрузка моделей при бездействии (Сон)</h2>
+            <p class="card-desc" data-i18n="standby_desc">Освобождает видеопамять (VRAM), если голосовой ввод не используется указанное время.</p>
+            <div class="form-group">
+              <label for="select-vram-standby" class="field-label" data-i18n="standby_timeout_label">Время бездействия до перехода в сон</label>
+              <div class="select-wrap">
+                <select id="select-vram-standby" class="custom-select" aria-haspopup="listbox" aria-expanded="false">
+                  <option value="15" data-i18n="standby_15m">Через 15 минут</option>
+                  <option value="30" data-i18n="standby_30m" selected>Через 30 минут (рекомендуется)</option>
+                  <option value="60" data-i18n="standby_60m">Через 1 час</option>
+                  <option value="0" data-i18n="standby_never">Никогда (держать в VRAM)</option>
+                </select>
+                <div class="select-panel" id="panel-select-vram-standby" role="listbox"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" id="card-gaming-mode">
+          <h2 class="card-title" data-i18n="gaming_title">Игровой режим</h2>
+          <p class="card-desc" data-i18n="gaming_desc">Автоматическая пауза перехвата клавиш и выгрузка моделей для максимального FPS в играх.</p>
+          
+          <div class="card-section">
+            <label class="toggle-switch">
+              <input type="checkbox" id="checkbox-gaming-mode-auto-detect" />
+              <span class="toggle-track">
+                <span class="toggle-thumb"></span>
+              </span>
+              <span class="toggle-label" data-i18n="gaming_auto_label">Автоматический игровой режим</span>
+            </label>
+          </div>
+
+          <hr class="divider" />
+
+          <div class="card-section">
+            <label class="toggle-switch">
+              <input type="checkbox" id="checkbox-gaming-mode" />
+              <span class="toggle-track">
+                <span class="toggle-thumb"></span>
+              </span>
+              <span class="toggle-label" data-i18n="gaming_mode_label">Включить игровой режим вручную</span>
+            </label>
+            <p class="switch-desc" data-i18n="gaming_mode_subdesc">
+              Отключает перехват клавиатуры и выгружает модели из видеопамяти (VRAM).
+            </p>
+          </div>
+          <p class="field-hint" data-i18n="gaming_tray_hint" style="margin-top: 12px;">Ручное переключение также доступно через меню Aura в трее Windows.</p>
         </div>
 
         </section>
@@ -513,26 +500,28 @@
               </p>
             </div>
 
-            <div id="smart-context-suboptions" style="display: none;">
-              <hr class="divider" />
-              <div class="card-section">
-                <label class="toggle-switch">
-                  <input type="checkbox" id="checkbox-smart-context-trailing-period" />
-                  <span class="toggle-track">
-                    <span class="toggle-thumb"></span>
-                  </span>
-                  <span class="toggle-label" data-i18n="smart_context_trailing_period_checkbox">Завершать точкой при дополнении в конце предложения</span>
-                </label>
-                <p class="switch-desc" data-i18n="smart_context_trailing_period_subdesc">
-                  Если курсор стоит в конце незавершенной фразы, завершает фразу точкой. При выключении оставляет конец открытым для дальнейшей речи.
-                </p>
+            <div id="smart-context-suboptions" class="collapsible-wrapper">
+              <div class="collapsible-content">
+                <hr class="divider" />
+                <div class="card-section">
+                  <label class="toggle-switch">
+                    <input type="checkbox" id="checkbox-smart-context-trailing-period" />
+                    <span class="toggle-track">
+                      <span class="toggle-thumb"></span>
+                    </span>
+                    <span class="toggle-label" data-i18n="smart_context_trailing_period_checkbox">Завершать точкой при дополнении в конце предложения</span>
+                  </label>
+                  <p class="switch-desc" data-i18n="smart_context_trailing_period_subdesc">
+                    Если курсор стоит в конце незавершенной фразы, завершает фразу точкой. При выключении оставляет конец открытым для дальнейшей речи.
+                  </p>
+                </div>
               </div>
             </div>
           </div>
 
           <div class="card" id="card-selection-edit">
             <h2 class="card-title" data-i18n="copy_context_title">Редактирование выделенного текста</h2>
-            <p class="card-desc" data-i18n="copy_context_desc">Голосовые команды над выделенным текстом: «переведи», «сократи», «исправь грамматику». Обычная диктовка вставляется без изменений. Примечание: программа отправляет Ctrl+C для захвата контекста, отключите при работе в терминале.</p>
+            <p class="card-desc" data-i18n="copy_context_desc">Голосовые команды над выделенным текстом: «переведи», «исправь ошибки». Обычная диктовка вставляется без изменений. Примечание: программа отправляет Ctrl+C для захвата контекста, отключите при работе в терминале.</p>
             <label class="toggle-switch">
               <input type="checkbox" id="checkbox-selection-edit-enabled" />
               <span class="toggle-track">
@@ -542,51 +531,46 @@
             </label>
 
             <!-- Inner settings container: visible only when the toggle is enabled -->
-            <div id="selection-edit-inner" style="display: none; flex-direction: column; gap: 12px; margin-top: 4px;">
-              <div class="commands-guide-entry">
-                <div class="commands-guide-entry-info">
-                  <span class="field-label" data-i18n="commands_guide_label">Голосовые команды</span>
-                  <p class="switch-desc" data-i18n="commands_guide_sub">Справочник действий и включение/отключение отдельных команд</p>
+            <div id="selection-edit-inner" class="collapsible-wrapper">
+              <div class="collapsible-content">
+                <div class="form-group" id="group-supported-commands">
+                  <label class="field-label" data-i18n="commands_guide_label">Поддерживаемые команды</label>
+                  <p class="switch-desc" data-i18n="commands_guide_sub" style="margin-top: 2px; margin-bottom: 8px;">Голосовые фразы для действий над выделенным текстом</p>
+                  <div class="commands-info-guide" id="commands-info-guide"></div>
                 </div>
-                <button type="button" class="btn btn-secondary" id="btn-open-commands-guide">
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0;"><path d="M4 6h16M4 12h16M4 18h7"/></svg>
-                  <span data-i18n="commands_guide_btn">Справочник команд</span>
-                  <span class="badge-count" id="badge-active-commands-count">8</span>
-                </button>
-              </div>
 
-              <div class="form-group">
-                <label for="select-ai-edit-mode" class="field-label" data-i18n="ai_edit_mode_label">Режим редактирования</label>
-                <div class="select-wrap">
-                  <select id="select-ai-edit-mode" class="custom-select" aria-haspopup="listbox" aria-expanded="false">
-                    <option value="auto" data-i18n="ai_edit_mode_auto">Авто</option>
-                    <option value="local" data-i18n="ai_edit_mode_local">Локальный</option>
-                    <option value="cloud" data-i18n="ai_edit_mode_cloud">Облачный</option>
-                  </select>
-                  <div class="select-panel" id="select-panel-ai-edit-mode" role="listbox"></div>
+                <div class="form-group" id="group-translate-target">
+                  <label for="select-translate-target" class="field-label" data-i18n="translate_target_label">Язык перевода по умолчанию</label>
+                  <div class="select-wrap">
+                    <select id="select-translate-target" class="custom-select" aria-haspopup="listbox" aria-expanded="false">
+                      <option value="en">English</option>
+                      <option value="ru">Русский</option>
+                      <option value="de">Deutsch</option>
+                      <option value="es">Español</option>
+                      <option value="fr">Français</option>
+                      <option value="it">Italiano</option>
+                      <option value="zh">中文</option>
+                      <option value="pt">Português</option>
+                      <option value="tr">Türkçe</option>
+                      <option value="nl">Nederlands</option>
+                    </select>
+                    <div class="select-panel" id="select-panel-translate-target" role="listbox"></div>
+                  </div>
+                  <p class="switch-desc" data-i18n="translate_target_sub">Используется при голосовой команде «переведи» без указания языка.</p>
                 </div>
-                <p class="switch-desc" data-i18n="ai_edit_mode_sub">Авто использует локальную модель при наличии, иначе облачный сервис.</p>
-              </div>
 
-              <div class="form-group" id="group-translate-target">
-                <label for="select-translate-target" class="field-label" data-i18n="translate_target_label">Язык перевода по умолчанию</label>
-                <div class="select-wrap">
-                  <select id="select-translate-target" class="custom-select" aria-haspopup="listbox" aria-expanded="false">
-                    <option value="en">English</option>
-                    <option value="ru">Русский</option>
-                    <option value="de">Deutsch</option>
-                    <option value="es">Español</option>
-                    <option value="fr">Français</option>
-                    <option value="it">Italiano</option>
-                    <option value="zh">中文</option>
-                    <option value="pt">Português</option>
-                    <option value="tr">Türkçe</option>
-                    <option value="nl">Nederlands</option>
-                  </select>
-                  <div class="select-panel" id="select-panel-translate-target" role="listbox"></div>
+                <div class="form-group">
+                  <label for="select-ai-edit-mode" class="field-label" data-i18n="ai_edit_mode_label">Режим редактирования</label>
+                  <div class="select-wrap">
+                    <select id="select-ai-edit-mode" class="custom-select" aria-haspopup="listbox" aria-expanded="false">
+                      <option value="auto" data-i18n="ai_edit_mode_auto">Авто</option>
+                      <option value="local" data-i18n="ai_edit_mode_local">Локальный</option>
+                      <option value="cloud" data-i18n="ai_edit_mode_cloud">Облачный</option>
+                    </select>
+                    <div class="select-panel" id="select-panel-ai-edit-mode" role="listbox"></div>
+                  </div>
+                  <p class="switch-desc" data-i18n="ai_edit_mode_sub">Авто использует локальную модель при наличии, иначе облачный сервис.</p>
                 </div>
-                <p class="switch-desc" data-i18n="translate_target_sub">Используется при голосовой команде «переведи» без указания языка.</p>
-              </div>
 
               <div class="form-group" id="group-llm-models">
                 <label class="field-label" data-i18n="llm_model_label">Локальная модель</label>
@@ -645,7 +629,7 @@
                   </select>
                   <div class="select-panel" id="select-panel-edit-cloud-provider" role="listbox"></div>
                 </div>
-                <p class="switch-desc" id="desc-edit-cloud-provider" data-i18n="edit_cloud_provider_sub">Модель, выполняющая команды перевода, сокращения и форматирования текста.</p>
+                <p class="switch-desc" id="desc-edit-cloud-provider" data-i18n="edit_cloud_provider_sub">Модель, выполняющая команды перевода и исправления текста.</p>
 
                 <div class="form-group" id="edit-custom-provider-url-group" style="display: none; margin-top: 8px;">
                   <label for="input-edit-custom-url" class="field-label" data-i18n="api_custom_url">Адрес API сервера</label>
@@ -664,12 +648,14 @@
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="eye-icon"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
                     </button>
                   </div>
+                  <p class="field-hint" id="hint-edit-api-key" data-i18n="api_key_shared_hint" style="margin-top: 6px;">Единый ключ Aura: действует для диктовки и AI-редактирования.</p>
                 </div>
                 <div class="api-link-wrapper">
                   <a href="https://aistudio.google.com/" target="_blank" class="help-link" id="link-get-key-edit" data-i18n="api_get_key">Получить ключ API</a>
                 </div>
               </div>
             </div>
+          </div>
           </div>
         </section>
 
@@ -709,7 +695,7 @@
             </label>
           </div>
 
-          <div class="card">
+          <div class="card" id="card-sounds">
             <h2 class="card-title" data-i18n="sound_title">Звуковое сопровождение</h2>
             <p class="card-desc" data-i18n="sound_desc">Звуковые эффекты оверлея при записи.</p>
             <label class="toggle-switch">
@@ -719,27 +705,31 @@
               </span>
               <span class="toggle-label" data-i18n="sound_enable">Включить звуки оверлея</span>
             </label>
-            <div class="form-group" id="sound-volume-group" style="margin-top: 10px;">
-              <label for="range-sound-volume" class="field-label" data-i18n="sound_volume_label">Громкость звука</label>
-              <div class="volume-slider-container">
-                <div class="volume-track-wrap">
-                  <input type="range" id="range-sound-volume" min="0" max="100" value="80" class="custom-slider" />
-                  <span id="volume-value-label" class="volume-value-text">80%</span>
+            <div id="sound-suboptions" class="collapsible-wrapper">
+              <div class="collapsible-content">
+                <div class="form-group" id="sound-volume-group">
+                  <label for="range-sound-volume" class="field-label" data-i18n="sound_volume_label">Громкость звука</label>
+                  <div class="volume-slider-container">
+                    <div class="volume-track-wrap">
+                      <input type="range" id="range-sound-volume" min="0" max="100" value="80" class="custom-slider" />
+                      <span id="volume-value-label" class="volume-value-text">80%</span>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
-            <div class="form-group" id="sound-theme-group" style="margin-top: 10px;">
-              <label for="select-sound-theme" class="field-label" data-i18n="sound_theme_label">Звуковая тема</label>
-              <div class="select-wrap">
-                <select id="select-sound-theme" class="custom-select" aria-haspopup="listbox" aria-expanded="false">
-                  <option value="zen" data-i18n="sound_theme_zen">Дзен</option>
-                  <option value="rhodes" data-i18n="sound_theme_rhodes">Rhodes</option>
-                  <option value="scifi" data-i18n="sound_theme_scifi">Sci-Fi</option>
-                  <option value="classic" data-i18n="sound_theme_classic">Колокольчик</option>
-                  <option value="bubble" data-i18n="sound_theme_bubble">Капля воды</option>
-                  <option value="haptic" data-i18n="sound_theme_haptic">Тактильный свитч</option>
-                </select>
-                <div class="select-panel" id="select-panel-sound-theme" role="listbox"></div>
+                <div class="form-group" id="sound-theme-group">
+                  <label for="select-sound-theme" class="field-label" data-i18n="sound_theme_label">Звуковая тема</label>
+                  <div class="select-wrap">
+                    <select id="select-sound-theme" class="custom-select" aria-haspopup="listbox" aria-expanded="false">
+                      <option value="zen" data-i18n="sound_theme_zen">Дзен</option>
+                      <option value="rhodes" data-i18n="sound_theme_rhodes">Rhodes</option>
+                      <option value="scifi" data-i18n="sound_theme_scifi">Sci-Fi</option>
+                      <option value="classic" data-i18n="sound_theme_classic">Колокольчик</option>
+                      <option value="bubble" data-i18n="sound_theme_bubble">Капля воды</option>
+                      <option value="haptic" data-i18n="sound_theme_haptic">Тактильный свитч</option>
+                    </select>
+                    <div class="select-panel" id="select-panel-sound-theme" role="listbox"></div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -800,31 +790,98 @@
               Инструмент глобального голосового ввода для Windows. Программа переводит речь в текст и вставляет его в любое активное окно с автоматическим форматированием и расстановкой пунктуации.
             </p>
 
-            <div class="about-tour-wrap">
-              <button type="button" class="btn btn-secondary btn-replay-tour" id="btn-replay-onboarding">
-                <svg class="btn-tour-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <circle cx="12" cy="12" r="10"></circle>
-                  <polygon points="10 8 16 12 10 16 10 8"></polygon>
-                </svg>
-                <span data-i18n="onboarding_replay">Вводный экскурс по возможностям</span>
+            <div class="about-fluent-wrap">
+              <!-- Item 1: Tour -->
+              <button type="button" class="about-fluent-row" id="btn-replay-onboarding">
+                <div class="about-fluent-left">
+                  <div class="about-fluent-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <circle cx="12" cy="12" r="10"></circle>
+                      <polygon points="10 8 16 12 10 16 10 8"></polygon>
+                    </svg>
+                  </div>
+                  <div class="about-fluent-texts">
+                    <span class="about-fluent-title" data-i18n="about_row_tour_title">Вводный экскурс по возможностям</span>
+                    <span class="about-fluent-desc" data-i18n="about_row_tour_desc">Интерактивный тур с подсказками по основным функциям</span>
+                  </div>
+                </div>
+                <svg class="about-fluent-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
               </button>
-            </div>
 
-            <div class="about-gratitude-wrap">
-              <div class="gratitude-divider"></div>
-              <p class="gratitude-text" data-i18n="about_gratitude_text">
-                Спасибо, что пользуетесь Aura! Если программа делает вашу работу быстрее и удобнее — поддержите проект звездой на GitHub.
-              </p>
-              <a href="https://github.com/malashkadev/aura" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-github-star" id="btn-github-star">
-                <svg class="github-icon" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/>
-                </svg>
-                <span data-i18n="btn_star_github">Поставить звезду на GitHub</span>
-                <svg class="star-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
-                </svg>
+              <!-- Item 2: Changelog -->
+              <a href="https://github.com/malashkadev/aura/releases" target="_blank" rel="noopener noreferrer" class="about-fluent-row" id="btn-changelog">
+                <div class="about-fluent-left">
+                  <div class="about-fluent-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                      <polyline points="14 2 14 8 20 8"></polyline>
+                      <line x1="16" y1="13" x2="8" y2="13"></line>
+                      <line x1="16" y1="17" x2="8" y2="17"></line>
+                    </svg>
+                  </div>
+                  <div class="about-fluent-texts">
+                    <span class="about-fluent-title" data-i18n="about_row_changelog_title">Что нового в этой версии</span>
+                    <span class="about-fluent-desc" data-i18n="about_row_changelog_desc">Список изменений, улучшения производительности и релизы</span>
+                  </div>
+                </div>
+                <svg class="about-fluent-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg>
+              </a>
+
+              <!-- Item 3: Report Issue -->
+              <a href="https://github.com/malashkadev/aura/issues/new" target="_blank" rel="noopener noreferrer" class="about-fluent-row" id="btn-report-issue">
+                <div class="about-fluent-left">
+                  <div class="about-fluent-icon issue-always-red">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <circle cx="12" cy="12" r="10"></circle>
+                      <line x1="12" y1="8" x2="12" y2="12"></line>
+                      <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                    </svg>
+                  </div>
+                  <div class="about-fluent-texts">
+                    <span class="about-fluent-title" data-i18n="about_row_report_issue_title">Сообщить об ошибке</span>
+                    <span class="about-fluent-desc" data-i18n="about_row_report_issue_desc">Написать о проблеме разработчикам на GitHub</span>
+                  </div>
+                </div>
+                <svg class="about-fluent-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg>
+              </a>
+
+              <!-- Item 4: Star on GitHub (Last item, star always yellow) -->
+              <a href="https://github.com/malashkadev/aura" target="_blank" rel="noopener noreferrer" class="about-fluent-row" id="btn-github-star">
+                <div class="about-fluent-left">
+                  <div class="about-fluent-icon star-always-yellow">
+                    <svg viewBox="0 0 24 24" fill="#ffb800" stroke="#ffb800" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                    </svg>
+                  </div>
+                  <div class="about-fluent-texts">
+                    <span class="about-fluent-title" data-i18n="about_row_star_title">Поставить звезду на GitHub</span>
+                    <span class="about-fluent-desc" data-i18n="about_row_star_desc">Поддержите проект в открытом репозитории</span>
+                  </div>
+                </div>
+                <svg class="about-fluent-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg>
               </a>
             </div>
+
+            <!-- Footer Exit Button -->
+            <div class="about-divider"></div>
+            <button type="button" class="btn btn-secondary btn-exit-app" id="btn-exit-app">
+              <svg class="btn-tour-icon icon-exit" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+                <line x1="12" y1="2" x2="12" y2="12"></line>
+              </svg>
+              <span data-i18n="about_btn_exit_app">Выйти из Aura</span>
+            </button>
+          </div>
+
+          <div class="card" id="card-update-checks">
+            <h2 class="card-title" data-i18n="update_checks_title">Проверка обновлений</h2>
+            <p class="card-desc" data-i18n="update_checks_desc">Aura обращается к GitHub только при ручной проверке или если вы включили автоматическую проверку.</p>
+            <label class="toggle-switch">
+              <input type="checkbox" id="checkbox-automatic-update-checks" />
+              <span class="toggle-track"><span class="toggle-thumb"></span></span>
+              <span class="toggle-label" data-i18n="update_checks_checkbox">Автоматически проверять обновления при запуске</span>
+            </label>
+            <button type="button" class="btn btn-secondary" id="btn-check-updates" data-i18n="update_check_now">Проверить обновления</button>
           </div>
 
           <div class="card">
@@ -841,38 +898,17 @@
       </main>
     </div>
 
-    <footer class="app-footer">
-      <div class="footer-status" role="status" aria-live="polite">
-        <span id="footer-status-icon" class="status-icon-wrapper">
-          <svg class="icon-success" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-        </span>
-        <span id="footer-status-text" data-i18n="status_ready">Готово</span>
-      </div>
-      <button type="button" class="btn-save" id="btn-save-settings" data-i18n="btn_save">Сохранить настройки</button>
-    </footer>
-  </div>
-
-  <!-- Modal for Voice Commands Guide & Toggle -->
-  <dialog id="modal-commands-guide" class="modal-overlay" aria-labelledby="commands-guide-title">
-    <div class="modal-card modal-card-commands">
-      <div class="modal-header-row">
-        <div>
-          <h3 class="modal-title" id="commands-guide-title" data-i18n="commands_guide_title">Справочник голосовых команд</h3>
-          <p class="modal-message" data-i18n="commands_guide_desc" style="margin-top: 4px;">Управляйте доступными действиями над выделенным текстом. Отключённые команды вставляются как обычная речь.</p>
-        </div>
-        <button type="button" class="btn-close-modal" id="btn-close-commands-guide-x" title="Закрыть" aria-label="Закрыть">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-        </button>
-      </div>
-
-      <div class="commands-guide-list" id="commands-guide-list"></div>
-
-      <div class="modal-actions" style="margin-top: 4px;">
-        <span class="commands-guide-summary" id="commands-guide-summary"></span>
-        <button type="button" class="btn btn-secondary" id="btn-close-commands-guide" data-i18n="commands_guide_close">Закрыть</button>
+    <!-- Floating Toast Notification -->
+    <div id="toast-container" class="toast-container" aria-live="polite" aria-atomic="true">
+      <div id="app-toast" class="app-toast" role="status" hidden>
+        <span id="toast-icon" class="toast-icon"></span>
+        <span id="toast-text" class="toast-text"></span>
       </div>
     </div>
-  </dialog>
+    <button type="button" id="btn-save-settings" hidden aria-hidden="true"></button>
+  </div>
+
+
 
   <!-- Custom modal overlay for confirmation dialogs -->
   <dialog id="custom-confirm-modal" class="modal-overlay" aria-labelledby="confirm-modal-title">
@@ -891,21 +927,21 @@
   <div id="spotlight-tour-overlay" class="spotlight-overlay" hidden aria-modal="true" role="dialog" aria-labelledby="spotlight-title">
     <div class="spotlight-backdrop" id="spotlight-backdrop"></div>
     <div id="spotlight-cutout" class="spotlight-cutout"></div>
-    <div id="spotlight-popover" class="spotlight-popover" role="region" aria-live="polite">
-      <div class="spotlight-header">
+    <div id="spotlight-popover" class="spotlight-popover spotlight-dock" role="region" aria-live="polite">
+      <div class="spotlight-dock-left">
         <div class="spotlight-step-tag">
           <div class="spotlight-segments" id="spotlight-segments" aria-hidden="true"></div>
           <span id="spotlight-step-indicator" class="spotlight-step-text"></span>
         </div>
         <button type="button" class="spotlight-btn-skip" id="btn-spotlight-skip" data-i18n="onboarding_skip">Пропустить обучение</button>
       </div>
-      <h3 id="spotlight-title" class="spotlight-title"></h3>
-      <p id="spotlight-desc" class="spotlight-desc"></p>
-      <div class="spotlight-footer">
-        <div class="spotlight-actions">
-          <button type="button" class="btn btn-secondary" id="btn-spotlight-prev" data-i18n="onboarding_prev">Назад</button>
-          <button type="button" class="btn btn-primary" id="btn-spotlight-next" data-i18n="onboarding_next">Далее</button>
-        </div>
+      <div class="spotlight-dock-center">
+        <h3 id="spotlight-title" class="spotlight-title"></h3>
+        <p id="spotlight-desc" class="spotlight-desc"></p>
+      </div>
+      <div class="spotlight-dock-actions">
+        <button type="button" class="btn btn-secondary" id="btn-spotlight-prev" data-i18n="onboarding_prev">Назад</button>
+        <button type="button" class="btn btn-primary" id="btn-spotlight-next" data-i18n="onboarding_next">Далее</button>
       </div>
     </div>
   </div>

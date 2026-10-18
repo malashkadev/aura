@@ -106,6 +106,15 @@ const i18nDict = {
     "about_description": "Инструмент глобального голосового ввода для Windows. Программа переводит речь в текст и вставляет его в любое активное окно с автоматическим форматированием и расстановкой пунктуации.",
     "about_gratitude_text": "Спасибо, что пользуетесь Aura! Если программа делает вашу работу быстрее и удобнее — поддержите проект звездой на GitHub.",
     "btn_star_github": "Поставить звезду на GitHub",
+    "about_row_tour_title": "Вводный экскурс по возможностям",
+    "about_row_tour_desc": "Интерактивный тур с подсказками по основным функциям",
+    "about_row_changelog_title": "Что нового в этой версии",
+    "about_row_changelog_desc": "Список изменений, улучшения производительности и релизы",
+    "about_row_report_issue_title": "Сообщить об ошибке",
+    "about_row_report_issue_desc": "Написать о проблеме разработчикам на GitHub",
+    "about_row_star_title": "Поставить звезду на GitHub",
+    "about_row_star_desc": "Поддержите проект в открытом репозитории",
+    "about_btn_exit_app": "Выйти из Aura",
     "status_ready": "Готово",
     "btn_save": "Сохранить настройки",
     "confirm_title": "Подтверждение",
@@ -124,16 +133,16 @@ const i18nDict = {
     "status_loaded": "Настройки загружены",
     "status_load_error": "Ошибка загрузки настроек: ",
     "status_save_error": "Ошибка сохранения настроек: ",
-    "status_streaming_degraded": "Живое превью Parakeet отключено — финальный текст готовится пакетно",
-    "model_downloading_pattern": "Запуск скачивания для модели '{model}'...",
+    "status_streaming_degraded": "Живой ввод приостановлен — полный текст появится после завершения записи",
+    "model_downloading_pattern": "Запуск скачивания {model}...",
     "model_download_error_pattern": "Ошибка скачивания: {err}",
     "delete_model_title": "Удаление модели",
-    "delete_model_confirm_pattern": "Вы действительно хотите удалить локальную модель '{model}'?",
+    "delete_model_confirm_pattern": "Вы действительно хотите удалить локальную модель {model}?",
     "delete_model_btn": "Удалить",
-    "model_deleting_pattern": "Удаление модели '{model}'...",
+    "model_deleting_pattern": "Удаление модели {model}...",
     "model_deleted_success": "Модель успешно удалена",
     "model_delete_error_pattern": "Ошибка удаления: {err}",
-    "model_downloaded_success_pattern": "Модель '{model}' скачана!",
+    "model_downloaded_success_pattern": "Модель {model} скачана",
     "confirm_clear_history_title": "Очистить историю",
     "confirm_clear_history_msg": "Вы действительно хотите очистить всю историю транскрипций?",
     "general_ui_lang_title": "Язык интерфейса",
@@ -142,8 +151,8 @@ const i18nDict = {
     "update_checks_desc": "Aura обращается к GitHub только при ручной проверке или если вы включили автоматическую проверку.",
     "update_checks_checkbox": "Автоматически проверять обновления при запуске",
     "update_check_now": "Проверить обновления",
-    "update_current": "Установлена актуальная версия Aura.",
-    "update_available_pattern": "Доступна Aura v{version}.",
+    "update_current": "Установлена актуальная версия Aura",
+    "update_available_pattern": "Доступна Aura v{version}",
     "update_check_error_pattern": "Не удалось проверить обновления: {error}",
     "update_installing": "Скачивание, проверка подписи и установка обновления...",
     "update_installed_restarting": "Обновление установлено. Перезапуск...",
@@ -161,7 +170,7 @@ const i18nDict = {
     "copy_context_desc": "Если включено, Aura отправляет Ctrl+C и передаёт выделенный текст провайдеру или локальной модели как контекст для команды редактирования. Отключите эту функцию при работе в терминале.",
     "copy_context_checkbox": "Разрешить редактирование выделенного текста",
     "ai_edit_title": "Команды над выделением",
-    "ai_edit_desc": "Голосовые команды для выделенного текста: «переведи», «сократи», «исправь грамматику». Команда применяется к выделению, обычная диктовка вставляется без изменений.",
+    "ai_edit_desc": "Голосовые команды для выделенного текста: «переведи», «исправь грамматику». Команда применяется к выделению, обычная диктовка вставляется без изменений.",
     "ai_edit_mode_label": "Режим редактирования",
     "ai_edit_mode_auto": "Авто",
     "ai_edit_mode_cloud": "Облачный",
@@ -171,7 +180,7 @@ const i18nDict = {
     "translate_target_label": "Язык перевода по умолчанию",
     "translate_target_sub": "Используется при голосовой команде «переведи» без указания языка.",
     "edit_cloud_provider_label": "Облачный сервис",
-    "edit_cloud_provider_sub": "Модель, выполняющая команды перевода, сокращения и форматирования текста.",
+    "edit_cloud_provider_sub": "Модель, выполняющая команды перевода и исправления грамматики текста.",
     "edit_cloud_provider_fallback_sub": "Используется как резервный сервис, если локальная модель не установлена или недоступна.",
     "llm_model_label": "Локальная модель",
     "model_meta_llm_0_6b": "~460 МБ — минимальная, простые команды",
@@ -261,18 +270,20 @@ const i18nDict = {
     "onboarding_finish": "Начать работу",
     "onboarding_replay": "Вводный экскурс по возможностям",
     "onboarding_step_tag": "{current} / {total}",
-    "onboarding_step_1_title": "Быстрый старт диктовки",
-    "onboarding_step_1_desc": "Нажимайте или удерживайте Alt+V в любом приложении Windows для ввода текста голосом. Доступны режимы Push-to-Talk (удержание) и Toggle (клик старт/стоп). При записи на экране появляется компактный оверлей.",
-    "onboarding_step_2_title": "Способы распознавания речи",
-    "onboarding_step_2_desc": "Используйте автономное распознавание на своём компьютере без отправки данных в сеть либо подключите облачные модели (Gemini, OpenAI, Groq) для быстрой обработки без нагрузки на систему.",
-    "onboarding_step_3_title": "Редактирование выделенного текста",
-    "onboarding_step_3_desc": "Выделите текст в любой программе, нажмите Alt+V и произнесите команду: «сократи», «переведи на английский» или «исправь ошибки». Если же команды нет, а вы просто надиктовываете речь, Aura вставит наговорённый текст на место выделенного.",
-    "onboarding_step_4_title": "Работа в фоне и системный трей",
-    "onboarding_step_4_desc": "Aura тихо работает в фоне. Игровой режим временно приостанавливает горячие клавиши, чтобы сохранить FPS в играх, а при простое память видеокарты автоматически освобождается. Индикация активности игрового режима отображается прямо на иконке в трее Windows.",
-    "commands_guide_title": "Справочник голосовых команд",
-    "commands_guide_desc": "Управляйте доступными действиями над выделенным текстом. Отключённые команды вставляются как обычная речь.",
-    "commands_guide_label": "Голосовые команды",
-    "commands_guide_sub": "Справочник действий и включение/отключение отдельных команд",
+    "onboarding_step_1_title": "Способы распознавания речи",
+    "onboarding_step_1_desc": "Локальный ИИ обеспечивает 100% приватность без передачи аудио в сеть и ускоряется видеокартой (NVIDIA CUDA) или CPU. Облачный ИИ не требует загрузки моделей и быстро расшифровывает через API без нагрузки на систему.",
+    "onboarding_step_2_title": "Язык распознавания и словарь",
+    "onboarding_step_2_desc": "Аура умеет автоматически подстраиваться под язык активной раскладки клавиатуры. В словаре можно задать правила автозамены опечаток и расшифровки профессиональных терминов.",
+    "onboarding_step_3_title": "Умная вставка и редактирование выделенного",
+    "onboarding_step_3_desc": "Выделите текст в любой программе, нажмите хоткей и надиктуйте команду: «исправь ошибки» или «переведи» — Аура выполнит редактирование прямо на месте.",
+    "onboarding_step_4_title": "Горячие клавиши, оверлей и звуковой отклик",
+    "onboarding_step_4_desc": "Главная клавиша запускает запись в любой программе. При старте и завершении звучит приятный щелчок, а на экране появляется плавающий таймер со статусом распознавания.",
+    "onboarding_step_5_title": "История записей и тихая работа в трее",
+    "onboarding_step_5_desc": "Все надиктованные тексты сохраняются в истории для повторного копирования. Аура тихо сворачивается в системный трей и всегда готова к мгновенной работе по горячей клавише.",
+    "commands_guide_title": "Поддерживаемые голосовые команды",
+    "commands_guide_desc": "Доступные действия над выделенным текстом.",
+    "commands_guide_label": "Поддерживаемые команды",
+    "commands_guide_sub": "Голосовые фразы для действий над выделенным текстом",
     "commands_guide_btn": "Справочник команд",
     "commands_guide_close": "Закрыть",
     "commands_guide_active_summary": "{active} из {total} команд активно",
@@ -281,7 +292,12 @@ const i18nDict = {
     "smart_context_checkbox": "Учитывать контекст вокруг курсора",
     "smart_context_subdesc": "Начинает со строчной буквы при вставке в середину предложения, убирает лишние точки и аккуратно расставляет пробелы.",
     "smart_context_trailing_period_checkbox": "Завершать точкой при дополнении в конце предложения",
-    "smart_context_trailing_period_subdesc": "Если курсор стоит в конце незавершенной фразы, завершает фразу точкой. При выключении оставляет конец открытым для дальнейшей речи."
+    "smart_context_trailing_period_subdesc": "Если курсор стоит в конце незавершенной фразы, завершает фразу точкой. При выключении оставляет конец открытым для дальнейшей речи.",
+    "sound_preview_btn": "Прослушать тему",
+    "sound_preview_label": "Тест",
+    "api_key_status_saved": "Сохранен в Windows DPAPI",
+    "api_key_shared_hint": "Единый ключ Aura: действует для диктовки и AI-редактирования.",
+    "api_key_btn_change": "Изменить"
   },
   "en": {
     "title_settings": "Settings",
@@ -378,6 +394,15 @@ const i18nDict = {
     "about_description": "Global voice input tool for Windows. The program transcribes speech to text and inserts it into any active window with automatic formatting and punctuation.",
     "about_gratitude_text": "Thank you for using Aura! If it makes your work faster and easier, please consider supporting the project with a star on GitHub.",
     "btn_star_github": "Star on GitHub",
+    "about_row_tour_title": "Feature Tour",
+    "about_row_tour_desc": "Interactive walkthrough of core features",
+    "about_row_changelog_title": "What's New in this Version",
+    "about_row_changelog_desc": "Changelog, performance improvements and releases",
+    "about_row_report_issue_title": "Report an Issue",
+    "about_row_report_issue_desc": "File a bug report or feedback on GitHub",
+    "about_row_star_title": "Star on GitHub",
+    "about_row_star_desc": "Support the open-source project",
+    "about_btn_exit_app": "Exit Aura",
     "status_ready": "Ready",
     "btn_save": "Save Settings",
     "confirm_title": "Confirmation",
@@ -396,16 +421,16 @@ const i18nDict = {
     "status_loaded": "Settings loaded",
     "status_load_error": "Failed to load settings: ",
     "status_save_error": "Failed to save settings: ",
-    "status_streaming_degraded": "Live Parakeet preview disabled — the final text is being prepared in batch mode",
-    "model_downloading_pattern": "Starting download for model '{model}'...",
+    "status_streaming_degraded": "Live preview paused — full text will appear when recording ends",
+    "model_downloading_pattern": "Starting download for {model}...",
     "model_download_error_pattern": "Download error: {err}",
     "delete_model_title": "Delete model",
-    "delete_model_confirm_pattern": "Are you sure you want to delete the local model '{model}'?",
+    "delete_model_confirm_pattern": "Are you sure you want to delete the local model {model}?",
     "delete_model_btn": "Delete",
-    "model_deleting_pattern": "Deleting model '{model}'...",
+    "model_deleting_pattern": "Deleting model {model}...",
     "model_deleted_success": "Model deleted successfully",
     "model_delete_error_pattern": "Delete error: {err}",
-    "model_downloaded_success_pattern": "Model '{model}' downloaded!",
+    "model_downloaded_success_pattern": "Model {model} downloaded",
     "confirm_clear_history_title": "Clear history",
     "confirm_clear_history_msg": "Are you sure you want to clear all transcription history?",
     "general_ui_lang_title": "Interface Language",
@@ -414,8 +439,8 @@ const i18nDict = {
     "update_checks_desc": "Aura contacts GitHub only when you check manually or enable automatic checks.",
     "update_checks_checkbox": "Check for updates automatically at startup",
     "update_check_now": "Check for updates",
-    "update_current": "Aura is up to date.",
-    "update_available_pattern": "Aura v{version} is available.",
+    "update_current": "Aura is up to date",
+    "update_available_pattern": "Aura v{version} is available",
     "update_check_error_pattern": "Could not check for updates: {error}",
     "update_installing": "Downloading, verifying the signature, and installing the update...",
     "update_installed_restarting": "Update installed. Restarting...",
@@ -433,7 +458,7 @@ const i18nDict = {
     "copy_context_desc": "When enabled, Aura sends Ctrl+C and passes the selected text to the provider or local model as context for an editing command. Disable this feature when working in a terminal.",
     "copy_context_checkbox": "Enable selected text editing",
     "ai_edit_title": "Commands on selection",
-    "ai_edit_desc": "Voice commands for the selected text: \"translate\", \"shorten\", \"fix grammar\". A command is applied to the selection; plain dictation is inserted unchanged.",
+    "ai_edit_desc": "Voice commands for the selected text: \"translate\", \"fix grammar\". A command is applied to the selection; plain dictation is inserted unchanged.",
     "ai_edit_mode_label": "Editing mode",
     "ai_edit_mode_auto": "Auto",
     "ai_edit_mode_cloud": "Cloud",
@@ -443,7 +468,7 @@ const i18nDict = {
     "translate_target_label": "Default translation language",
     "translate_target_sub": "Used when saying \"translate\" without specifying a target language.",
     "edit_cloud_provider_label": "Cloud AI Service",
-    "edit_cloud_provider_sub": "Model executing translation, summarization, and formatting commands.",
+    "edit_cloud_provider_sub": "Model executing translation and grammar correction commands.",
     "edit_cloud_provider_fallback_sub": "Used as a fallback service if the local model is not installed or unavailable.",
     "llm_model_label": "Local model",
     "model_meta_llm_0_6b": "~460 MB — smallest, basic commands",
@@ -533,18 +558,20 @@ const i18nDict = {
     "onboarding_finish": "Get started",
     "onboarding_replay": "Feature walkthrough tour",
     "onboarding_step_tag": "{current} / {total}",
-    "onboarding_step_1_title": "Quick Start Dictation",
-    "onboarding_step_1_desc": "Press or hold Alt+V in any Windows application to dictate text. Push-to-Talk (hold) and Toggle (click start/stop) modes are supported. A compact overlay appears on screen during recording.",
-    "onboarding_step_2_title": "Speech Recognition Engines",
-    "onboarding_step_2_desc": "Use offline recognition on your PC without sending data over the network, or connect cloud models (Gemini, OpenAI, Groq) for fast processing with zero system load.",
-    "onboarding_step_3_title": "Selected Text Voice Editing",
-    "onboarding_step_3_desc": "Select text in any application, press Alt+V, and speak a command: 'shorten', 'translate to english', or 'fix grammar'. If no command is given and you just speak, Aura will replace the selection with your dictated text.",
-    "onboarding_step_4_title": "Background Operation & System Tray",
-    "onboarding_step_4_desc": "Aura runs quietly in the background. Gaming mode pauses hotkeys to preserve FPS, and video memory is freed during idle time. An indicator on the Windows tray icon always shows when gaming mode is active.",
-    "commands_guide_title": "Voice Commands Guide",
-    "commands_guide_desc": "Manage actions available for selected text. Disabled commands are typed out as normal speech.",
-    "commands_guide_label": "Voice Commands",
-    "commands_guide_sub": "Action reference and per-command enable/disable toggles",
+    "onboarding_step_1_title": "Speech Recognition Methods",
+    "onboarding_step_1_desc": "Local AI guarantees 100% privacy without sending audio to the network, accelerated by GPU (NVIDIA CUDA) or CPU. Cloud AI requires no model downloads and delivers fast API processing with zero system load.",
+    "onboarding_step_2_title": "Recognition Language & Dictionary",
+    "onboarding_step_2_desc": "Aura can automatically adapt to the active keyboard layout language. In the dictionary, you can configure text replacement rules for typos and domain-specific terminology.",
+    "onboarding_step_3_title": "Smart Insertion & Selected Text Editing",
+    "onboarding_step_3_desc": "Select text in any application, press your hotkey, and speak a command: 'fix grammar' or 'translate' — Aura edits and replaces the text directly in place.",
+    "onboarding_step_4_title": "Global Hotkeys, Overlay & Audio Feedback",
+    "onboarding_step_4_desc": "The primary hotkey triggers speech recording anywhere. Gentle clicks confirm start and stop, and a floating overlay displays live recording status and elapsed time.",
+    "onboarding_step_5_title": "Transcription History & Silent Tray Operation",
+    "onboarding_step_5_desc": "All dictated texts are securely preserved in history for quick reuse. Aura stays quietly in the Windows tray, instantly ready for voice input whenever you press your hotkey.",
+    "commands_guide_title": "Supported Voice Commands",
+    "commands_guide_desc": "Available actions for selected text.",
+    "commands_guide_label": "Supported Commands",
+    "commands_guide_sub": "Voice phrases for actions on selected text",
     "commands_guide_btn": "Commands Guide",
     "commands_guide_close": "Close",
     "commands_guide_active_summary": "{active} of {total} commands active",
@@ -553,7 +580,12 @@ const i18nDict = {
     "smart_context_checkbox": "Adapt to surrounding cursor context",
     "smart_context_subdesc": "Starts with lowercase when inserting mid-sentence, strips trailing periods, and ensures clean spacing.",
     "smart_context_trailing_period_checkbox": "End with a period when continuing at the end of a sentence",
-    "smart_context_trailing_period_subdesc": "When cursor is at the end of an open sentence, completes with a period. When unchecked, leaves open for further dictation."
+    "smart_context_trailing_period_subdesc": "When cursor is at the end of an open sentence, completes with a period. When unchecked, leaves open for further dictation.",
+    "sound_preview_btn": "Preview theme",
+    "sound_preview_label": "Test",
+    "api_key_status_saved": "Saved in Windows DPAPI",
+    "api_key_shared_hint": "Unified Aura key: applies to voice dictation and AI editing.",
+    "api_key_btn_change": "Change"
   },
   "de": {
     "gpu_accel_label": "Lokale Hardware-Beschleunigung",
@@ -660,6 +692,15 @@ const i18nDict = {
     "about_description": "Globales Spracheingabe-Tool für Windows. Die Anwendung überträgt Sprache in Text und fügt ihn mit automatischer Formatierung und Zeichensetzung in jedes aktive Fenster ein.",
     "about_gratitude_text": "Danke, dass Sie Aura nutzen! Wenn das Tool Ihre Arbeit erleichtert, unterstützen Sie das Projekt gerne mit einem Stern auf GitHub.",
     "btn_star_github": "Stern auf GitHub geben",
+    "about_row_tour_title": "Funktionstour",
+    "about_row_tour_desc": "Interaktive Einführung in die wichtigsten Funktionen",
+    "about_row_changelog_title": "Was ist neu in dieser Version",
+    "about_row_changelog_desc": "Versionshinweise, Verbesserungen und Veröffentlichungen",
+    "about_row_report_issue_title": "Problem melden",
+    "about_row_report_issue_desc": "Fehlerbericht oder Feedback auf GitHub einreichen",
+    "about_row_star_title": "Auf GitHub mit Stern bewerten",
+    "about_row_star_desc": "Unterstützen Sie das Open-Source-Projekt",
+    "about_btn_exit_app": "Aura beenden",
     "status_ready": "Bereit",
     "btn_save": "Einstellungen speichern",
     "confirm_title": "Bestätigung",
@@ -678,16 +719,16 @@ const i18nDict = {
     "status_loaded": "Einstellungen geladen",
     "status_load_error": "Fehler beim Laden der Einstellungen: ",
     "status_save_error": "Fehler beim Speichern der Einstellungen: ",
-    "status_streaming_degraded": "Live-Parakeet-Vorschau deaktiviert — der finale Text wird im Batch-Modus erstellt",
-    "model_downloading_pattern": "Download für Modell '{model}' wird gestartet...",
+    "status_streaming_degraded": "Live-Vorschau pausiert — der vollständige Text erscheint nach Aufnahmeende",
+    "model_downloading_pattern": "Download für {model} wird gestartet...",
     "model_download_error_pattern": "Download-Fehler: {err}",
     "delete_model_title": "Modell löschen",
-    "delete_model_confirm_pattern": "Möchten Sie das lokale Modell '{model}' wirklich löschen?",
+    "delete_model_confirm_pattern": "Möchten Sie das lokale Modell {model} wirklich löschen?",
     "delete_model_btn": "Löschen",
-    "model_deleting_pattern": "Modell '{model}' wird gelöscht...",
+    "model_deleting_pattern": "Modell {model} wird gelöscht...",
     "model_deleted_success": "Modell erfolgreich gelöscht",
     "model_delete_error_pattern": "Fehler beim Löschen: {err}",
-    "model_downloaded_success_pattern": "Modell '{model}' heruntergeladen!",
+    "model_downloaded_success_pattern": "Modell {model} heruntergeladen",
     "confirm_clear_history_title": "Verlauf löschen",
     "confirm_clear_history_msg": "Möchten Sie den gesamten Transkriptionsverlauf wirklich löschen?",
     "general_ui_lang_title": "Sprache der Benutzeroberfläche",
@@ -696,8 +737,8 @@ const i18nDict = {
     "update_checks_desc": "Aura kontaktiert GitHub nur bei einer manuellen Prüfung oder wenn Sie automatische Prüfungen aktivieren.",
     "update_checks_checkbox": "Beim Start automatisch nach Updates suchen",
     "update_check_now": "Nach Updates suchen",
-    "update_current": "Aura ist auf dem neuesten Stand.",
-    "update_available_pattern": "Aura v{version} ist verfügbar.",
+    "update_current": "Aura ist auf dem neuesten Stand",
+    "update_available_pattern": "Aura v{version} ist verfügbar",
     "update_check_error_pattern": "Updates konnten nicht geprüft werden: {error}",
     "update_installing": "Update wird heruntergeladen, die Signatur geprüft und die Installation ausgeführt...",
     "update_installed_restarting": "Update installiert. Neustart...",
@@ -718,7 +759,7 @@ const i18nDict = {
     "copy_context_desc": "Wenn aktiviert, sendet Aura Strg+C und übermittelt den ausgewählten Text als Kontext für einen Bearbeitungsbefehl an den Anbieter oder das lokale Modell. Deaktivieren Sie diese Funktion bei der Arbeit im Terminal.",
     "copy_context_checkbox": "Bearbeitung des ausgewählten Texts aktivieren",
     "ai_edit_title": "Befehle für die Auswahl",
-    "ai_edit_desc": "Sprachbefehle für den ausgewählten Text: „übersetzen“, „kürzen“, „Grammatik korrigieren“. Ein Befehl wird auf die Auswahl angewendet; normales Diktat wird unverändert eingefügt.",
+    "ai_edit_desc": "Sprachbefehle für den ausgewählten Text: „übersetzen“, „Grammatik korrigieren“. Ein Befehl wird auf die Auswahl angewendet; normales Diktat wird unverändert eingefügt.",
     "ai_edit_mode_label": "Bearbeitungsmodus",
     "ai_edit_mode_auto": "Auto",
     "ai_edit_mode_cloud": "Cloud",
@@ -728,7 +769,7 @@ const i18nDict = {
     "translate_target_label": "Standard-Zielsprache für Übersetzungen",
     "translate_target_sub": "Wird verwendet, wenn „übersetze“ ohne Zielangabe gesprochen wird.",
     "edit_cloud_provider_label": "Cloud-KI-Dienst",
-    "edit_cloud_provider_sub": "Modell zur Ausführung von Befehlen wie Übersetzung, Zusammenfassung und Formatierung.",
+    "edit_cloud_provider_sub": "Modell zur Ausführung von Befehlen wie Übersetzung und Textkorrektur.",
     "edit_cloud_provider_fallback_sub": "Wird als Fallback verwendet, wenn das lokale Modell nicht installiert oder nicht verfügbar ist.",
     "llm_model_label": "Lokales Modell",
     "model_meta_llm_0_6b": "~460 MB — kleinste, einfache Befehle",
@@ -805,18 +846,20 @@ const i18nDict = {
     "onboarding_finish": "Loslegen",
     "onboarding_replay": "Funktionsüberblick starten",
     "onboarding_step_tag": "{current} / {total}",
-    "onboarding_step_1_title": "Schnellstart Diktat",
-    "onboarding_step_1_desc": "Drücken oder halten Sie Alt+V in jeder Windows-Anwendung, um Text per Sprache einzugeben. Push-to-Talk (Halten) und Umschaltmodus (Klick Start/Stopp) werden unterstützt. Während der Aufnahme erscheint ein kompaktes Overlay.",
-    "onboarding_step_2_title": "Spracherkennungs-Engines",
-    "onboarding_step_2_desc": "Nutzen Sie die Offline-Erkennung direkt auf Ihrem PC ohne Datenübertragung ins Netzwerk oder verbinden Sie Cloud-Modelle (Gemini, OpenAI, Groq) für eine schnelle Verarbeitung ohne Systemlast.",
-    "onboarding_step_3_title": "Sprachbearbeitung von markiertem Text",
-    "onboarding_step_3_desc": "Markieren Sie Text in beliebigen Programmen, drücken Sie Alt+V und sprechen Sie einen Befehl: „kürze“, „übersetze ins Englische“ oder „korrigiere Fehler“. Erfolgt kein Befehl, wird der markierte Text durch das Diktierte ersetzt.",
-    "onboarding_step_4_title": "Hintergrundbetrieb & System-Tray",
-    "onboarding_step_4_desc": "Aura läuft leise im Hintergrund. Der Spielmodus pausiert Hotkeys für stabile FPS in Spielen, und bei Inaktivität wird der Grafikspeicher freigegeben. Ein Symbol im Windows-Tray zeigt jederzeit an, wenn der Spielmodus aktiv ist.",
-    "commands_guide_title": "Sprachbefehle-Übersicht",
-    "commands_guide_desc": "Aktionen für markierten Text verwalten. Deaktivierte Befehle werden als normaler Text eingegeben.",
-    "commands_guide_label": "Sprachbefehle",
-    "commands_guide_sub": "Referenz der Aktionen und Ein-/Ausschalten einzelner Befehle",
+    "onboarding_step_1_title": "Spracherkennungsmethoden",
+    "onboarding_step_1_desc": "Lokale KI bietet 100% Privatsphäre ohne Datenübertragung und wird per GPU (NVIDIA CUDA) oder CPU beschleunigt. Cloud-KI benötigt keine Downloads und verarbeitet blitzschnell per API ohne Systemlast.",
+    "onboarding_step_2_title": "Erkennungssprache & Wörterbuch",
+    "onboarding_step_2_desc": "Aura kann sich automatisch an die aktive Tastatursprache anpassen. Im Wörterbuch können Textersetzungsregeln für Tippfehler und Fachbegriffe festgelegt werden.",
+    "onboarding_step_3_title": "Intelligentes Einfügen & Textbearbeitung",
+    "onboarding_step_3_desc": "Markieren Sie Text in einem beliebigen Programm, drücken Sie den Hotkey und sprechen Sie einen Befehl: „Fehler korrigieren“ oder „übersetzen“ — Aura ersetzt den Text direkt an Ort und Stelle.",
+    "onboarding_step_4_title": "Globale Hotkeys, Overlay & Audio-Feedback",
+    "onboarding_step_4_desc": "Der Haupt-Hotkey startet die Aufnahme überall. Sanfte Klicks bestätigen Start und Stopp, und ein schwebendes Overlay zeigt Status und Aufnahmezeit an.",
+    "onboarding_step_5_title": "Verlauf & leiser Betrieb im System-Tray",
+    "onboarding_step_5_desc": "Alle diktierten Texte werden im Verlauf gespeichert. Aura bleibt leise im Windows-Tray und ist per Tastendruck jederzeit sofort einsatzbereit.",
+    "commands_guide_title": "Unterstützte Sprachbefehle",
+    "commands_guide_desc": "Verfügbare Aktionen für markierten Text.",
+    "commands_guide_label": "Unterstützte Befehle",
+    "commands_guide_sub": "Sprachphrasen für Aktionen auf markiertem Text",
     "commands_guide_btn": "Befehlsübersicht",
     "commands_guide_close": "Schließen",
     "commands_guide_active_summary": "{active} von {total} Befehlen aktiv",
@@ -825,7 +868,12 @@ const i18nDict = {
     "smart_context_checkbox": "Kontext um den Cursor berücksichtigen",
     "smart_context_subdesc": "Beginnt mitten im Satz mit Kleinbuchstaben, entfernt überflüssige Punkte und formatiert Leerzeichen sauber.",
     "smart_context_trailing_period_checkbox": "Bei Fortsetzung am Satzende mit Punkt abschließen",
-    "smart_context_trailing_period_subdesc": "Schließt den Satz mit einem Punkt ab, wenn der Cursor am Ende steht. Deaktiviert lassen, um weitersprechen zu können."
+    "smart_context_trailing_period_subdesc": "Schließt den Satz mit einem Punkt ab, wenn der Cursor am Ende steht. Deaktiviert lassen, um weitersprechen zu können.",
+    "sound_preview_btn": "Thema anhören",
+    "sound_preview_label": "Testen",
+    "api_key_status_saved": "In Windows DPAPI gespeichert",
+    "api_key_shared_hint": "Einheitlicher Aura-Schlüssel: gilt für Sprache und KI-Bearbeitung.",
+    "api_key_btn_change": "Ändern"
   },
   "es": {
     "title_settings": "Ajustes",
@@ -919,6 +967,15 @@ const i18nDict = {
     "about_description": "Herramienta de entrada de voz global para Windows. El programa transcribe el habla en texto y lo inserta en cualquier ventana activa con formato y puntuación automáticos.",
     "about_gratitude_text": "¡Gracias por usar Aura! Si hace tu trabajo más rápido y cómodo, apoya el proyecto con una estrella en GitHub.",
     "btn_star_github": "Dar una estrella en GitHub",
+    "about_row_tour_title": "Paseo de funciones",
+    "about_row_tour_desc": "Guía interactiva de las funciones principales",
+    "about_row_changelog_title": "Novedades en esta versión",
+    "about_row_changelog_desc": "Registro de cambios, mejoras y lanzamientos",
+    "about_row_report_issue_title": "Informar de un error",
+    "about_row_report_issue_desc": "Enviar un reporte o sugerencia en GitHub",
+    "about_row_star_title": "Dar una estrella en GitHub",
+    "about_row_star_desc": "Apoya el proyecto de código abierto",
+    "about_btn_exit_app": "Salir de Aura",
     "status_ready": "Listo",
     "btn_save": "Guardar ajustes",
     "confirm_title": "Confirmación",
@@ -937,16 +994,16 @@ const i18nDict = {
     "status_loaded": "Ajustes cargados",
     "status_load_error": "Error al cargar los ajustes: ",
     "status_save_error": "Error al guardar los ajustes: ",
-    "status_streaming_degraded": "Vista previa en vivo de Parakeet desactivada: el texto final se prepara por lotes",
-    "model_downloading_pattern": "Iniciando descarga para el modelo '{model}'...",
+    "status_streaming_degraded": "Vista previa en vivo en pausa: el texto completo aparecerá al finalizar la grabación",
+    "model_downloading_pattern": "Iniciando descarga para {model}...",
     "model_download_error_pattern": "Error de descarga: {err}",
     "delete_model_title": "Eliminar modelo",
-    "delete_model_confirm_pattern": "¿Está seguro de que desea eliminar el modelo local '{model}'?",
+    "delete_model_confirm_pattern": "¿Está seguro de que desea eliminar el modelo local {model}?",
     "delete_model_btn": "Eliminar",
-    "model_deleting_pattern": "Eliminando modelo '{model}'...",
+    "model_deleting_pattern": "Eliminando modelo {model}...",
     "model_deleted_success": "Modelo eliminado correctamente",
     "model_delete_error_pattern": "Error al eliminar: {err}",
-    "model_downloaded_success_pattern": "¡Modelo '{model}' descargado!",
+    "model_downloaded_success_pattern": "Modelo {model} descargado",
     "confirm_clear_history_title": "Limpiar historial",
     "confirm_clear_history_msg": "¿Está seguro de que desea limpiar todo el historial de transcripciones?",
     "general_ui_lang_title": "Idioma de la interfaz",
@@ -955,8 +1012,8 @@ const i18nDict = {
     "update_checks_desc": "Aura se conecta a GitHub solo al comprobar manualmente o al activar las comprobaciones automáticas.",
     "update_checks_checkbox": "Buscar actualizaciones automáticamente al iniciar",
     "update_check_now": "Buscar actualizaciones",
-    "update_current": "Aura está actualizada.",
-    "update_available_pattern": "Aura v{version} está disponible.",
+    "update_current": "Aura está actualizada",
+    "update_available_pattern": "Aura v{version} está disponible",
     "update_check_error_pattern": "No se pudieron buscar actualizaciones: {error}",
     "update_installing": "Descargando, verificando la firma e instalando la actualización...",
     "update_installed_restarting": "Actualización instalada. Reiniciando...",
@@ -990,7 +1047,7 @@ const i18nDict = {
     "copy_context_desc": "Cuando está activado, Aura envía Ctrl+C y pasa el texto seleccionado al proveedor o al modelo local como contexto para una orden de edición. Desactive esta función al trabajar en una terminal.",
     "copy_context_checkbox": "Permitir edición del texto seleccionado",
     "ai_edit_title": "Órdenes sobre la selección",
-    "ai_edit_desc": "Órdenes por voz para el texto seleccionado: «traducir», «acortar», «corregir gramática». La orden se aplica a la selección; el dictado normal se inserta sin cambios.",
+    "ai_edit_desc": "Órdenes por voz para el texto seleccionado: «traducir», «corregir gramática». La orden se aplica a la selección; el dictado normal se inserta sin cambios.",
     "ai_edit_mode_label": "Modo de edición",
     "ai_edit_mode_auto": "Auto",
     "ai_edit_mode_cloud": "Nube",
@@ -1000,7 +1057,7 @@ const i18nDict = {
     "translate_target_label": "Idioma de traducción predeterminado",
     "translate_target_sub": "Se utiliza al decir «traduce» sin especificar un idioma de destino.",
     "edit_cloud_provider_label": "Servicio de IA en la nube",
-    "edit_cloud_provider_sub": "Modelo que ejecuta comandos de traducción, resumen y formato de texto.",
+    "edit_cloud_provider_sub": "Modelo que ejecuta comandos de traducción y corrección de texto.",
     "edit_cloud_provider_fallback_sub": "Se utiliza como reserva si el modelo local no está instalado o disponible.",
     "llm_model_label": "Modelo local",
     "model_meta_llm_0_6b": "~460 MB — la más pequeña, órdenes básicas",
@@ -1077,18 +1134,20 @@ const i18nDict = {
     "onboarding_finish": "Comenzar",
     "onboarding_replay": "Recorrido de funciones",
     "onboarding_step_tag": "{current} / {total}",
-    "onboarding_step_1_title": "Inicio rápido de dictado",
-    "onboarding_step_1_desc": "Presione o mantenga presionado Alt+V en cualquier aplicación de Windows para dictar texto. Admite Push-to-Talk (mantener) y Alternar (clic inicio/parada). Durante la grabación aparece una superposición compacta en pantalla.",
-    "onboarding_step_2_title": "Motores de reconocimiento de voz",
-    "onboarding_step_2_desc": "Use el reconocimiento sin conexión en su PC sin enviar datos a la red o conecte modelos en la nube (Gemini, OpenAI, Groq) para un procesamiento rápido sin carga del sistema.",
-    "onboarding_step_3_title": "Edición de texto seleccionado por voz",
-    "onboarding_step_3_desc": "Seleccione texto en cualquier programa, presione Alt+V y pronuncie un comando: 'acorta', 'traduce al inglés' o 'corrige la gramática'. Si no da una orden y solo dicta, Aura reemplazará la selección con el texto dictado.",
-    "onboarding_step_4_title": "Operación en segundo plano y bandeja del sistema",
-    "onboarding_step_4_desc": "Aura funciona discretamente en segundo plano. El modo juego pausa los atajos para mantener los FPS, y la memoria gráfica se libera en reposo. Un indicador en la bandeja del sistema muestra siempre si el modo juego está activo.",
-    "commands_guide_title": "Guía de comandos de voz",
-    "commands_guide_desc": "Gestione las acciones sobre el texto seleccionado. Los comandos desactivados se insertan como texto normal.",
-    "commands_guide_label": "Comandos de voz",
-    "commands_guide_sub": "Referencia de acciones y activación/desactivación por comando",
+    "onboarding_step_1_title": "Métodos de reconocimiento de voz",
+    "onboarding_step_1_desc": "La IA local garantiza un 100% de privacidad sin enviar audio a la red, acelerada por GPU (NVIDIA CUDA) o CPU. La IA en la nube no requiere descargas y procesa al instante mediante API sin carga en el sistema.",
+    "onboarding_step_2_title": "Idioma de reconocimiento y diccionario",
+    "onboarding_step_2_desc": "Aura puede adaptarse automáticamente al idioma del teclado activo. En el diccionario puede definir reglas de reemplazo para erratas y términos especializados.",
+    "onboarding_step_3_title": "Inserción inteligente y edición del texto seleccionado",
+    "onboarding_step_3_desc": "Seleccione texto en cualquier aplicación, presione el atajo y dicte una orden: «corrige errores» o «traduce» — Aura reemplazará el texto directamente en el lugar.",
+    "onboarding_step_4_title": "Atajos globales, overlay y confirmación de audio",
+    "onboarding_step_4_desc": "La tecla principal inicia la grabación en cualquier lugar. Clics suaves confirman el inicio y fin, y un overlay flotante muestra el tiempo y estado de la grabación.",
+    "onboarding_step_5_title": "Historial de transcripciones y bandeja del sistema",
+    "onboarding_step_5_desc": "Todos los textos dictados se guardan en el historial para su reutilización. Aura permanece en la bandeja del sistema lista para activarse con su atajo.",
+    "commands_guide_title": "Comandos de voz compatibles",
+    "commands_guide_desc": "Acciones disponibles sobre el texto seleccionado.",
+    "commands_guide_label": "Comandos compatibles",
+    "commands_guide_sub": "Frases de voz para acciones en texto seleccionado",
     "commands_guide_btn": "Guía de comandos",
     "commands_guide_close": "Cerrar",
     "commands_guide_active_summary": "{active} de {total} comandos activos",
@@ -1097,7 +1156,12 @@ const i18nDict = {
     "smart_context_checkbox": "Tener en cuenta el contexto del cursor",
     "smart_context_subdesc": "Comienza con minúscula en mitad de una frase, elimina puntos finales y ajusta los espacios limpios.",
     "smart_context_trailing_period_checkbox": "Finalizar con punto al continuar al final de la oración",
-    "smart_context_trailing_period_subdesc": "Completa la frase con un punto si el cursor está al final. Desactívelo para seguir dictando."
+    "smart_context_trailing_period_subdesc": "Completa la frase con un punto si el cursor está al final. Desactívelo para seguir dictando.",
+    "sound_preview_btn": "Probar tema",
+    "sound_preview_label": "Probar",
+    "api_key_status_saved": "Guardado en Windows DPAPI",
+    "api_key_shared_hint": "Clave única de Aura: se aplica al dictado y a la edición con IA.",
+    "api_key_btn_change": "Cambiar"
   },
   "fr": {
     "title_settings": "Paramètres",
@@ -1191,6 +1255,15 @@ const i18nDict = {
     "about_description": "Outil de saisie vocale globale pour Windows. Le programme transcrit la parole en texte et l'insère dans n'importe quelle fenêtre active avec un formatage et une ponctuation automatiques.",
     "about_gratitude_text": "Merci d'utiliser Aura ! Si le programme vous fait gagner du temps, soutenez le projet avec une étoile sur GitHub.",
     "btn_star_github": "Mettre une étoile sur GitHub",
+    "about_row_tour_title": "Visite guidée",
+    "about_row_tour_desc": "Présentation interactive des fonctionnalités clés",
+    "about_row_changelog_title": "Nouveautés de cette version",
+    "about_row_changelog_desc": "Journal des modifications, améliorations et versions",
+    "about_row_report_issue_title": "Signaler un problème",
+    "about_row_report_issue_desc": "Signaler un bug ou faire part de vos retours sur GitHub",
+    "about_row_star_title": "Mettre une étoile sur GitHub",
+    "about_row_star_desc": "Soutenez le projet open source",
+    "about_btn_exit_app": "Quitter Aura",
     "status_ready": "Prêt",
     "btn_save": "Enregistrer",
     "confirm_title": "Confirmation",
@@ -1209,16 +1282,16 @@ const i18nDict = {
     "status_loaded": "Paramètres chargés",
     "status_load_error": "Échec du chargement des paramètres : ",
     "status_save_error": "Échec de l'enregistrement des paramètres : ",
-    "status_streaming_degraded": "Aperçu live Parakeet désactivé — le texte final est préparé par lot",
-    "model_downloading_pattern": "Démarrage du téléchargement pour le modèle '{model}'...",
+    "status_streaming_degraded": "Aperçu en direct suspendu — le texte complet apparaîtra à la fin de l'enregistrement",
+    "model_downloading_pattern": "Démarrage du téléchargement pour {model}...",
     "model_download_error_pattern": "Erreur de téléchargement: {err}",
     "delete_model_title": "Supprimer le modèle",
-    "delete_model_confirm_pattern": "Voulez-vous vraiment supprimer le modèle local '{model}' ?",
+    "delete_model_confirm_pattern": "Voulez-vous vraiment supprimer le modèle local {model} ?",
     "delete_model_btn": "Supprimer",
-    "model_deleting_pattern": "Suppression du modèle '{model}'...",
+    "model_deleting_pattern": "Suppression du modèle {model}...",
     "model_deleted_success": "Modèle supprimé avec succès",
     "model_delete_error_pattern": "Erreur de suppression: {err}",
-    "model_downloaded_success_pattern": "Modèle '{model}' téléchargé !",
+    "model_downloaded_success_pattern": "Modèle {model} téléchargé",
     "confirm_clear_history_title": "Effacer l'historique",
     "confirm_clear_history_msg": "Voulez-vous vraiment effacer tout l'historique des transcriptions ?",
     "general_ui_lang_title": "Langue de l'interface",
@@ -1227,8 +1300,8 @@ const i18nDict = {
     "update_checks_desc": "Aura contacte GitHub uniquement lors d’une vérification manuelle ou si vous activez les vérifications automatiques.",
     "update_checks_checkbox": "Rechercher automatiquement les mises à jour au démarrage",
     "update_check_now": "Rechercher les mises à jour",
-    "update_current": "Aura est à jour.",
-    "update_available_pattern": "Aura v{version} est disponible.",
+    "update_current": "Aura est à jour",
+    "update_available_pattern": "Aura v{version} est disponible",
     "update_check_error_pattern": "Impossible de rechercher les mises à jour : {error}",
     "update_installing": "Téléchargement, vérification de la signature et installation de la mise à jour…",
     "update_installed_restarting": "Mise à jour installée. Redémarrage…",
@@ -1262,7 +1335,7 @@ const i18nDict = {
     "copy_context_desc": "Lorsque cette option est activée, Aura envoie Ctrl+C et transmet le texte sélectionné au fournisseur ou au modèle local comme contexte d’une commande de modification. Désactivez-la lorsque vous travaillez dans un terminal.",
     "copy_context_checkbox": "Activer la modification du texte sélectionné",
     "ai_edit_title": "Commandes sur la sélection",
-    "ai_edit_desc": "Commandes vocales pour le texte sélectionné : « traduire », « raccourcir », « corriger la grammaire ». La commande s’applique à la sélection ; la dictée simple est insérée inchangée.",
+    "ai_edit_desc": "Commandes vocales pour le texte sélectionné : « traduire », « corriger la grammaire ». La commande s’applique à la sélection ; la dictée simple est insérée inchangée.",
     "ai_edit_mode_label": "Mode de modification",
     "ai_edit_mode_auto": "Auto",
     "ai_edit_mode_cloud": "Cloud",
@@ -1272,7 +1345,7 @@ const i18nDict = {
     "translate_target_label": "Langue de traduction par défaut",
     "translate_target_sub": "Utilisée lorsque vous dites « traduis » sans préciser de langue.",
     "edit_cloud_provider_label": "Service d'IA cloud",
-    "edit_cloud_provider_sub": "Modèle exécutant les commandes de traduction, résumé et mise en forme.",
+    "edit_cloud_provider_sub": "Modèle exécutant les commandes de traduction et de correction de texte.",
     "edit_cloud_provider_fallback_sub": "Utilisé en secours si le modèle local n'est pas installé ou indisponible.",
     "llm_model_label": "Modèle local",
     "model_meta_llm_0_6b": "~460 Mo — la plus légère, commandes simples",
@@ -1349,18 +1422,20 @@ const i18nDict = {
     "onboarding_finish": "Commencer",
     "onboarding_replay": "Visite guidée des fonctionnalités",
     "onboarding_step_tag": "{current} / {total}",
-    "onboarding_step_1_title": "Démarrage rapide de la dictée",
-    "onboarding_step_1_desc": "Appuyez ou maintenez Alt+V dans n'importe quelle application Windows pour dicter du texte. Modes Push-to-Talk (maintien) et Bascule (clic départ/arrêt). Un overlay compact apparaît à l'écran pendant l'enregistrement.",
-    "onboarding_step_2_title": "Moteurs de reconnaissance vocale",
-    "onboarding_step_2_desc": "Utilisez la reconnaissance hors ligne sur votre PC sans transfert de données ou connectez des modèles cloud (Gemini, OpenAI, Groq) pour un traitement rapide sans charger le système.",
-    "onboarding_step_3_title": "Modification de texte sélectionné à la voix",
-    "onboarding_step_3_desc": "Sélectionnez du texte dans n'importe quel logiciel, appuyez sur Alt+V et dictez un ordre : « raccourcis », « traduis en anglais » ou « corrige les erreurs ». Sans ordre particulier, le texte dicté remplacera la sélection.",
-    "onboarding_step_4_title": "Fonctionnement en arrière-plan et zone de notification",
-    "onboarding_step_4_desc": "Aura tourne discrètement en arrière-plan. Le mode jeu suspend les raccourcis pour préserver les FPS, et la mémoire graphique est libérée en veille. Une icône dans la barre d'état indique en permanence si le mode jeu est actif.",
-    "commands_guide_title": "Guide des commandes vocales",
-    "commands_guide_desc": "Gérez les actions sur le texte sélectionné. Les commandes désactivées sont saisies comme du texte ordinaire.",
-    "commands_guide_label": "Commandes vocales",
-    "commands_guide_sub": "Répertoire des actions et activation/désactivation par commande",
+    "onboarding_step_1_title": "Méthodes de reconnaissance vocale",
+    "onboarding_step_1_desc": "L'IA locale offre 100% de confidentialité sans envoi audio sur le réseau, accélérée par GPU (NVIDIA CUDA) ou CPU. L'IA cloud ne nécessite aucun téléchargement et traite via API sans charge système.",
+    "onboarding_step_2_title": "Langue de reconnaissance et dictionnaire",
+    "onboarding_step_2_desc": "Aura peut s'adapter automatiquement à la langue du clavier actif. Dans le dictionnaire, définissez des règles de remplacement pour les coquilles et termes spécialisés.",
+    "onboarding_step_3_title": "Insertion intelligente et édition du texte sélectionné",
+    "onboarding_step_3_desc": "Sélectionnez du texte dans n'importe quel logiciel, appuyez sur le raccourci et dictez un ordre : « corrige les erreurs » ou « traduis » — Aura modifie le texte directement sur place.",
+    "onboarding_step_4_title": "Raccourcis globaux, overlay et retour sonore",
+    "onboarding_step_4_desc": "La touche principale déclenche l'enregistrement n'importe où. De discrets clics confirment le début et la fin, et un overlay flottant indique l'état et la durée.",
+    "onboarding_step_5_title": "Historique des dictées et zone de notification",
+    "onboarding_step_5_desc": "Tous les textes dictés sont conservés dans l'historique pour être réutilisés. Aura reste discrètement dans la barre des tâches, prête à être activée par votre raccourci.",
+    "commands_guide_title": "Commandes vocales prises en charge",
+    "commands_guide_desc": "Actions disponibles sur le texte sélectionné.",
+    "commands_guide_label": "Commandes prises en charge",
+    "commands_guide_sub": "Phrases vocales pour les actions sur le texte sélectionné",
     "commands_guide_btn": "Guide des commandes",
     "commands_guide_close": "Fermer",
     "commands_guide_active_summary": "{active} sur {total} commandes actives",
@@ -1369,7 +1444,12 @@ const i18nDict = {
     "smart_context_checkbox": "Prendre en compte le contexte autour du curseur",
     "smart_context_subdesc": "Commence par une minuscule au milieu d'une phrase, supprime les points inutiles et ajuste les espaces.",
     "smart_context_trailing_period_checkbox": "Terminer par un point lors de la continuation en fin de phrase",
-    "smart_context_trailing_period_subdesc": "Termine par un point si le curseur est en fin de phrase. Désactivez pour poursuivre la dictée."
+    "smart_context_trailing_period_subdesc": "Termine par un point si le curseur est en fin de phrase. Désactivez pour poursuivre la dictée.",
+    "sound_preview_btn": "Écouter le thème",
+    "sound_preview_label": "Tester",
+    "api_key_status_saved": "Enregistré dans Windows DPAPI",
+    "api_key_shared_hint": "Clé unique Aura : s'applique à la dictée et à l'édition IA.",
+    "api_key_btn_change": "Modifier"
   },
   "it": {
     "title_settings": "Impostazioni",
@@ -1463,6 +1543,15 @@ const i18nDict = {
     "about_description": "Strumento di inserimento vocale globale per Windows. Il programma trascrive la voce in testo e la inserisce in qualsiasi finestra attiva con formattazione e punteggiatura automatiche.",
     "about_gratitude_text": "Grazie per aver scelto Aura! Se rende il tuo lavoro più veloce e comodo, sostieni il progetto con una stella su GitHub.",
     "btn_star_github": "Lascia una stella su GitHub",
+    "about_row_tour_title": "Tour delle funzionalità",
+    "about_row_tour_desc": "Guida interattiva alle funzionalità principali",
+    "about_row_changelog_title": "Novità in questa versione",
+    "about_row_changelog_desc": "Registro modifiche, miglioramenti e versioni",
+    "about_row_report_issue_title": "Segnala un problema",
+    "about_row_report_issue_desc": "Invia una segnalazione di bug su GitHub",
+    "about_row_star_title": "Metti una stella su GitHub",
+    "about_row_star_desc": "Sostieni il progetto open source",
+    "about_btn_exit_app": "Esci da Aura",
     "status_ready": "Pronto",
     "btn_save": "Salva impostazioni",
     "confirm_title": "Conferma",
@@ -1481,16 +1570,16 @@ const i18nDict = {
     "status_loaded": "Impostazioni caricate",
     "status_load_error": "Impossibile caricare le impostazioni: ",
     "status_save_error": "Impossibile salvare le impostazioni: ",
-    "status_streaming_degraded": "Anteprima live di Parakeet disattivata — il testo finale viene elaborato in batch",
-    "model_downloading_pattern": "Avvio del download per il modello '{model}'...",
+    "status_streaming_degraded": "Anteprima live in pausa — il testo completo apparirà al termine della registrazione",
+    "model_downloading_pattern": "Avvio del download per {model}...",
     "model_download_error_pattern": "Errore di download: {err}",
     "delete_model_title": "Elimina modello",
-    "delete_model_confirm_pattern": "Sei sicuro di voler eliminare il modello locale '{model}'?",
+    "delete_model_confirm_pattern": "Sei sicuro di voler eliminare il modello locale {model}?",
     "delete_model_btn": "Elimina",
-    "model_deleting_pattern": "Eliminazione del modello '{model}'...",
+    "model_deleting_pattern": "Eliminazione del modello {model}...",
     "model_deleted_success": "Modello eliminato con successo",
     "model_delete_error_pattern": "Errore di eliminazione: {err}",
-    "model_downloaded_success_pattern": "Modello '{model}' scaricato!",
+    "model_downloaded_success_pattern": "Modello {model} scaricato",
     "confirm_clear_history_title": "Cancella cronologia",
     "confirm_clear_history_msg": "Sei sicuro di voler cancellare tutta la cronologia delle trascrizioni?",
     "general_ui_lang_title": "Lingua dell'interfaccia",
@@ -1499,8 +1588,8 @@ const i18nDict = {
     "update_checks_desc": "Aura contatta GitHub solo durante un controllo manuale o se abiliti i controlli automatici.",
     "update_checks_checkbox": "Controlla automaticamente gli aggiornamenti all’avvio",
     "update_check_now": "Controlla aggiornamenti",
-    "update_current": "Aura è aggiornata.",
-    "update_available_pattern": "È disponibile Aura v{version}.",
+    "update_current": "Aura è aggiornata",
+    "update_available_pattern": "È disponibile Aura v{version}",
     "update_check_error_pattern": "Impossibile verificare gli aggiornamenti: {error}",
     "update_installing": "Download, verifica della firma e installazione dell’aggiornamento...",
     "update_installed_restarting": "Aggiornamento installato. Riavvio...",
@@ -1534,7 +1623,7 @@ const i18nDict = {
     "copy_context_desc": "Quando è abilitata, Aura invia Ctrl+C e passa il testo selezionato al provider o al modello locale come contesto per un comando di modifica. Disattiva questa funzione quando lavori in un terminale.",
     "copy_context_checkbox": "Abilita modifica del testo selezionato",
     "ai_edit_title": "Comandi sulla selezione",
-    "ai_edit_desc": "Comandi vocali per il testo selezionato: «traduci», «riduci», «correggi la grammatica». Il comando si applica alla selezione; la dettatura semplice viene inserita invariata.",
+    "ai_edit_desc": "Comandi vocali per il testo selezionato: «traduci», «correggi la grammatica». Il comando si applica alla selezione; la dettatura semplice viene inserita invariata.",
     "ai_edit_mode_label": "Modalità di modifica",
     "ai_edit_mode_auto": "Auto",
     "ai_edit_mode_cloud": "Cloud",
@@ -1544,7 +1633,7 @@ const i18nDict = {
     "translate_target_label": "Lingua di traduzione predefinita",
     "translate_target_sub": "Utilizzata quando pronunci «traduci» senza specificare una lingua.",
     "edit_cloud_provider_label": "Servizio IA cloud",
-    "edit_cloud_provider_sub": "Modello che esegue comandi di traduzione, riassunto e formattazione.",
+    "edit_cloud_provider_sub": "Modello che esegue comandi di traduzione e correzione del testo.",
     "edit_cloud_provider_fallback_sub": "Utilizzato come fallback se il modello locale non è installato o disponibile.",
     "llm_model_label": "Modello locale",
     "model_meta_llm_0_6b": "~460 MB — più leggera, comandi semplici",
@@ -1621,18 +1710,20 @@ const i18nDict = {
     "onboarding_finish": "Inizia",
     "onboarding_replay": "Tour guidato delle funzionalità",
     "onboarding_step_tag": "{current} / {total}",
-    "onboarding_step_1_title": "Avvio rapido dettatura",
-    "onboarding_step_1_desc": "Premi o tieni premuto Alt+V in qualsiasi applicazione Windows per dettare testo. Supporta Push-to-Talk (pressione continua) e Toggle (clic avvio/arresto). Durante la registrazione appare un overlay compatto sullo schermo.",
-    "onboarding_step_2_title": "Motori di riconoscimento vocale",
-    "onboarding_step_2_desc": "Usa il riconoscimento offline sul tuo PC senza inviare dati in rete oppure collega modelli cloud (Gemini, OpenAI, Groq) per un'elaborazione rapida senza carico sul sistema.",
-    "onboarding_step_3_title": "Modifica del testo selezionato con la voce",
-    "onboarding_step_3_desc": "Seleziona testo in qualsiasi programma, premi Alt+V e pronuncia un comando: 'accorcia', 'traduci in inglese' o 'correggi errori'. Se non fornisci un comando e ti limiti a dettare, il testo dettato sostituirà la selezione.",
-    "onboarding_step_4_title": "Funzionamento in background e barra delle applicazioni",
-    "onboarding_step_4_desc": "Aura opera silenziosamente in background. La modalità gioco sospende le scorciatoie per mantenere gli FPS, e la memoria video viene liberata in standby. Un'icona nella barra di sistema mostra sempre se la modalità gioco è attiva.",
-    "commands_guide_title": "Guida ai comandi vocali",
-    "commands_guide_desc": "Gestisci le azioni sul testo selezionato. I comandi disabilitati vengono inseriti come normale testo.",
-    "commands_guide_label": "Comandi vocali",
-    "commands_guide_sub": "Riferimento azioni e attivazione/disattivazione dei singoli comandi",
+    "onboarding_step_1_title": "Metodi di riconoscimento vocale",
+    "onboarding_step_1_desc": "L'IA locale garantisce il 100% di privacy senza invio di dati alla rete, accelerata da GPU (NVIDIA CUDA) o CPU. L'IA cloud non richiede download e offre elaborazione rapida via API senza carico sul sistema.",
+    "onboarding_step_2_title": "Lingua di riconoscimento e dizionario",
+    "onboarding_step_2_desc": "Aura può adattarsi automaticamente alla lingua della tastiera attiva. Nel dizionario puoi configurare regole di sostituzione per refusi e terminologia specifica.",
+    "onboarding_step_3_title": "Inserimento intelligente e modifica del testo selezionato",
+    "onboarding_step_3_desc": "Seleziona il testo in qualsiasi programma, premi la scorciatoia e pronuncia un comando: 'correggi errori' o 'traduci' — Aura modificherà il testo direttamente sul posto.",
+    "onboarding_step_4_title": "Scorciatoie globali, overlay e feedback audio",
+    "onboarding_step_4_desc": "Il tasto principale avvia la registrazione ovunque. Delicati clic confermano l'inizio e la fine, e un overlay mobile mostra stato e tempo trascorso.",
+    "onboarding_step_5_title": "Cronologia trascrizioni e barra delle applicazioni",
+    "onboarding_step_5_desc": "Tutti i testi dettati sono salvati nella cronologia per un rapido riutilizzo. Aura resta silenziosa nella barra delle applicazioni, pronta all'uso con la scorciatoia.",
+    "commands_guide_title": "Comandi vocali supportati",
+    "commands_guide_desc": "Azioni disponibili per il testo selezionato.",
+    "commands_guide_label": "Comandi supportati",
+    "commands_guide_sub": "Frasi vocali per azioni sul testo selezionato",
     "commands_guide_btn": "Guida comandi",
     "commands_guide_close": "Chiudi",
     "commands_guide_active_summary": "{active} su {total} comandi attivi",
@@ -1641,7 +1732,12 @@ const i18nDict = {
     "smart_context_checkbox": "Adatta al contesto attorno al cursore",
     "smart_context_subdesc": "Inizia con la minuscola a metà frase, rimuove i punti finali superflui e gestisce gli spazi in modo pulito.",
     "smart_context_trailing_period_checkbox": "Termina con un punto quando si continua alla fine della frase",
-    "smart_context_trailing_period_subdesc": "Se il cursore si trova alla fine di una frase aperta, termina con un punto. Se disattivato, lascia la frase aperta per continuare la dettatura."
+    "smart_context_trailing_period_subdesc": "Se il cursore si trova alla fine di una frase aperta, termina con un punto. Se disattivato, lascia la frase aperta per continuare la dettatura.",
+    "sound_preview_btn": "Ascolta tema",
+    "sound_preview_label": "Test",
+    "api_key_status_saved": "Salvato in Windows DPAPI",
+    "api_key_shared_hint": "Chiave unificata Aura: valida per dettatura e modifica IA.",
+    "api_key_btn_change": "Modifica"
   },
   "zh": {
     "title_settings": "设置",
@@ -1735,6 +1831,15 @@ const i18nDict = {
     "about_description": "适用于 Windows 的全局语音输入工具。本程序可以将语音转录为文本，并以自动格式和标点符号插入到任何活动窗口中。",
     "about_gratitude_text": "感谢您使用 Aura！如果它让您的输入更高效便捷，欢迎在 GitHub 上为本项目点亮一颗星。",
     "btn_star_github": "在 GitHub 上点亮 Star",
+    "about_row_tour_title": "功能导览",
+    "about_row_tour_desc": "核心功能交互式引导介绍",
+    "about_row_changelog_title": "此版本的新功能",
+    "about_row_changelog_desc": "更新日志、性能提升及版本发布",
+    "about_row_report_issue_title": "反馈问题",
+    "about_row_report_issue_desc": "在 GitHub 上提交问题或建议",
+    "about_row_star_title": "在 GitHub 上点赞",
+    "about_row_star_desc": "在开源社区支持该项目",
+    "about_btn_exit_app": "退出 Aura",
     "status_ready": "就绪",
     "btn_save": "保存设置",
     "confirm_title": "确认",
@@ -1753,16 +1858,16 @@ const i18nDict = {
     "status_loaded": "设置已加载",
     "status_load_error": "加载设置失败: ",
     "status_save_error": "保存设置失败: ",
-    "status_streaming_degraded": "Parakeet 实时预览已停用——最终文本将批量生成",
-    "model_downloading_pattern": "正在启动模型 '{model}' 的下载...",
+    "status_streaming_degraded": "实时预览已暂停——完整文本将在录音结束后显示",
+    "model_downloading_pattern": "正在启动模型 {model} 的下载...",
     "model_download_error_pattern": "下载错误: {err}",
     "delete_model_title": "删除模型",
-    "delete_model_confirm_pattern": "您确定要删除本地模型 '{model}' 吗？",
+    "delete_model_confirm_pattern": "您确定要删除本地模型 {model} 吗？",
     "delete_model_btn": "删除",
-    "model_deleting_pattern": "正在删除模型 '{model}'...",
+    "model_deleting_pattern": "正在删除模型 {model}...",
     "model_deleted_success": "模型删除成功",
     "model_delete_error_pattern": "删除错误: {err}",
-    "model_downloaded_success_pattern": "模型 '{model}' 已下载！",
+    "model_downloaded_success_pattern": "模型 {model} 已下载",
     "confirm_clear_history_title": "清空历史",
     "confirm_clear_history_msg": "您确定要清空所有听写历史记录吗？",
     "general_ui_lang_title": "界面语言",
@@ -1771,8 +1876,8 @@ const i18nDict = {
     "update_checks_desc": "Aura 仅在您手动检查或启用自动检查时连接 GitHub。",
     "update_checks_checkbox": "启动时自动检查更新",
     "update_check_now": "检查更新",
-    "update_current": "Aura 已是最新版本。",
-    "update_available_pattern": "Aura v{version} 可用。",
+    "update_current": "Aura 已是最新版本",
+    "update_available_pattern": "Aura v{version} 可用",
     "update_check_error_pattern": "无法检查更新：{error}",
     "update_installing": "正在下载、验证签名并安装更新...",
     "update_installed_restarting": "更新已安装。正在重启...",
@@ -1806,7 +1911,7 @@ const i18nDict = {
     "copy_context_desc": "启用后，Aura 会发送 Ctrl+C，并将选中文本作为编辑指令的上下文传给服务提供商或本地模型。在终端中工作时请关闭此功能。",
     "copy_context_checkbox": "启用选中文本编辑",
     "ai_edit_title": "选区指令",
-    "ai_edit_desc": "针对选中文本的语音指令：“翻译”、“缩短”、“修正语法”。指令作用于选区；普通听写原样插入。",
+    "ai_edit_desc": "针对选中文本的语音指令：“翻译”、“修正语法”。指令作用于选区；普通听写原样插入。",
     "ai_edit_mode_label": "编辑模式",
     "ai_edit_mode_auto": "自动",
     "ai_edit_mode_cloud": "云端",
@@ -1816,7 +1921,7 @@ const i18nDict = {
     "translate_target_label": "默认翻译目标语言",
     "translate_target_sub": "当语音指令仅为“翻译”且未指定语言时使用。",
     "edit_cloud_provider_label": "云端 AI 服务",
-    "edit_cloud_provider_sub": "执行翻译、精简和格式化指令的云端模型。",
+    "edit_cloud_provider_sub": "执行翻译和文本纠错指令的云端模型。",
     "edit_cloud_provider_fallback_sub": "当本地模型未安装或不可用时作为备用服务。",
     "llm_model_label": "本地模型",
     "model_meta_llm_0_6b": "~460 MB — 最小，基础指令",
@@ -1893,18 +1998,20 @@ const i18nDict = {
     "onboarding_finish": "开始使用",
     "onboarding_replay": "功能入门导览",
     "onboarding_step_tag": "{current} / {total}",
-    "onboarding_step_1_title": "快速开始听写",
-    "onboarding_step_1_desc": "在任何 Windows 程序中按住或轻按 Alt+V 即可进行语音输入。支持按住说话（Push-to-Talk）与点击启停（Toggle）两种模式。录音时屏幕上会显示紧凑的悬浮覆盖层（Overlay）。",
-    "onboarding_step_2_title": "语音识别引擎模式",
-    "onboarding_step_2_desc": "可在电脑本地离线运行语音识别，无需连接网络；亦可连接云端 AI（Gemini、OpenAI、Groq）进行快速处理且不占用本机系统资源。",
-    "onboarding_step_3_title": "选中文本语音指令编辑",
-    "onboarding_step_3_desc": "在任何软件中选中文本，按 Alt+V 并说出指令：“缩短”、“翻译成英语”或“修正错误”。若未给出指令直接说话，Aura 会直接用听写文本替换选中部分。",
-    "onboarding_step_4_title": "后台静默运行与系统托盘",
-    "onboarding_step_4_desc": "Aura 在后台静默运行。游戏时自动暂停快捷键以保证游戏 FPS，空闲时自动释放显存。系统托盘图标会始终显示游戏模式的运行状态。",
-    "commands_guide_title": "语音指令指南",
-    "commands_guide_desc": "管理选中文本可用的语音操作。停用的指令将作为普通语音直接输入。",
-    "commands_guide_label": "语音指令",
-    "commands_guide_sub": "操作参考及单项指令启用/停用开关",
+    "onboarding_step_1_title": "语音识别方式",
+    "onboarding_step_1_desc": "本地 AI 提供 100% 隐私保护，无需将音频上传至网络，并支持 GPU（NVIDIA CUDA）或 CPU 硬件加速。云端 AI 无需下载模型，通过 API 快速处理且不占用系统资源。",
+    "onboarding_step_2_title": "识别语言与自定义词汇表",
+    "onboarding_step_2_desc": "Aura 可根据当前键盘布局自动匹配识别语言。您可以在词汇表中设置文本替换规则，以纠正错别字或识别专业术语。",
+    "onboarding_step_3_title": "智能上下文插入与选中文本编辑",
+    "onboarding_step_3_desc": "在任何应用中选中文本，按快捷键并说出指令（如“纠正错误”或“翻译”），Aura 即可就地完成文本编辑与替换。",
+    "onboarding_step_4_title": "全局快捷键、悬浮层与声音反馈",
+    "onboarding_step_4_desc": "主快捷键可在任意界面快速启动录音。开始与结束伴有轻柔的点击提示音，屏幕上会显示录音状态与时间的悬浮层。",
+    "onboarding_step_5_title": "听写历史记录与静默托盘运行",
+    "onboarding_step_5_desc": "所有听写文本均安全保存在历史记录中以便快速复用。Aura 静默常驻 Windows 托盘，随时按快捷键即可开始听写。",
+    "commands_guide_title": "支持的语音指令",
+    "commands_guide_desc": "选中文本可用的操作。",
+    "commands_guide_label": "支持的指令",
+    "commands_guide_sub": "针对选中文本执行操作的语音短语",
     "commands_guide_btn": "指令指南",
     "commands_guide_close": "关闭",
     "commands_guide_active_summary": "{active} / {total} 个指令已启用",
@@ -1913,7 +2020,12 @@ const i18nDict = {
     "smart_context_checkbox": "根据光标上下文智能调整",
     "smart_context_subdesc": "在句中插入时自动使用小写并去除结尾句号，精确处理两端空格。",
     "smart_context_trailing_period_checkbox": "句末续写时自动添加句号",
-    "smart_context_trailing_period_subdesc": "若光标处于未完成句子末尾，则以句号结束。关闭时保持开放以便继续语音输入。"
+    "smart_context_trailing_period_subdesc": "若光标处于未完成句子末尾，则以句号结束。关闭时保持开放以便继续语音输入。",
+    "sound_preview_btn": "试听音效",
+    "sound_preview_label": "测试",
+    "api_key_status_saved": "已保存在 Windows DPAPI",
+    "api_key_shared_hint": "Aura 统一密钥：适用于语音听写和 AI 编辑。",
+    "api_key_btn_change": "更改"
   },
   "pt": {
     "title_settings": "Configurações",
@@ -2007,6 +2119,15 @@ const i18nDict = {
     "about_description": "Ferramenta de entrada de voz global para Windows. O programa transcreve a fala em texto e a insere em qualquer janela ativa com formatação e pontuação automáticas.",
     "about_gratitude_text": "Obrigado por usar o Aura! Se ele torna seu dia a dia mais ágil, apoie o projeto com uma estrela no GitHub.",
     "btn_star_github": "Dar uma estrela no GitHub",
+    "about_row_tour_title": "Tour de recursos",
+    "about_row_tour_desc": "Guia interativo dos principais recursos",
+    "about_row_changelog_title": "Novidades desta versão",
+    "about_row_changelog_desc": "Registro de alterações, melhorias e lançamentos",
+    "about_row_report_issue_title": "Relatar um problema",
+    "about_row_report_issue_desc": "Enviar relatório de bug ou feedback no GitHub",
+    "about_row_star_title": "Dar uma estrela no GitHub",
+    "about_row_star_desc": "Apoie o projeto de código aberto",
+    "about_btn_exit_app": "Sair do Aura",
     "status_ready": "Pronto",
     "btn_save": "Salvar configurações",
     "confirm_title": "Confirmação",
@@ -2025,16 +2146,16 @@ const i18nDict = {
     "status_loaded": "Configurações carregadas",
     "status_load_error": "Falha ao carregar configurações: ",
     "status_save_error": "Falha ao salvar configurações: ",
-    "status_streaming_degraded": "Pré-visualização ao vivo do Parakeet desativada — o texto final será gerado em lote",
-    "model_downloading_pattern": "Iniciando download para o modelo '{model}'...",
+    "status_streaming_degraded": "Pré-visualização ao vivo pausada — o texto completo aparecerá ao encerrar a gravação",
+    "model_downloading_pattern": "Iniciando download para {model}...",
     "model_download_error_pattern": "Erro de download: {err}",
     "delete_model_title": "Excluir modelo",
-    "delete_model_confirm_pattern": "Tem certeza de que deseja excluir o modelo local '{model}'?",
+    "delete_model_confirm_pattern": "Tem certeza de que deseja excluir o modelo local {model}?",
     "delete_model_btn": "Excluir",
-    "model_deleting_pattern": "Excluindo modelo '{model}'...",
+    "model_deleting_pattern": "Excluindo modelo {model}...",
     "model_deleted_success": "Modelo excluído com sucesso",
     "model_delete_error_pattern": "Erro ao excluir: {err}",
-    "model_downloaded_success_pattern": "Modelo '{model}' baixado!",
+    "model_downloaded_success_pattern": "Modelo {model} baixado",
     "confirm_clear_history_title": "Limpar histórico",
     "confirm_clear_history_msg": "Tem certeza de que deseja limpar todo o histórico de transcrições?",
     "general_ui_lang_title": "Idioma da interface",
@@ -2043,8 +2164,8 @@ const i18nDict = {
     "update_checks_desc": "A Aura só acessa o GitHub quando você verifica manualmente ou ativa as verificações automáticas.",
     "update_checks_checkbox": "Verificar atualizações automaticamente ao iniciar",
     "update_check_now": "Verificar atualizações",
-    "update_current": "A Aura está atualizada.",
-    "update_available_pattern": "A versão {version} da Aura está disponível.",
+    "update_current": "A Aura está atualizada",
+    "update_available_pattern": "A versão {version} da Aura está disponível",
     "update_check_error_pattern": "Não foi possível verificar atualizações: {error}",
     "update_installing": "Baixando, verificando a assinatura e instalando a atualização...",
     "update_installed_restarting": "Atualização instalada. Reiniciando...",
@@ -2078,7 +2199,7 @@ const i18nDict = {
     "copy_context_desc": "Quando ativado, o Aura envia Ctrl+C e encaminha o texto selecionado ao provedor ou ao modelo local como contexto para um comando de edição. Desative este recurso ao trabalhar em um terminal.",
     "copy_context_checkbox": "Ativar edição de texto selecionado",
     "ai_edit_title": "Comandos sobre a seleção",
-    "ai_edit_desc": "Comandos de voz para o texto selecionado: «traduzir», «encurtar», \"corrigir gramática». O comando é aplicado à seleção; a ditado comum é inserida sem alterações.",
+    "ai_edit_desc": "Comandos de voz para o texto selecionado: «traduzir», «corrigir gramática». O comando é aplicado à seleção; a ditado comum é inserida sem alterações.",
     "ai_edit_mode_label": "Modo de edição",
     "ai_edit_mode_auto": "Auto",
     "ai_edit_mode_cloud": "Nuvem",
@@ -2088,7 +2209,7 @@ const i18nDict = {
     "translate_target_label": "Idioma padrão para tradução",
     "translate_target_sub": "Usado ao dizer «traduza» sem especificar um idioma de destino.",
     "edit_cloud_provider_label": "Serviço de IA na nuvem",
-    "edit_cloud_provider_sub": "Modelo que executa comandos de tradução, resumo e formatação.",
+    "edit_cloud_provider_sub": "Modelo que executa comandos de tradução e correção de texto.",
     "edit_cloud_provider_fallback_sub": "Usado como contingência se o modelo local não estiver instalado ou disponível.",
     "llm_model_label": "Modelo local",
     "model_meta_llm_0_6b": "~460 MB — o menor, comandos básicos",
@@ -2165,18 +2286,20 @@ const i18nDict = {
     "onboarding_finish": "Começar",
     "onboarding_replay": "Visita guiada de recursos",
     "onboarding_step_tag": "{current} / {total}",
-    "onboarding_step_1_title": "Início rápido de ditado",
-    "onboarding_step_1_desc": "Pressione ou segure Alt+V em qualquer aplicativo do Windows para ditar texto. Suporta Push-to-Talk (segurar) e Alternar (clique início/parada). Durante a gravação, uma sobreposição compacta (overlay) aparece na tela.",
-    "onboarding_step_2_title": "Mecanismos de reconhecimento de voz",
-    "onboarding_step_2_desc": "Use o reconhecimento offline em seu PC sem envio de dados pela rede ou conecte modelos em nuvem (Gemini, OpenAI, Groq) para processamento rápido sem carga no sistema.",
-    "onboarding_step_3_title": "Edição de texto selecionado por voz",
-    "onboarding_step_3_desc": "Selecione o texto em qualquer aplicativo, pressione Alt+V e pronuncie um comando: 'encurte', 'traduza para inglês' ou 'corrija a gramática'. Caso nenhum comando seja dado, o texto ditado substituirá a seleção.",
-    "onboarding_step_4_title": "Operação em segundo plano e bandeja do sistema",
-    "onboarding_step_4_desc": "O Aura roda discretamente em segundo plano. O modo de jogo pausa atalhos para manter o FPS, e a memória de vídeo é liberada em inatividade. Um ícone na bandeja do sistema indica quando o modo de jogo está ativo.",
-    "commands_guide_title": "Guia de comandos de voz",
-    "commands_guide_desc": "Gerencie as ações no texto selecionado. Comandos desativados são inseridos como fala comum.",
-    "commands_guide_label": "Comandos de voz",
-    "commands_guide_sub": "Referência de ações e ativação/desativação por comando",
+    "onboarding_step_1_title": "Métodos de reconhecimento de voz",
+    "onboarding_step_1_desc": "A IA local garante 100% de privacidade sem envio de áudio para a rede, acelerada por GPU (NVIDIA CUDA) ou CPU. A IA em nuvem não requer downloads e processa rapidamente via API sem carga no sistema.",
+    "onboarding_step_2_title": "Idioma de reconhecimento e dicionário",
+    "onboarding_step_2_desc": "O Aura pode se adaptar automaticamente ao idioma do teclado ativo. No dicionário, configure regras de substituição para termos técnicos e erros de digitação.",
+    "onboarding_step_3_title": "Inserção inteligente e edição do texto selecionado",
+    "onboarding_step_3_desc": "Selecione o texto em qualquer aplicativo, pressione o atalho e dite um comando: 'corrija erros' ou 'traduza' — o Aura editará o texto diretamente no local.",
+    "onboarding_step_4_title": "Atalhos globais, overlay e resposta sonora",
+    "onboarding_step_4_desc": "A tecla principal inicia a gravação em qualquer lugar. Cliques suaves confirmam início e parada, e um overlay flutuante exibe status e tempo de gravação.",
+    "onboarding_step_5_title": "Histórico de transcrições e bandeja do sistema",
+    "onboarding_step_5_desc": "Todos os textos ditados são salvos no histórico para reutilização. O Aura opera discretamente na bandeja do sistema, pronto para uso com seu atalho.",
+    "commands_guide_title": "Comandos de voz suportados",
+    "commands_guide_desc": "Ações disponíveis para o texto selecionado.",
+    "commands_guide_label": "Comandos suportados",
+    "commands_guide_sub": "Frases de voz para ações no texto selecionado",
     "commands_guide_btn": "Guia de comandos",
     "commands_guide_close": "Fechar",
     "commands_guide_active_summary": "{active} de {total} comandos ativos",
@@ -2185,7 +2308,12 @@ const i18nDict = {
     "smart_context_checkbox": "Adaptar ao contexto ao redor do cursor",
     "smart_context_subdesc": "Inicia com letra minúscula no meio da frase, remove pontos finais extras e ajusta os espaços de forma limpa.",
     "smart_context_trailing_period_checkbox": "Finalizar com ponto ao continuar no fim da frase",
-    "smart_context_trailing_period_subdesc": "Se o cursor estiver no fim de uma frase aberta, finaliza com ponto. Quando desativado, mantém aberto para mais ditado."
+    "smart_context_trailing_period_subdesc": "Se o cursor estiver no fim de uma frase aberta, finaliza com ponto. Quando desativado, mantém aberto para mais ditado.",
+    "sound_preview_btn": "Ouvir tema",
+    "sound_preview_label": "Testar",
+    "api_key_status_saved": "Salvo no Windows DPAPI",
+    "api_key_shared_hint": "Chave unificada do Aura: aplica-se ao ditado e à edição por IA.",
+    "api_key_btn_change": "Alterar"
   },
   "tr": {
     "title_settings": "Ayarlar",
@@ -2279,6 +2407,15 @@ const i18nDict = {
     "about_description": "Windows için genel sesli giriş aracı. Program, konuşmayı metne dönüştürür ve otomatik biçimlendirme ve noktalama işaretleriyle herhangi bir aktif pencereye ekler.",
     "about_gratitude_text": "Aura'yı kullandığınız için teşekkürler! Çalışmanızı hızlandırıyorsa, projeyi GitHub'da yıldızlayarak destekleyebilirsiniz.",
     "btn_star_github": "GitHub'da Yıldız Ver",
+    "about_row_tour_title": "Özellik Turu",
+    "about_row_tour_desc": "Temel özelliklere ilişkin etkileşimli rehber",
+    "about_row_changelog_title": "Bu Sürümdeki Yenilikler",
+    "about_row_changelog_desc": "Değişiklik günlüğü, performans iyileştirmeleri ve sürümler",
+    "about_row_report_issue_title": "Hata Bildir",
+    "about_row_report_issue_desc": "GitHub üzerinden hata veya geri bildirim gönderin",
+    "about_row_star_title": "GitHub'da Yıldız Ver",
+    "about_row_star_desc": "Açık kaynaklı projeyi destekleyin",
+    "about_btn_exit_app": "Aura'dan Çık",
     "status_ready": "Hazır",
     "btn_save": "Ayarları Kaydet",
     "confirm_title": "Onay",
@@ -2297,16 +2434,16 @@ const i18nDict = {
     "status_loaded": "Ayarlar yüklendi",
     "status_load_error": "Ayarlar yüklenemedi: ",
     "status_save_error": "Ayarlar kaydedilemedi: ",
-    "status_streaming_degraded": "Canlı Parakeet önizlemesi devre dışı — nihai metin toplu olarak hazırlanıyor",
-    "model_downloading_pattern": "'{model}' modeli için indirme başlatılıyor...",
+    "status_streaming_degraded": "Canlı önizleme duraklatıldı — tam metin kayıt bittiğinde görünecek",
+    "model_downloading_pattern": "{model} modeli için indirme başlatılıyor...",
     "model_download_error_pattern": "İndirme hatası: {err}",
     "delete_model_title": "Modeli sil",
-    "delete_model_confirm_pattern": "Yerel '{model}' modelini silmek istediğinizden emin misiniz?",
+    "delete_model_confirm_pattern": "Yerel {model} modelini silmek istediğinizden emin misiniz?",
     "delete_model_btn": "Sil",
-    "model_deleting_pattern": "'{model}' modeli siliniyor...",
+    "model_deleting_pattern": "{model} modeli siliniyor...",
     "model_deleted_success": "Model başarıyla silindi",
     "model_delete_error_pattern": "Silme hatası: {err}",
-    "model_downloaded_success_pattern": "'{model}' modeli indirildi!",
+    "model_downloaded_success_pattern": "{model} modeli indirildi",
     "confirm_clear_history_title": "Geçmişi Temizle",
     "confirm_clear_history_msg": "Tüm transkripsiyon geçmişini temizlemek istediğinizden emin misiniz?",
     "general_ui_lang_title": "Arayüz Dili",
@@ -2315,8 +2452,8 @@ const i18nDict = {
     "update_checks_desc": "Aura, GitHub’a yalnızca elle denetlediğinizde veya otomatik denetimleri etkinleştirdiğinizde bağlanır.",
     "update_checks_checkbox": "Başlangıçta güncellemeleri otomatik olarak denetle",
     "update_check_now": "Güncellemeleri denetle",
-    "update_current": "Aura güncel.",
-    "update_available_pattern": "Aura v{version} kullanılabilir.",
+    "update_current": "Aura güncel",
+    "update_available_pattern": "Aura v{version} kullanılabilir",
     "update_check_error_pattern": "Güncellemeler denetlenemedi: {error}",
     "update_installing": "Güncelleme indiriliyor, imza doğrulanıyor ve kuruluyor...",
     "update_installed_restarting": "Güncelleme kuruldu. Yeniden başlatılıyor...",
@@ -2350,7 +2487,7 @@ const i18nDict = {
     "copy_context_desc": "Etkinleştirildiğinde Aura, Ctrl+C gönderir ve seçili metni bir düzenleme komutu için bağlam olarak seçilen bulut sağlayıcısına veya yerel modele iletir. Terminalde çalışırken bu özelliği devre dışı bırakın.",
     "copy_context_checkbox": "Seçili metni düzenlemeyi etkinleştir",
     "ai_edit_title": "Seçim üzerinde komutlar",
-    "ai_edit_desc": "Seçili metin için sesli komutlar: «çevir», «kısalt», «dilbilgisini düzelt». Komut seçime uygulanır; normal dikte olduğu gibi eklenir.",
+    "ai_edit_desc": "Seçili metin için sesli komutlar: «çevir», «dilbilgisini düzelt». Komut seçime uygulanır; normal dikte olduğu gibi eklenir.",
     "ai_edit_mode_label": "Düzenleme modu",
     "ai_edit_mode_auto": "Otomatik",
     "ai_edit_mode_cloud": "Bulut",
@@ -2360,7 +2497,7 @@ const i18nDict = {
     "translate_target_label": "Varsayılan çeviri dili",
     "translate_target_sub": "Hedef dil belirtilmeden «çevir» komutu verildiğinde kullanılır.",
     "edit_cloud_provider_label": "Bulut Yapay Zeka Servisi",
-    "edit_cloud_provider_sub": "Metin çeviri, özetleme ve biçimlendirme komutlarını yürüten model.",
+    "edit_cloud_provider_sub": "Metin çeviri ve düzeltme komutlarını yürüten model.",
     "edit_cloud_provider_fallback_sub": "Yerel model kurulu değilse veya kullanılamıyorsa yedek olarak kullanılır.",
     "llm_model_label": "Yerel model",
     "model_meta_llm_0_6b": "~460 MB — en küçük, temel komutlar",
@@ -2437,18 +2574,20 @@ const i18nDict = {
     "onboarding_finish": "Başla",
     "onboarding_replay": "Özellik tanıtım turu",
     "onboarding_step_tag": "{current} / {total}",
-    "onboarding_step_1_title": "Hızlı Dikte Başlatma",
-    "onboarding_step_1_desc": "Metin dikte etmek için herhangi bir Windows uygulamasında Alt+V tuşuna basın veya basılı tutun. Bas-Konuş (Push-to-Talk) ve Aç/Kapat (Toggle) modları desteklenir. Kayıt sırasında ekranda kompakt bir yer paylaşımı (overlay) görünür.",
-    "onboarding_step_2_title": "Konuşma Tanıma Motorları",
-    "onboarding_step_2_desc": "Ağa veri göndermeden doğrudan bilgisayarınızda çevrimdışı tanımayı kullanın veya sistem yükü olmadan hızlı işlem için bulut modellerini (Gemini, OpenAI, Groq) bağlayın.",
-    "onboarding_step_3_title": "Seçili Metni Sesle Düzenleme",
-    "onboarding_step_3_desc": "Herhangi bir uygulamada metni seçin, Alt+V tuşuna basın ve bir komut verin: 'kısalt', 'ingilizceye çevir' veya 'hataları düzelt'. Komut verilmezse, dikte edilen metin seçimin yerine eklenir.",
-    "onboarding_step_4_title": "Arka Planda Çalışma ve Sistem Tepsisi",
-    "onboarding_step_4_desc": "Aura arka planda sessizce çalışır. Oyun modu FPS'yi korumak için kısayolları duraklatır, boşta kalındığında video belleği serbest bırakılır. Sistem tepsisindeki simge oyun modunun etkin olup olmadığını gösterir.",
-    "commands_guide_title": "Sesli Komut Rehberi",
-    "commands_guide_desc": "Seçilen metin üzerindeki sesli eylemleri yönetin. Devre dışı bırakılan komutlar normal konuşma olarak yazılır.",
-    "commands_guide_label": "Sesli Komutlar",
-    "commands_guide_sub": "Eylem referansı ve komut bazında açma/kapatma anahtarları",
+    "onboarding_step_1_title": "Konuşma Tanıma Yöntemleri",
+    "onboarding_step_1_desc": "Yerel Yapay Zeka, ses verilerini ağa aktarmadan %100 gizlilik sağlar ve GPU (NVIDIA CUDA) veya CPU ile hızlandırılır. Bulut Yapay Zeka ise model indirmeye gerek kalmadan API üzerinden sıfır sistem yüküyle anında çalışır.",
+    "onboarding_step_2_title": "Tanıma Dili ve Sözlük",
+    "onboarding_step_2_desc": "Aura, aktif klavye düzeninin diline otomatik olarak uyum sağlayabilir. Sözlükte yazım hatalarını düzeltmek ve teknik terimleri tanımlamak için metin değiştirme kuralları belirleyebilirsiniz.",
+    "onboarding_step_3_title": "Akıllı Ekleme ve Seçili Metni Düzenleme",
+    "onboarding_step_3_desc": "Herhangi bir uygulamada metni seçin, kısayola basın ve bir komut söyleyin: 'hataları düzelt' veya 'çevir' — Aura metni doğrudan yerinde düzenler.",
+    "onboarding_step_4_title": "Genel Kısayollar, Overlay ve Sesli Geri Bildirim",
+    "onboarding_step_4_desc": "Ana kısayol tuşu herhangi bir yerde kaydı başlatır. Hafif sesli tıklamalar başlangıç ve duruşu doğrular, hareketli bir overlay ise kayıt süresini ve durumunu gösterir.",
+    "onboarding_step_5_title": "Metin Geçmişi ve Sistem Tepsisinde Sessiz Çalışma",
+    "onboarding_step_5_desc": "Dikte edilen tüm metinler yeniden kopyalanmak üzere geçmişte saklanır. Aura sistem tepsisinde sessizce bekler ve kısayolunuza anında yanıt verir.",
+    "commands_guide_title": "Desteklenen Sesli Komutlar",
+    "commands_guide_desc": "Seçilen metin üzerindeki kullanılabilir eylemler.",
+    "commands_guide_label": "Desteklenen Komutlar",
+    "commands_guide_sub": "Seçili metin üzerinde eylemler için sesli ifadeler",
     "commands_guide_btn": "Komut Rehberi",
     "commands_guide_close": "Kapat",
     "commands_guide_active_summary": "{active} / {total} komut aktif",
@@ -2457,7 +2596,12 @@ const i18nDict = {
     "smart_context_checkbox": "İmleç çevresindeki bağlama göre uyarla",
     "smart_context_subdesc": "Cümle ortasında küçük harfle başlar, fazladan noktaları kaldırır ve boşlukları düzenler.",
     "smart_context_trailing_period_checkbox": "Cümle sonunda devam ederken nokta ile bitir",
-    "smart_context_trailing_period_subdesc": "İmleç tamamlanmamış cümlenin sonundaysa nokta ekler. Kapatılırsa dikteye devam etmek için açık bırakır."
+    "smart_context_trailing_period_subdesc": "İmleç tamamlanmamış cümlenin sonundaysa nokta ekler. Kapatılırsa dikteye devam etmek için açık bırakır.",
+    "sound_preview_btn": "Temayı dinle",
+    "sound_preview_label": "Test et",
+    "api_key_status_saved": "Windows DPAPI'de kayıtlı",
+    "api_key_shared_hint": "Birleşik Aura anahtarı: sesli dikte ve yapay zeka düzenlemesi için geçerlidir.",
+    "api_key_btn_change": "Değiştir"
   }
 };
 
@@ -2516,6 +2660,12 @@ function rebuildSelectPanels() {
 function closeSelectPanels() {
   document.querySelectorAll(".select-panel.open").forEach((panel) => {
     panel.classList.remove("open");
+    panel.classList.add("closing");
+    if (panel._closeTimer) clearTimeout(panel._closeTimer);
+    panel._closeTimer = setTimeout(() => {
+      panel.classList.remove("closing");
+      panel._closeTimer = null;
+    }, 120);
   });
   document.querySelectorAll("select.custom-select[aria-expanded]").forEach((el) => {
     el.setAttribute("aria-expanded", "false");
@@ -2529,6 +2679,11 @@ function toggleSelectPanel(select) {
   const willOpen = !panel.classList.contains("open");
   closeSelectPanels();
   if (willOpen) {
+    if (panel._closeTimer) {
+      clearTimeout(panel._closeTimer);
+      panel._closeTimer = null;
+    }
+    panel.classList.remove("closing");
     // Values can change programmatically (loadSettings, engine switching)
     // after the panel was built, so the accent mark must be re-synced
     // against the current value every time the panel opens.
@@ -2717,222 +2872,6 @@ const COMMANDS_METADATA = [
       pt: ['«traduza»', '«traduza para inglês»', '«traduza para espanhol»'],
       tr: ['"çevir"', '"İngilizceye çevir"', '"Almancaya çevir"']
     }
-  },
-  {
-    id: "shorten",
-    names: {
-      ru: "Сокращение текста",
-      en: "Shorten & Condense",
-      de: "Kürzen & Verdichten",
-      es: "Acortar y resumir",
-      fr: "Raccourcir et condenser",
-      it: "Accorcia e condensa",
-      zh: "精简缩短",
-      pt: "Encurtar e resumir",
-      tr: "Kısalt ve Özetle"
-    },
-    descriptions: {
-      ru: "Делает текст лаконичнее и короче, удаляя лишние слова и сохраняя все важные мысли.",
-      en: "Makes the text concise and punchy, removing filler words while keeping core ideas intact.",
-      de: "Macht den Text prägnanter und kürzer, entfernt Füllwörter und bewahrt Kernaussagen.",
-      es: "Hace el texto más conciso y breve, eliminando redundancias y manteniendo las ideas clave.",
-      fr: "Rend le texte concis, supprime le remplissage tout en préservant les idées clés.",
-      it: "Rende il testo più sintetico ed essenziale, eliminando il superfluo e mantenendo i punti chiave.",
-      zh: "精简语句，剔除冗余修饰，完整保留核心事实与要点。",
-      pt: "Torna o texto mais sucinto e direto, removendo excessos e mantendo o essencial.",
-      tr: "Gereksiz sözcükleri çıkararak metni daha kısa ve öz hale getirir, ana fikri korur."
-    },
-    chips: {
-      ru: ["«сократи»", "«сделай короче»", "«сожми текст»"],
-      en: ['"shorten"', '"make shorter"', '"condense"'],
-      de: ['„kürzen“', '„kürzer machen“', '„Text verdichten“'],
-      es: ['«acorta»', '«hazlo más corto»', '«hazlo breve»'],
-      fr: ['« raccourcis »', '« fais plus court »', '« condense »'],
-      it: ['"accorcia"', '"fai più corto"', '"sintetizza"'],
-      zh: ['“缩短”', '“精简文本”', '“写短一点”'],
-      pt: ['«encurte»', '«faça mais curto»', '«mais breve»'],
-      tr: ['"kısalt"', '"daha kısa yap"', '"kısa tut"']
-    }
-  },
-  {
-    id: "expand",
-    names: {
-      ru: "Развёртывание текста",
-      en: "Expand & Elaborate",
-      de: "Ausformulieren & Erweitern",
-      es: "Ampliar y detallar",
-      fr: "Développer et étoffer",
-      it: "Espandi e approfondisci",
-      zh: "扩充展开",
-      pt: "Expandir e detalhar",
-      tr: "Genişlet ve Detaylandır"
-    },
-    descriptions: {
-      ru: "Дополняет текст полезными деталями, делает формулировки более ясными и обстоятельными.",
-      en: "Elaborates on ideas with helpful details and clarity while preserving the original intent.",
-      de: "Formuliert Ideen detaillierter und anschaulicher aus unter Beibehaltung der Absicht.",
-      es: "Amplía y detalla las ideas con claridad sin perder el propósito original.",
-      fr: "Développe les idées avec plus de clarté et de précision tout en conservant l'intention d'origine.",
-      it: "Arricchisce il testo con dettagli e maggiore chiarezza preservando l'intento iniziale.",
-      zh: "扩充文本细节，让表达更加清晰详实，同时保持原意不变。",
-      pt: "Desenvolve o texto com detalhes e clareza sem perder a mensagem original.",
-      tr: "Metni faydalı detaylarla zenginleştirir, anlatımı daha açık ve kapsamlı kılar."
-    },
-    chips: {
-      ru: ["«распиши подробнее»", "«разверни мысль»", "«добавь деталей»"],
-      en: ['"expand"', '"elaborate"', '"add details"'],
-      de: ['„ausführlicher“', '„Gedanken ausführen“', '„Details hinzufügen“'],
-      es: ['«amplía»', '«explica con más detalle»', '«añade деталей»'],
-      fr: ['« développe »', '« détaille »', '« ajoute des détails »'],
-      it: ['"espandi"', '"approfondisci"', '"aggiungi dettagli"'],
-      zh: ['“展开说明”', '“写详细一点”', '“补充细节”'],
-      pt: ['«expanda»', '«detalhe mais»', '«adicione detalhes»'],
-      tr: ['"detaylandır"', '"daha ayrıntılı yaz"', '"genişlet"']
-    }
-  },
-  {
-    id: "bulletize",
-    names: {
-      ru: "Форматирование списком",
-      en: "Bullet List",
-      de: "Als Aufzählung formatieren",
-      es: "Formato de lista",
-      fr: "Formater en liste à puces",
-      it: "Elenco puntato",
-      zh: "项目符号列表",
-      pt: "Formatar em tópicos",
-      tr: "Madde İmleri Listesi"
-    },
-    descriptions: {
-      ru: "Преобразует сплошной текст в структурированный маркированный список с ключевыми пунктами.",
-      en: "Formats unstructured paragraphs into a clean, easy-to-read bulleted list.",
-      de: "Verwandelt Fließtext in eine übersichtliche, strukturierte Liste mit Aufzählungspunkten.",
-      es: "Convierte párrafos continuos en una lista ordenada y limpia con puntos clave.",
-      fr: "Transforme un texte continu en une liste à puces claire et facile à lire.",
-      it: "Trasforma il testo discorsivo in un elenco puntato ordinato e ben strutturato.",
-      zh: "将连续段落转换成清晰工整、易于阅读的项目符号列表。",
-      pt: "Converte o texto contínuo em uma lista ordenada com tópicos bem definidos.",
-      tr: "Düz metni okunması kolay, maddeler halinde düzenli bir listeye dönüştürür."
-    },
-    chips: {
-      ru: ["«сделай список»", "«по пунктам»", "«оформи списком»"],
-      en: ['"bulletize"', '"make a list"', '"bullet points"'],
-      de: ['„Liste erstellen“', '„in Stichpunkten“', '„Aufzählung“'],
-      es: ['«haz una lista»', '«en viñetas»', '«formatea como lista»'],
-      fr: ['« fais une liste »', '« sous forme de liste »', '« liste à puces »'],
-      it: ['"fai un elenco"', '"in punti"', '"elenco puntato"'],
-      zh: ['“做成列表”', '“列要点”', '“项目符号”'],
-      pt: ['«faça uma lista»', '«em tópicos»', '«formate em lista»'],
-      tr: ['"liste yap"', '"maddeler halinde"', '"madde imleri"']
-    }
-  },
-  {
-    id: "summarize",
-    names: {
-      ru: "Выжимка и тезисы",
-      en: "Summarize & TL;DR",
-      de: "Kernaussagen & Zusammenfassung",
-      es: "Resumen y puntos clave",
-      fr: "Résumé et points clés",
-      it: "Sintesi e punti chiave",
-      zh: "核心摘要与提炼",
-      pt: "Resumo e pontos-chave",
-      tr: "Özet ve Ana Başlıklar"
-    },
-    descriptions: {
-      ru: "Выделяет главную суть и ключевые выводы из длинного текста в кратком и понятном виде.",
-      en: "Extracts essential takeaways and main ideas into an instant concise briefing.",
-      de: "Fasst die wichtigsten Kernaussagen und Erkenntnisse kurz und verständlich zusammen.",
-      es: "Extrae las conclusiones esenciales y las ideas principales de manera concisa.",
-      fr: "Extrait l'essentiel et les conclusions clés sous une forme brève et percutante.",
-      it: "Estrae il significato essenziale e le conclusioni principali in modo rapido e chiaro.",
-      zh: "快速提炼长文本的关键结论和核心思想，形成简明摘要。",
-      pt: "Extrai as conclusões essenciais e ideias principais de forma rápida e clara.",
-      tr: "Uzun metinlerden ana fikri ve önemli sonuçları kısa ve anlaşılır bir özette toplar."
-    },
-    chips: {
-      ru: ["«главные тезисы»", "«краткая суть»", "«сделай саммари»"],
-      en: ['"summarize"', '"key takeaways"', '"tldr"'],
-      de: ['„zusammenfassen“', '„Kernaussagen“', '„Kurzfassung“'],
-      es: ['«resume»', '«puntos clave»', '«haz un resumen»'],
-      fr: ['« résume »', '« points essentiels »', '« fais un résumé »'],
-      it: ['"riassumi"', '"punti chiave"', '"fai un sommario"'],
-      zh: ['“总结要点”', '“核心摘要”', '“提炼精髓”'],
-      pt: ['«resuma»', '«principais pontos»', '«faça um resumo»'],
-      tr: ['"özetle"', '"ana noktalar"', '"özet çıkar"']
-    }
-  },
-  {
-    id: "rewrite_formal",
-    names: {
-      ru: "Деловой стиль",
-      en: "Formal Tone",
-      de: "Geschäftlicher Ton",
-      es: "Tono formal",
-      fr: "Ton formel et professionnel",
-      it: "Tono formale",
-      zh: "正式商务语气",
-      pt: "Tom formal",
-      tr: "Resmi Dil"
-    },
-    descriptions: {
-      ru: "Переформулирует текст в строгом, вежливом и профессиональном деловом ключе.",
-      en: "Rewrites the text into a polished, respectful, and professional business tone.",
-      de: "Formuliert den Text in einem höflichen, professionellen Geschäftston neu.",
-      es: "Reescribe el texto en un estilo pulido, respetuoso y formal para entornos profesionales.",
-      fr: "Réécrit le texte dans un registre soutenu, courtois et adapté au milieu professionnel.",
-      it: "Riscrive il testo con un registro accurato, formale e adatto alla comunicazione professionale.",
-      zh: "将文本改写为严谨、得体、适合职场与商务沟通的专业语气。",
-      pt: "Reescreve o texto em tom polido, respeitoso e profissional para o trabalho.",
-      tr: "Metni kurumsal ve iş iletişimine uygun, saygılı ve resmi bir dille yeniden yazar."
-    },
-    chips: {
-      ru: ["«деловой стиль»", "«сделай официально»", "«вежливый тон»"],
-      en: ['"make formal"', '"business tone"', '"professional"'],
-      de: ['„formell machen“', '„geschäftlicher Ton“', '„höflich formulieren“'],
-      es: ['«hazlo formal»', '«tono profesional»', '«estilo formal»'],
-      fr: ['« ton formel »', '« style professionnel »', '« rends formel »'],
-      it: ['"rendi formale"', '"tono professionale"', '"stile formale"'],
-      zh: ['“正式语气”', '“商务风格”', '“书面语”'],
-      pt: ['«torne formal»', '«tom profissional»', '«estilo corporativo»'],
-      tr: ['"resmi yap"', '"kurumsal üslup"', '"profesyonel dil"']
-    }
-  },
-  {
-    id: "rewrite_casual",
-    names: {
-      ru: "Непринуждённый стиль",
-      en: "Casual Tone",
-      de: "Lockerer Ton",
-      es: "Tono informal",
-      fr: "Ton décontracté",
-      it: "Tono informale",
-      zh: "随和口语语气",
-      pt: "Tom informal",
-      tr: "Samimi / Günlük Dil"
-    },
-    descriptions: {
-      ru: "Переписывает текст в простом, тёплом и естественном разговорном стиле.",
-      en: "Rewrites the text into an approachable, friendly, and conversational voice.",
-      de: "Formuliert den Text in einer sympathischen, lockeren und natürlichen Umgangssprache.",
-      es: "Reescribe el texto en un tono cercano, natural y amigable de conversación diaria.",
-      fr: "Réécrit le texte avec un style chaleureux, fluide et accessible entre collègues ou amis.",
-      it: "Riscrive il testo con un tono amichevole, spontaneo e colloquiale.",
-      zh: "将文本改写为亲切自然、生动流畅的日常口语与随和语气。",
-      pt: "Reescreve o texto com uma linguagem natural, amigável e descontraída.",
-      tr: "Metni sıcak, doğal ve günlük konuşma diline uygun bir üslupla yeniden yazar."
-    },
-    chips: {
-      ru: ["«простыми словами»", "«дружеский тон»", "«неформально»"],
-      en: ['"make casual"', '"friendly tone"', '"conversational"'],
-      de: ['„lockerer Ton“', '„freundlich“', '„einfache Sprache“'],
-      es: ['«hazlo informal»', '«tono amigable»', '«más natural»'],
-      fr: ['« ton amical »', '« fais décontracté »', '« simple et naturel »'],
-      it: ['"rendi informale"', '"tono amichevole"', '"più naturale"'],
-      zh: ['“通俗点”', '“随和语气”', '“口语化”'],
-      pt: ['«torne informal»', '«tom amigável»', '«mais natural»'],
-      tr: ['"samimi yap"', '"günlük dil"', '"daha doğal"']
-    }
   }
 ];
 
@@ -3006,15 +2945,31 @@ const radioCloud = document.getElementById("radio-cloud");
     const localEngineSection = document.getElementById("local-engine-section");
     const apiKeysCard = document.getElementById("card-api-keys");
 
+    const animateIn = (el) => {
+      if (!el) return;
+      el.classList.remove("engine-switch-fade");
+      void el.offsetWidth;
+      el.classList.add("engine-switch-fade");
+    };
+
     if (radioLocal.checked) {
-      if (localEngineSection) localEngineSection.style.display = "flex";
+      if (localEngineSection) {
+        localEngineSection.style.display = "flex";
+        animateIn(localEngineSection);
+      }
       updateLocalEngineUI();
       if (fallbackCard) fallbackCard.style.display = "none";
       if (apiKeysCard) apiKeysCard.style.display = "none";
     } else {
       if (localEngineSection) localEngineSection.style.display = "none";
-      if (apiKeysCard) apiKeysCard.style.display = "flex";
-      if (fallbackCard) fallbackCard.style.display = "flex";
+      if (apiKeysCard) {
+        apiKeysCard.style.display = "flex";
+        animateIn(apiKeysCard);
+      }
+      if (fallbackCard) {
+        fallbackCard.style.display = "flex";
+        animateIn(fallbackCard);
+      }
       if (langCard) langCard.style.display = "none";
       if (vocabCard) vocabCard.style.display = "none";
       if (streamingCard) streamingCard.style.display = "none";
@@ -3025,22 +2980,41 @@ const radioCloud = document.getElementById("radio-cloud");
     if (!selectLocalEngine || !groupWhisperModels || !groupParakeetModels) return;
     const isParakeet = selectLocalEngine.value === "parakeet";
     const vocabCard = document.getElementById("card-vocabulary");
-    if (vocabCard) vocabCard.style.display = isParakeet ? "none" : "flex";
     const langCard = document.getElementById("card-language");
-    if (langCard) langCard.style.display = isParakeet ? "none" : "flex";
     const streamingCard = document.getElementById("card-streaming");
-    if (streamingCard) streamingCard.style.display = isParakeet ? "flex" : "none";
     const gpuSettings = document.getElementById("gpu-acceleration-settings");
+
+    const animateIn = (el) => {
+      if (!el) return;
+      el.classList.remove("engine-switch-fade");
+      void el.offsetWidth;
+      el.classList.add("engine-switch-fade");
+    };
+
+    if (vocabCard) {
+      vocabCard.style.display = isParakeet ? "none" : "flex";
+      if (!isParakeet) animateIn(vocabCard);
+    }
+    if (langCard) {
+      langCard.style.display = isParakeet ? "none" : "flex";
+      if (!isParakeet) animateIn(langCard);
+    }
+    if (streamingCard) {
+      streamingCard.style.display = isParakeet ? "flex" : "none";
+      if (isParakeet) animateIn(streamingCard);
+    }
     if (gpuSettings) {
       gpuSettings.style.display = "block";
     }
     if (isParakeet) {
       groupWhisperModels.style.display = "none";
       groupParakeetModels.style.display = "block";
+      animateIn(groupParakeetModels);
       selectModelCard("parakeet-v3");
     } else {
       groupWhisperModels.style.display = "block";
       groupParakeetModels.style.display = "none";
+      animateIn(groupWhisperModels);
       if (selectedModelName === "parakeet-v3") {
         selectModelCard(lastSelectedWhisperModel || "large-v3-turbo-q5_0");
       }
@@ -3149,15 +3123,26 @@ async function refreshEngineHealth() {
   }
 
   function updateCustomProviderUI() {
-    const isCustom = selectProvider && selectProvider.value === "custom";
+    const isCustom = (selectProvider && selectProvider.value === "custom") || (selectEditCloudProvider && selectEditCloudProvider.value === "custom");
     const urlGroup = document.getElementById("custom-provider-url-group");
     const modelGroup = document.getElementById("custom-provider-model-group");
     const editUrlGroup = document.getElementById("edit-custom-provider-url-group");
     const editModelGroup = document.getElementById("edit-custom-provider-model-group");
-    if (urlGroup) urlGroup.style.display = isCustom ? "flex" : "none";
-    if (modelGroup) modelGroup.style.display = isCustom ? "flex" : "none";
-    if (editUrlGroup) editUrlGroup.style.display = isCustom ? "flex" : "none";
-    if (editModelGroup) editModelGroup.style.display = isCustom ? "flex" : "none";
+    const animateIn = (el) => {
+      if (!el) return;
+      el.classList.remove("engine-switch-fade");
+      void el.offsetWidth;
+      el.classList.add("engine-switch-fade");
+    };
+    [urlGroup, modelGroup, editUrlGroup, editModelGroup].forEach((group) => {
+      if (group) {
+        const wasHidden = group.style.display === "none";
+        group.style.display = isCustom ? "flex" : "none";
+        if (isCustom && wasHidden) {
+          animateIn(group);
+        }
+      }
+    });
   }
 
   document.addEventListener("click", (e) => {
@@ -3195,7 +3180,7 @@ const btnSaveSettings = document.getElementById("btn-save-settings");
   const selectionEditInner = document.getElementById("selection-edit-inner");
   const syncSelectionEditInner = () => {
     if (selectionEditInner && checkboxCopyContext) {
-      selectionEditInner.style.display = checkboxCopyContext.checked ? "flex" : "none";
+      selectionEditInner.classList.toggle("is-expanded", !!checkboxCopyContext.checked);
     }
   };
   const checkboxSmartContext = document.getElementById("checkbox-smart-context-enabled");
@@ -3203,7 +3188,13 @@ const btnSaveSettings = document.getElementById("btn-save-settings");
   const smartContextSuboptions = document.getElementById("smart-context-suboptions");
   const syncSmartContextSuboptions = () => {
     if (smartContextSuboptions && checkboxSmartContext) {
-      smartContextSuboptions.style.display = checkboxSmartContext.checked ? "block" : "none";
+      smartContextSuboptions.classList.toggle("is-expanded", !!checkboxSmartContext.checked);
+    }
+  };
+  const soundSuboptions = document.getElementById("sound-suboptions");
+  const syncSoundSuboptions = () => {
+    if (soundSuboptions && checkboxSounds) {
+      soundSuboptions.classList.toggle("is-expanded", !!checkboxSounds.checked);
     }
   };
   const selectSoundTheme = document.getElementById("select-sound-theme");
@@ -3666,18 +3657,11 @@ const btnSaveSettings = document.getElementById("btn-save-settings");
 
 
   function updateSoundUI() {
-    const themeGroup = document.getElementById("sound-theme-group");
-    const volumeGroup = document.getElementById("sound-volume-group");
-    const show = (checkboxSounds && checkboxSounds.checked) ? "flex" : "none";
-    if (themeGroup) {
-      themeGroup.style.display = show;
-    }
-    if (volumeGroup) {
-      volumeGroup.style.display = show;
-    }
+    syncSoundSuboptions();
   }
   if (checkboxSounds) {
     checkboxSounds.addEventListener("change", updateSoundUI);
+    updateSoundUI();
   }
   
   let apiKeys = {
@@ -3800,8 +3784,6 @@ const btnSaveSettings = document.getElementById("btn-save-settings");
       handleProviderChange(selectEditCloudProvider.value);
     });
   }
-  
-  const footerStatusText = document.getElementById("footer-status-text");
 
   let selectedModelName = "base";
   let lastSelectedWhisperModel = "large-v3-turbo-q5_0";
@@ -3825,14 +3807,13 @@ const btnSaveSettings = document.getElementById("btn-save-settings");
     if (!isSettingsLoaded) return;
     settingsModified = true;
     settingsRevision += 1;
-    showStatus(getTranslation("status_modified"), false, true);
 
     if (autoSaveTimeout) {
       clearTimeout(autoSaveTimeout);
       autoSaveTimeout = null;
     }
 
-    const delay = immediate ? 80 : 700;
+    const delay = immediate ? 150 : 700;
     autoSaveTimeout = setTimeout(() => {
       autoSaveTimeout = null;
       if (settingsModified) {
@@ -3944,48 +3925,22 @@ const btnSaveSettings = document.getElementById("btn-save-settings");
     }
   }
 
-  // --- Voice Commands Guide & Toggle Modal ---
-  function updateCommandsSummary() {
-    const total = COMMANDS_METADATA.length;
-    const active = total - disabledEditCommands.length;
-    const badge = document.getElementById("badge-active-commands-count");
-    if (badge) {
-      badge.textContent = String(active);
-    }
-    const summary = document.getElementById("commands-guide-summary");
-    if (summary) {
-      summary.textContent = getTranslation("commands_guide_active_summary", { active, total });
-    }
-  }
-
-  function renderCommandsGuideList() {
-    const listEl = document.getElementById("commands-guide-list");
-    if (!listEl) return;
-    listEl.innerHTML = "";
+  // --- Supported Voice Commands Guide (Inline) ---
+  function renderSupportedCommandsGuide() {
+    const guideEl = document.getElementById("commands-info-guide");
+    if (!guideEl) return;
+    guideEl.innerHTML = "";
 
     const lang = i18nDict[currentLanguage] ? currentLanguage : "ru";
 
     COMMANDS_METADATA.forEach(cmd => {
-      const isDisabled = disabledEditCommands.includes(cmd.id);
-      const row = document.createElement("div");
-      row.className = `command-row${isDisabled ? " disabled" : ""}`;
-      row.dataset.commandId = cmd.id;
+      const item = document.createElement("div");
+      item.className = "guide-item";
 
-      const info = document.createElement("div");
-      info.className = "command-info";
-
-      const header = document.createElement("div");
-      header.className = "command-header";
-      const name = document.createElement("span");
-      name.className = "command-name";
-      name.textContent = (cmd.names && (cmd.names[lang] || cmd.names.ru)) || cmd.id;
-      header.appendChild(name);
-      info.appendChild(header);
-
-      const desc = document.createElement("p");
-      desc.className = "command-desc";
-      desc.textContent = (cmd.descriptions && (cmd.descriptions[lang] || cmd.descriptions.ru)) || "";
-      info.appendChild(desc);
+      const title = document.createElement("span");
+      title.className = "guide-item-title";
+      title.textContent = (cmd.names && (cmd.names[lang] || cmd.names.ru)) || cmd.id;
+      item.appendChild(title);
 
       const chipsContainer = document.createElement("div");
       chipsContainer.className = "command-chips";
@@ -3996,98 +3951,9 @@ const btnSaveSettings = document.getElementById("btn-save-settings");
         chip.textContent = chipText;
         chipsContainer.appendChild(chip);
       });
-      info.appendChild(chipsContainer);
+      item.appendChild(chipsContainer);
 
-      const toggleLabel = document.createElement("label");
-      toggleLabel.className = "toggle-switch command-toggle";
-      toggleLabel.title = (cmd.names && (cmd.names[lang] || cmd.names.ru)) || "";
-
-      const checkbox = document.createElement("input");
-      checkbox.type = "checkbox";
-      checkbox.checked = !isDisabled;
-      checkbox.dataset.commandId = cmd.id;
-
-      checkbox.addEventListener("change", () => {
-        const checked = checkbox.checked;
-        if (checked) {
-          disabledEditCommands = disabledEditCommands.filter(id => id !== cmd.id);
-          row.classList.remove("disabled");
-        } else {
-          if (!disabledEditCommands.includes(cmd.id)) {
-            disabledEditCommands.push(cmd.id);
-          }
-          row.classList.add("disabled");
-        }
-        updateCommandsSummary();
-        markSettingsModified(false);
-      });
-
-      const track = document.createElement("span");
-      track.className = "toggle-track";
-      const thumb = document.createElement("span");
-      thumb.className = "toggle-thumb";
-      track.appendChild(thumb);
-
-      toggleLabel.appendChild(checkbox);
-      toggleLabel.appendChild(track);
-
-      row.appendChild(info);
-      row.appendChild(toggleLabel);
-      listEl.appendChild(row);
-    });
-
-    updateCommandsSummary();
-  }
-
-  function openCommandsGuideModal() {
-    const modal = document.getElementById("modal-commands-guide");
-    if (!(modal instanceof HTMLDialogElement)) return;
-    renderCommandsGuideList();
-    if (modal.open) modal.close();
-    modal.showModal();
-    requestAnimationFrame(() => modal.classList.add("active"));
-  }
-
-  function closeCommandsGuideModal() {
-    const modal = document.getElementById("modal-commands-guide");
-    if (!(modal instanceof HTMLDialogElement) || !modal.open) return;
-    modal.classList.remove("active");
-    setTimeout(() => {
-      if (modal.open) modal.close();
-    }, 200);
-  }
-
-  const btnOpenCommandsGuide = document.getElementById("btn-open-commands-guide");
-  if (btnOpenCommandsGuide) {
-    btnOpenCommandsGuide.addEventListener("click", () => {
-      openCommandsGuideModal();
-    });
-  }
-
-  const btnCloseCommandsGuide = document.getElementById("btn-close-commands-guide");
-  if (btnCloseCommandsGuide) {
-    btnCloseCommandsGuide.addEventListener("click", () => {
-      closeCommandsGuideModal();
-    });
-  }
-
-  const btnCloseCommandsGuideX = document.getElementById("btn-close-commands-guide-x");
-  if (btnCloseCommandsGuideX) {
-    btnCloseCommandsGuideX.addEventListener("click", () => {
-      closeCommandsGuideModal();
-    });
-  }
-
-  const modalCommandsGuide = document.getElementById("modal-commands-guide");
-  if (modalCommandsGuide) {
-    modalCommandsGuide.addEventListener("click", (e) => {
-      if (e.target === modalCommandsGuide) {
-        closeCommandsGuideModal();
-      }
-    });
-    modalCommandsGuide.addEventListener("cancel", (e) => {
-      e.preventDefault();
-      closeCommandsGuideModal();
+      guideEl.appendChild(item);
     });
   }
 
@@ -4127,15 +3993,25 @@ const btnSaveSettings = document.getElementById("btn-save-settings");
     const syncLlmGroupVisibility = () => {
       const groupCloud = document.getElementById("group-edit-cloud-provider");
       const descCloud = document.getElementById("desc-edit-cloud-provider");
+      const animateIn = (el) => {
+        if (!el) return;
+        el.classList.remove("engine-switch-fade");
+        void el.offsetWidth;
+        el.classList.add("engine-switch-fade");
+      };
       if (selectAiEditMode) {
         const mode = selectAiEditMode.value;
         const needsLocal = mode === "auto" || mode === "local";
         const needsCloud = mode === "auto" || mode === "cloud";
         if (groupLlmModels) {
+          const wasHidden = groupLlmModels.style.display === "none";
           groupLlmModels.style.display = needsLocal ? "" : "none";
+          if (needsLocal && wasHidden) animateIn(groupLlmModels);
         }
         if (groupCloud) {
+          const wasHidden = groupCloud.style.display === "none";
           groupCloud.style.display = needsCloud ? "" : "none";
+          if (needsCloud && wasHidden) animateIn(groupCloud);
         }
         if (descCloud) {
           descCloud.textContent = mode === "auto"
@@ -4489,7 +4365,7 @@ const btnSaveSettings = document.getElementById("btn-save-settings");
         await updateGpuCardStates();
 
         disabledEditCommands = Array.isArray(settings.disabled_edit_commands) ? [...settings.disabled_edit_commands] : [];
-        updateCommandsSummary();
+        renderSupportedCommandsGuide();
         
         isSettingsLoaded = true;
         settingsModified = false;
@@ -4543,11 +4419,10 @@ modelCards.forEach(card => {
 
         if (isDownloaded) {
           actionEl.innerHTML = `
-            <span class="status-ready-badge">
+            <span class="status-ready-badge" title="${dict.model_status_ready || "Установлено"}" aria-label="${dict.model_status_ready || "Установлено"}" data-i18n-title="model_status_ready">
               <svg class="status-ready-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
                 <polyline points="20 6 9 17 4 12"></polyline>
               </svg>
-              <span data-i18n="model_status_ready">${dict.model_status_ready || "Установлено"}</span>
             </span>
             <button type="button" class="btn-delete-card-model" title="${dict.model_action_delete || "Удалить"}" aria-label="${dict.model_action_delete || "Удалить"}" data-model="${model}">
               <svg class="btn-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
@@ -4615,8 +4490,6 @@ modelCards.forEach(card => {
     }
     try {
       const dict = i18nDict[currentLanguage] || i18nDict.ru;
-      showStatus(dict.status_saving || "Сохранение настроек...");
-      
       const checkboxStreaming = document.getElementById("checkbox-streaming");
       
       // Update apiKeys cache from active input first:
@@ -4724,16 +4597,9 @@ await invoke("set_settings", { settings });
           true
         );
       } else {
-        showStatus(dict.status_saved || "Настройки успешно сохранены!");
+        const currentDict = i18nDict[currentLanguage] || i18nDict.ru;
+        showStatus(currentDict.status_ready || "Готово");
       }
-      
-      // Temporary success animation in footer status
-      setTimeout(() => {
-        if (!settingsModified) {
-          const currentDict = i18nDict[currentLanguage] || i18nDict.ru;
-          showStatus(currentDict.status_ready || "Готово");
-        }
-      }, 3000);
 } catch (err) {
       console.error(err);
       showStatus(`${getTranslation("status_save_error")}${err}`, true);
@@ -4750,8 +4616,31 @@ await invoke("set_settings", { settings });
       }
     }
   }
+  function getModelDisplayName(model) {
+    if (!model) return "";
+    const card = document.querySelector(`.model-card[data-model="${model}"]`);
+    if (card) {
+      const nameEl = card.querySelector(".model-name");
+      if (nameEl && nameEl.textContent) {
+        return nameEl.textContent.trim();
+      }
+    }
+    const names = {
+      "tiny": "Whisper Tiny",
+      "base": "Whisper Base",
+      "small": "Whisper Small",
+      "medium": "Whisper Medium",
+      "large-v3-turbo-q5_0": "Whisper Large v3 Turbo",
+      "parakeet-v3": "NVIDIA Parakeet v3",
+      "qwen3-0.6b": "Qwen3 0.6B",
+      "qwen3-1.7b": "Qwen3 1.7B",
+      "qwen3-4b": "Qwen3 4B",
+      "punctuation": "Silero Punctuation",
+    };
+    return names[model] || model;
+  }
 
-async function downloadModelCard(model) {
+  async function downloadModelCard(model) {
     if (inFlightModelDownloads.has(model)) {
       return;
     }
@@ -4764,7 +4653,7 @@ async function downloadModelCard(model) {
     const llmAtStart = selectedLlmModel;
 
     try {
-      showStatus(getTranslation("model_downloading_pattern", { model }));
+      showStatus(getTranslation("model_downloading_pattern", { model: getModelDisplayName(model) }));
 
       // Hide actions, show progress
       if (actionEl) actionEl.style.display = "none";
@@ -4833,8 +4722,9 @@ async function downloadModelCard(model) {
   }
 
   async function deleteModelCard(model) {
+    const modelDisplayName = getModelDisplayName(model);
     const confirmTitle = getTranslation("delete_model_title");
-    const confirmMsg = getTranslation("delete_model_confirm_pattern", { model });
+    const confirmMsg = getTranslation("delete_model_confirm_pattern", { model: modelDisplayName });
     const confirmBtn = getTranslation("delete_model_btn");
     const cancelBtn = getTranslation("confirm_cancel");
 
@@ -4848,7 +4738,7 @@ async function downloadModelCard(model) {
       return;
     }
     try {
-      showStatus(getTranslation("model_deleting_pattern", { model }));
+      showStatus(getTranslation("model_deleting_pattern", { model: modelDisplayName }));
       await invoke("delete_model_command", { modelName: model });
       
       showStatus(getTranslation("model_deleted_success"));
@@ -4934,7 +4824,7 @@ async function downloadModelCard(model) {
     if (payload.done) {
       const isInternalPayload = typeof model === "string" && (model.startsWith("llm-runtime-") || model === "punctuation");
       if (!isInternalPayload) {
-        showStatus(getTranslation("model_downloaded_success_pattern", { model }));
+        showStatus(getTranslation("model_downloaded_success_pattern", { model: getModelDisplayName(model) }));
       }
       if (progressEl) {
         progressEl.classList.remove("installing");
@@ -4995,9 +4885,8 @@ async function downloadModelCard(model) {
 
       if (isDownloaded) {
         actionEl.innerHTML = `
-          <span class="status-ready-badge">
+          <span class="status-ready-badge" title="${dict.model_status_ready || "Установлено"}" aria-label="${dict.model_status_ready || "Установлено"}" data-i18n-title="model_status_ready">
             <svg class="status-ready-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-            <span data-i18n="model_status_ready">${dict.model_status_ready || "Установлено"}</span>
           </span>
           <button type="button" class="btn-delete-card-model" title="${dict.model_action_delete || "Удалить"}" aria-label="${dict.model_action_delete || "Удалить"}" data-gpu="${provider}">
             <svg class="btn-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
@@ -5297,33 +5186,94 @@ card.addEventListener("keydown", async (e) => {
       modal.addEventListener("cancel", onDialogCancel);
     });
   }
-  function showStatus(msg, isError = false, isModified = false) {
-    footerStatusText.textContent = msg;
-    const footerStatus = footerStatusText.closest(".footer-status");
-    
-    if (footerStatus) {
-      footerStatus.classList.remove("modified", "error", "success");
-      const iconEl = document.getElementById("footer-status-icon");
-      if (isError) {
-        footerStatus.classList.add("error");
-        footerStatusText.style.color = "var(--status-error)";
-        if (iconEl) {
-          iconEl.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line><circle cx="12" cy="12" r="10"></circle></svg>`;
-        }
-      } else if (isModified) {
-        footerStatus.classList.add("modified");
-        footerStatusText.style.color = "var(--status-modified)";
-        if (iconEl) {
-          iconEl.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>`;
-        }
+  let toastTimer = null;
+  let toastHideTimer = null;
+
+  function showToast(msg, type = "info", duration = 3000) {
+    const toastEl = document.getElementById("app-toast");
+    const toastText = document.getElementById("toast-text");
+    const toastIcon = document.getElementById("toast-icon");
+    if (!toastEl || !toastText) return;
+
+    if (toastTimer) {
+      clearTimeout(toastTimer);
+      toastTimer = null;
+    }
+    if (toastHideTimer) {
+      clearTimeout(toastHideTimer);
+      toastHideTimer = null;
+    }
+
+    toastText.textContent = msg;
+    toastEl.classList.remove("toast-error", "toast-success", "toast-info", "toast-hiding");
+
+    if (toastIcon) {
+      if (type === "error") {
+        toastEl.classList.add("toast-error");
+        toastIcon.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>`;
+      } else if (type === "success") {
+        toastEl.classList.add("toast-success");
+        toastIcon.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
       } else {
-        footerStatus.classList.add("success");
-        footerStatusText.style.color = "";
-        if (iconEl) {
-          iconEl.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+        toastEl.classList.add("toast-info");
+        toastIcon.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>`;
+      }
+    }
+
+    toastEl.hidden = false;
+    void toastEl.offsetWidth;
+
+    if (duration > 0) {
+      toastTimer = setTimeout(() => {
+        toastEl.classList.add("toast-hiding");
+        toastHideTimer = setTimeout(() => {
+          toastEl.hidden = true;
+          toastEl.classList.remove("toast-hiding");
+        }, 180);
+      }, duration);
+    }
+  }
+
+  const SILENT_STATUS_KEYS = new Set([
+    "status_ready",
+    "status_loading",
+    "status_loaded",
+    "status_saving",
+    "status_saved",
+    "status_modified",
+  ]);
+
+  function isSilentStatus(msg) {
+    if (!msg || typeof msg !== "string" || !msg.trim()) return true;
+    const trimmed = msg.trim();
+    if (trimmed === "Готово" || trimmed === "Ready") return true;
+    for (const lang of Object.keys(i18nDict)) {
+      const dict = i18nDict[lang];
+      if (!dict) continue;
+      for (const key of SILENT_STATUS_KEYS) {
+        if (dict[key] && dict[key].trim() === trimmed) {
+          return true;
         }
       }
     }
+    return false;
+  }
+
+  function showStatus(msg, isError = false, isModified = false) {
+    if (isModified || isSilentStatus(msg)) {
+      return;
+    }
+
+    if (isError) {
+      showToast(msg, "error", 4500);
+      return;
+    }
+
+    const isSuccess =
+      /скопирован|успешно|удален|copied|success|deleted|erfolgreich|kopiert|succès|copié|copiado|éxito|eliminado|copiato|successo|sucesso|eliminato|excluído|kopyalandı|başarılı|silindi|已复制|成功|已删除|gekopieerd|geslaagd|verwijderd/i.test(
+        msg
+      );
+    showToast(msg, isSuccess ? "success" : "info", 3000);
   }
 
   // Bind Events
@@ -5374,6 +5324,17 @@ if (e.button === 0 && !e.target.closest(".window-control-btn") && !e.target.clos
       }
     });
 
+    // Update data-i18n-title elements (tooltips and aria-labels)
+    const titleElements = document.querySelectorAll("[data-i18n-title]");
+    titleElements.forEach(el => {
+      const key = el.getAttribute("data-i18n-title");
+      const text = dict[key] || i18nDict.ru[key];
+      if (text) {
+        el.setAttribute("title", text);
+        el.setAttribute("aria-label", text);
+      }
+    });
+
     const selectUiLang = document.getElementById("select-ui-lang");
     if (selectUiLang) {
       selectUiLang.setAttribute("aria-label", dict.general_ui_lang_title || "UI Language");
@@ -5398,13 +5359,6 @@ if (e.button === 0 && !e.target.closest(".window-control-btn") && !e.target.clos
       const closeText = dict.window_close || (lang === "ru" ? "Закрыть" : "Close");
       btnClose.setAttribute("title", closeText);
       btnClose.setAttribute("aria-label", closeText);
-    }
-
-    const btnCloseCommandsGuideX = document.getElementById("btn-close-commands-guide-x");
-    if (btnCloseCommandsGuideX) {
-      const closeText = dict.window_close || (lang === "ru" ? "Закрыть" : "Close");
-      btnCloseCommandsGuideX.setAttribute("title", closeText);
-      btnCloseCommandsGuideX.setAttribute("aria-label", closeText);
     }
 
     const btnClearSearch = document.getElementById("btn-clear-history-search");
@@ -5503,16 +5457,7 @@ if (e.button === 0 && !e.target.closest(".window-control-btn") && !e.target.clos
     // Refresh model cards status/actions
     refreshDownloadedModels();
     updateGpuCardStates();
-    updateCommandsSummary();
-    const modalCommandsGuide = document.getElementById("modal-commands-guide");
-    if (modalCommandsGuide && modalCommandsGuide.open) {
-      renderCommandsGuideList();
-    }
-    
-    // If settings modified status is showing, update it
-    if (settingsModified) {
-      showStatus(dict.status_modified, false, true);
-    }
+    renderSupportedCommandsGuide();
     
     // Reload history list if the active panel is panel-history
     const historyTab = document.getElementById("tab-btn-history");
@@ -5796,7 +5741,7 @@ if (e.button === 0 && !e.target.closest(".window-control-btn") && !e.target.clos
             <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
             <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
           </svg>
-          <svg class="check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none; color: var(--accent-color);">
+          <svg class="check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="20 6 9 17 4 12"></polyline>
           </svg>
         </button>
@@ -5804,24 +5749,19 @@ if (e.button === 0 && !e.target.closest(".window-control-btn") && !e.target.clos
 
       // Bind copy event
       const btnCopy = itemEl.querySelector(".btn-copy-history");
-      const copyIcon = itemEl.querySelector(".copy-icon");
-      const checkIcon = itemEl.querySelector(".check-icon");
 
       btnCopy.addEventListener("click", async () => {
         try {
           await invoke("copy_to_clipboard", { text: entry.text });
           
-          // Hide copy icon, show checkmark SVG
-          copyIcon.style.display = "none";
-          checkIcon.style.display = "block";
+          btnCopy.classList.add("copied");
           
           if (btnCopy._copyTimeout) {
             clearTimeout(btnCopy._copyTimeout);
           }
           
           btnCopy._copyTimeout = setTimeout(() => {
-            checkIcon.style.display = "none";
-            copyIcon.style.display = "block";
+            btnCopy.classList.remove("copied");
             btnCopy._copyTimeout = null;
           }, 1500);
         } catch (err) {
@@ -5902,6 +5842,17 @@ if (e.button === 0 && !e.target.closest(".window-control-btn") && !e.target.clos
       } catch (err) {
         console.error("Failed to copy diagnostic report", err);
         showStatus(`${getTranslation("status_error")}${err}`, true);
+      }
+    });
+  }
+
+  const btnExitApp = document.getElementById("btn-exit-app");
+  if (btnExitApp) {
+    btnExitApp.addEventListener("click", async () => {
+      try {
+        await invoke("exit_app");
+      } catch (err) {
+        console.error("Failed to exit app:", err);
       }
     });
   }
@@ -6045,17 +5996,17 @@ if (e.button === 0 && !e.target.closest(".window-control-btn") && !e.target.clos
     setupReplacementsUI();
     initSelectPanels();
 
-    // Spotlight Tour Controller
+    // Spotlight Tour Controller (Docked Footer + Spotlight Cutout)
     const TOUR_STEPS = [
       {
-        tab: "hotkeys",
-        targetSelector: "#card-hotkey .hotkey-field-wrapper",
+        tab: "speech",
+        targetSelector: "#card-engine",
         titleKey: "onboarding_step_1_title",
         descKey: "onboarding_step_1_desc"
       },
       {
-        tab: "speech",
-        targetSelector: "#card-engine .engine-toggle-group",
+        tab: "text",
+        targetSelector: "#card-language",
         titleKey: "onboarding_step_2_title",
         descKey: "onboarding_step_2_desc"
       },
@@ -6066,10 +6017,16 @@ if (e.button === 0 && !e.target.closest(".window-control-btn") && !e.target.clos
         descKey: "onboarding_step_3_desc"
       },
       {
-        tab: "general",
-        targetSelector: "#card-gaming-mode",
+        tab: "hotkeys",
+        targetSelector: "#card-hotkey",
         titleKey: "onboarding_step_4_title",
         descKey: "onboarding_step_4_desc"
+      },
+      {
+        tab: "history",
+        targetSelector: ".card-history",
+        titleKey: "onboarding_step_5_title",
+        descKey: "onboarding_step_5_desc"
       }
     ];
 
@@ -6089,6 +6046,7 @@ if (e.button === 0 && !e.target.closest(".window-control-btn") && !e.target.clos
       const btnSkip = document.getElementById("btn-spotlight-skip");
       const btnReplay = document.getElementById("btn-replay-onboarding");
       const backdrop = document.getElementById("spotlight-backdrop");
+      const mainContent = document.getElementById("settings-main-content");
 
       if (!overlay || !cutout || !popover || !btnPrev || !btnNext || !btnSkip) {
         return {
@@ -6113,7 +6071,7 @@ if (e.button === 0 && !e.target.closest(".window-control-btn") && !e.target.clos
         const target = document.querySelector(step.targetSelector);
         if (!target) return;
 
-        target.scrollIntoView({ block: "nearest", inline: "nearest" });
+        target.scrollIntoView({ block: "center", inline: "nearest", behavior: "smooth" });
 
         const rect = target.getBoundingClientRect();
         const padding = 6;
@@ -6126,38 +6084,6 @@ if (e.button === 0 && !e.target.closest(".window-control-btn") && !e.target.clos
         cutout.style.left = `${Math.round(cutoutLeft)}px`;
         cutout.style.width = `${Math.round(cutoutWidth)}px`;
         cutout.style.height = `${Math.round(cutoutHeight)}px`;
-
-        const popoverRect = popover.getBoundingClientRect();
-        const popoverHeight = popoverRect.height || 180;
-        const popoverWidth = popoverRect.width || 440;
-        const windowHeight = window.innerHeight;
-        const windowWidth = window.innerWidth;
-
-        const spaceBelow = windowHeight - (cutoutTop + cutoutHeight) - 14;
-        const spaceAbove = cutoutTop - 14;
-
-        let popoverTop;
-        if (spaceBelow >= popoverHeight + 8) {
-          popoverTop = cutoutTop + cutoutHeight + 12;
-        } else if (spaceAbove >= popoverHeight + 8) {
-          popoverTop = cutoutTop - popoverHeight - 12;
-        } else {
-          // If tight on both sides, place strictly on whichever side offers more clearance
-          if (spaceBelow >= spaceAbove) {
-            popoverTop = cutoutTop + cutoutHeight + 8;
-          } else {
-            popoverTop = Math.max(8, cutoutTop - popoverHeight - 8);
-          }
-        }
-
-        let popoverLeft = cutoutLeft;
-        if (popoverLeft + popoverWidth > windowWidth - 16) {
-          popoverLeft = Math.max(16, windowWidth - popoverWidth - 16);
-        }
-        if (popoverLeft < 16) popoverLeft = 16;
-
-        popover.style.top = `${Math.round(popoverTop)}px`;
-        popover.style.left = `${Math.round(popoverLeft)}px`;
       }
 
       function showTourStep(index) {
@@ -6185,14 +6111,13 @@ if (e.button === 0 && !e.target.closest(".window-control-btn") && !e.target.clos
         renderSegments();
 
         updateTourPosition();
-        requestAnimationFrame(() => {
-          updateTourPosition();
-        });
+        setTimeout(updateTourPosition, 80);
       }
 
       function startTour() {
         isTourActive = true;
         overlay.hidden = false;
+        if (mainContent) mainContent.classList.add("tour-active-padding");
         currentTourStep = 0;
         showTourStep(0);
       }
@@ -6200,6 +6125,7 @@ if (e.button === 0 && !e.target.closest(".window-control-btn") && !e.target.clos
       function finishTour() {
         isTourActive = false;
         overlay.hidden = true;
+        if (mainContent) mainContent.classList.remove("tour-active-padding");
         hasCompletedOnboarding = true;
         try {
           localStorage.setItem("aura_onboarding_completed", "true");
@@ -6237,6 +6163,23 @@ if (e.button === 0 && !e.target.closest(".window-control-btn") && !e.target.clos
         btnReplay.addEventListener("click", () => {
           startTour();
         });
+      }
+
+      if (mainContent) {
+        mainContent.addEventListener("scroll", () => {
+          if (isTourActive) {
+            const step = TOUR_STEPS[currentTourStep];
+            const target = document.querySelector(step.targetSelector);
+            if (target) {
+              const rect = target.getBoundingClientRect();
+              const padding = 6;
+              cutout.style.top = `${Math.round(Math.max(0, rect.top - padding))}px`;
+              cutout.style.left = `${Math.round(Math.max(0, rect.left - padding))}px`;
+              cutout.style.width = `${Math.round(rect.width + padding * 2)}px`;
+              cutout.style.height = `${Math.round(rect.height + padding * 2)}px`;
+            }
+          }
+        }, { passive: true });
       }
 
       window.addEventListener("keydown", (e) => {

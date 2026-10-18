@@ -1078,18 +1078,26 @@ pub async fn run_local_edit<R: tauri::Runtime>(
     // Decoupled user content: ONLY the selected text is passed inside the data block.
     // The spoken command words are NEVER passed in the user content block, preventing
     // the model from translating or editing the command itself instead of the document.
-    let user_content = format!(
-        "Text to process:\n<<<SELECTED_TEXT_START>>>\n{}\n<<<SELECTED_TEXT_END>>>\n\nOutput ONLY the processed replacement text. Do NOT wrap output in tags or markers.",
-        selected_text
-    );
+    let user_content = if crate::edit_intent::is_primarily_cyrillic(selected_text) {
+        format!(
+            "Исходный текст для обработки:\n<<<SELECTED_TEXT_START>>>\n{}\n<<<SELECTED_TEXT_END>>>\n\nВыведи ТОЛЬКО обработанный текст замены на русском языке. Не используй теги и маркеры.",
+            selected_text
+        )
+    } else {
+        format!(
+            "Text to process:\n<<<SELECTED_TEXT_START>>>\n{}\n<<<SELECTED_TEXT_END>>>\n\nOutput ONLY the processed replacement text. Do NOT wrap output in tags or markers.",
+            selected_text
+        )
+    };
 
     let generation_started = Instant::now();
+    let temperature = 0.1;
     let raw_answer = local_chat_once(
         port,
         &model_name,
         &system_prompt,
         &user_content,
-        0.1,
+        temperature,
         LLM_MAX_OUTPUT_TOKENS,
         LLM_EDIT_TIMEOUT,
     )
@@ -1164,83 +1172,12 @@ pub async fn run_local_edit<R: tauri::Runtime>(
         *last_activity = Instant::now();
     }
 
-    // Small local models sometimes answer with a copy of the input instead of
-    // doing the edit: they echo the selection (a misclassified dictation) or
-    // echo the spoken command itself (saying "Сократи" and getting "Сократи"
-    // back). Both cases are decided by one cheap classifier round trip.
-    //
-    // Critical invariant: For grammar correction / proofreading (FixGrammar, typo /
-    // punctuation / spelling fixes), the edited text is INTENDED to resemble the original
-    // selection with only minor corrections. Flagging high text resemblance on grammar
-    // edits discards legitimate model corrections (like fixing commas or spelling errors).
-    let is_grammar_or_proofreading = matches!(intent, crate::edit_intent::EditIntent::FixGrammar)
-        || if let crate::edit_intent::EditIntent::Custom(ref ins) = intent {
-            let lower = ins.to_lowercase();
-            // RU
-            lower.contains("ошибк")
-                || lower.contains("опечатк")
-                || lower.contains("пунктуац")
-                || lower.contains("грамматик")
-                || lower.contains("запят")
-                || lower.contains("букв")
-                || lower.contains("пробел")
-                || lower.contains("регистр")
-                // EN
-                || lower.contains("typo")
-                || lower.contains("grammar")
-                || lower.contains("spelling")
-                || lower.contains("punctua")
-                || lower.contains("comma")
-                || lower.contains("mistake")
-                || lower.contains("proofread")
-                || lower.contains("capitalize")
-                // DE
-                || lower.contains("fehler")
-                || lower.contains("rechtschreib")
-                || lower.contains("punktua")
-                || lower.contains("komma")
-                || lower.contains("satzzeichen")
-                // FR
-                || lower.contains("erreur")
-                || lower.contains("faute")
-                || lower.contains("orthograph")
-                || lower.contains("ponctuat")
-                || lower.contains("virgule")
-                // ES & IT & PT
-                || lower.contains("ortograf")
-                || lower.contains("puntuac")
-                || lower.contains("punteggiat")
-                || lower.contains("pontuaç")
-                || lower.contains("pontuac")
-                || lower.contains("virgol")
-                // TR
-                || lower.contains("hata")
-                || lower.contains("noktalam")
-                || lower.contains("yazım")
-                || lower.contains("yazim")
-                // NL
-                || lower.contains("leesteken")
-                // ZH
-                || lower.contains("错")
-                || lower.contains("标点")
-                || lower.contains("逗号")
-                || lower.contains("纠正")
-        } else {
-            false
-        };
-
-    let echoes_selection = if is_grammar_or_proofreading {
-        false
-    } else {
-        texts_resemble(&edited, selected_text)
-    };
+    // Canonical commands (FixGrammar, Translate) have already passed strict intent parsing and the
+    // validate_edit_result quality gate above (which verifies non-empty, non-identical text,
+    // script match, and bounds).
     let echoes_command = texts_resemble(&edited, transcribed_text);
-    if echoes_selection || echoes_command {
-        let echoes = if echoes_command {
-            "the spoken command"
-        } else {
-            "the selection"
-        };
+    if echoes_command {
+        let echoes = "the spoken command";
         let is_dictation = classify_local_utterance(port, &model_name, transcribed_text).await;
         let verdict = match is_dictation {
             Some(true) => "dictation",
@@ -1445,6 +1382,7 @@ fn parse_classifier_answer(answer: &str) -> Option<bool> {
         &[
             "dictation",
             "dictat",
+            "диктац",
             "диктов",
             "диктан",
             "обычн",
