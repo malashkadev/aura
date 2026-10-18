@@ -2712,8 +2712,11 @@ pub fn stop_whisper_server<R: Runtime>(app_handle: &tauri::AppHandle<R>) {
     state
         .whisper_port
         .store(0, std::sync::atomic::Ordering::SeqCst);
-    let mut server = recover_lock(&state.whisper_server, "Whisper server");
-    if let Some(running) = server.take() {
+    let running = {
+        let mut server = recover_lock(&state.whisper_server, "Whisper server");
+        server.take()
+    };
+    if let Some(running) = running {
         drop(running);
     }
 }

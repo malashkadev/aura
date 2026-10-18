@@ -50,3 +50,26 @@ installer and are not licensed under the AGPL; Qwen3 model weights are
 licensed under the Apache License 2.0:
 
 https://www.apache.org/licenses/LICENSE-2.0
+
+## whisper.cpp
+
+Aura bundles prebuilt `whisper-server` and `whisper-cli` runtime binaries and
+libraries in `src-tauri/binaries/`. whisper.cpp is licensed under the MIT License:
+
+https://github.com/ggml-org/whisper.cpp/blob/master/LICENSE
+
+## sherpa-onnx
+
+Aura bundles prebuilt `sherpa-onnx-offline-websocket-server` and offline
+inference binaries in `src-tauri/binaries/` for the Parakeet speech recognition
+engine. sherpa-onnx is licensed under the Apache License 2.0:
+
+https://github.com/k2-fsa/sherpa-onnx/blob/master/LICENSE
+
+## Simple DirectMedia Layer (SDL2)
+
+Aura bundles `SDL2.dll` in `src-tauri/binaries/` to support audio playback and
+capture utilities. SDL2 is licensed under the zlib License:
+
+https://www.libsdl.org/license.php
+

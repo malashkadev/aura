@@ -484,12 +484,14 @@ impl AudioRecorder {
     where
         F: Fn(f32) + Send + 'static,
     {
-        let mut state = self
-            .state
-            .lock()
-            .map_err(|_| "Audio recorder state is unavailable".to_string())?;
-        if state.is_some() {
-            return Err("Already recording".to_string());
+        {
+            let state = self
+                .state
+                .lock()
+                .map_err(|_| "Audio recorder state is unavailable".to_string())?;
+            if state.is_some() {
+                return Err("Already recording".to_string());
+            }
         }
 
         let (command_tx, command_rx) = mpsc::sync_channel(1);
@@ -541,6 +543,15 @@ impl AudioRecorder {
 
         match ready_rx.recv_timeout(START_TIMEOUT) {
             Ok(Ok(())) => {
+                let mut state = self
+                    .state
+                    .lock()
+                    .map_err(|_| "Audio recorder state is unavailable".to_string())?;
+                if state.is_some() {
+                    let _ = command_tx.try_send(RecorderCommand::Cancel);
+                    drop(worker);
+                    return Err("Already recording".to_string());
+                }
                 *state = Some(ActiveRecording {
                     command_tx,
                     worker,

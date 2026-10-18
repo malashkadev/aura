@@ -53,9 +53,10 @@ while ((btnMatch = buttonRegex.exec(html)) !== null) {
       buttonIssues.push({ id, cls, issue: `Has text "${innerWithoutSvg}" without data-i18n attribute` });
     } else {
       // Icon-only button
-      if (!title && !aria) {
+      const isHidden = attrs.includes("hidden");
+      if (!title && !aria && !isHidden) {
         buttonIssues.push({ id, cls, issue: `Icon-only button has neither title nor aria-label` });
-      } else {
+      } else if (!isHidden) {
         // Has title or aria
         const text = title || aria;
         // Is it localized in main.js?

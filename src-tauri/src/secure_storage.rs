@@ -127,36 +127,41 @@ pub fn apply_restrictive_acl(path: &Path) -> Result<(), String> {
     };
     use windows_sys::Win32::System::Threading::{GetCurrentProcess, OpenProcessToken};
 
-    let user_sid = unsafe {
+    let user_sid = {
         let mut token: windows_sys::Win32::Foundation::HANDLE = 0;
-        if OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &mut token) == 0 {
+        if unsafe { OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &mut token) } == 0 {
             return Err(format!(
                 "OpenProcessToken failed: {}",
                 std::io::Error::last_os_error()
             ));
         }
         let mut needed: u32 = 0;
-        let _ = GetTokenInformation(token, TokenUser, std::ptr::null_mut(), 0, &mut needed);
+        let _ =
+            unsafe { GetTokenInformation(token, TokenUser, std::ptr::null_mut(), 0, &mut needed) };
         let mut buffer = vec![0u8; needed as usize];
-        let ok = GetTokenInformation(
-            token,
-            TokenUser,
-            buffer.as_mut_ptr() as *mut std::ffi::c_void,
-            needed,
-            &mut needed,
-        );
-        windows_sys::Win32::Foundation::CloseHandle(token);
+        let ok = unsafe {
+            GetTokenInformation(
+                token,
+                TokenUser,
+                buffer.as_mut_ptr() as *mut std::ffi::c_void,
+                needed,
+                &mut needed,
+            )
+        };
+        unsafe { windows_sys::Win32::Foundation::CloseHandle(token) };
         if ok == 0 {
             return Err(format!(
                 "GetTokenInformation failed: {}",
                 std::io::Error::last_os_error()
             ));
         }
-        std::ptr::read(buffer.as_ptr() as *const TOKEN_USER)
-            .User
-            .Sid
+        let raw_sid = unsafe {
+            std::ptr::read_unaligned(buffer.as_ptr() as *const TOKEN_USER)
+                .User
+                .Sid
+        };
+        owned_sid_copy(raw_sid)?
     };
-    let user_sid = owned_sid_copy(user_sid)?;
     let system_sid = well_known_sid_bytes(WinLocalSystemSid)?;
 
     let entries = [

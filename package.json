@@ -12,6 +12,7 @@
     "typecheck": "tsc -p tsconfig.json",
     "check": "npm run lint && npm run typecheck",
     "test": "node --test tests/frontend-static.test.mjs",
+    "audit": "node scripts/audit-all-elements.mjs && node scripts/check-aria.mjs && node scripts/check-css-invariants.mjs && node scripts/check-dynamic-strings.mjs && node scripts/check-hardcoded-text.mjs && node scripts/check-ipc.mjs && node scripts/check-overlay-i18n.mjs && node scripts/check-titles.mjs && node scripts/comprehensive-audit.mjs && node scripts/deep-audit.mjs",
     "build": "tauri build"
   },
   "devDependencies": {

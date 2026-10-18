@@ -823,6 +823,37 @@ pub fn normalize_sentence_boundaries_and_case(text: &str, _language: &str) -> St
     result_tokens.join(" ")
 }
 
+fn find_case_insensitive(haystack: &str, needle: &str) -> Option<(usize, usize)> {
+    if needle.is_empty() {
+        return Some((0, 0));
+    }
+    let needle_lower: Vec<char> = needle.chars().flat_map(|c| c.to_lowercase()).collect();
+    for (start_idx, _) in haystack.char_indices() {
+        let mut n_iter = needle_lower.iter();
+        let mut matched = true;
+        for (cur_idx, ch) in haystack[start_idx..].char_indices() {
+            for l_ch in ch.to_lowercase() {
+                if let Some(&expected) = n_iter.next() {
+                    if l_ch != expected {
+                        matched = false;
+                        break;
+                    }
+                } else {
+                    break;
+                }
+            }
+            if !matched {
+                break;
+            }
+            if n_iter.len() == 0 {
+                let end_idx = start_idx + cur_idx + ch.len_utf8();
+                return Some((start_idx, end_idx));
+            }
+        }
+    }
+    None
+}
+
 /// Strips typical Whisper subtitle / metadata hallucinated prefixes like "Текст фильма:", "Субтитры:", "Автор субтитров:".
 fn remove_inline_hallucination_phrase(
     text: &str,
@@ -830,14 +861,9 @@ fn remove_inline_hallucination_phrase(
     require_colon_or_punct_suffix: bool,
 ) -> String {
     let mut result = text.to_string();
-    loop {
-        let lower = result.to_lowercase();
-        let Some(pos) = lower.find(phrase) else {
-            break;
-        };
-
+    while let Some((pos, end_pos)) = find_case_insensitive(&result, phrase) {
         let before = &result[..pos];
-        let after_raw = &result[pos + phrase.len()..];
+        let after_raw = &result[end_pos..];
 
         // Check following characters
         let trimmed_after = after_raw.trim_start_matches([' ', '\t']);
@@ -856,9 +882,8 @@ fn remove_inline_hallucination_phrase(
         // Consume trailing separator characters (like ":", "...", "…", "-", etc.)
         let rest_after_sep =
             trimmed_after.trim_start_matches([':', '-', '—', '.', '…', '!', '?', ',', ' ', '\t']);
-        let skip_len = result.len() - before.len() - rest_after_sep.len();
 
-        let after = &result[pos + skip_len..];
+        let after = rest_after_sep;
 
         // Build stitched string
         let before_trimmed = before.trim_end();
@@ -1028,10 +1053,12 @@ pub fn strip_hallucinated_prefixes(text: &str) -> String {
                 }
             }
 
-            // Also check if followed by author name (up to 35 chars) + colon
+            // Also check if followed by author name (up to 35 chars) + colon/separator
             if let Some(colon_pos) = remainder.find([':', '-', '—']) {
                 if colon_pos <= 35 {
-                    let after_sep = remainder[colon_pos + 1..].trim_start();
+                    let mut sep_chars = remainder[colon_pos..].chars();
+                    sep_chars.next();
+                    let after_sep = sep_chars.as_str().trim_start();
                     if !after_sep.is_empty() {
                         current_text = after_sep.to_string();
                         break;
@@ -1390,11 +1417,12 @@ fn prune_trailing_repeated_sentences(text: &str) -> Option<String> {
     let mut start = 0;
     for (idx, ch) in trimmed.char_indices() {
         if matches!(ch, '.' | '!' | '?' | '…') {
-            let s = trimmed[start..=idx].trim();
+            let end = idx + ch.len_utf8();
+            let s = trimmed[start..end].trim();
             if !s.is_empty() {
-                sentences.push((start, idx + ch.len_utf8(), s));
+                sentences.push((start, end, s));
             }
-            start = idx + ch.len_utf8();
+            start = end;
         }
     }
     if start < trimmed.len() {
@@ -2329,6 +2357,36 @@ mod tests {
         assert_eq!(
             full_pipeline_res,
             "Мы закончили, но остались некоторые вопросы."
+        );
+    }
+
+    #[test]
+    fn test_hallucinated_em_dash_separator_no_panic_fault_01() {
+        // When the earliest separator is a 3-byte UTF-8 em-dash '—'
+        let input = "Субтитры создавал — Всем привет и хорошего дня.";
+        let cleaned = strip_hallucinated_prefixes(input);
+        assert_eq!(cleaned, "Всем привет и хорошего дня.");
+
+        let input_author = "Субтитры Иван — Привет мир";
+        let cleaned_author = strip_hallucinated_prefixes(input_author);
+        assert_eq!(cleaned_author, "Привет мир");
+    }
+
+    #[test]
+    fn test_case_insensitive_hallucination_unicode_safe_fault_02() {
+        let input = "СУБТИТРЫ: Привет мир.";
+        let cleaned = strip_hallucinated_prefixes(input);
+        assert_eq!(cleaned, "Привет мир.");
+    }
+
+    #[test]
+    fn test_prune_trailing_repeated_sentences_with_ellipsis_latent_fault_02() {
+        // Multi-byte ellipsis '…' (3 bytes) at sentence boundary must not panic on char boundary
+        let input = "Это первая мысль… Это вторая мысль. Это вторая мысль.";
+        let pruned = prune_trailing_repeated_sentences(input);
+        assert_eq!(
+            pruned,
+            Some("Это первая мысль… Это вторая мысль.".to_string())
         );
     }
 }

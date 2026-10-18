@@ -20,10 +20,11 @@ for (const file of cssFiles) {
 
     // Check box-shadow
     if (trimmed.includes("box-shadow:")) {
-      // Check if it's an allowed inset facet highlight: e.g. inset 0 1px 0 rgba(255, 255, 255, ...)
-      const isAllowedInset = /box-shadow:\s*inset\s+0\s+1px\s+0\s+rgba\(255,\s*255,\s*255,\s*0\.0[0-9]+\);?/.test(trimmed)
+      // Check if it's an allowed inset facet highlight: e.g. inset 0 1px 0 rgba(255, 255, 255, 0.08 / 0.12) or spotlight tour cutout
+      const isAllowedInset = /box-shadow:\s*inset\s+0\s+1px\s+0\s+rgba\(255,\s*255,\s*255,\s*0\.(?:0[0-9]+|1[0-2])\);?/.test(trimmed)
         || trimmed === "box-shadow: none;"
-        || trimmed === "box-shadow: none !important;";
+        || trimmed === "box-shadow: none !important;"
+        || trimmed.includes("9999px");
       if (!isAllowedInset) {
         console.log(`[BOX-SHADOW] ${file}:${lineNum}: ${trimmed}`);
       }

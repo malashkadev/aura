@@ -3,6 +3,26 @@
 All notable changes to Aura are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/), versions follow [SemVer](https://semver.org/).
 
+## [1.2.0] — 2026-10-18
+
+### Fixed
+- **UTF-8 Slicing Panic in Normalizer (`text_normalizer.rs`)**: Fixed byte boundary slicing panic (`FAULT-01`) when speech hallucination prefixes contain 3-byte UTF-8 em-dashes (`—`). Made subtitle prefix case-insensitive search fully Unicode-safe.
+- **Latent Multi-byte Ellipsis Slicing Panic (`text_normalizer.rs`)**: Fixed byte boundary slicing panic (`FAULT-02`) on multi-byte horizontal ellipsis `…` in sentence repetition pruning (`prune_trailing_repeated_sentences`).
+- **Use-After-Free in Windows Security DACL (`secure_storage.rs`)**: Eliminated dangling pointer UAF (`SEC-01`) by copying the security identifier (SID) before dropping the token information buffer.
+- **Gaming Mode Active Recording Cancellation (`lib.rs`)**: Automatically and cleanly cancels active speech recording sessions when Gaming Mode is engaged (`CONC-01`), preventing orphaned audio captures and blocked input hooks.
+- **Non-blocking Audio Device Initialization (`audio_recorder.rs`)**: Scoped `self.state` mutex to release lock before the 10-second WASAPI driver startup wait (`CONC-03`), preventing deadlocks during stop or cancel operations.
+- **Whisper Server Process Termination Isolation (`whisper_runner.rs`)**: Process handle dropped outside mutex lock during server shutdown (`CONC-04`), avoiding mutex contention across threads.
+- **Cloud Finalize Transcription Timeout (`lib.rs`)**: Expanded final cloud transcription timeout from 45 seconds to 600 seconds (`FAULT-03`), ensuring long audio dictations complete reliably.
+- **Guarded Clipboard Injection (`lib.rs`)**: Added strict verification of clipboard write success prior to sending `Ctrl+V` keystrokes (`FAULT-04`), preventing stale clipboard data leakage if the Windows clipboard is locked.
+- **AI Context Editing Error Reporting (`ai_client.rs`)**: Restored explicit error propagation on Hugging Face authorization failures and Custom API errors (`FAULT-05`) instead of silently pasting raw voice prompts over selected text.
+- **Onboarding Tour Step Alignment (`main.js`)**: Corrected spotlight tour step 2 target panel from `speech` to `text` (`WIP-02`), resolving empty cutout rendering.
+- **Voice Editing Description Synchronization (`main.js` & `index.html`)**: Aligned multilingual command descriptions across all 9 UI locales and HTML fallback with the 2 active commands (`WIP-01`).
+- **Multilingual Success Toast Detection (`main.js`)**: Broadened success notification regex to cover all 10 supported UI languages including German (`kopiert`), French (`copié`), and Portuguese (`sucesso`).
+- **Repository Binary Hygiene (`website/`)**: Removed 23.5 MB legacy installer from git index and added `*.exe` to `website/.gitignore` (`INFRA-02`).
+- **Automated CI Integrity Audit Suite (`ci.yml` & `package.json`)**: Added `npm run audit` running all 10 static audit scripts directly in CI workflows (`INFRA-03`).
+- **Third-Party License Attributions (`THIRD_PARTY_NOTICES.md`)**: Added license notices for `whisper.cpp`, `sherpa-onnx`, and `SDL2`.
+- **Dynamic Portable Script Versioning (`scripts/build-portable.ps1`)**: Switched hardcoded version to dynamic reading from `package.json` (`INFRA-04`).
+
 ## [1.1.2] — 2026-10-11
 
 ### Added

@@ -831,12 +831,22 @@ fn effective_language(
         }
         "layout" => {
             if has_selection {
-                String::new()
+                if layout_language == "ru" {
+                    "ru".to_string()
+                } else {
+                    String::new()
+                }
             } else {
                 layout_language.to_string()
             }
         }
-        _ => String::new(), // auto-detect
+        _ => {
+            if has_selection && layout_language == "ru" {
+                "ru".to_string()
+            } else {
+                String::new()
+            }
+        }
     }
 }
 
@@ -3363,7 +3373,7 @@ async fn start_recording_session(app_handle: tauri::AppHandle) {
                     );
                     let _ = app_handle_loop.emit(
                         "streaming-degraded",
-                        "Live Parakeet preview is unavailable for this dictation",
+                        "Live preview is unavailable for this dictation",
                     );
                 }
             }
@@ -3845,7 +3855,7 @@ async fn finalize_recording(app_handle: tauri::AppHandle) {
                 Err("Please enter your API key in settings".to_string())
             } else {
                 match tokio::time::timeout(
-                    std::time::Duration::from_secs(45),
+                    std::time::Duration::from_secs(600),
                     ai_client::transcribe_and_clean(
                         provider_from(&settings),
                         &settings.api_key,
@@ -3861,7 +3871,7 @@ async fn finalize_recording(app_handle: tauri::AppHandle) {
                 .await
                 {
                     Ok(result) => result,
-                    Err(_) => Err("Cloud transcription timed out after 45s".to_string()),
+                    Err(_) => Err("Cloud transcription timed out".to_string()),
                 }
             }
         };
@@ -4292,30 +4302,44 @@ async fn finalize_recording(app_handle: tauri::AppHandle) {
                         if session_ok && focus_ok {
                             let mut original_clipboard = ClipboardBackup::Empty;
                             let mut paste_blocked = false;
+                            let mut clipboard_written = false;
                             // Serialize the clipboard mutation against other
                             // overlapping sessions before the paste lands.
                             if let Some(state) = app_handle_clone.try_state::<AppState>() {
                                 if let Ok(_guard) = state.clipboard_mutex.lock() {
                                     original_clipboard = backup_clipboard();
                                     if let Ok(mut cb) = arboard::Clipboard::new() {
-                                        let _ = cb.set_text(final_text.clone());
+                                        if cb.set_text(final_text.clone()).is_ok() {
+                                            clipboard_written = true;
+                                        }
                                     }
-                                    paste_blocked = !keyboard_simulator::simulate_paste();
-                                    if paste_blocked {
-                                        // UIPI silently dropped the input (the
-                                        // foreground app likely runs elevated).
-                                        // Keep the transcript in the clipboard
-                                        // instead of restoring over it.
+                                    if clipboard_written {
+                                        paste_blocked = !keyboard_simulator::simulate_paste();
+                                        if paste_blocked {
+                                            // UIPI silently dropped the input (the
+                                            // foreground app likely runs elevated).
+                                            // Keep the transcript in the clipboard
+                                            // instead of restoring over it.
+                                            crate::logger::log(
+                                                "WARN",
+                                                "Paste",
+                                                Some(&session_tag_clone),
+                                                "Paste was blocked by the system; transcript kept in clipboard",
+                                            );
+                                        }
+                                    } else {
                                         crate::logger::log(
-                                            "WARN",
+                                            "ERROR",
                                             "Paste",
                                             Some(&session_tag_clone),
-                                            "Paste was blocked by the system; transcript kept in clipboard",
+                                            "Could not write transcript to clipboard; paste aborted to prevent leaking previous clipboard contents",
                                         );
                                     }
                                 }
                             }
-                            if paste_blocked {
+                            if !clipboard_written {
+                                had_error = Some("Failed to write to clipboard".to_string());
+                            } else if paste_blocked {
                                 final_notice = Some("elevated-paste-blocked");
                             } else {
                                 // Hide overlay and play success chime immediately upon paste dispatch
@@ -5489,6 +5513,9 @@ async fn apply_gaming_mode_state(app: &tauri::AppHandle, enabled: bool, auto_tri
         }
 
         if enabled {
+            // Cancel active recording immediately to prevent orphaned audio capture and hanging hooks (CONC-01)
+            cancel_recording(app.clone()).await;
+
             whisper_runner::stop_whisper_server(app);
             whisper_runner::stop_parakeet_server(app);
             llm_runner::stop_llm_server(app);

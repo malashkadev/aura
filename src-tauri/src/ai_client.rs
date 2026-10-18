@@ -818,10 +818,10 @@ pub async fn transcribe_and_clean(
                             None,
                             &format!("Hugging Face model '{model}' failed: {err}"),
                         );
-                        // Auth failures (401/403) mean invalid API key or permissions; abort immediately.
+                        // Auth failures (401/403) mean invalid API key or permissions; abort immediately with error.
                         // Other errors (400, 404, 429) can be model-specific; try the next candidate model.
                         if matches!(status_code_from_error(&err), Some(401 | 403)) {
-                            return Ok(transcribed_text);
+                            return Err(format!("Hugging Face authorization failed: {err}"));
                         }
                         last_error = err;
                     }
@@ -832,9 +832,9 @@ pub async fn transcribe_and_clean(
                 "WARN",
                 "LLM",
                 None,
-                &format!("Hugging Face all LLM models failed, falling back to transcribed text: {last_error}"),
+                &format!("Hugging Face all LLM models failed for context editing: {last_error}"),
             );
-            Ok(transcribed_text)
+            Err(format!("Hugging Face context editing failed: {last_error}"))
         }
 
         ApiProvider::Custom => {
@@ -890,8 +890,13 @@ pub async fn transcribe_and_clean(
             {
                 Ok(cleaned) => Ok(cleaned),
                 Err(err) => {
-                    eprintln!("Aura Dev Log: Custom chat cleanup skipped: {err}");
-                    Ok(transcribed_text)
+                    crate::logger::log(
+                        "WARN",
+                        "LLM",
+                        None,
+                        &format!("Custom chat editing failed: {err}"),
+                    );
+                    Err(format!("Custom chat editing failed: {err}"))
                 }
             }
         }

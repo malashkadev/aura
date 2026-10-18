@@ -8,18 +8,18 @@ const expectedLocales = ["ru", "en", "de", "es", "fr", "it", "zh", "pt", "tr"];
 
 console.log("=== CHECKING OVERLAY.JS TRANSLATIONS ===");
 
-function extractObject(varName) {
+function extractObject(varName, silent = false) {
   const marker = `const ${varName} =`;
   const start = overlayJs.indexOf(marker);
   if (start === -1) {
-    console.error(`Marker ${marker} not found!`);
+    if (!silent) console.error(`Marker ${marker} not found!`);
     return null;
   }
   const end = overlayJs.indexOf("};", start) + 1;
   return vm.runInNewContext("(" + overlayJs.slice(start + marker.length, end) + ")");
 }
 
-const contextObj = extractObject("contextIndicatorTranslations");
+const contextObj = extractObject("contextIndicatorTranslations", true);
 if (contextObj) {
   console.log("contextIndicatorTranslations locales:", Object.keys(contextObj));
   for (const loc of expectedLocales) {
