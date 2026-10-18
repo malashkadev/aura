@@ -548,10 +548,10 @@ async fn reprocess_history_text(
         ai_client::clean_text_with_llm(provider, api_key, &text, lang, &settings.dictionary).await
     } else {
         let normalized = text_normalizer::normalize_transcription_text(&text, lang);
-        Ok(text_normalizer::apply_text_replacements(
-            &normalized,
-            &settings.text_replacements,
-        ))
+        let replaced =
+            text_normalizer::apply_text_replacements(&normalized, &settings.text_replacements);
+        let (clean, _) = text_normalizer::extract_caret_marker(&replaced);
+        Ok(clean)
     }
 }
 
@@ -4233,7 +4233,8 @@ async fn finalize_recording(app_handle: tauri::AppHandle) {
                         "Text editing failed; nothing was inserted and the selection was left unchanged",
                     );
                 } else if !is_empty_speech && !is_silence_hallucination(final_candidate.trim()) {
-                    let final_text = final_candidate;
+                    let (final_text, caret_left) =
+                        text_normalizer::extract_caret_marker(&final_candidate);
 
                     let (history_mode, history_engine, history_processing_ms) =
                         resolve_history_entry_meta(
@@ -4284,6 +4285,9 @@ async fn finalize_recording(app_handle: tauri::AppHandle) {
                                 ),
                             }
                         } else {
+                            if caret_left > 0 && typing_outcome == TypingUpdateOutcome::Applied {
+                                keyboard_simulator::send_left_arrows(caret_left);
+                            }
                             request_animated_hide(&app_handle_clone, "success");
                             overlay_hide_requested = true;
                         }
@@ -4364,6 +4368,9 @@ async fn finalize_recording(app_handle: tauri::AppHandle) {
                                         original_clipboard.clone(),
                                         &final_text,
                                     );
+                                }
+                                if caret_left > 0 {
+                                    keyboard_simulator::send_left_arrows(caret_left);
                                 }
                             }
                         } else if session_ok {

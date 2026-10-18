@@ -1785,10 +1785,50 @@ pub fn apply_text_replacements(
             expanded_replacement = expanded_replacement.replace("{datetime}", &datetime_str);
         }
 
+        let expanded_replacement = mark_caret_position(&expanded_replacement);
         result = replace_case_insensitive_boundary(&result, trigger, &expanded_replacement);
     }
 
     result
+}
+
+const CARET_SENTINEL: char = '\u{E000}';
+
+fn mark_caret_position(replacement: &str) -> String {
+    match replacement.find('|') {
+        Some(index) => {
+            let mut marked = String::with_capacity(replacement.len() + 1);
+            marked.push_str(&replacement[..index]);
+            marked.push(CARET_SENTINEL);
+            marked.push_str(&replacement[index + 1..]);
+            marked
+        }
+        None => replacement.to_string(),
+    }
+}
+
+pub fn extract_caret_marker(text: &str) -> (String, usize) {
+    if !text.contains(CARET_SENTINEL) {
+        return (text.to_string(), 0);
+    }
+    let mut clean = String::with_capacity(text.len());
+    let mut caret_left: Option<usize> = None;
+    for ch in text.chars() {
+        if ch == CARET_SENTINEL {
+            if caret_left.is_none() {
+                caret_left = Some(clean.chars().count());
+            }
+        } else {
+            clean.push(ch);
+        }
+    }
+    match caret_left {
+        Some(before) => {
+            let total = clean.chars().count();
+            (clean, total - before)
+        }
+        None => (clean, 0),
+    }
 }
 
 fn replace_case_insensitive_boundary(haystack: &str, trigger: &str, replacement: &str) -> String {
@@ -2088,6 +2128,52 @@ mod tests {
         let res3 = apply_text_replacements(text3, &replacements);
         assert!(!res3.contains("{date}"));
         assert!(res3.starts_with("Дата релиза 20"));
+    }
+
+    #[test]
+    fn test_caret_marker_in_replacement() {
+        let replacements = vec![crate::settings::TextReplacement {
+            trigger: "зз".to_string(),
+            replacement: "Здравствуйте, |!".to_string(),
+        }];
+
+        let res = apply_text_replacements("зз", &replacements);
+        let (clean, caret_left) = extract_caret_marker(&res);
+        assert_eq!(clean, "Здравствуйте, !");
+        assert_eq!(caret_left, 1);
+    }
+
+    #[test]
+    fn test_caret_marker_first_pipe_wins_and_others_stay_literal() {
+        let replacements = vec![crate::settings::TextReplacement {
+            trigger: "труба".to_string(),
+            replacement: "a|b|c".to_string(),
+        }];
+
+        let res = apply_text_replacements("труба", &replacements);
+        let (clean, caret_left) = extract_caret_marker(&res);
+        assert_eq!(clean, "ab|c");
+        assert_eq!(caret_left, 3);
+    }
+
+    #[test]
+    fn test_dictated_pipe_is_not_a_caret_marker() {
+        let replacements = vec![crate::settings::TextReplacement {
+            trigger: "зз".to_string(),
+            replacement: "Здравствуйте!".to_string(),
+        }];
+
+        let res = apply_text_replacements("a | b", &replacements);
+        let (clean, caret_left) = extract_caret_marker(&res);
+        assert_eq!(clean, "a | b");
+        assert_eq!(caret_left, 0);
+    }
+
+    #[test]
+    fn test_extract_caret_marker_without_marker_is_passthrough() {
+        let (clean, caret_left) = extract_caret_marker("Обычный текст.");
+        assert_eq!(clean, "Обычный текст.");
+        assert_eq!(caret_left, 0);
     }
 
     #[test]

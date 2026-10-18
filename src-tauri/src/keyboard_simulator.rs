@@ -621,6 +621,38 @@ mod windows_impl {
         restore_modifiers(&released);
     }
 
+    pub fn send_left_arrows(count: usize) {
+        let released = release_modifiers();
+        unsafe {
+            for index in 0..count {
+                let mut inputs = [std::mem::zeroed::<INPUT>(); 2];
+
+                inputs[0].r#type = INPUT_KEYBOARD;
+                inputs[0].Anonymous.ki = KEYBDINPUT {
+                    wVk: 0x25,
+                    wScan: 0,
+                    dwFlags: 0,
+                    time: 0,
+                    dwExtraInfo: 0,
+                };
+
+                inputs[1].r#type = INPUT_KEYBOARD;
+                inputs[1].Anonymous.ki = KEYBDINPUT {
+                    wVk: 0x25,
+                    wScan: 0,
+                    dwFlags: KEYEVENTF_KEYUP,
+                    time: 0,
+                    dwExtraInfo: 0,
+                };
+
+                SendInput(2, inputs.as_mut_ptr(), std::mem::size_of::<INPUT>() as i32);
+                let delay = if (index + 1) % 10 == 0 { 15 } else { 3 };
+                std::thread::sleep(std::time::Duration::from_millis(delay));
+            }
+        }
+        restore_modifiers(&released);
+    }
+
     pub fn replace_text<F>(
         backspace_count: usize,
         new_text: &str,
@@ -943,6 +975,23 @@ mod macos_impl {
         }
     }
 
+    pub fn send_left_arrows(count: usize) {
+        let Some(source) = create_event_source() else {
+            crate::logger::log(
+                "ERROR",
+                "Keyboard",
+                None,
+                "Failed to create macOS event source",
+            );
+            return;
+        };
+        for _ in 0..count {
+            let _ = post_keyboard_event(&source, 123, true, 0, None);
+            let _ = post_keyboard_event(&source, 123, false, 0, None);
+            std::thread::sleep(std::time::Duration::from_millis(3));
+        }
+    }
+
     pub fn replace_text<F>(
         backspace_count: usize,
         new_text: &str,
@@ -1018,13 +1067,13 @@ mod macos_impl {
 #[cfg(target_os = "windows")]
 pub use windows_impl::{
     get_active_layout_language, get_focus_target, get_foreground_window, replace_text,
-    send_dummy_key, simulate_copy, simulate_paste, type_backspaces, type_string,
+    send_dummy_key, send_left_arrows, simulate_copy, simulate_paste, type_backspaces, type_string,
 };
 
 #[cfg(target_os = "macos")]
 pub use macos_impl::{
     get_active_layout_language, get_focus_target, get_foreground_window, replace_text,
-    send_dummy_key, simulate_copy, simulate_paste, type_backspaces, type_string,
+    send_dummy_key, send_left_arrows, simulate_copy, simulate_paste, type_backspaces, type_string,
 };
 
 #[cfg(test)]
