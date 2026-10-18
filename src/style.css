@@ -3184,7 +3184,7 @@ body {
   border: 2px solid var(--accent-color);
   box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.50);
   pointer-events: none;
-  transition: top 0.25s var(--ease-out), left 0.25s var(--ease-out), width 0.25s var(--ease-out), height 0.25s var(--ease-out);
+  transition: top 0.25s var(--ease-out), left 0.25s var(--ease-out), width 0.25s var(--ease-out), height 0.25s var(--ease-out), opacity 0.2s var(--ease-out);
   z-index: 1001;
 }
 

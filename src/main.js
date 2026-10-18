@@ -6077,12 +6077,28 @@ if (e.button === 0 && !e.target.closest(".window-control-btn") && !e.target.clos
       function updateTourPosition() {
         if (!isTourActive) return;
         const step = TOUR_STEPS[currentTourStep];
-        const target = document.querySelector(step.targetSelector);
-        if (!target) return;
+        let target = document.querySelector(step.targetSelector);
+
+        // If the target element is hidden (e.g. #card-language is display:none in cloud recognition mode),
+        // fallback to the first visible card in the same tab (e.g. #card-replacements)
+        if (target && target.offsetParent === null) {
+          target = document.querySelector(`#panel-${step.tab} .card:not([style*="display: none"])`);
+        }
+
+        if (!target || target.offsetParent === null) {
+          cutout.style.opacity = "0";
+          return;
+        }
 
         target.scrollIntoView({ block: "center", inline: "nearest", behavior: "smooth" });
 
         const rect = target.getBoundingClientRect();
+        if (rect.width === 0 || rect.height === 0) {
+          cutout.style.opacity = "0";
+          return;
+        }
+
+        cutout.style.opacity = "1";
         const padding = 6;
         const cutoutTop = Math.max(0, rect.top - padding);
         const cutoutLeft = Math.max(0, rect.left - padding);
