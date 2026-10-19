@@ -16,6 +16,12 @@ static HOOK_PAUSED: AtomicBool = AtomicBool::new(false);
 /// Marks whether the keyboard hook is paused (e.g. during Gaming Mode).
 pub fn set_hook_paused(paused: bool) {
     HOOK_PAUSED.store(paused, Ordering::SeqCst);
+    if paused {
+        #[cfg(target_os = "windows")]
+        windows_impl::clear_phantom_hotkey_state();
+        #[cfg(target_os = "macos")]
+        macos_impl::clear_phantom_hotkey_state();
+    }
 }
 
 pub fn is_hook_paused() -> bool {
@@ -156,6 +162,9 @@ mod windows_impl {
     static HOTKEY_PAIR: AtomicU32 = AtomicU32::new((MOD_ALT << 16) | 0x56); // Alt+V
     static SUPPRESSED_MODIFIERS: AtomicU32 = AtomicU32::new(0);
 
+    /// Rate-limits the injected-target-key warning to one message per session.
+    static INJECTED_TARGET_WARNED: AtomicBool = AtomicBool::new(false);
+
     /// Packed (modifier_mask << 16) | key_vk waiting to be applied once an
     /// in-flight recording releases; u32::MAX means "nothing pending".
     static PENDING_HOTKEY: AtomicU32 = AtomicU32::new(u32::MAX);
@@ -266,6 +275,24 @@ mod windows_impl {
         modifiers_satisfied_state(mask, event_vk, event_is_down, modifier_is_down)
     }
 
+    /// Decides whether the target key is still physically held when a modifier
+    /// is released. A key-down swallowed by this hook (`return 1`) never lands
+    /// in the Win32 asynchronous key state, so `GetAsyncKeyState` reads "up"
+    /// while the user still holds the key; once the target key-down has been
+    /// intercepted, the `KEY_SUPPRESSED` latch is therefore authoritative.
+    fn target_key_still_held(key_suppressed: bool, async_state_down: bool) -> bool {
+        key_suppressed || async_state_down
+    }
+
+    /// Decides whether a target-key key-down must be swallowed. Only an
+    /// explicit hotkey chord or a hold already in progress qualifies.
+    /// `RECORDING_ACTIVE` must never be added here: in toggle mode the
+    /// recording outlives the chord, and plain typing of the target key would
+    /// be swallowed and would stop the session on its key-up.
+    fn should_suppress_target_down(modifier_satisfied: bool, shortcut_active: bool) -> bool {
+        modifier_satisfied || shortcut_active
+    }
+
     fn is_any_modifier_key(vk_code: u32) -> bool {
         matches!(
             vk_code,
@@ -353,7 +380,7 @@ mod windows_impl {
             parse_hotkey(hotkey_str).ok_or_else(|| format!("Unsupported hotkey: {hotkey_str}"))?;
         let packed = (modifier_mask << 16) | key;
 
-        if SHORTCUT_ACTIVE.load(Ordering::SeqCst) {
+        if SHORTCUT_ACTIVE.load(Ordering::SeqCst) || KEY_SUPPRESSED.load(Ordering::SeqCst) {
             // A live session still holds the old key: resetting SHORTCUT_ACTIVE
             // here would orphan it, because its eventual key-up no longer
             // matches the new pair and the session could never end normally.
@@ -363,7 +390,7 @@ mod windows_impl {
                 "INFO",
                 "Hotkey",
                 None,
-                "Recording is active; hotkey change deferred until the current hotkey is released",
+                "Recording or key-hold is active; hotkey change deferred until the current hotkey is released",
             );
             return Ok(());
         }
@@ -393,7 +420,7 @@ mod windows_impl {
         }
     }
 
-    fn clear_phantom_hotkey_state() {
+    pub(super) fn clear_phantom_hotkey_state() {
         SUPPRESSED_MODIFIERS.store(0, Ordering::SeqCst);
         SHORTCUT_ACTIVE.store(false, Ordering::SeqCst);
         KEY_SUPPRESSED.store(false, Ordering::SeqCst);
@@ -402,7 +429,7 @@ mod windows_impl {
             "INFO",
             "Hotkey",
             None,
-            "Session lock/unlock detected; stale hotkey state cleared",
+            "Session lock/unlock or hook pause detected; stale hotkey state cleared",
         );
     }
 
@@ -571,6 +598,20 @@ mod windows_impl {
             let kbd_struct = *(lparam as *const KBDLLHOOKSTRUCT);
             let is_injected = (kbd_struct.flags & 0x10) != 0;
             if is_injected {
+                let packed_hotkey = HOTKEY_PAIR.load(Ordering::Relaxed);
+                let key_vk = packed_hotkey & 0xFFFF;
+                if key_vk != 0
+                    && kbd_struct.vkCode == key_vk
+                    && SHORTCUT_ACTIVE.load(Ordering::Relaxed)
+                    && !INJECTED_TARGET_WARNED.swap(true, Ordering::Relaxed)
+                {
+                    crate::logger::log(
+                        "WARN",
+                        "Hotkey",
+                        None,
+                        "Injected target key event detected while hotkey session active (possible third-party keyboard utility conflict)",
+                    );
+                }
                 return CallNextHookEx(0, code, wparam, lparam);
             }
 
@@ -647,11 +688,20 @@ mod windows_impl {
                 // key-up clears the shortcut state; disarming an Alt/Win OS
                 // action still needs to happen while that modifier is released.
                 if is_up {
-                    let target_still_held = {
-                        let state = GetAsyncKeyState(key_vk as i32);
-                        (state as u16 & 0x8000) != 0
-                    };
+                    let target_still_held = target_key_still_held(
+                        KEY_SUPPRESSED.load(Ordering::SeqCst),
+                        {
+                            let state = GetAsyncKeyState(key_vk as i32);
+                            (state as u16 & 0x8000) != 0
+                        },
+                    );
                     if target_still_held {
+                        crate::logger::log(
+                            "INFO",
+                            "Hotkey",
+                            None,
+                            "Modifier released while target key still held; deferring session finalization until target key release",
+                        );
                         if matches!(event_modifier, Some(MOD_ALT) | Some(MOD_WIN))
                             && modifier_mask & MOD_CTRL == 0
                         {
@@ -673,9 +723,13 @@ mod windows_impl {
                 let modifier_satisfied = modifiers_satisfied(modifier_mask, vk_code, is_down);
 
                 if is_down {
-                    if modifier_satisfied || SHORTCUT_ACTIVE.load(Ordering::SeqCst) {
+                    if should_suppress_target_down(
+                        modifier_satisfied,
+                        SHORTCUT_ACTIVE.load(Ordering::SeqCst),
+                    ) {
                         KEY_SUPPRESSED.store(true, Ordering::SeqCst);
                         if !SHORTCUT_ACTIVE.swap(true, Ordering::SeqCst) {
+                            INJECTED_TARGET_WARNED.store(false, Ordering::Relaxed);
                             notify_hotkey(true);
                         }
                         return 1;
@@ -813,6 +867,40 @@ mod windows_impl {
             assert_eq!(SUPPRESSED_MODIFIERS.load(Ordering::SeqCst), 0);
             assert!(!SHORTCUT_ACTIVE.load(Ordering::SeqCst));
             assert!(!KEY_SUPPRESSED.load(Ordering::SeqCst));
+        }
+
+        #[test]
+        fn test_alt_released_first_defers_finalization_via_latch() {
+            use super::target_key_still_held;
+
+            // Regression: a key-down swallowed by the hook never reaches the
+            // Win32 async key state, so GetAsyncKeyState reads "up" while the
+            // user still holds the key. The latch must win in that case.
+            assert!(
+                target_key_still_held(true, false),
+                "The KEY_SUPPRESSED latch must defer finalization while the key is held"
+            );
+            assert!(
+                target_key_still_held(false, true),
+                "The async state is authoritative when the latch is not armed"
+            );
+            assert!(
+                !target_key_still_held(false, false),
+                "Neither latch nor async state means the key is up"
+            );
+        }
+
+        #[test]
+        fn test_toggle_mode_typing_v_is_not_suppressed() {
+            use super::should_suppress_target_down;
+
+            // Contract: only an explicit chord or an in-progress hold suppresses
+            // the target key. A toggle-latched session (RECORDING_ACTIVE) and
+            // plain typing must pass through, otherwise the letter is swallowed
+            // and the session stops on its key-up.
+            assert!(!should_suppress_target_down(false, false));
+            assert!(should_suppress_target_down(true, false));
+            assert!(should_suppress_target_down(false, true));
         }
     }
 }
@@ -991,7 +1079,7 @@ mod macos_impl {
         let (modifier, key) =
             parse_hotkey(hotkey_str).ok_or_else(|| format!("Unsupported hotkey: {hotkey_str}"))?;
 
-        if SHORTCUT_ACTIVE.load(Ordering::SeqCst) {
+        if SHORTCUT_ACTIVE.load(Ordering::SeqCst) || KEY_SUPPRESSED.load(Ordering::SeqCst) {
             // A live session still holds the old key; defer to avoid orphaning
             // it (its key-up would no longer match the new configuration).
             match PENDING_HOTKEY.lock() {
@@ -1068,6 +1156,18 @@ mod macos_impl {
                 "Deferred hotkey change applied after the recording ended",
             );
         }
+    }
+
+    pub(super) fn clear_phantom_hotkey_state() {
+        SHORTCUT_ACTIVE.store(false, Ordering::SeqCst);
+        KEY_SUPPRESSED.store(false, Ordering::SeqCst);
+        apply_pending_hotkey();
+        crate::logger::log(
+            "INFO",
+            "Hotkey",
+            None,
+            "Session lock/unlock or hook pause detected; stale macOS hotkey state cleared",
+        );
     }
 
     pub fn start_hook<F>(callback: F) -> Result<(), String>
@@ -1245,6 +1345,19 @@ mod macos_impl {
                 if !SHORTCUT_ACTIVE.swap(true, Ordering::SeqCst) {
                     notify_hotkey(true);
                 }
+            } else if !modifier_satisfied
+                && target_keycode.is_some()
+                && KEY_SUPPRESSED.load(Ordering::SeqCst)
+            {
+                // Modifier released while the target key is still held: defer
+                // finalization to the target key-up (mirrors the Windows latch
+                // behavior) so remaining auto-repeats stay suppressed.
+                crate::logger::log(
+                    "INFO",
+                    "Hotkey",
+                    None,
+                    "Modifier released while target key still held; deferring session finalization until target key release",
+                );
             } else if !modifier_satisfied && SHORTCUT_ACTIVE.swap(false, Ordering::SeqCst) {
                 notify_hotkey(false);
                 apply_pending_hotkey();
