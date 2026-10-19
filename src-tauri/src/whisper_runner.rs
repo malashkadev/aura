@@ -39,6 +39,13 @@ fn terminate_and_reap(child: &mut std::process::Child) {
     let _ = child.wait();
 }
 
+struct StartingGuard<'a>(&'a std::sync::atomic::AtomicBool);
+impl<'a> Drop for StartingGuard<'a> {
+    fn drop(&mut self) {
+        self.0.store(false, std::sync::atomic::Ordering::Release);
+    }
+}
+
 fn run_command_with_timeout(
     command: &mut Command,
     timeout: std::time::Duration,
@@ -1672,6 +1679,12 @@ fn start_parakeet_server_unlocked<R: Runtime>(
         }
         server.take()
     };
+
+    let _starting_guard = StartingGuard(&state.parakeet_starting);
+    state
+        .parakeet_starting
+        .store(true, std::sync::atomic::Ordering::Release);
+
     if let Some(previous) = previous {
         state
             .parakeet_port
@@ -2521,6 +2534,11 @@ fn start_whisper_server_unlocked<R: Runtime>(
         }
         server.take()
     };
+
+    let _starting_guard = StartingGuard(&state.whisper_starting);
+    state
+        .whisper_starting
+        .store(true, std::sync::atomic::Ordering::Release);
 
     if let Some(previous) = previous {
         state

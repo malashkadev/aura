@@ -3054,7 +3054,7 @@ async function refreshEngineHealth() {
         chip.classList.add("health-ok");
         return;
       }
-      if (Date.now() < engineStartNoticeUntil) {
+      if (health.starting) {
         chip.innerHTML = `<span class="spinner-inline" aria-hidden="true"></span> ${getTranslation("engine_starting")}`;
         chip.classList.add("health-warn");
         return;
@@ -3079,19 +3079,19 @@ async function refreshEngineHealth() {
 
   // Right after the user switches the local engine (or its acceleration) the
   // resident server needs seconds to boot and warm up. Poll fast until the
-  // server actually reports running (or the hard cap passes) and WITHOUT the
-  // focus gate: the settings window is usually unfocused while the user
-  // dictates, and a frozen "starting…" chip is worse than a cheap IPC poll.
-  function kickEngineStatusPolling(windowMs = 60000) {
-    engineStartNoticeUntil = Date.now() + windowMs;
+  // server reports running (or stops starting).
+  function kickEngineStatusPolling(maxAttempts = 30) {
     if (engineFastPollTimer) return;
-    engineFastPollTimer = setInterval(() => {
+    let attempts = 0;
+    engineFastPollTimer = setInterval(async () => {
+      attempts++;
+      await refreshEngineHealth();
       const running = Boolean(lastHealthState && lastHealthState.running);
-      if (running || Date.now() >= engineStartNoticeUntil) {
+      const starting = Boolean(lastHealthState && lastHealthState.starting);
+      if (running || (!starting && attempts >= 6) || attempts >= maxAttempts) {
         clearInterval(engineFastPollTimer);
         engineFastPollTimer = null;
       }
-      refreshEngineHealth();
     }, 700);
   }
 
@@ -3808,7 +3808,6 @@ const btnSaveSettings = document.getElementById("btn-save-settings");
   let settingsRevision = 0;
   let engineHealthTimer = null;
   let engineFastPollTimer = null;
-  let engineStartNoticeUntil = 0;
   let lastHealthState = null;
   let updateGamingModeUi = () => {};
 
@@ -4379,10 +4378,11 @@ const btnSaveSettings = document.getElementById("btn-save-settings");
         isSettingsLoaded = true;
         settingsModified = false;
         
-        refreshEngineHealth();
-        if (radioLocal.checked) {
-          kickEngineStatusPolling();
-        }
+        refreshEngineHealth().then(() => {
+          if (lastHealthState && lastHealthState.starting) {
+            kickEngineStatusPolling();
+          }
+        });
         if (!engineHealthTimer) {
           engineHealthTimer = setInterval(() => {
             if (document.hasFocus()) {
@@ -4595,7 +4595,11 @@ await invoke("set_settings", { settings });
       }
       renderProviderKeyInput();
       if (radioLocal.checked) {
-        kickEngineStatusPolling();
+        refreshEngineHealth().then(() => {
+          if (lastHealthState && lastHealthState.starting) {
+            kickEngineStatusPolling();
+          }
+        });
       }
       if (settingsRevision === revisionAtStart) {
         settingsModified = false;

@@ -68,10 +68,12 @@ struct AppState {
     parakeet_port: std::sync::atomic::AtomicU16,
     parakeet_streaming: Mutex<Option<ParakeetStreamingSession>>,
     parakeet_watchdog: Mutex<Option<whisper_runner::ParakeetWatchdog>>,
+    pub(crate) parakeet_starting: AtomicBool,
     whisper_lifecycle: Mutex<()>,
     whisper_server: Mutex<Option<whisper_runner::RunningWhisperServer>>,
     whisper_port: std::sync::atomic::AtomicU16,
     whisper_watchdog: Mutex<Option<whisper_runner::WhisperWatchdog>>,
+    pub(crate) whisper_starting: AtomicBool,
     llm_lifecycle: Mutex<()>,
     llm_server: Mutex<Option<llm_runner::RunningLlmServer>>,
     llm_port: std::sync::atomic::AtomicU16,
@@ -702,6 +704,7 @@ async fn get_diagnostic_report(app_handle: tauri::AppHandle) -> Result<String, S
 struct EngineHealth {
     engine: String,
     running: bool,
+    starting: bool,
     provider: Option<String>,
     port: Option<u16>,
     gaming_mode: bool,
@@ -710,16 +713,21 @@ struct EngineHealth {
 #[tauri::command]
 fn get_engine_health(app_handle: tauri::AppHandle) -> EngineHealth {
     let settings = settings::load_settings(&app_handle).unwrap_or_default();
-    let gaming_mode = app_handle
+    let (gaming_mode, whisper_starting, parakeet_starting) = app_handle
         .try_state::<AppState>()
-        .map(|s| s.gaming_mode_active.load(Ordering::Acquire))
-        .unwrap_or(false);
+        .map(|s| (
+            s.gaming_mode_active.load(Ordering::Acquire),
+            s.whisper_starting.load(Ordering::Acquire),
+            s.parakeet_starting.load(Ordering::Acquire),
+        ))
+        .unwrap_or((false, false, false));
 
     if settings.local_engine == "whisper" {
         return match whisper_runner::whisper_server_status(&app_handle) {
             Some((provider, port)) => EngineHealth {
                 engine: "whisper".to_string(),
                 running: true,
+                starting: false,
                 provider: Some(provider),
                 port: Some(port),
                 gaming_mode,
@@ -727,6 +735,7 @@ fn get_engine_health(app_handle: tauri::AppHandle) -> EngineHealth {
             None => EngineHealth {
                 engine: "whisper".to_string(),
                 running: false,
+                starting: whisper_starting,
                 provider: None,
                 port: None,
                 gaming_mode,
@@ -737,6 +746,7 @@ fn get_engine_health(app_handle: tauri::AppHandle) -> EngineHealth {
         return EngineHealth {
             engine: settings.local_engine,
             running: true,
+            starting: false,
             provider: None,
             port: None,
             gaming_mode,
@@ -746,6 +756,7 @@ fn get_engine_health(app_handle: tauri::AppHandle) -> EngineHealth {
         Some((provider, port)) => EngineHealth {
             engine: "parakeet".to_string(),
             running: true,
+            starting: false,
             provider: Some(provider),
             port: Some(port),
             gaming_mode,
@@ -753,6 +764,7 @@ fn get_engine_health(app_handle: tauri::AppHandle) -> EngineHealth {
         None => EngineHealth {
             engine: "parakeet".to_string(),
             running: false,
+            starting: parakeet_starting,
             provider: None,
             port: None,
             gaming_mode,
@@ -1429,10 +1441,43 @@ async fn run_local_whisper_async(
         .await
         .map_err(|e| format!("Local ASR task failed: {e}"))?
     } else {
-        let whisper_port = app_handle
+        let mut whisper_port = app_handle
             .try_state::<AppState>()
             .map(|state| state.whisper_port.load(Ordering::SeqCst))
             .unwrap_or(0);
+
+        if whisper_port == 0 {
+            let is_starting = app_handle
+                .try_state::<AppState>()
+                .map(|state| state.whisper_starting.load(Ordering::Acquire))
+                .unwrap_or(false);
+            if is_starting {
+                crate::logger::log(
+                    "INFO",
+                    "ASR",
+                    None,
+                    "Resident Whisper server is starting up; waiting briefly for prewarm to finish",
+                );
+                let wait_start = std::time::Instant::now();
+                while wait_start.elapsed() < std::time::Duration::from_secs(8) {
+                    tokio::time::sleep(std::time::Duration::from_millis(150)).await;
+                    whisper_port = app_handle
+                        .try_state::<AppState>()
+                        .map(|state| state.whisper_port.load(Ordering::SeqCst))
+                        .unwrap_or(0);
+                    if whisper_port > 0 {
+                        break;
+                    }
+                    let still_starting = app_handle
+                        .try_state::<AppState>()
+                        .map(|state| state.whisper_starting.load(Ordering::Acquire))
+                        .unwrap_or(false);
+                    if !still_starting {
+                        break;
+                    }
+                }
+            }
+        }
 
         if whisper_port > 0 {
             let wav_path = std::path::PathBuf::from(&wav);
@@ -4778,10 +4823,12 @@ pub fn run() {
                 parakeet_port: std::sync::atomic::AtomicU16::new(3033),
                 parakeet_streaming: Mutex::new(None),
                 parakeet_watchdog: Mutex::new(None),
+                parakeet_starting: AtomicBool::new(false),
                 whisper_lifecycle: Mutex::new(()),
                 whisper_server: Mutex::new(None),
                 whisper_port: std::sync::atomic::AtomicU16::new(0),
                 whisper_watchdog: Mutex::new(None),
+                whisper_starting: AtomicBool::new(false),
                 llm_lifecycle: Mutex::new(()),
                 llm_server: Mutex::new(None),
                 llm_port: std::sync::atomic::AtomicU16::new(0),
@@ -7020,10 +7067,12 @@ mod tests {
             parakeet_port: std::sync::atomic::AtomicU16::new(3033),
             parakeet_streaming: Mutex::new(None),
             parakeet_watchdog: Mutex::new(None),
+            parakeet_starting: AtomicBool::new(false),
             whisper_lifecycle: Mutex::new(()),
             whisper_server: Mutex::new(None),
             whisper_port: std::sync::atomic::AtomicU16::new(0),
             whisper_watchdog: Mutex::new(None),
+            whisper_starting: AtomicBool::new(false),
             llm_lifecycle: Mutex::new(()),
             llm_server: Mutex::new(None),
             llm_port: std::sync::atomic::AtomicU16::new(0),
