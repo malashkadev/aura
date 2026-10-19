@@ -272,9 +272,11 @@ const i18nDict = {
     "onboarding_replay": "Вводный экскурс по возможностям",
     "onboarding_step_tag": "{current} / {total}",
     "onboarding_step_1_title": "Способы распознавания речи",
-    "onboarding_step_1_desc": "Локальный ИИ обеспечивает 100% приватность без передачи аудио в сеть и ускоряется видеокартой (NVIDIA CUDA) или CPU. Облачный ИИ не требует загрузки моделей и быстро расшифровывает через API без нагрузки на систему.",
-    "onboarding_step_2_title": "Язык распознавания и словарь",
-    "onboarding_step_2_desc": "Аура умеет автоматически подстраиваться под язык активной раскладки клавиатуры. В словаре можно задать правила автозамены опечаток и расшифровки профессиональных терминов.",
+    "onboarding_step_1_desc": "По умолчанию Аура работает полностью автономно и приватно: ваш голос расшифровывается прямо на ПК (NVIDIA CUDA или CPU) без передачи в сеть. При необходимости можно подключить облачный ИИ через API.",
+    "onboarding_step_2_title": "Язык, словарь и автозамена",
+    "onboarding_step_2_desc": "Аура подстраивается под язык активной раскладки. В словаре можно указать профессиональные термины, а в автозамене — настроить исправление опечаток и шаблоны с маркером курсора |.",
+    "onboarding_step_2_alt_title": "Автозамена текста и шаблоны",
+    "onboarding_step_2_alt_desc": "Настройте правила автозамены частых опечаток и быстрые шаблоны текста. Символ | в шаблоне автоматически перемещает курсор в нужное место после вставки.",
     "onboarding_step_3_title": "Умная вставка и редактирование выделенного",
     "onboarding_step_3_desc": "Выделите текст в любой программе, нажмите хоткей и надиктуйте команду: «исправь ошибки» или «переведи» — Аура выполнит редактирование прямо на месте.",
     "onboarding_step_4_title": "Горячие клавиши, оверлей и звуковой отклик",
@@ -561,9 +563,11 @@ const i18nDict = {
     "onboarding_replay": "Feature walkthrough tour",
     "onboarding_step_tag": "{current} / {total}",
     "onboarding_step_1_title": "Speech Recognition Methods",
-    "onboarding_step_1_desc": "Local AI guarantees 100% privacy without sending audio to the network, accelerated by GPU (NVIDIA CUDA) or CPU. Cloud AI requires no model downloads and delivers fast API processing with zero system load.",
-    "onboarding_step_2_title": "Recognition Language & Dictionary",
-    "onboarding_step_2_desc": "Aura can automatically adapt to the active keyboard layout language. In the dictionary, you can configure text replacement rules for typos and domain-specific terminology.",
+    "onboarding_step_1_desc": "By default, Aura operates completely offline and private: speech is transcribed directly on your PC (NVIDIA CUDA or CPU) without network transfer. You can also connect Cloud AI via API if preferred.",
+    "onboarding_step_2_title": "Language, Dictionary & Replacements",
+    "onboarding_step_2_desc": "Aura adapts automatically to your active keyboard layout. In the dictionary, you can specify domain terms, and in replacements — fix typos and expand text snippets with cursor marker |.",
+    "onboarding_step_2_alt_title": "Text Replacements & Snippets",
+    "onboarding_step_2_alt_desc": "Set up replacement rules for common typos and quick text snippets. The | symbol inside a snippet automatically positions the caret right where you need it.",
     "onboarding_step_3_title": "Smart Insertion & Selected Text Editing",
     "onboarding_step_3_desc": "Select text in any application, press your hotkey, and speak a command: 'fix grammar' or 'translate' — Aura edits and replaces the text directly in place.",
     "onboarding_step_4_title": "Global Hotkeys, Overlay & Audio Feedback",
@@ -850,9 +854,11 @@ const i18nDict = {
     "onboarding_replay": "Funktionsüberblick starten",
     "onboarding_step_tag": "{current} / {total}",
     "onboarding_step_1_title": "Spracherkennungsmethoden",
-    "onboarding_step_1_desc": "Lokale KI bietet 100% Privatsphäre ohne Datenübertragung und wird per GPU (NVIDIA CUDA) oder CPU beschleunigt. Cloud-KI benötigt keine Downloads und verarbeitet blitzschnell per API ohne Systemlast.",
-    "onboarding_step_2_title": "Erkennungssprache & Wörterbuch",
-    "onboarding_step_2_desc": "Aura kann sich automatisch an die aktive Tastatursprache anpassen. Im Wörterbuch können Textersetzungsregeln für Tippfehler und Fachbegriffe festgelegt werden.",
+    "onboarding_step_1_desc": "Standardmäßig arbeitet Aura vollständig offline und privat: Sprache wird direkt auf Ihrem PC (NVIDIA CUDA oder CPU) ohne Netzwerkübertragung verarbeitet. Bei Bedarf kann Cloud-KI per API genutzt werden.",
+    "onboarding_step_2_title": "Sprache, Wörterbuch & Ersetzungen",
+    "onboarding_step_2_desc": "Aura passt sich automatisch an das aktive Tastaturlayout an. Im Wörterbuch können Fachbegriffe hinterlegt und in den Textersetzungen Tippfehler sowie Vorlagen mit dem Cursormarker | konfiguriert werden.",
+    "onboarding_step_2_alt_title": "Textersetzungen & Vorlagen",
+    "onboarding_step_2_alt_desc": "Definieren Sie Ersetzungsregeln für häufige Tippfehler und schnelle Textvorlagen. Das Symbol | platziert den Cursor nach dem Einfügen automatisch an der gewünschten Stelle.",
     "onboarding_step_3_title": "Intelligentes Einfügen & Textbearbeitung",
     "onboarding_step_3_desc": "Markieren Sie Text in einem beliebigen Programm, drücken Sie den Hotkey und sprechen Sie einen Befehl: „Fehler korrigieren“ oder „übersetzen“ — Aura ersetzt den Text direkt an Ort und Stelle.",
     "onboarding_step_4_title": "Globale Hotkeys, Overlay & Audio-Feedback",
@@ -1139,9 +1145,11 @@ const i18nDict = {
     "onboarding_replay": "Recorrido de funciones",
     "onboarding_step_tag": "{current} / {total}",
     "onboarding_step_1_title": "Métodos de reconocimiento de voz",
-    "onboarding_step_1_desc": "La IA local garantiza un 100% de privacidad sin enviar audio a la red, acelerada por GPU (NVIDIA CUDA) o CPU. La IA en la nube no requiere descargas y procesa al instante mediante API sin carga en el sistema.",
-    "onboarding_step_2_title": "Idioma de reconocimiento y diccionario",
-    "onboarding_step_2_desc": "Aura puede adaptarse automáticamente al idioma del teclado activo. En el diccionario puede definir reglas de reemplazo para erratas y términos especializados.",
+    "onboarding_step_1_desc": "De forma predeterminada, Aura funciona de manera totalmente autónoma y privada: la voz se transcribe en su PC (NVIDIA CUDA o CPU) sin enviarse a la red. Si lo prefiere, puede activar la IA en la nube mediante API.",
+    "onboarding_step_2_title": "Idioma, diccionario y reemplazos",
+    "onboarding_step_2_desc": "Aura se adapta automáticamente al idioma del teclado activo. En el diccionario puede añadir términos técnicos y en los reemplazos configurar corrección de erratas y plantillas con el marcador de cursor |.",
+    "onboarding_step_2_alt_title": "Reemplazos de texto y plantillas",
+    "onboarding_step_2_alt_desc": "Configure reglas de reemplazo para erratas frecuentes y plantillas rápidas. El símbolo | ubica automáticamente el cursor en la posición deseada tras la inserción.",
     "onboarding_step_3_title": "Inserción inteligente y edición del texto seleccionado",
     "onboarding_step_3_desc": "Seleccione texto en cualquier aplicación, presione el atajo y dicte una orden: «corrige errores» o «traduce» — Aura reemplazará el texto directamente en el lugar.",
     "onboarding_step_4_title": "Atajos globales, overlay y confirmación de audio",
@@ -1428,9 +1436,11 @@ const i18nDict = {
     "onboarding_replay": "Visite guidée des fonctionnalités",
     "onboarding_step_tag": "{current} / {total}",
     "onboarding_step_1_title": "Méthodes de reconnaissance vocale",
-    "onboarding_step_1_desc": "L'IA locale offre 100% de confidentialité sans envoi audio sur le réseau, accélérée par GPU (NVIDIA CUDA) ou CPU. L'IA cloud ne nécessite aucun téléchargement et traite via API sans charge système.",
-    "onboarding_step_2_title": "Langue de reconnaissance et dictionnaire",
-    "onboarding_step_2_desc": "Aura peut s'adapter automatiquement à la langue du clavier actif. Dans le dictionnaire, définissez des règles de remplacement pour les coquilles et termes spécialisés.",
+    "onboarding_step_1_desc": "Par défaut, Aura fonctionne de manière totalement autonome et privée : votre voix est transcrite sur votre PC (NVIDIA CUDA ou CPU) sans transfert réseau. Vous pouvez également activer l'IA cloud via API si besoin.",
+    "onboarding_step_2_title": "Langue, dictionnaire et remplacements",
+    "onboarding_step_2_desc": "Aura s'adapte automatiquement à la langue du clavier actif. Dans le dictionnaire, ajoutez vos termes techniques, et dans les remplacements, configurez la correction de coquilles et des modèles avec le marqueur de curseur |.",
+    "onboarding_step_2_alt_title": "Remplacements de texte et modèles",
+    "onboarding_step_2_alt_desc": "Configurez des règles de remplacement pour les coquilles fréquentes et des modèles rapides. Le symbole | place automatiquement le curseur au bon endroit après l'insertion.",
     "onboarding_step_3_title": "Insertion intelligente et édition du texte sélectionné",
     "onboarding_step_3_desc": "Sélectionnez du texte dans n'importe quel logiciel, appuyez sur le raccourci et dictez un ordre : « corrige les erreurs » ou « traduis » — Aura modifie le texte directement sur place.",
     "onboarding_step_4_title": "Raccourcis globaux, overlay et retour sonore",
@@ -1717,9 +1727,11 @@ const i18nDict = {
     "onboarding_replay": "Tour guidato delle funzionalità",
     "onboarding_step_tag": "{current} / {total}",
     "onboarding_step_1_title": "Metodi di riconoscimento vocale",
-    "onboarding_step_1_desc": "L'IA locale garantisce il 100% di privacy senza invio di dati alla rete, accelerata da GPU (NVIDIA CUDA) o CPU. L'IA cloud non richiede download e offre elaborazione rapida via API senza carico sul sistema.",
-    "onboarding_step_2_title": "Lingua di riconoscimento e dizionario",
-    "onboarding_step_2_desc": "Aura può adattarsi automaticamente alla lingua della tastiera attiva. Nel dizionario puoi configurare regole di sostituzione per refusi e terminologia specifica.",
+    "onboarding_step_1_desc": "Per impostazione predefinita, Aura funziona in modo del tutto autonomo e privato: la voce viene trascritta direttamente sul PC (NVIDIA CUDA o CPU) senza trasmissione in rete. All'occorrenza è possibile usare l'IA cloud via API.",
+    "onboarding_step_2_title": "Lingua, dizionario e sostituzioni",
+    "onboarding_step_2_desc": "Aura si adatta automaticamente alla lingua della tastiera attiva. Nel dizionario puoi inserire termini tecnici e nelle sostituzioni impostare la correzione di refusi e modelli con il marcatore del cursore |.",
+    "onboarding_step_2_alt_title": "Sostituzioni di testo e modelli",
+    "onboarding_step_2_alt_desc": "Imposta regole di sostituzione per refusi frequenti e modelli rapidi. Il simbolo | posiziona automaticamente il cursore nel punto esatto dopo l'inserimento.",
     "onboarding_step_3_title": "Inserimento intelligente e modifica del testo selezionato",
     "onboarding_step_3_desc": "Seleziona il testo in qualsiasi programma, premi la scorciatoia e pronuncia un comando: 'correggi errori' o 'traduci' — Aura modificherà il testo direttamente sul posto.",
     "onboarding_step_4_title": "Scorciatoie globali, overlay e feedback audio",
@@ -2006,9 +2018,11 @@ const i18nDict = {
     "onboarding_replay": "功能入门导览",
     "onboarding_step_tag": "{current} / {total}",
     "onboarding_step_1_title": "语音识别方式",
-    "onboarding_step_1_desc": "本地 AI 提供 100% 隐私保护，无需将音频上传至网络，并支持 GPU（NVIDIA CUDA）或 CPU 硬件加速。云端 AI 无需下载模型，通过 API 快速处理且不占用系统资源。",
-    "onboarding_step_2_title": "识别语言与自定义词汇表",
-    "onboarding_step_2_desc": "Aura 可根据当前键盘布局自动匹配识别语言。您可以在词汇表中设置文本替换规则，以纠正错别字或识别专业术语。",
+    "onboarding_step_1_desc": "默认情况下，Aura 完全离线且私密运行：语音直接在您的电脑上处理（NVIDIA CUDA 或 CPU 硬件加速），无需上传至网络。需要时也可以通过 API 连接云端 AI。",
+    "onboarding_step_2_title": "识别语言、词汇表与文本替换",
+    "onboarding_step_2_desc": "Aura 可自动匹配当前键盘布局语言。您可以在词汇表中添加专业术语，并在文本替换中配置错别字纠正及带有光标标记 | 的快捷模板。",
+    "onboarding_step_2_alt_title": "文本替换与快捷模板",
+    "onboarding_step_2_alt_desc": "设置常用错别字的自动替换规则与快捷文本模板。模板中的 | 符号会在插入文本后自动将光标定位至所需位置。",
     "onboarding_step_3_title": "智能上下文插入与选中文本编辑",
     "onboarding_step_3_desc": "在任何应用中选中文本，按快捷键并说出指令（如“纠正错误”或“翻译”），Aura 即可就地完成文本编辑与替换。",
     "onboarding_step_4_title": "全局快捷键、悬浮层与声音反馈",
@@ -2295,9 +2309,11 @@ const i18nDict = {
     "onboarding_replay": "Visita guiada de recursos",
     "onboarding_step_tag": "{current} / {total}",
     "onboarding_step_1_title": "Métodos de reconhecimento de voz",
-    "onboarding_step_1_desc": "A IA local garante 100% de privacidade sem envio de áudio para a rede, acelerada por GPU (NVIDIA CUDA) ou CPU. A IA em nuvem não requer downloads e processa rapidamente via API sem carga no sistema.",
-    "onboarding_step_2_title": "Idioma de reconhecimento e dicionário",
-    "onboarding_step_2_desc": "O Aura pode se adaptar automaticamente ao idioma do teclado ativo. No dicionário, configure regras de substituição para termos técnicos e erros de digitação.",
+    "onboarding_step_1_desc": "Por padrão, o Aura opera de forma totalmente autônoma e privada: sua voz é transcrita no próprio PC (NVIDIA CUDA ou CPU) sem envio para a rede. Se preferir, você também pode conectar a IA em nuvem via API.",
+    "onboarding_step_2_title": "Idioma, dicionário e substituições",
+    "onboarding_step_2_desc": "O Aura se adapta automaticamente ao idioma do teclado ativo. No dicionário você pode adicionar termos técnicos e nas substituições configurar correção de erros e modelos com o marcador de cursor |.",
+    "onboarding_step_2_alt_title": "Substituições de texto e modelos",
+    "onboarding_step_2_alt_desc": "Configure regras de substituição para erros frequentes e modelos rápidos. O símbolo | posiciona automaticamente o cursor no ponto desejado após a inserção.",
     "onboarding_step_3_title": "Inserção inteligente e edição do texto selecionado",
     "onboarding_step_3_desc": "Selecione o texto em qualquer aplicativo, pressione o atalho e dite um comando: 'corrija erros' ou 'traduza' — o Aura editará o texto diretamente no local.",
     "onboarding_step_4_title": "Atalhos globais, overlay e resposta sonora",
@@ -2584,9 +2600,11 @@ const i18nDict = {
     "onboarding_replay": "Özellik tanıtım turu",
     "onboarding_step_tag": "{current} / {total}",
     "onboarding_step_1_title": "Konuşma Tanıma Yöntemleri",
-    "onboarding_step_1_desc": "Yerel Yapay Zeka, ses verilerini ağa aktarmadan %100 gizlilik sağlar ve GPU (NVIDIA CUDA) veya CPU ile hızlandırılır. Bulut Yapay Zeka ise model indirmeye gerek kalmadan API üzerinden sıfır sistem yüküyle anında çalışır.",
-    "onboarding_step_2_title": "Tanıma Dili ve Sözlük",
-    "onboarding_step_2_desc": "Aura, aktif klavye düzeninin diline otomatik olarak uyum sağlayabilir. Sözlükte yazım hatalarını düzeltmek ve teknik terimleri tanımlamak için metin değiştirme kuralları belirleyebilirsiniz.",
+    "onboarding_step_1_desc": "Aura varsayılan olarak tamamen çevrimdışı ve gizli çalışır: ses verileriniz ağa iletilmeden doğrudan bilgisayarınızda (NVIDIA CUDA veya CPU) işlenir. İhtiyaç duyulduğunda API üzerinden Bulut Yapay Zeka da kullanılabilir.",
+    "onboarding_step_2_title": "Tanıma Dili, Sözlük ve Değiştirmeler",
+    "onboarding_step_2_desc": "Aura, aktif klavye düzenine otomatik olarak uyum sağlar. Sözlükte mesleki terimleri belirtebilir, metin değiştirmede ise yazım hatalarını düzelten ve | imleç işaretli şablonlar tanımlayabilirsiniz.",
+    "onboarding_step_2_alt_title": "Metin Değiştirme ve Şablonlar",
+    "onboarding_step_2_alt_desc": "Sık yapılan yazım hataları için değiştirme kuralları ve hızlı metin şablonları ayarlayın. Şablondaki | işareti ekleme sonrasında imleci otomatik olarak gereken yere konumlandırır.",
     "onboarding_step_3_title": "Akıllı Ekleme ve Seçili Metni Düzenleme",
     "onboarding_step_3_desc": "Herhangi bir uygulamada metni seçin, kısayola basın ve bir komut söyleyin: 'hataları düzelt' veya 'çevir' — Aura metni doğrudan yerinde düzenler.",
     "onboarding_step_4_title": "Genel Kısayollar, Overlay ve Sesli Geri Bildirim",
@@ -6021,7 +6039,9 @@ if (e.button === 0 && !e.target.closest(".window-control-btn") && !e.target.clos
         tab: "text",
         targetSelector: "#card-language",
         titleKey: "onboarding_step_2_title",
-        descKey: "onboarding_step_2_desc"
+        descKey: "onboarding_step_2_desc",
+        altTitleKey: "onboarding_step_2_alt_title",
+        altDescKey: "onboarding_step_2_alt_desc"
       },
       {
         tab: "text",
@@ -6068,6 +6088,17 @@ if (e.button === 0 && !e.target.closest(".window-control-btn") && !e.target.clos
         };
       }
 
+      function getTourTarget(step) {
+        if (!step) return null;
+        let target = document.querySelector(step.targetSelector);
+        // Fallback to the first visible card in the panel if the target is hidden
+        // (e.g. #card-language is display:none in cloud or parakeet mode -> falls back to #card-replacements)
+        if (target && target.offsetParent === null) {
+          target = document.querySelector(`#panel-${step.tab} .card:not([style*="display: none"])`);
+        }
+        return (target && target.offsetParent !== null) ? target : null;
+      }
+
       function renderSegments() {
         if (!segmentsContainer) return;
         segmentsContainer.innerHTML = "";
@@ -6078,23 +6109,19 @@ if (e.button === 0 && !e.target.closest(".window-control-btn") && !e.target.clos
         });
       }
 
-      function updateTourPosition() {
+      function updateTourPosition(shouldScroll = true) {
         if (!isTourActive) return;
         const step = TOUR_STEPS[currentTourStep];
-        let target = document.querySelector(step.targetSelector);
+        const target = getTourTarget(step);
 
-        // If the target element is hidden (e.g. #card-language is display:none in cloud recognition mode),
-        // fallback to the first visible card in the same tab (e.g. #card-replacements)
-        if (target && target.offsetParent === null) {
-          target = document.querySelector(`#panel-${step.tab} .card:not([style*="display: none"])`);
-        }
-
-        if (!target || target.offsetParent === null) {
+        if (!target) {
           cutout.style.opacity = "0";
           return;
         }
 
-        target.scrollIntoView({ block: "center", inline: "nearest", behavior: "smooth" });
+        if (shouldScroll) {
+          target.scrollIntoView({ block: "center", inline: "nearest", behavior: "auto" });
+        }
 
         const rect = target.getBoundingClientRect();
         if (rect.width === 0 || rect.height === 0) {
@@ -6129,8 +6156,14 @@ if (e.button === 0 && !e.target.closest(".window-control-btn") && !e.target.clos
           current: String(currentTourStep + 1),
           total: String(total)
         });
-        titleEl.textContent = getTranslation(step.titleKey);
-        descEl.textContent = getTranslation(step.descKey);
+
+        const primaryEl = document.querySelector(step.targetSelector);
+        const isFallback = Boolean(step.altTitleKey && (!primaryEl || primaryEl.offsetParent === null));
+        const titleKey = isFallback ? step.altTitleKey : step.titleKey;
+        const descKey = isFallback ? step.altDescKey : step.descKey;
+
+        titleEl.textContent = getTranslation(titleKey);
+        descEl.textContent = getTranslation(descKey);
 
         btnPrev.style.display = currentTourStep === 0 ? "none" : "inline-flex";
         btnNext.textContent = currentTourStep === total - 1
@@ -6139,8 +6172,8 @@ if (e.button === 0 && !e.target.closest(".window-control-btn") && !e.target.clos
 
         renderSegments();
 
-        updateTourPosition();
-        setTimeout(updateTourPosition, 80);
+        updateTourPosition(true);
+        setTimeout(() => updateTourPosition(false), 60);
       }
 
       function startTour() {
@@ -6197,16 +6230,7 @@ if (e.button === 0 && !e.target.closest(".window-control-btn") && !e.target.clos
       if (mainContent) {
         mainContent.addEventListener("scroll", () => {
           if (isTourActive) {
-            const step = TOUR_STEPS[currentTourStep];
-            const target = document.querySelector(step.targetSelector);
-            if (target) {
-              const rect = target.getBoundingClientRect();
-              const padding = 6;
-              cutout.style.top = `${Math.round(Math.max(0, rect.top - padding))}px`;
-              cutout.style.left = `${Math.round(Math.max(0, rect.left - padding))}px`;
-              cutout.style.width = `${Math.round(rect.width + padding * 2)}px`;
-              cutout.style.height = `${Math.round(rect.height + padding * 2)}px`;
-            }
+            updateTourPosition(false);
           }
         }, { passive: true });
       }
@@ -6226,7 +6250,7 @@ if (e.button === 0 && !e.target.closest(".window-control-btn") && !e.target.clos
       });
 
       window.addEventListener("resize", () => {
-        if (isTourActive) updateTourPosition();
+        if (isTourActive) updateTourPosition(false);
       });
 
       return {
