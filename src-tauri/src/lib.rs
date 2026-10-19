@@ -1151,6 +1151,25 @@ fn is_silence_hallucination(text: &str) -> bool {
         return true;
     }
 
+    // Single-word or repeated filler loops like "ммммммммммм", "эмммммммммммммм", "hmmmmmm", "ummm"
+    if !normalized.is_empty() {
+        let no_spaces: String = normalized.chars().filter(|c| !c.is_whitespace()).collect();
+        if !no_spaces.is_empty() {
+            if no_spaces.chars().all(|c| c == 'м' || c == 'm') {
+                return true;
+            }
+            let mut chs = no_spaces.chars();
+            let is_filler_hallucination = match chs.next() {
+                Some('э') => chs.all(|c| c == 'м'),
+                Some('e') | Some('u') | Some('h') => chs.all(|c| c == 'm'),
+                _ => false,
+            };
+            if is_filler_hallucination {
+                return true;
+            }
+        }
+    }
+
     // Also catch repeated loops where the whole utterance consists solely of repeating an exact marker
     let norm_words: Vec<&str> = normalized.split_whitespace().collect();
     if norm_words.len() >= 2 {
@@ -6565,6 +6584,10 @@ mod tests {
         assert!(is_silence_hallucination("Mm, Mm."));
         assert!(is_silence_hallucination("S"));
         assert!(is_silence_hallucination("Мм"));
+        assert!(is_silence_hallucination("ммммммммммм"));
+        assert!(is_silence_hallucination("Эмммммммммммммммммммммммммммммм"));
+        assert!(is_silence_hallucination("hmmmmmm"));
+        assert!(is_silence_hallucination("Ummmmm"));
         assert!(is_silence_hallucination("Используйте, что это не так"));
         assert!(is_silence_hallucination("Используйтесь, что это не так"));
         assert!(is_silence_hallucination("Убедитесь, что это не так"));
