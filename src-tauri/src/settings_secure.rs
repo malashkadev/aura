@@ -148,7 +148,7 @@ impl Default for Settings {
     fn default() -> Self {
         Self {
             ui_language: default_ui_language(),
-            transcription_mode: "cloud".to_string(),
+            transcription_mode: "local".to_string(),
             api_provider: "gemini".to_string(),
             api_key: String::new(),
             api_key_gemini: String::new(),
@@ -711,6 +711,7 @@ mod tests {
     #[test]
     fn defaults_are_private_and_safe() {
         let settings = Settings::default();
+        assert_eq!(settings.transcription_mode, "local");
         assert!(!settings.copy_context_on_start);
         assert_eq!(settings.local_acceleration, "cpu");
         assert!(!settings.log_speech_text);
