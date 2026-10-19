@@ -77,15 +77,17 @@ if (errStart !== -1) {
   }
 }
 
-console.log("=== CHECKING LIB.RS TRAY TRANSLATIONS ===");
-const libRs = read("src-tauri/src/lib.rs");
-const trayTransMatch = libRs.match(/fn tray_translations\(language: &str\)[^{]*\{([\s\S]*?)\n\}/);
-if (trayTransMatch) {
-  const branches = [...trayTransMatch[1].matchAll(/"([a-z]{2})"\s*=>/g)].map(m => m[1]);
-  console.log("lib.rs tray_translations language branches:", branches);
+console.log("=== CHECKING TRAY MENU TRANSLATIONS ===");
+const trayMenuJs = read("src/tray-menu.js");
+const trayDictMatch = trayMenuJs.match(/const I18N = \{([\s\S]*?)\n\};/);
+if (!trayDictMatch) {
+  console.warn("[WARN] src/tray-menu.js: `const I18N = { ... }` dictionary not found");
+} else {
+  const branches = [...trayDictMatch[1].matchAll(/^ {2}([a-z]{2}):\s*\{/gm)].map((m) => m[1]);
+  console.log("tray-menu.js UI languages:", branches);
   for (const loc of expectedLocales) {
     if (!branches.includes(loc)) {
-      console.warn(`[WARN] lib.rs tray_translations missing branch for '${loc}'`);
+      console.warn(`[WARN] tray-menu.js I18N missing locale '${loc}'`);
     }
   }
 }

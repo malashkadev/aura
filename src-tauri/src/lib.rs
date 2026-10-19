@@ -715,11 +715,13 @@ fn get_engine_health(app_handle: tauri::AppHandle) -> EngineHealth {
     let settings = settings::load_settings(&app_handle).unwrap_or_default();
     let (gaming_mode, whisper_starting, parakeet_starting) = app_handle
         .try_state::<AppState>()
-        .map(|s| (
-            s.gaming_mode_active.load(Ordering::Acquire),
-            s.whisper_starting.load(Ordering::Acquire),
-            s.parakeet_starting.load(Ordering::Acquire),
-        ))
+        .map(|s| {
+            (
+                s.gaming_mode_active.load(Ordering::Acquire),
+                s.whisper_starting.load(Ordering::Acquire),
+                s.parakeet_starting.load(Ordering::Acquire),
+            )
+        })
         .unwrap_or((false, false, false));
 
     if settings.local_engine == "whisper" {
@@ -1173,7 +1175,11 @@ fn is_silence_hallucination(text: &str) -> bool {
             let mut chs = no_spaces.chars();
             let is_filler_hallucination = match chs.next() {
                 Some('э') => chs.all(|c| c == 'м'),
-                Some('e') | Some('u') | Some('h') => chs.all(|c| c == 'm'),
+                // Latin fillers require at least three characters so real
+                // two-letter words ("um", "em" in German/Portuguese) survive.
+                Some('e') | Some('u') | Some('h') => {
+                    no_spaces.chars().count() >= 3 && chs.all(|c| c == 'm')
+                }
                 _ => false,
             };
             if is_filler_hallucination {
@@ -4544,6 +4550,10 @@ async fn finalize_recording(app_handle: tauri::AppHandle) {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    crate::logger::init_early();
+    crate::logger::install_panic_hook();
+    crate::logger::log_startup();
+
     let application = tauri::Builder::default()
         .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
             // A second instance just focuses the settings window of the first one
@@ -6635,6 +6645,8 @@ mod tests {
         assert!(is_silence_hallucination("Эмммммммммммммммммммммммммммммм"));
         assert!(is_silence_hallucination("hmmmmmm"));
         assert!(is_silence_hallucination("Ummmmm"));
+        assert!(!is_silence_hallucination("em"));
+        assert!(!is_silence_hallucination("um"));
         assert!(is_silence_hallucination("Используйте, что это не так"));
         assert!(is_silence_hallucination("Используйтесь, что это не так"));
         assert!(is_silence_hallucination("Убедитесь, что это не так"));

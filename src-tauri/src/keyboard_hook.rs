@@ -688,13 +688,11 @@ mod windows_impl {
                 // key-up clears the shortcut state; disarming an Alt/Win OS
                 // action still needs to happen while that modifier is released.
                 if is_up {
-                    let target_still_held = target_key_still_held(
-                        KEY_SUPPRESSED.load(Ordering::SeqCst),
-                        {
+                    let target_still_held =
+                        target_key_still_held(KEY_SUPPRESSED.load(Ordering::SeqCst), {
                             let state = GetAsyncKeyState(key_vk as i32);
                             (state as u16 & 0x8000) != 0
-                        },
-                    );
+                        });
                     if target_still_held {
                         crate::logger::log(
                             "INFO",

@@ -1,6 +1,6 @@
-# SourceForge Publication Kit — Aura v1.1.0
+# SourceForge Publication Kit — Aura v1.2.0
 
-Этот документ содержит все готовые тексты, метаданные и инструкции для публикации релиза **Aura v1.1.0** на платформе [SourceForge](https://sourceforge.net/projects/aura-voice-typing/).
+Этот документ содержит все готовые тексты, метаданные и инструкции для публикации релиза **Aura v1.2.0** на платформе [SourceForge](https://sourceforge.net/projects/aura-voice-typing/).
 
 ---
 
@@ -50,7 +50,7 @@ Unlike proprietary dictation software that locks you into paid subscriptions and
 
 - **Optional Cloud AI Providers**:
   - Connect your own API keys to Google Gemini (multimodal 3.8 & 3.6 Flash), Groq (Whisper Large v3), OpenAI (Whisper-1), Hugging Face, or any custom OpenAI-compatible server URL.
-  - Secondary contextual text editing and rewriting on selected text with a visual AI sparkle badge.
+  - Contextual text editing on selected text (translate / fix grammar) with an amber contour highlight around the target field.
 
 - **Gaming Mode (DirectX & Vulkan)**:
   - Automatically detects fullscreen 3D games, pauses the low-level keyboard hook (`HOOK_PAUSED`) to ensure zero input lag, and unloads resident speech models to free 100% of GPU VRAM for maximum gaming FPS.
@@ -71,7 +71,7 @@ Unlike proprietary dictation software that locks you into paid subscriptions and
 
 - **Polished User Experience**:
   - **6-Tab Modern Settings**: General, Speech, Text, Hotkeys, History, and About.
-  - **High-DPI Custom Tray Menu**: Per-monitor DPI scaling, drill-down navigation, engine switching, and 11 recognition languages.
+  - **High-DPI Custom Tray Menu**: Per-monitor DPI scaling, drill-down navigation, engine switching, and 10 recognition languages with auto-detect and keyboard-layout modes.
   - **300-Item Encrypted History**: Encrypted locally via Windows DPAPI (`CryptProtectData`), organized by day («Today», «Yesterday», calendar dates) with instant search and source filtering.
   - **6 Procedural Audio Themes**: Web Audio synthesized feedback sounds (Zen, Rhodes, Sci-Fi, Classic Bell, Water Drop, Haptic Click) with adjustable volume.
   - **Full 9-Language Localization**: English, Russian, German, Spanish, French, Italian, Chinese, Portuguese, and Turkish.
@@ -133,8 +133,8 @@ Unlike proprietary dictation software that locks you into paid subscriptions and
 
 ## 6. Release File Details (Параметры файла для загрузки в раздел Files)
 
-- **Folder Path:** `/Aura 1.1.0/` (или `/v1.1.0/`)
-- **File Name:** `Aura_1.1.0_x64-setup.exe`
+- **Folder Path:** `/Aura 1.2.0/` (или `/v1.2.0/`)
+- **File Name:** `Aura_1.2.0_x64-setup.exe`
 - **File Size:** `23 449 392` bytes (22.36 MB)
 - **SHA-256 Checksum:** `40400126D30931E552C8E30CE050C6DEF52BFE7EF3123A82AFDDFDA66F8F3534`
 - **Default Download Setting:** После загрузки файла нажать на иконку `(i)` рядом с файлом и выбрать чекбокс **"Default download for: Windows"**.

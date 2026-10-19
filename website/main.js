@@ -2,7 +2,7 @@
  * AURA — Interactive Website Core Script
  * Features:
  * - Live Dictation Typing Simulator (Original Replica with realistic overlay pill)
- * - 5-Tab Settings Showcase (Interactive Tabs, Mic Test, Hardware/Engine Pickers, Live History Search)
+ * - 6-Tab Settings Showcase (Interactive Tabs, Mic Test, Hardware/Engine Pickers, Live History Search)
  * - Engine Matrix Tab Switcher & Benchmark Progress Fill
  * - Pure Acoustic Tensor Waves (High-Performance Autonomous FBM WebGL Shader with Organic Hero Mask, Zero Mouse Ripple)
  * - Hero ↔ How-it-Works Kinetic Snap Transition (Instant 0ms-Latency Response, Bidirectional Wheel/Touch/Keyboard, Auto-Hiding Indicator)
@@ -515,7 +515,7 @@ function initInterfaceShowcase() {
       btnUpdates.disabled = true;
 
       setTimeout(() => {
-        btnUpdates.textContent = currentLangRu ? '✓ Актуальная версия v1.1.2' : '✓ Aura is up to date (v1.1.2)';
+        btnUpdates.textContent = currentLangRu ? '✓ Актуальная версия v1.2.0' : '✓ Aura is up to date (v1.2.0)';
         setTimeout(() => {
           btnUpdates.textContent = originalText;
           btnUpdates.disabled = false;
@@ -530,7 +530,7 @@ function initInterfaceShowcase() {
     btnDiag.addEventListener('click', async () => {
       const currentLangRu = (document.documentElement.lang || 'ru') === 'ru';
       const originalText = btnDiag.textContent;
-      const report = `Aura System Diagnostic Report\nVersion: 1.1.2 (x64)\nOS: Windows 10/11 x64\nEngine: Whisper.cpp / NVIDIA Parakeet (CUDA Active)\nVRAM: NVIDIA GeForce RTX (Detected)\nDPAPI Storage: Encrypted\nStatus: Nominal (Ready)`;
+      const report = `Aura System Diagnostic Report\nVersion: 1.2.0 (x64)\nOS: Windows 10/11 x64\nEngine: Whisper.cpp / NVIDIA Parakeet (CUDA Active)\nVRAM: NVIDIA GeForce RTX (Detected)\nDPAPI Storage: Encrypted\nStatus: Nominal (Ready)`;
       try {
         await navigator.clipboard.writeText(report);
       } catch (err) {}

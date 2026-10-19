@@ -1,0 +1,24 @@
+# yaml-language-server: $schema=https://aka.ms/winget-manifest.installer.1.6.0.schema.json
+
+PackageIdentifier: Malashka.Aura
+PackageVersion: 1.2.0
+Platform:
+  - Windows.Desktop
+MinimumOSVersion: 10.0.17763.0
+InstallerType: nullsoft
+Scope: user
+InstallModes:
+  - silent
+  - silentWithProgress
+  - interactive
+InstallerSwitches:
+  Silent: /S
+  SilentWithProgress: /S
+UpgradeBehavior: install
+ReleaseDate: '2026-10-18'
+Installers:
+  - Architecture: x64
+    InstallerUrl: https://github.com/malashkadev/aura/releases/download/v1.2.0/Aura_1.2.0_x64-setup.exe
+    InstallerSha256: 5DB3D802549CF1D15177B4CA8969A2F6D81AF68BCE90DDF5DBDE6A6241524BCC
+ManifestType: installer
+ManifestVersion: 1.6.0

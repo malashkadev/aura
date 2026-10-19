@@ -5,6 +5,20 @@ The format follows [Keep a Changelog](https://keepachangelog.com/), versions fol
 
 ## [1.2.0] — 2026-10-18
 
+_Audit follow-up pass added on 2026-10-19._
+
+### Added
+- **Cursor Marker in Text Replacements (`|`)**: a `|` inside a replacement or snippet sets the final caret position after insertion (e.g. `Здравствуйте, |!`); the first marker wins, later pipes stay literal. Implemented in the shared normalizer (`text_normalizer.rs`), applied to live dictation, history reprocessing and paste/streaming paths, with a dedicated hint in all 9 UI locales.
+- **Native Win32 Caret-Context Fast Path (`caret_context.rs`)**: classic `Edit`, RichEdit and Scintilla controls are read through `EM_GETSEL`/`WM_GETTEXT` (password fields excluded, 32k/256k length guards, 10 ms message timeout) with the previous UI Automation path kept as fallback.
+- **Windows Session Lock/Unlock Hotkey Recovery (`keyboard_hook.rs`)**: a message-only window with `WTSRegisterSessionNotification` clears stale hotkey latches after lock/unlock or hook pause, so the hotkey cannot stay "stuck" after a locked session.
+- **Early Startup Logging & Panic Hook (`logger.rs`)**: diagnostics logging now starts before the Tauri builder (pid/cwd/args) and a panic hook records panics that happen before window creation.
+- **Engine Health "Starting" State (`lib.rs`, `main.js`)**: `get_engine_health` reports a `starting` flag and the first local dictation briefly waits for the resident Whisper prewarm instead of failing.
+
+### Changed
+- **Local speech recognition is now the out-of-the-box default**: `transcription_mode` defaults to `local` with the local engine radio preselected (`settings_secure.rs`); cloud AI remains an opt-in.
+- **Supported Commands guide redesigned**: balanced two-column chip layout; voice editing is documented as the 2 active commands (translate / fix grammar) across all locales and the HTML fallback.
+- **Onboarding tour narrative updated**: explains the local-first default, dictionary/replacements and the `|` marker, with a dedicated alternate narrative for modes where the language card is hidden.
+
 ### Fixed
 - **UTF-8 Slicing Panic in Normalizer (`text_normalizer.rs`)**: Fixed byte boundary slicing panic (`FAULT-01`) when speech hallucination prefixes contain 3-byte UTF-8 em-dashes (`—`). Made subtitle prefix case-insensitive search fully Unicode-safe.
 - **Latent Multi-byte Ellipsis Slicing Panic (`text_normalizer.rs`)**: Fixed byte boundary slicing panic (`FAULT-02`) on multi-byte horizontal ellipsis `…` in sentence repetition pruning (`prune_trailing_repeated_sentences`).
@@ -22,6 +36,11 @@ The format follows [Keep a Changelog](https://keepachangelog.com/), versions fol
 - **Automated CI Integrity Audit Suite (`ci.yml` & `package.json`)**: Added `npm run audit` running all 10 static audit scripts directly in CI workflows (`INFRA-03`).
 - **Third-Party License Attributions (`THIRD_PARTY_NOTICES.md`)**: Added license notices for `whisper.cpp`, `sherpa-onnx`, and `SDL2`.
 - **Dynamic Portable Script Versioning (`scripts/build-portable.ps1`)**: Switched hardcoded version to dynamic reading from `package.json` (`INFRA-04`).
+- **Hotkey Auto-Repeat Leak (`keyboard_hook.rs`)**: session finalization is deferred until the target key is released (a `KEY_SUPPRESSED` latch covers keys swallowed by the hook), so held-key auto-repeat can no longer start or stop a session spuriously in toggle or hold mode.
+- **Filler-Loop Silence Hallucinations (`lib.rs`)**: repeated filler loops (`мммммм`, `эмммммм`, `hmmmmm`) are now classified as silence; two-letter real words (`em`, `um` in German/Portuguese) are preserved.
+- **Tour Spotlight Fallback (`main.js`)**: the onboarding cutout no longer jumps to the top-left corner and now prefers the step-declared alternate card (`#card-replacements`) instead of the first visible card when the primary target is hidden.
+- **Engine Health Chip Synchronization (`lib.rs`, `main.js`)**: the chip is driven by the backend `starting` flag instead of a frontend timer, eliminating a "starting…" ghost state and matching the resident server boot.
+- **Installer Launch After Installation (`nsis/installer.nsi`)**: finish-page launch and `/R` restart now use `nsis_tauri_utils::RunAsUser` (never elevated) with a one-shot `FindProcessCurrentUser` check and retry, fixing "Aura did not start after installation" reports.
 
 ## [1.1.2] — 2026-10-11
 

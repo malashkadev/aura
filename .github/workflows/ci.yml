@@ -50,6 +50,15 @@ jobs:
           rustup toolchain install 1.96.0 --profile minimal --component rustfmt,clippy
           rustup override set 1.96.0
 
+      - name: Verify workspace is clean
+        # CI and release builds must run on exactly the committed tree; the
+        # release workflow does not run the static audit suite, so a dirty
+        # checkout here means the published installer was not verified.
+        run: |
+          git diff --exit-code
+          git diff --cached --exit-code
+          if (git ls-files --others --exclude-standard | Select-String .) { throw "Untracked files present" }
+
       - name: Check Rust formatting
         run: cargo fmt --manifest-path src-tauri/Cargo.toml -- --check
 

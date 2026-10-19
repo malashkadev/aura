@@ -110,9 +110,9 @@
             <div class="mic-meter-header">
               <div class="mic-meter-title-wrap">
                 <h2 class="card-title" data-i18n="mic_meter_title">Проверка микрофона</h2>
-                <p class="card-desc" data-i18n="mic_meter_desc">Проверьте уровень входного сигнала и детекцию речи в реальном времени.</p>
+                <p class="card-desc" data-i18n="mic_meter_desc">Проверьте уровень входящего сигнала и распознавание голоса в реальном времени.</p>
               </div>
-              <button type="button" class="btn btn-secondary btn-mic-test" id="btn-toggle-mic-meter" data-i18n="mic_meter_test_btn_start">Запустить тест</button>
+              <button type="button" class="btn btn-secondary btn-mic-test" id="btn-toggle-mic-meter" data-i18n="mic_meter_test_btn_start">Начать тест</button>
             </div>
             <div class="form-group" style="margin-top: 12px; margin-bottom: 12px;">
               <label for="select-audio-device" class="field-label" data-i18n="audio_device_label">Микрофон (устройство ввода)</label>
@@ -235,8 +235,8 @@
                 <div class="model-card" data-gpu="cpu" role="radio" aria-checked="true" tabindex="0">
                   <div class="model-card-main">
                     <div class="model-card-info">
-                      <span class="model-name" data-i18n="gpu_accel_cpu_title">CPU (Без ускорения)</span>
-                      <span class="model-meta" data-i18n="gpu_accel_cpu_desc">Стандартный режим. Безопасен, но нагружает процессор (CPU).</span>
+                      <span class="model-name" data-i18n="gpu_accel_cpu_title">CPU (без ускорения)</span>
+                      <span class="model-meta" data-i18n="gpu_accel_cpu_desc">Стандартный режим. Надёжен, но нагружает процессор.</span>
                     </div>
                     <div class="model-card-action" id="action-gpu-cpu">
                       <span class="status-ready-badge" data-i18n-title="model_status_ready" title="Установлено" aria-label="Установлено">
@@ -249,8 +249,8 @@
                 <div class="model-card" data-gpu="cuda" role="radio" aria-checked="false" tabindex="0">
                   <div class="model-card-main">
                     <div class="model-card-info">
-                      <span class="model-name" data-i18n="gpu_accel_cuda_title">NVIDIA CUDA (Макс. скорость)</span>
-                      <span class="model-meta" data-i18n="gpu_accel_cuda_desc">Для видеокарт GeForce. Задействует видеопамять (VRAM) для мгновенного отклика без нагрузки на процессор.</span>
+                      <span class="model-name" data-i18n="gpu_accel_cuda_title">NVIDIA CUDA (максимальная скорость)</span>
+                      <span class="model-meta" data-i18n="gpu_accel_cuda_desc">Для видеокарт GeForce RTX/GTX. Использует тензорные ядра.</span>
                     </div>
                     <div class="model-card-action" id="action-gpu-cuda"></div>
                   </div>
@@ -284,7 +284,7 @@
                   <div class="model-card-main">
                     <div class="model-card-info">
                       <span class="model-name">Base</span>
-                      <span class="model-meta" data-i18n="model_meta_base">~145 МБ — базовая легковесная (для слабых CPU)</span>
+                      <span class="model-meta" data-i18n="model_meta_base">~145 МБ — рекомендуемая</span>
                     </div>
                     <div class="model-card-action" id="action-base"></div>
                   </div>
@@ -326,7 +326,7 @@
                   <div class="model-card-main">
                     <div class="model-card-info">
                       <span class="model-name">Large v3 Turbo (Q5)</span>
-                      <span class="model-meta" data-i18n="model_meta_turbo_q5">~550 МБ — рекомендуемая (макс. точность, оптимизирована для GPU)</span>
+                      <span class="model-meta" data-i18n="model_meta_turbo_q5">~550 МБ — почти как Turbo, вдвое легче</span>
                     </div>
                     <div class="model-card-action" id="action-large-v3-turbo-q5_0"></div>
                   </div>
@@ -340,7 +340,7 @@
                   <div class="model-card-main">
                     <div class="model-card-info">
                       <span class="model-name">Large v3 Turbo</span>
-                      <span class="model-meta" data-i18n="model_meta_turbo">~1.6 ГБ — максимальная точность для RU/EN (без квантования)</span>
+                      <span class="model-meta" data-i18n="model_meta_turbo">~1.6 ГБ — лучшая точность для RU/EN</span>
                     </div>
                     <div class="model-card-action" id="action-large-v3-turbo"></div>
                   </div>
@@ -458,11 +458,9 @@
               <span class="toggle-track">
                 <span class="toggle-thumb"></span>
               </span>
-              <span class="toggle-label" data-i18n="streaming_checkbox">Потоковый ввод в реальном времени</span>
+              <span class="toggle-label" data-i18n="streaming_checkbox">Потоковый ввод в реальном времени (экспериментальный)</span>
             </label>
-            <p class="switch-desc" data-i18n="streaming_subdesc">
-              Текст вставляется по мере речи и автоматически корректируется при отпускании клавиши. Если выключено — вставляется целиком после записи.
-            </p>
+            <p class="switch-desc" data-i18n="streaming_subdesc">Если выключено: текст вставится целиком только после того, как вы отпустите клавиши.</p>
           </div>
 
           <div class="card" id="card-vocabulary">
@@ -522,7 +520,7 @@
 
           <div class="card" id="card-selection-edit">
             <h2 class="card-title" data-i18n="copy_context_title">Редактирование выделенного текста</h2>
-            <p class="card-desc" data-i18n="copy_context_desc">Голосовые команды над выделенным текстом: «переведи», «исправь ошибки». Обычная диктовка вставляется без изменений. Примечание: программа отправляет Ctrl+C для захвата контекста, отключите при работе в терминале.</p>
+            <p class="card-desc" data-i18n="copy_context_desc">Если включено, Aura отправляет Ctrl+C и передаёт выделенный текст провайдеру или локальной модели как контекст для команды редактирования. Отключите эту функцию при работе в терминале.</p>
             <label class="toggle-switch">
               <input type="checkbox" id="checkbox-selection-edit-enabled" />
               <span class="toggle-track">
@@ -570,7 +568,7 @@
                     </select>
                     <div class="select-panel" id="select-panel-ai-edit-mode" role="listbox"></div>
                   </div>
-                  <p class="switch-desc" data-i18n="ai_edit_mode_sub">Авто использует локальную модель при наличии, иначе облачный сервис.</p>
+                  <p class="switch-desc" data-i18n="ai_edit_mode_sub">Авто использует локальную модель, если она установлена, иначе облачный провайдер. Для команд над выделением включите «Разрешить захват выделения и команды редактирования».</p>
                 </div>
 
               <div class="form-group" id="group-llm-models">
@@ -630,7 +628,7 @@
                   </select>
                   <div class="select-panel" id="select-panel-edit-cloud-provider" role="listbox"></div>
                 </div>
-                <p class="switch-desc" id="desc-edit-cloud-provider" data-i18n="edit_cloud_provider_sub">Модель, выполняющая команды перевода и исправления текста.</p>
+                <p class="switch-desc" id="desc-edit-cloud-provider" data-i18n="edit_cloud_provider_sub">Модель, выполняющая команды перевода и исправления грамматики текста.</p>
 
                 <div class="form-group" id="edit-custom-provider-url-group" style="display: none; margin-top: 8px;">
                   <label for="input-edit-custom-url" class="field-label" data-i18n="api_custom_url">Адрес API сервера</label>
@@ -687,8 +685,8 @@
           </div>
 
           <div class="card" id="card-overlay-timer">
-            <h2 class="card-title" data-i18n="overlay_timer_title">Таймер и статус в оверлее</h2>
-            <p class="card-desc" data-i18n="overlay_timer_desc">Отображать счетчик времени и статус обработки под индикатором речи. Ошибки будут видны всегда.</p>
+            <h2 class="card-title" data-i18n="overlay_timer_title">Таймер и статус оверлея</h2>
+            <p class="card-desc" data-i18n="overlay_timer_desc">Отображать счетчик времени и статус обработки под индикатором голоса. Ошибки отображаются всегда.</p>
             <label class="toggle-switch">
               <input type="checkbox" id="checkbox-overlay-show-timer" checked />
               <span class="toggle-track"><span class="toggle-thumb"></span></span>
@@ -887,11 +885,11 @@
 
           <div class="card">
             <h2 class="card-title" data-i18n="diag_title">Диагностика</h2>
-            <p class="card-desc" data-i18n="diag_speech_text_desc">Сохранять точный текст распознанной речи в диагностические логи.</p>
+            <p class="card-desc" data-i18n="diag_speech_text_desc">Сохранять точный текст распознанной речи в диагностические логи. По умолчанию выключено для приватности.</p>
             <label class="toggle-switch">
               <input type="checkbox" id="setting-log-speech-text" />
               <span class="toggle-track"><span class="toggle-thumb"></span></span>
-              <span class="toggle-label" data-i18n="diag_speech_text_title">Логирование текста речи</span>
+              <span class="toggle-label" data-i18n="diag_speech_text_title">Логирование текста речи (режим разработчика)</span>
             </label>
             <button type="button" class="btn btn-secondary" id="btn-copy-diagnostics" data-i18n="btn_copy_diagnostics">Скопировать отчет диагностики</button>
           </div>

@@ -1,7 +1,7 @@
 use std::fs::{self, File, OpenOptions};
 use std::io::{BufRead, BufReader, Write};
 use std::path::{Path, PathBuf};
-use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::mpsc::{self, SyncSender, TrySendError};
 use std::sync::Mutex;
 use std::thread;
@@ -11,10 +11,12 @@ use tauri::Manager;
 pub const MAX_LOG_SIZE: u64 = 10 * 1024 * 1024; // 10 MB
 pub const LOG_FILE_NAME: &str = "aura_diagnostics.log";
 const LOGGER_QUEUE_CAPACITY: usize = 2_048;
+const EARLY_LOG_IDENTIFIER: &str = "com.aura.app";
 
 static LOGGER_TX: Mutex<Option<SyncSender<String>>> = Mutex::new(None);
 static DROPPED_LOG_LINES: AtomicU64 = AtomicU64::new(0);
 static LOGGER_DIR: Mutex<Option<PathBuf>> = Mutex::new(None);
+static INITIALIZED: AtomicBool = AtomicBool::new(false);
 
 pub fn anonymize_speech(text: &str, log_speech_text: bool) -> String {
     if log_speech_text {
@@ -31,7 +33,12 @@ pub fn format_session_tag(session_id: u64) -> String {
 }
 
 pub fn init(log_dir: PathBuf) {
+    if INITIALIZED.swap(true, Ordering::SeqCst) {
+        return;
+    }
+
     if let Err(e) = fs::create_dir_all(&log_dir) {
+        INITIALIZED.store(false, Ordering::SeqCst);
         eprintln!("[LOGGER ERROR] Failed to create log directory: {}", e);
         return;
     }
@@ -56,6 +63,68 @@ pub fn init(log_dir: PathBuf) {
     }
     if let Ok(mut lock) = LOGGER_DIR.lock() {
         *lock = Some(log_dir);
+    }
+}
+
+fn early_log_dir() -> Option<PathBuf> {
+    std::env::var_os("LOCALAPPDATA")
+        .map(|base| PathBuf::from(base).join(EARLY_LOG_IDENTIFIER).join("logs"))
+}
+
+pub fn init_early() {
+    if let Some(log_dir) = early_log_dir() {
+        init(log_dir);
+    }
+}
+
+pub fn log_startup() {
+    let args: Vec<String> = std::env::args().collect();
+    let cwd = std::env::current_dir()
+        .map(|path| path.display().to_string())
+        .unwrap_or_default();
+    log(
+        "INFO",
+        "App",
+        None,
+        &format!(
+            "Aura process starting (pid={}, cwd={}, args={:?})",
+            std::process::id(),
+            cwd,
+            args
+        ),
+    );
+}
+
+pub fn install_panic_hook() {
+    std::panic::set_hook(Box::new(|info| {
+        log_panic_sync(&info.to_string());
+    }));
+}
+
+pub fn log_panic_sync(message: &str) {
+    let line = format!(
+        "{} [ERROR] [Panic] {}",
+        format_timestamp(SystemTime::now()),
+        message
+    );
+    eprintln!("{}", line);
+
+    let log_dir = LOGGER_DIR
+        .try_lock()
+        .ok()
+        .and_then(|dir| dir.as_ref().cloned())
+        .or_else(early_log_dir);
+    let Some(log_dir) = log_dir else {
+        return;
+    };
+
+    let _ = fs::create_dir_all(&log_dir);
+    if let Ok(mut file) = OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(log_dir.join(LOG_FILE_NAME))
+    {
+        let _ = writeln!(file, "{}", line);
     }
 }
 
@@ -458,6 +527,16 @@ mod tests {
     use super::*;
     use std::fs;
     use std::time::{SystemTime, UNIX_EPOCH};
+
+    #[test]
+    fn early_log_identifier_matches_tauri_config() {
+        let config = include_str!("../tauri.conf.json");
+        let expected = format!("\"identifier\": \"{}\"", EARLY_LOG_IDENTIFIER);
+        assert!(
+            config.contains(&expected),
+            "EARLY_LOG_IDENTIFIER must stay in sync with tauri.conf.json ({expected})"
+        );
+    }
 
     #[test]
     fn test_anonymize_speech() {

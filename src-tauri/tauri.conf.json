@@ -90,6 +90,7 @@
     ],
     "windows": {
       "nsis": {
+        "template": "nsis/installer.nsi",
         "sidebarImage": "icons/nsis-sidebar.bmp",
         "installerIcon": "icons/icon.ico",
         "languages": ["Russian", "English"],

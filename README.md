@@ -39,7 +39,7 @@ Press and hold the hotkey, speak, and release — Aura instantly transcribes you
 - **Idle VRAM Standby (Sleep)** — configurable standby timer (15, 30, 60 minutes) to free GPU memory without closing Aura.
 - **Real-time streaming input** — smooth word-level streaming into active fields without flickering or text duplicates (NVIDIA Parakeet).
 - **Text Replacements & Dynamic Macros** — local rules for instant text expansion into snippets, email addresses, or live date/time tokens (`{date}`, `{date_ru}`, `{time}`, `{datetime}`). A `|` marker in a template sets the final cursor position (e.g. `Hello, |!`).
-- **Focus Guard & Context Editing** — ensures transcribed text is never typed into the wrong window if focus shifts (with safe clipboard handoff), and provides 1-click text editing on selected text with a visual AI sparkle indicator.
+- **Focus Guard & Context Editing** — ensures transcribed text is never typed into the wrong window if focus shifts (with safe clipboard handoff), and provides 1-click text editing on selected text with an amber contour highlight around the target field.
 - **Audio device selection, WASAPI Hotplug & Tail Hold** — choose physical microphone input devices with dynamic device hotplugging, 450ms tail grace buffer, and non-destructive Silero VAD silence trimming.
 - **Transcription history with day grouping** — up to 300 encrypted dictations (DPAPI) with day grouping (Today / Yesterday / calendar dates), live search, and source filters.
 - **Custom dictionary** — bias recognition towards your names, brands, and technical terms.
@@ -127,18 +127,16 @@ cargo test
 - **Secure local storage** — API keys and transcription history are encrypted using **Windows DPAPI** (`CryptProtectData`) with file access restricted to the current user and SYSTEM via ACL.
 - **Update checks** run only on demand or when explicitly enabled in settings.
 
-## What's new in v1.1.0
+## What's new in v1.2.0
 
-- **Gaming Mode** — automatic detection of 3D games and graphics APIs (DirectX / Vulkan) with safe suspension of the low-level keyboard hook and model memory unloading to maintain 100% FPS in games, plus manual tray toggle.
-- **Idle VRAM Standby (Sleep)** — automatic model unloading from dedicated GPU memory when idle for 15, 30, or 60 minutes, with instant reload on next activation.
-- **Local Text Replacements & Dynamic Macros** — custom expansion rules to replace spoken triggers with text snippets, email addresses, or live date/time tokens (`{date}`, `{date_ru}`, `{time}`, `{datetime}`). A `|` marker in a template sets the final cursor position (e.g. `Hello, |!`).
-- **Native High-DPI Tray Menu** — custom WebView2 tray window with per-monitor DPI awareness and multi-monitor cursor placement, featuring instant gaming mode toggle.
-- **Dynamic Microphone Hotplug (WASAPI)** — real-time detection and graceful reconnection when headsets or USB microphones are plugged or unplugged.
-- **300-Item Encrypted History** — day grouping (Today / Yesterday), live search, source filtering, and DPAPI encryption.
-- **450ms Grace Buffer (Tail Hold)** — expanded post-release tail hold buffer and non-destructive Silero VAD to eliminate clipped word and sentence endings.
-- **New Sound Themes** — added "Bubble" (water droplet) and "Haptic" (mechanical tactile switch) sound themes alongside Zen, Rhodes, Sci-Fi, and Classic Bell.
-- **Windows Package Manager Support** — install and update via one command: `winget install Malashka.Aura`.
-
+- **Local recognition is now the default** — out of the box Aura transcribes with the resident Whisper/Parakeet engine on CPU or NVIDIA CUDA; cloud AI remains an opt-in.
+- **Cursor marker in replacements** — place `|` in a template to control the final caret position (e.g. `Hello, |!`).
+- **Smarter caret-context capture** — a native Win32 fast path for standard edit controls, with UI Automation as a fallback; password fields are skipped.
+- **Locked-session recovery** — the global hotkey no longer stays stuck after a Windows lock/unlock cycle.
+- **Hotkey auto-repeat fix** — holding the toggle hotkey can no longer start or stop a session repeatedly.
+- **Filler-loop filtering** — `ммммм` / `hmmmm` silence hallucinations are discarded while real short words survive.
+- **Redesigned Commands Guide** — a cleaner two-column reference for the active voice-editing commands.
+- **Installer reliability** — Aura launches de-elevated after installation, with a one-shot retry if the first start is missed.
 ## Roadmap
 
 - **macOS support** — native port (global hotkeys via `CGEventTap`, CoreAudio capture) is in the codebase and **compiles in CI**. Remaining items: macOS whisper binary, `.app` bundle, Accessibility-permission flow, and hardware testing.
