@@ -142,7 +142,7 @@
 
 | Артефакт | Путь | Размер | SHA-256 |
 |---|---|---:|---|
-| NSIS (публикуемый) | `src-tauri/target/release/bundle/nsis/Aura_1.2.0_x64-setup.exe` | **23 771 349** байт (22,67 МБ) | `3FFA25C6F8FF98D662EE83CEC7D83B0B73891678E756569BA9266D2C90106D0B` |
+| NSIS (публикуемый) | `src-tauri/target/release/bundle/nsis/Aura_1.2.0_x64-setup.exe` | **23 777 637** байт (22,68 МБ) | `104087EABBF1DBED2C4AB2503D8E16B9DC0C51A15A57E1B114019DC12D907554` |
 | MSI (локальный) | `src-tauri/target/release/bundle/msi/Aura_1.2.0_x64_en-US.msi` | **44 449 792** байта | `5CE1A8313AC9657652238DECF399475AABB74FEA1717701D48E969DC38EA900F` |
 
 В `release-manifest-1.2.0.json` публикуется только NSIS; MSI остаётся локальным артефактом.
@@ -169,11 +169,11 @@ A public key has been found, but no private key.
 
 Новый NSIS-хэш `7F1A7D41...E6E8` проставлен в:
 
-- `release-manifest-1.2.0.json` (`bytes: 23771349`, `sha256`);
+- `release-manifest-1.2.0.json` (`bytes: 23777637`, `sha256`);
 - `website/index.html` (checksum в модалке загрузки);
 - `website/index_ru.html` (checksum в модалке загрузки);
 - `winget/manifests/m/Malashka/Aura/1.2.0/Malashka.Aura.installer.yaml` (`InstallerSha256`);
-- `docs/SOURCEFORGE_PUBLICATION_KIT.md` (размер `23 771 349` байт / 22.67 MB и checksum).
+- `docs/SOURCEFORGE_PUBLICATION_KIT.md` (размер `23 777 637` байт / 22.68 MB и checksum).
 
 Старый хэш `BC50C4206AF57AE80CCA0C167E05EDC11A459411C0AE8F2934609397B0E29B2B` и старый размер `23 777 918` больше недействительны. Если они где-то встретятся — поверхность не синхронизирована.
 
@@ -191,8 +191,8 @@ A public key has been found, but no private key.
     {
       "kind": "nsis",
       "file": "Aura_1.2.0_x64-setup.exe",
-      "bytes": 23771349,
-      "sha256": "3FFA25C6F8FF98D662EE83CEC7D83B0B73891678E756569BA9266D2C90106D0B"
+      "bytes": 23777637,
+      "sha256": "104087EABBF1DBED2C4AB2503D8E16B9DC0C51A15A57E1B114019DC12D907554"
     }
   ]
 }
@@ -326,7 +326,7 @@ A public key has been found, but no private key.
 - NSIS-артефакт: `src-tauri/target/release/bundle/nsis/Aura_1.2.0_x64-setup.exe`.
 - MSI-артефакт: `src-tauri/target/release/bundle/msi/Aura_1.2.0_x64_en-US.msi`.
 - Копия для сайта: `website/Aura_1.2.0_x64-setup.exe`.
-- Актуальный SHA-256 NSIS: `3FFA25C6F8FF98D662EE83CEC7D83B0B73891678E756569BA9266D2C90106D0B`.
+- Актуальный SHA-256 NSIS: `104087EABBF1DBED2C4AB2503D8E16B9DC0C51A15A57E1B114019DC12D907554`.
 - Недействительный SHA-256 предыдущей сборки: `BC50C4206AF57AE80CCA0C167E05EDC11A459411C0AE8F2934609397B0E29B2B`.
 - Версия в `package.json` / `tauri.conf.json` / `Cargo.toml` — `1.2.0`.
 - Рабочая форма push (если пользователь разрешит): `git -c credential.helper= -c credential.helper="!gh auth git-credential" push origin main`.

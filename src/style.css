@@ -2456,9 +2456,9 @@ body {
 }
 
 .modal-actions .btn-secondary:hover {
-  background-color: hsla(0, 0%, 100%, 0.05);
-  border-color: var(--text-muted);
+  border-color: var(--accent-color);
   color: var(--text-primary);
+  background-color: hsla(0, 0%, 100%, 0.05);
 }
 
 .modal-actions .btn-primary {
