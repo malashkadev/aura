@@ -335,7 +335,8 @@ test("settings UI exposes native accessible controls and responsive motion-safe 
   assert.match(css, /\.select-panel-item\.is-focused/);
   assert.match(html, /class="first-run-heading"/);
   assert.match(css, /\.card-actions \.btn \{[\s\S]*?margin-top: 0/);
-  assert.match(css, /\.modal-actions \.btn-primary \{[\s\S]*?background-color: var\(--accent-color\)/);
+  assert.match(css, /\.modal-actions \.btn-primary \{[\s\S]*?border-color: var\(--accent-color\)/);
+  assert.match(css, /\.modal-actions \.btn-primary \{[\s\S]*?color: var\(--text-primary\)/);
   assert.doesNotMatch(css, /\.first-run-card \{\s*border-color/);
   assert.doesNotMatch(main, /select\.style\.display\s*=\s*"none"/);
   assert.doesNotMatch(main, /initCustomSelects/);

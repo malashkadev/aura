@@ -5391,7 +5391,6 @@ if (e.button === 0 && !e.target.closest(".window-control-btn") && !e.target.clos
   }
 
   const btnFirstRunDownload = document.getElementById("btn-first-run-download");
-  const btnFirstRunTest = document.getElementById("btn-first-run-test");
   if (btnFirstRunDownload) {
     btnFirstRunDownload.addEventListener("click", () => {
       const speechTab = document.getElementById("tab-btn-speech");
@@ -5401,22 +5400,6 @@ if (e.button === 0 && !e.target.closest(".window-control-btn") && !e.target.clos
         baseCard.scrollIntoView({ block: "center", behavior: "smooth" });
       }
       downloadModelCard("base");
-    });
-  }
-  if (btnFirstRunTest) {
-    btnFirstRunTest.addEventListener("click", () => {
-      const speechTab = document.getElementById("tab-btn-speech");
-      if (speechTab) activateTab(speechTab);
-      const micCard = document.getElementById("card-mic-meter");
-      if (micCard) {
-        micCard.scrollIntoView({ block: "center", behavior: "smooth" });
-      }
-      if (btnToggleMicMeter && !btnToggleMicMeter.classList.contains("active")) {
-        btnToggleMicMeter.click();
-      }
-      if (btnToggleMicMeter) {
-        btnToggleMicMeter.focus({ preventScroll: true });
-      }
     });
   }
 
