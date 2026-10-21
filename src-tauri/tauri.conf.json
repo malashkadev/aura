@@ -11,7 +11,7 @@
     "windows": [
       {
         "label": "main",
-        "title": "Настройки Aura",
+        "title": "Aura",
         "url": "index.html",
         "width": 880,
         "height": 620,

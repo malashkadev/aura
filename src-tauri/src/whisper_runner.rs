@@ -410,6 +410,12 @@ pub(crate) fn whisper_model_filename(model_name: &str) -> Result<String, String>
     whisper_artifact(model_name).map(|spec| spec.filename.to_string())
 }
 
+pub(crate) fn whisper_model_expected_size(model_name: &str) -> Option<u64> {
+    whisper_artifact(model_name)
+        .ok()
+        .map(|spec| spec.expected_size)
+}
+
 pub(crate) fn whisper_model_is_installed(model_name: &str, path: &Path) -> bool {
     let Ok(spec) = whisper_artifact(model_name) else {
         return false;
@@ -849,6 +855,10 @@ pub(crate) fn parakeet_model_is_installed(directory: &Path) -> bool {
             .map(|metadata| metadata.is_file() && metadata.len() == spec.expected_size)
             .unwrap_or(false)
     })
+}
+
+pub(crate) fn parakeet_artifact_sizes() -> [(&'static str, u64); 4] {
+    PARAKEET_ARTIFACTS.map(|spec| (spec.filename, spec.expected_size))
 }
 
 pub async fn download_parakeet_model<R: Runtime>(
@@ -1744,16 +1754,73 @@ fn start_parakeet_server_unlocked<R: Runtime>(
     Ok(())
 }
 
+/// Honest resident-sidecar state for diagnostics. Unlike the historical
+/// `Option<(provider, port)>`, this distinguishes "never started", an
+/// in-flight startup, a process that has exited, and a failed inspection.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub(crate) enum SidecarRuntimeStatus {
+    NotRunning,
+    Starting,
+    Ready {
+        provider: String,
+        port: u16,
+        pid: u32,
+    },
+    Exited {
+        code: Option<i32>,
+    },
+    InspectionError(String),
+}
+
+fn inspect_sidecar_child(
+    child: &mut std::process::Child,
+    provider: &str,
+    port: u16,
+) -> SidecarRuntimeStatus {
+    match child.try_wait() {
+        Ok(None) => SidecarRuntimeStatus::Ready {
+            provider: provider.to_string(),
+            port,
+            pid: child.id(),
+        },
+        Ok(Some(status)) => SidecarRuntimeStatus::Exited {
+            code: status.code(),
+        },
+        Err(error) => SidecarRuntimeStatus::InspectionError(format!("try_wait failed: {error}")),
+    }
+}
+
 /// Live health of the local engine for diagnostics: for Parakeet this is the
 /// actual sidecar process state, not what the settings claim.
+pub(crate) fn parakeet_runtime_status<R: Runtime>(
+    app_handle: &tauri::AppHandle<R>,
+) -> SidecarRuntimeStatus {
+    let Some(state) = app_handle.try_state::<crate::AppState>() else {
+        return SidecarRuntimeStatus::InspectionError(
+            "application state is unavailable".to_string(),
+        );
+    };
+    let starting = state
+        .parakeet_starting
+        .load(std::sync::atomic::Ordering::Acquire);
+    let mut server = recover_lock(&state.parakeet_server, "Parakeet server");
+    let Some(running) = server.as_mut() else {
+        return if starting {
+            SidecarRuntimeStatus::Starting
+        } else {
+            SidecarRuntimeStatus::NotRunning
+        };
+    };
+    inspect_sidecar_child(&mut running.child, &running.provider, running.port)
+}
+
 pub(crate) fn parakeet_server_status<R: Runtime>(
     app_handle: &tauri::AppHandle<R>,
 ) -> Option<(String, u16)> {
-    let state = app_handle.try_state::<crate::AppState>()?;
-    let server = recover_lock(&state.parakeet_server, "Parakeet server");
-    server
-        .as_ref()
-        .map(|running| (running.provider.clone(), running.port))
+    match parakeet_runtime_status(app_handle) {
+        SidecarRuntimeStatus::Ready { provider, port, .. } => Some((provider, port)),
+        _ => None,
+    }
 }
 
 pub fn stop_parakeet_server<R: Runtime>(app_handle: &tauri::AppHandle<R>) {
@@ -2774,14 +2841,35 @@ pub fn ensure_whisper_server_state<R: Runtime>(
     }
 }
 
+pub(crate) fn whisper_runtime_status<R: Runtime>(
+    app_handle: &tauri::AppHandle<R>,
+) -> SidecarRuntimeStatus {
+    let Some(state) = app_handle.try_state::<crate::AppState>() else {
+        return SidecarRuntimeStatus::InspectionError(
+            "application state is unavailable".to_string(),
+        );
+    };
+    let starting = state
+        .whisper_starting
+        .load(std::sync::atomic::Ordering::Acquire);
+    let mut server = recover_lock(&state.whisper_server, "Whisper server");
+    let Some(running) = server.as_mut() else {
+        return if starting {
+            SidecarRuntimeStatus::Starting
+        } else {
+            SidecarRuntimeStatus::NotRunning
+        };
+    };
+    inspect_sidecar_child(&mut running.child, &running.provider, running.port)
+}
+
 pub(crate) fn whisper_server_status<R: Runtime>(
     app_handle: &tauri::AppHandle<R>,
 ) -> Option<(String, u16)> {
-    let state = app_handle.try_state::<crate::AppState>()?;
-    let server = recover_lock(&state.whisper_server, "Whisper server");
-    server
-        .as_ref()
-        .map(|running| (running.provider.clone(), running.port))
+    match whisper_runtime_status(app_handle) {
+        SidecarRuntimeStatus::Ready { provider, port, .. } => Some((provider, port)),
+        _ => None,
+    }
 }
 
 pub fn build_whisper_prompt(language: &str, user_dictionary: &str) -> String {
@@ -2968,6 +3056,20 @@ const PUNCTUATION_ARCHIVE_URL: &str = "https://github.com/k2-fsa/sherpa-onnx/rel
 const PUNCTUATION_ARCHIVE_SIZE: u64 = 64_717_756;
 const PUNCTUATION_ARCHIVE_SHA256: &str =
     "c0d5aa5f8eeb686032345e180bedf39319dc2e0556781c6264bcadba8328a6e1";
+const PUNCTUATION_ARCHIVE_FILENAME: &str = "punctuation.tar.bz2";
+
+/// Verified archives live outside the per-attempt extraction directory so a
+/// failed install can reuse the archive (and its resumable `.part`) next time.
+fn punctuation_archive_directory(models_dir: &Path) -> PathBuf {
+    models_dir.join("punctuation-archive")
+}
+
+fn is_retryable_punctuation_download_error(error: &str) -> bool {
+    error.contains("stalled for more than 30 seconds")
+        || error.contains("Connection failed while downloading")
+        || error.contains("Incomplete download of")
+        || error.contains("exceeded its overall time budget")
+}
 
 struct RemoveDirectoryOnDrop(PathBuf);
 
@@ -3057,11 +3159,18 @@ fn install_punctuation_archive(
         .parent()
         .ok_or_else(|| "Punctuation destination has no parent directory".to_string())?;
     let backup = parent.join(".punctuation.previous");
-    if backup.exists() {
+    // Recover a crash that happened after the previous model was moved away
+    // but before the new one was installed. Never discard the only working
+    // copy just because a stale backup exists.
+    let mut had_previous = destination.exists();
+    if !had_previous && backup.exists() {
+        std::fs::rename(&backup, destination)
+            .map_err(|error| format!("Failed to restore previous punctuation model: {error}"))?;
+        had_previous = true;
+    } else if backup.exists() {
         std::fs::remove_dir_all(&backup)
             .map_err(|error| format!("Failed to clear stale punctuation backup: {error}"))?;
     }
-    let had_previous = destination.exists();
     if had_previous {
         std::fs::rename(destination, &backup)
             .map_err(|error| format!("Failed to stage previous punctuation model: {error}"))?;
@@ -3085,9 +3194,9 @@ fn install_punctuation_archive(
     Ok(())
 }
 
-/// Facade with one automatic retry: resize/CDN hiccups (rare spikes in streamed
-/// byte counts) are retried once before surrendering, because a byte-level
-/// hiccup must not leave the feature permanently broken.
+/// Facade with one automatic retry for transient transport failures. The
+/// verified archive and its `.part` live in a stable cache, so a retry resumes
+/// instead of starting over; integrity and cancellation failures are final.
 pub async fn download_punctuation_model<R: Runtime>(
     app_handle: &tauri::AppHandle<R>,
 ) -> Result<(), String> {
@@ -3099,8 +3208,7 @@ pub async fn download_punctuation_model<R: Runtime>(
         match download_punctuation_model_attempt(app_handle).await {
             Ok(()) => return Ok(()),
             Err(error) => {
-                let retryable = error.contains("Incomplete punctuation download")
-                    || error.contains("stalled for more than 30 seconds");
+                let retryable = is_retryable_punctuation_download_error(&error);
                 if retryable && attempt == 1 {
                     crate::logger::log(
                         "WARN",
@@ -3114,6 +3222,12 @@ pub async fn download_punctuation_model<R: Runtime>(
                     tokio::time::sleep(std::time::Duration::from_millis(800)).await;
                     continue;
                 }
+                crate::logger::log(
+                    "ERROR",
+                    "Punctuation",
+                    None,
+                    &format!("Punctuation download failed: {error}"),
+                );
                 return Err(error);
             }
         }
@@ -3133,6 +3247,24 @@ async fn download_punctuation_model_attempt<R: Runtime>(
     let models_dir = app_local_data.join("models");
     let punc_dir = models_dir.join("punctuation");
     if punctuation_files_complete(&punc_dir) {
+        // A crash between installing the model and deleting the cache can
+        // leave a verified archive behind. Clean it on the next check.
+        let stale_cache = punctuation_archive_directory(&models_dir);
+        if stale_cache.exists() {
+            if let Err(error) = tokio::fs::remove_dir_all(&stale_cache).await {
+                if error.kind() != std::io::ErrorKind::NotFound {
+                    crate::logger::log(
+                        "WARN",
+                        "Punctuation",
+                        None,
+                        &format!(
+                            "Failed to clean stale punctuation archive cache {}: {error}",
+                            stale_cache.display()
+                        ),
+                    );
+                }
+            }
+        }
         return Ok(());
     }
     let _lease = match begin_model_download("punctuation") {
@@ -3161,7 +3293,15 @@ async fn download_punctuation_model_attempt<R: Runtime>(
         .await
         .map_err(|e| format!("Failed to create punctuation staging directory: {e}"))?;
     let _staging_guard = RemoveDirectoryOnDrop(staging_dir.clone());
-    let archive_path = staging_dir.join("punctuation.tar.bz2");
+
+    // The archive cache is deliberately stable. A transient failure or app
+    // restart resumes its `.part`, while extraction keeps using a unique
+    // staging directory that is removed by the RAII guard.
+    let archive_dir = punctuation_archive_directory(&models_dir);
+    tokio::fs::create_dir_all(&archive_dir)
+        .await
+        .map_err(|e| format!("Failed to create punctuation archive cache: {e}"))?;
+    let archive_path = archive_dir.join(PUNCTUATION_ARCHIVE_FILENAME);
 
     crate::logger::log(
         "INFO",
@@ -3170,94 +3310,65 @@ async fn download_punctuation_model_attempt<R: Runtime>(
         "Downloading local punctuation model...",
     );
     let client = crate::ai_client::build_download_client();
-    let mut response = client
-        .get(PUNCTUATION_ARCHIVE_URL)
-        .send()
-        .await
-        .map_err(|e| format!("Failed to download punctuation model: {}", e))?;
-    if !response.status().is_success() {
-        return Err(format!(
-            "Failed to download punctuation model: HTTP {}",
-            response.status()
-        ));
-    }
-    if let Some(advertised_size) = response.content_length() {
-        if advertised_size != PUNCTUATION_ARCHIVE_SIZE {
-            return Err(format!(
-                "Punctuation archive size mismatch: expected {PUNCTUATION_ARCHIVE_SIZE}, server advertised {advertised_size}"
-            ));
-        }
-    }
+    let spec = crate::artifact_download::ArtifactSpec {
+        label: "punctuation model",
+        url: PUNCTUATION_ARCHIVE_URL,
+        expected_size: PUNCTUATION_ARCHIVE_SIZE,
+        sha256: PUNCTUATION_ARCHIVE_SHA256,
+    };
+    let outcome = crate::artifact_download::download_verified_artifact(
+        &client,
+        spec,
+        &archive_path,
+        crate::artifact_download::DEFAULT_STALL_TIMEOUT,
+        || is_cancel_requested("punctuation"),
+        |progress| {
+            let is_verifying = progress.downloaded >= PUNCTUATION_ARCHIVE_SIZE;
+            let status = if is_verifying {
+                Some("installing".to_string())
+            } else {
+                None
+            };
+            let percentage = if is_verifying {
+                100.0
+            } else {
+                (progress.downloaded as f64 / PUNCTUATION_ARCHIVE_SIZE as f64 * 100.0).min(99.9)
+            };
+            let _ = app_handle.emit(
+                "model-download-progress",
+                DownloadProgress {
+                    model: "punctuation".to_string(),
+                    downloaded: progress.downloaded,
+                    total: Some(PUNCTUATION_ARCHIVE_SIZE),
+                    percentage,
+                    done: false,
+                    status,
+                },
+            );
+        },
+    )
+    .await?;
 
-    use sha2::{Digest, Sha256};
-    use tokio::io::AsyncWriteExt;
-    let mut file = tokio::fs::OpenOptions::new()
-        .create_new(true)
-        .write(true)
-        .open(&archive_path)
-        .await
-        .map_err(|e| format!("Failed to create punctuation archive: {e}"))?;
-    let mut hasher = Sha256::new();
-    let mut downloaded = 0u64;
-    // Read exactly PUNCTUATION_ARCHIVE_SIZE payload bytes. Some CDNs/proxies
-    // append trailing bytes after the payload; rather than aborting a good
-    // download, take the pinned slice and let SHA-256 be the integrity judge.
-    while downloaded < PUNCTUATION_ARCHIVE_SIZE {
-        let chunk = tokio::time::timeout(std::time::Duration::from_secs(30), response.chunk())
-            .await
-            .map_err(|_| "Punctuation download stalled for more than 30 seconds".to_string())?
-            .map_err(|e| format!("Error reading punctuation chunk: {e}"))?;
-        let Some(chunk) = chunk else {
-            break;
-        };
-        if is_cancel_requested("punctuation") {
-            return Err("Punctuation download cancelled".to_string());
-        }
-        let take = chunk
-            .len()
-            .min((PUNCTUATION_ARCHIVE_SIZE - downloaded) as usize);
-        let payload = &chunk[..take];
-        downloaded = downloaded.saturating_add(take as u64);
-        let is_verifying = downloaded >= PUNCTUATION_ARCHIVE_SIZE;
-        let status = if is_verifying {
-            Some("installing".to_string())
-        } else {
-            None
-        };
-        let _ = app_handle.emit(
-            "model-download-progress",
-            DownloadProgress {
-                model: "punctuation".to_string(),
-                downloaded,
-                total: Some(PUNCTUATION_ARCHIVE_SIZE),
-                percentage: (downloaded as f64 / PUNCTUATION_ARCHIVE_SIZE as f64) * 100.0,
-                done: false,
-                status,
-            },
+    if outcome.reused_existing {
+        crate::logger::log(
+            "INFO",
+            "Punctuation",
+            None,
+            "Reused the previously verified punctuation archive",
         );
-        hasher.update(payload);
-        file.write_all(payload)
-            .await
-            .map_err(|e| format!("Failed to write punctuation chunk: {e}"))?;
+    } else if outcome.resumed_from > 0 {
+        crate::logger::log(
+            "INFO",
+            "Punctuation",
+            None,
+            &format!(
+                "Resumed punctuation archive download at {} bytes",
+                outcome.resumed_from
+            ),
+        );
     }
-    file.flush()
-        .await
-        .map_err(|e| format!("Failed to flush punctuation archive: {e}"))?;
-    file.sync_all()
-        .await
-        .map_err(|e| format!("Failed to persist punctuation archive: {e}"))?;
-    drop(file);
-
-    if downloaded != PUNCTUATION_ARCHIVE_SIZE {
-        return Err(format!(
-            "Incomplete punctuation download: expected {PUNCTUATION_ARCHIVE_SIZE} bytes, received {downloaded}"
-        ));
-    }
-    let actual_hash = format!("{:x}", hasher.finalize());
-    if actual_hash != PUNCTUATION_ARCHIVE_SHA256 {
-        return Err(format!(
-            "Punctuation archive integrity check failed: expected {PUNCTUATION_ARCHIVE_SHA256}, got {actual_hash}"
-        ));
+    if is_cancel_requested("punctuation") {
+        return Err("Punctuation download cancelled".to_string());
     }
 
     let _ = app_handle.emit(
@@ -3280,6 +3391,23 @@ async fn download_punctuation_model_attempt<R: Runtime>(
     })
     .await
     .map_err(|error| format!("Punctuation install worker failed: {error}"))??;
+
+    // The model is installed, so the verified archive (and any resumable
+    // partial) is no longer needed. Failure to clean a cache must not turn a
+    // successful install into an error.
+    if let Err(error) = tokio::fs::remove_dir_all(&archive_dir).await {
+        if error.kind() != std::io::ErrorKind::NotFound {
+            crate::logger::log(
+                "WARN",
+                "Punctuation",
+                None,
+                &format!(
+                    "Punctuation install succeeded but archive cache cleanup failed ({}): {error}",
+                    archive_dir.display()
+                ),
+            );
+        }
+    }
 
     crate::logger::log(
         "INFO",
@@ -3436,6 +3564,35 @@ mod tests {
     }
 
     #[test]
+    fn punctuation_archive_cache_path_is_stable_and_outside_staging() {
+        let models_dir = Path::new("models");
+        let first = punctuation_archive_directory(models_dir);
+        let second = punctuation_archive_directory(models_dir);
+        assert_eq!(first, second);
+        assert_eq!(first, models_dir.join("punctuation-archive"));
+        assert!(!first.to_string_lossy().contains(".punctuation.install-"));
+    }
+
+    #[test]
+    fn punctuation_transient_download_errors_are_retryable() {
+        assert!(is_retryable_punctuation_download_error(
+            "Download of 'punctuation model' stalled for more than 30 seconds; partial data was kept"
+        ));
+        assert!(is_retryable_punctuation_download_error(
+            "Connection failed while downloading 'punctuation model': reset; partial data was kept"
+        ));
+        assert!(is_retryable_punctuation_download_error(
+            "Incomplete download of 'punctuation model': 10 of 20 bytes; partial data was kept"
+        ));
+        assert!(!is_retryable_punctuation_download_error(
+            "SHA-256 verification failed for 'punctuation model'"
+        ));
+        assert!(!is_retryable_punctuation_download_error(
+            "Download of 'punctuation model' cancelled"
+        ));
+    }
+
+    #[test]
     fn punctuation_archive_with_nested_versioned_folder_is_locatable() {
         let unique_id = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
@@ -3458,37 +3615,40 @@ mod tests {
         let _ = std::fs::remove_dir_all(&root);
     }
 
-    /// Network reproduction for the "stream changed size" reports: downloads
-    /// with the real client and reports received bytes vs pinned size.
-    /// Run: cargo test --lib -- --ignored reproduce_punctuation_download
+    /// Network smoke test for the shared downloader with the real punctuation
+    /// archive. Run: `cargo test --lib -- --ignored punctuation_archive_network_smoke`
     #[ignore = "requires network"]
     #[tokio::test]
-    async fn reproduce_punctuation_download_with_app_client() {
+    async fn punctuation_archive_network_smoke() {
+        let unique_id = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_nanos();
+        let dir = std::env::temp_dir().join(format!("aura_punct_download_{unique_id}"));
+        std::fs::create_dir_all(&dir).unwrap();
+        let destination = dir.join(PUNCTUATION_ARCHIVE_FILENAME);
         let client = crate::ai_client::build_download_client();
-        let mut response = client
-            .get(PUNCTUATION_ARCHIVE_URL)
-            .send()
-            .await
-            .expect("send");
-        let advertised = response.content_length();
-        let mut received: u64 = 0;
-        use sha2::{Digest, Sha256};
-        let mut hasher = Sha256::new();
-        loop {
-            let Some(chunk) = response.chunk().await.expect("chunk") else {
-                break;
-            };
-            received = received.saturating_add(chunk.len() as u64);
-            hasher.update(&chunk);
-        }
-        eprintln!(
-            "REPRO received={received} advertised={advertised:?} pinned={PUNCTUATION_ARCHIVE_SIZE} sha256={:x}",
-            hasher.finalize()
-        );
+        let outcome = crate::artifact_download::download_verified_artifact(
+            &client,
+            crate::artifact_download::ArtifactSpec {
+                label: "punctuation model",
+                url: PUNCTUATION_ARCHIVE_URL,
+                expected_size: PUNCTUATION_ARCHIVE_SIZE,
+                sha256: PUNCTUATION_ARCHIVE_SHA256,
+            },
+            &destination,
+            crate::artifact_download::DEFAULT_STALL_TIMEOUT,
+            || false,
+            |_| {},
+        )
+        .await
+        .expect("download verified punctuation archive");
+        assert_eq!(outcome.path, destination);
         assert_eq!(
-            received, PUNCTUATION_ARCHIVE_SIZE,
-            "stream byte count mismatch"
+            std::fs::metadata(&destination).unwrap().len(),
+            PUNCTUATION_ARCHIVE_SIZE
         );
+        let _ = std::fs::remove_dir_all(&dir);
     }
 
     #[test]
@@ -3624,6 +3784,31 @@ mod tests {
             std::thread::sleep(std::time::Duration::from_millis(50));
         }
         panic!("process {pid} was still alive 5 seconds after being killed");
+    }
+
+    #[test]
+    fn sidecar_runtime_inspection_reports_ready_and_exited() {
+        let mut child = spawn_sleeper_process();
+        let ready = inspect_sidecar_child(&mut child, "cpu", 4321);
+        match ready {
+            SidecarRuntimeStatus::Ready {
+                provider,
+                port,
+                pid,
+            } => {
+                assert_eq!(provider, "cpu");
+                assert_eq!(port, 4321);
+                assert_eq!(pid, child.id());
+            }
+            other => panic!("expected a ready sidecar, got {other:?}"),
+        }
+
+        child.kill().expect("kill sleeper");
+        child.wait().expect("reap sleeper");
+        match inspect_sidecar_child(&mut child, "cpu", 4321) {
+            SidecarRuntimeStatus::Exited { .. } => {}
+            other => panic!("expected an exited sidecar, got {other:?}"),
+        }
     }
 
     #[test]

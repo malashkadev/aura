@@ -146,6 +146,84 @@ test("frontend uses redacted key metadata and write-only provider-key IPC", () =
   assert.doesNotMatch(html, /value="parakeet"[^>]*disabled/);
 });
 
+test("every non-secret native setting is round-tripped by the settings form", () => {
+  const rust = read("src-tauri/src/settings_secure.rs");
+  const main = read("src/main.js");
+
+  const structBlock = rust.match(/pub struct Settings \{([\s\S]*?)\n\}/)?.[1] ?? "";
+  assert.ok(structBlock, "Settings struct must be parseable");
+  const backendFields = [...structBlock.matchAll(/pub\s+([a-z0-9_]+)\s*:/g)]
+    .map((match) => match[1])
+    .filter((name) => !name.startsWith("api_key"));
+  assert.ok(backendFields.length > 20, "Settings struct must expose its fields");
+
+  const settingsLiteral = main.match(/const settings = \{([\s\S]*?)\n\s*\};/u)?.[1] ?? "";
+  assert.ok(settingsLiteral, "saveSettings payload must be parseable");
+  const frontendFields = [...settingsLiteral.matchAll(/^\s*([a-z][a-z0-9_]*):/gm)]
+    .map((match) => match[1]);
+
+  assert.equal(new Set(frontendFields).size, frontendFields.length, "payload keys must be unique");
+  assert.deepEqual(
+    frontendFields.toSorted(),
+    backendFields.toSorted(),
+    "the settings form must send every non-secret Settings field and no stale fields",
+  );
+});
+
+test("settings backup exports no secrets and validates imported files", async () => {
+  const {
+    buildSettingsBackup,
+    parseSettingsBackup,
+    settingsBackupFileName,
+    SETTINGS_BACKUP_FORMAT,
+  } = await import("../src/settings-backup.js");
+
+  const exportedAt = new Date("2026-10-22T12:34:56.000Z");
+  const backup = buildSettingsBackup({
+    transcription_mode: "local",
+    dictionary: "Aura",
+    has_api_key_gemini: true,
+    api_key_gemini: "super-secret",
+  }, exportedAt);
+
+  assert.equal(backup.format, SETTINGS_BACKUP_FORMAT);
+  assert.equal(backup.exported_at, exportedAt.toISOString());
+  assert.deepEqual(backup.settings, {
+    transcription_mode: "local",
+    dictionary: "Aura",
+  });
+  assert.equal(settingsBackupFileName(exportedAt), "aura-settings-2026-10-22.json");
+
+  assert.deepEqual(
+    parseSettingsBackup(JSON.stringify(backup), ["transcription_mode", "dictionary"]),
+    { transcription_mode: "local", dictionary: "Aura" },
+  );
+  assert.deepEqual(
+    parseSettingsBackup(JSON.stringify({ settings: { dictionary: "Aura" } }), ["dictionary"]),
+    { dictionary: "Aura" },
+  );
+
+  assert.throws(
+    () => parseSettingsBackup("{", ["dictionary"]),
+    (error) => error.code === "invalid-backup",
+  );
+  assert.throws(
+    () => parseSettingsBackup(JSON.stringify({ format: "other" }), []),
+    (error) => error.code === "invalid-backup",
+  );
+  assert.throws(
+    () => parseSettingsBackup(JSON.stringify({ settings: [] }), []),
+    (error) => error.code === "invalid-backup",
+  );
+  assert.throws(
+    () => parseSettingsBackup(JSON.stringify({ settings: { transcription_mode: "local" } }), [
+      "transcription_mode",
+      "dictionary",
+    ]),
+    (error) => error.code === "invalid-backup",
+  );
+});
+
 test("settings translations cover every supported locale without fallback gaps", () => {
   const expectedLocales = ["ru", "en", "de", "es", "fr", "it", "zh", "pt", "tr"];
   const dictionaries = parseI18nDictionaries();
@@ -174,7 +252,7 @@ test("settings translations cover every supported locale without fallback gaps",
     "local_model_desc", "fallback_title",
     "copy_context_title", "copy_context_desc", "copy_context_checkbox",
     "gpu_accel_label", "gpu_accel_cpu_title", "gpu_accel_cpu_desc",
-    "gpu_accel_cuda_title", "gpu_accel_cuda_desc", "gpu_accel_dml_title", "gpu_accel_dml_desc",
+    "gpu_accel_cuda_title", "gpu_accel_cuda_desc",
     "update_current", "update_available_pattern", "update_check_error_pattern",
     "update_installing", "update_installed_restarting", "update_install_error_open_release",
     "window_minimize", "window_close", "history_copy_title", "history_search_clear",

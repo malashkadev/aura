@@ -46,7 +46,8 @@ Press and hold the hotkey, speak, and release — Aura instantly transcribes you
 - **12 language options** — auto-detect, keyboard-layout detection, or fixed selection (ru, en, de, es, fr, it, zh, pt, tr, nl).
 - **Polished overlay with 6 sound themes** — microphone VU meter, recording timer, 6 audio themes (Zen, Rhodes, Sci-Fi, Classic Bell, Bubble, Haptic), and display customization.
 - **Native High-DPI Tray Menu** — modern tray menu with per-monitor DPI scaling, instant gaming mode toggle, and settings access.
-- **System integration & security** — autostart with Windows, Windows DPAPI credential encryption, and one-click diagnostic reports.
+- **System integration & security** — autostart with Windows, Windows DPAPI credential encryption, one-click diagnostic reports with profile-path redaction, and portable settings backup/restore (API keys are never exported).
+- **Guided first run** — if no local model is installed, the General tab offers a one-click Base-model download and microphone test.
 
 ## How Aura compares
 
@@ -66,7 +67,7 @@ Aura combines the speed and privacy of local neural networks with the flexibilit
 | **Custom Term Dictionary** | **✅** | ❌ | ✅ |
 | **Transcription History** | **✅ Up to 300 items (DPAPI)** | ❌ | ✅ |
 
-> Official builds target Windows 10 & 11 (macOS port compiles in CI). Handy is a mature cross-platform choice for offline dictation. Wispr Flow offers a polished UI, but requires a paid subscription and proprietary cloud.
+> Official builds target Windows 10 & 11. The macOS port is still in progress and is not built by CI yet. Handy is a mature cross-platform choice for offline dictation. Wispr Flow offers a polished UI, but requires a paid subscription and proprietary cloud.
 
 ## Installation
 
@@ -137,9 +138,13 @@ cargo test
 - **Filler-loop filtering** — `ммммм` / `hmmmm` silence hallucinations are discarded while real short words survive.
 - **Redesigned Commands Guide** — a cleaner two-column reference for the active voice-editing commands.
 - **Installer reliability** — Aura launches de-elevated after installation, with a one-shot retry if the first start is missed.
+- **Portable settings backup** — export/import settings, dictionary, and replacements as JSON without API keys.
+- **Guided first run** — a model-download and microphone-test card appears when local mode has no speech model.
+- **Privacy and accessibility polish** — diagnostic reports redact the profile path; selects and the spotlight tour have full keyboard focus management.
+
 ## Roadmap
 
-- **macOS support** — native port (global hotkeys via `CGEventTap`, CoreAudio capture) is in the codebase and **compiles in CI**. Remaining items: macOS whisper binary, `.app` bundle, Accessibility-permission flow, and hardware testing.
+- **macOS support** — the native port (global hotkeys via `CGEventTap`, CoreAudio capture) is in the codebase, but CI currently verifies Windows builds only. Remaining items: a macOS build job, macOS whisper binary, `.app` bundle, Accessibility-permission flow, and hardware testing.
 
 ## License
 

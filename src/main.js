@@ -1,4 +1,9 @@
 import { bindTabKeyboardNavigation } from "./ui-accessibility.js";
+import {
+  buildSettingsBackup,
+  parseSettingsBackup,
+  settingsBackupFileName,
+} from "./settings-backup.js";
 
 // Retrieve Tauri APIs from window.__TAURI__
 const { invoke } = window.__TAURI__.core;
@@ -17,10 +22,6 @@ const i18nDict = {
     "tab_speech": "Голос",
     "tab_text": "Текст",
     "tab_hotkeys": "Управление",
-    "section_engine": "Движок",
-    "section_recognition": "Распознавание",
-    "section_input": "Ввод",
-    "section_dictionary": "Словарь",
     "tab_history": "История",
     "tab_about": "О программе",
     "general_autostart_title": "Автозапуск Aura",
@@ -82,7 +83,6 @@ const i18nDict = {
     "api_title": "Авторизация API-ключей",
     "api_desc": "Укажите ваши API-ключи для авторизации в облачных сервисах Gemini, OpenAI, Groq, Hugging Face или на пользовательском сервере.",
     "api_provider": "Провайдер API",
-    "section_cloud_ai": "Облачные ИИ",
     "api_key": "API-ключ",
     "api_key_placeholder": "Введите ваш API-ключ...",
     "hotkey_prompt": "Нажмите клавиши...",
@@ -101,11 +101,8 @@ const i18nDict = {
     "history_unit_sec": "с",
     "history_group_today": "Сегодня",
     "history_group_yesterday": "Вчера",
-    "about_app_title": "Голосовой ввод Aura",
     "about_version": "v1.2.0",
     "about_description": "Инструмент глобального голосового ввода для Windows. Программа переводит речь в текст и вставляет его в любое активное окно с автоматическим форматированием и расстановкой пунктуации.",
-    "about_gratitude_text": "Спасибо, что пользуетесь Aura! Если программа делает вашу работу быстрее и удобнее — поддержите проект звездой на GitHub.",
-    "btn_star_github": "Поставить звезду на GitHub",
     "about_row_tour_title": "Вводный экскурс по возможностям",
     "about_row_tour_desc": "Интерактивный тур с подсказками по основным функциям",
     "about_row_changelog_title": "Что нового в этой версии",
@@ -116,7 +113,6 @@ const i18nDict = {
     "about_row_star_desc": "Поддержите проект в открытом репозитории",
     "about_btn_exit_app": "Выйти из Aura",
     "status_ready": "Готово",
-    "btn_save": "Сохранить настройки",
     "confirm_title": "Подтверждение",
     "confirm_message": "Вы действительно хотите выполнить это действие?",
     "confirm_cancel": "Отмена",
@@ -169,13 +165,10 @@ const i18nDict = {
     "copy_context_title": "Редактирование выделенного текста",
     "copy_context_desc": "Если включено, Aura отправляет Ctrl+C и передаёт выделенный текст провайдеру или локальной модели как контекст для команды редактирования. Отключите эту функцию при работе в терминале.",
     "copy_context_checkbox": "Разрешить редактирование выделенного текста",
-    "ai_edit_title": "Команды над выделением",
-    "ai_edit_desc": "Голосовые команды для выделенного текста: «переведи», «исправь грамматику». Команда применяется к выделению, обычная диктовка вставляется без изменений.",
     "ai_edit_mode_label": "Режим редактирования",
     "ai_edit_mode_auto": "Авто",
     "ai_edit_mode_cloud": "Облачный",
     "ai_edit_mode_local": "Локальный",
-    "ai_edit_mode_off": "Выключен",
     "ai_edit_mode_sub": "Авто использует локальную модель, если она установлена, иначе облачный провайдер. Для команд над выделением включите «Разрешить захват выделения и команды редактирования».",
     "translate_target_label": "Язык перевода по умолчанию",
     "translate_target_sub": "Используется при голосовой команде «переведи» без указания языка.",
@@ -197,14 +190,22 @@ const i18nDict = {
     "cuda_license_cuda_link": "NVIDIA CUDA Toolkit",
     "cuda_license_cudnn_link": "cuDNN",
     "cuda_license_accept": "Скачать",
-    "gpu_accel_dml_title": "DirectML (универсальный)",
-    "gpu_accel_dml_desc": "Для видеокарт AMD, Intel и NVIDIA. Базовое ускорение.",
     "btn_copy_diagnostics": "Скопировать отчет диагностики",
     "toast_diagnostics_copied": "Отчет диагностики скопирован в буфер обмена!",
     "diag_speech_text_title": "Логирование текста речи (режим разработчика)",
     "diag_title": "Диагностика",
+    "backup_title": "Резервная копия настроек",
+    "backup_desc": "Сохраните настройки, словарь и автозамены в JSON-файл. API-ключи в файл не попадают.",
+    "backup_export": "Экспортировать",
+    "backup_import": "Импортировать",
+    "backup_exported": "Файл настроек сохранён",
+    "backup_import_confirm": "Импортировать настройки из выбранного файла? Текущие настройки будут заменены.",
+    "backup_import_invalid": "Выбранный файл не является корректной резервной копией настроек Aura.",
+    "first_run_title": "Начните диктовать офлайн",
+    "first_run_desc": "Для локального распознавания нужна модель. Base — рекомендуемый баланс скорости и точности (~145 МБ).",
+    "first_run_download": "Скачать Base",
+    "first_run_hint": "Модель скачивается один раз и работает без интернета.",
     "diag_speech_text_desc": "Сохранять точный текст распознанной речи в диагностические логи. По умолчанию выключено для приватности.",
-    "diag_speech_text_checkbox": "Записывать текст речи в логи",
     "api_custom_url": "Адрес API сервера",
     "api_custom_model": "Имя модели",
     "provider_opt_custom": "Пользовательский сервер",
@@ -212,14 +213,11 @@ const i18nDict = {
     "overlay_timer_desc": "Отображать счетчик времени и статус обработки под индикатором голоса. Ошибки отображаются всегда.",
     "overlay_timer_checkbox": "Показывать таймер и статус в оверлее",
     "mic_meter_title": "Проверка микрофона",
-    "mic_meter_desc": "Проверьте уровень входящего сигнала и распознавание голоса в реальном времени.",
+    "mic_meter_desc": "Проверьте уровень входящего сигнала в реальном времени.",
     "audio_device_label": "Микрофон (устройство ввода)",
     "audio_device_default": "По умолчанию (системное)",
-    "audio_device_desc": "Выберите физический микрофон для записи голоса.",
     "mic_meter_test_btn_start": "Начать тест",
     "mic_meter_test_btn_stop": "Остановить тест",
-    "mic_meter_speech": "Голос",
-    "mic_meter_silence": "Тишина",
     "mic_start_error": "Ошибка запуска микрофона: ",
     "history_search_placeholder": "Поиск по истории...",
     "history_filter_all": "Все",
@@ -231,12 +229,6 @@ const i18nDict = {
     "replacements_trigger_ph": "Слово или фраза (напр. почта)",
     "replacements_value_ph": "Заменить на (напр. name@mail.ru)",
     "replacements_caret_hint": "Символ | в тексте замены указывает, куда переместить курсор после вставки (напр. Здравствуйте, |!).",
-    "replacements_macro_hint": "Доступные макросы: {date} (ГГГГ-ММ-ДД), {date_ru} (ДД.ММ.ГГГГ), {time} (ЧЧ:ММ), {datetime}.",
-    "replacements_macros_label": "Вставить шаблон:",
-    "macro_chip_date_ru": "+ Дата РФ",
-    "macro_chip_date_iso": "+ Дата ISO",
-    "macro_chip_time": "+ Время",
-    "macro_chip_datetime": "+ Дата и время",
     "btn_add": "Добавить",
     "replacements_empty": "Правила автозамены пока не настроены",
     "replacements_delete_aria": "Удалить правило автозамены",
@@ -245,12 +237,6 @@ const i18nDict = {
     "gaming_mode_label": "Включить игровой режим вручную",
     "gaming_mode_subdesc": "Отключает перехват клавиатуры и выгружает модели из видеопамяти (VRAM).",
     "gaming_auto_label": "Автоматический игровой режим",
-    "gaming_auto_desc": "Приостанавливает горячие клавиши и освобождает видеопамять при запуске полноэкранных 3D-игр.",
-    "gaming_status_label": "Текущее состояние",
-    "gaming_status_inactive": "Не активен",
-    "gaming_status_active": "Активен (пауза)",
-    "gaming_btn_toggle_on": "Включить вручную",
-    "gaming_btn_toggle_off": "Выключить",
     "gaming_tray_hint": "Ручное переключение также доступно через меню Aura в трее Windows.",
     "standby_title": "Выгрузка моделей при бездействии (Сон)",
     "standby_timeout_label": "Время бездействия до перехода в сон",
@@ -269,7 +255,6 @@ const i18nDict = {
     "onboarding_prev": "Назад",
     "onboarding_next": "Далее",
     "onboarding_finish": "Начать работу",
-    "onboarding_replay": "Вводный экскурс по возможностям",
     "onboarding_step_tag": "{current} / {total}",
     "onboarding_step_1_title": "Способы распознавания речи",
     "onboarding_step_1_desc": "По умолчанию Аура работает полностью автономно и приватно: ваш голос расшифровывается прямо на ПК (NVIDIA CUDA или CPU) без передачи в сеть. При необходимости можно подключить облачный ИИ через API.",
@@ -291,11 +276,7 @@ const i18nDict = {
     "smart_context_subdesc": "Начинает со строчной буквы при вставке в середину предложения, убирает лишние точки и аккуратно расставляет пробелы.",
     "smart_context_trailing_period_checkbox": "Завершать точкой при дополнении в конце предложения",
     "smart_context_trailing_period_subdesc": "Если курсор стоит в конце незавершенной фразы, завершает фразу точкой. При выключении оставляет конец открытым для дальнейшей речи.",
-    "sound_preview_btn": "Прослушать тему",
-    "sound_preview_label": "Тест",
-    "api_key_status_saved": "Сохранен в Windows DPAPI",
     "api_key_shared_hint": "Единый ключ Aura: действует для диктовки и AI-редактирования.",
-    "api_key_btn_change": "Изменить"
   },
   "en": {
     "title_settings": "Settings",
@@ -303,10 +284,6 @@ const i18nDict = {
     "tab_speech": "Speech",
     "tab_text": "Text",
     "tab_hotkeys": "Hotkeys",
-    "section_engine": "Recognition engine",
-    "section_recognition": "Recognition",
-    "section_input": "Input",
-    "section_dictionary": "Dictionary",
     "tab_history": "History",
     "tab_about": "About",
     "general_autostart_title": "Aura Autostart",
@@ -368,7 +345,6 @@ const i18nDict = {
     "api_title": "API Keys Authorization",
     "api_desc": "Provide API keys for Gemini, OpenAI, Groq, Hugging Face, or a custom server.",
     "api_provider": "API Provider",
-    "section_cloud_ai": "Cloud AI",
     "api_key": "API Key",
     "api_key_placeholder": "Enter your API key...",
     "hotkey_prompt": "Press keys...",
@@ -387,11 +363,8 @@ const i18nDict = {
     "history_unit_sec": "s",
     "history_group_today": "Today",
     "history_group_yesterday": "Yesterday",
-    "about_app_title": "Aura Voice Input",
     "about_version": "v1.2.0",
     "about_description": "Global voice input tool for Windows. The program transcribes speech to text and inserts it into any active window with automatic formatting and punctuation.",
-    "about_gratitude_text": "Thank you for using Aura! If it makes your work faster and easier, please consider supporting the project with a star on GitHub.",
-    "btn_star_github": "Star on GitHub",
     "about_row_tour_title": "Feature Tour",
     "about_row_tour_desc": "Interactive walkthrough of core features",
     "about_row_changelog_title": "What's New in this Version",
@@ -402,7 +375,6 @@ const i18nDict = {
     "about_row_star_desc": "Support the open-source project",
     "about_btn_exit_app": "Exit Aura",
     "status_ready": "Ready",
-    "btn_save": "Save Settings",
     "confirm_title": "Confirmation",
     "confirm_message": "Are you sure you want to perform this action?",
     "confirm_cancel": "Cancel",
@@ -455,13 +427,10 @@ const i18nDict = {
     "copy_context_title": "Edit selected text",
     "copy_context_desc": "When enabled, Aura sends Ctrl+C and passes the selected text to the provider or local model as context for an editing command. Disable this feature when working in a terminal.",
     "copy_context_checkbox": "Enable selected text editing",
-    "ai_edit_title": "Commands on selection",
-    "ai_edit_desc": "Voice commands for the selected text: \"translate\", \"fix grammar\". A command is applied to the selection; plain dictation is inserted unchanged.",
     "ai_edit_mode_label": "Editing mode",
     "ai_edit_mode_auto": "Auto",
     "ai_edit_mode_cloud": "Cloud",
     "ai_edit_mode_local": "Local",
-    "ai_edit_mode_off": "Off",
     "ai_edit_mode_sub": "Auto uses the local model when it is installed, otherwise the cloud provider. For commands on selection, enable \"Allow selection capture and edit commands\".",
     "translate_target_label": "Default translation language",
     "translate_target_sub": "Used when saying \"translate\" without specifying a target language.",
@@ -483,14 +452,22 @@ const i18nDict = {
     "cuda_license_cuda_link": "CUDA Toolkit license",
     "cuda_license_cudnn_link": "cuDNN license",
     "cuda_license_accept": "Download",
-    "gpu_accel_dml_title": "DirectML (universal)",
-    "gpu_accel_dml_desc": "For AMD, Intel, and NVIDIA GPUs. Basic acceleration.",
     "btn_copy_diagnostics": "Copy Diagnostic Report",
     "toast_diagnostics_copied": "Diagnostic report copied to clipboard!",
     "diag_speech_text_title": "Log Speech Text (Developer Mode)",
     "diag_title": "Diagnostics",
+    "backup_title": "Settings backup",
+    "backup_desc": "Save your settings, dictionary and text replacements to a JSON file. API keys are never included.",
+    "backup_export": "Export",
+    "backup_import": "Import",
+    "backup_exported": "Settings file saved",
+    "backup_import_confirm": "Import settings from the selected file? Your current settings will be replaced.",
+    "backup_import_invalid": "The selected file is not a valid Aura settings backup.",
+    "first_run_title": "Start dictating offline",
+    "first_run_desc": "Local recognition needs a model. Base is the recommended balance of speed and accuracy (~145 MB).",
+    "first_run_download": "Download Base",
+    "first_run_hint": "The model is downloaded once and works without an internet connection.",
     "diag_speech_text_desc": "Include exact transcribed speech text in diagnostic logs. Disabled by default for privacy.",
-    "diag_speech_text_checkbox": "Include speech text in logs",
     "api_custom_url": "Server API URL",
     "api_custom_model": "Model Name",
     "provider_opt_custom": "Custom Server",
@@ -498,14 +475,11 @@ const i18nDict = {
     "overlay_timer_desc": "Show duration timer and processing status below voice indicator. Errors are always displayed.",
     "overlay_timer_checkbox": "Show timer and status on overlay",
     "mic_meter_title": "Microphone Check",
-    "mic_meter_desc": "Test input signal level and real-time voice detection.",
+    "mic_meter_desc": "Check the incoming signal level in real time.",
     "audio_device_label": "Microphone (input device)",
     "audio_device_default": "Default (system)",
-    "audio_device_desc": "Select physical microphone for voice recording.",
     "mic_meter_test_btn_start": "Start Test",
     "mic_meter_test_btn_stop": "Stop Test",
-    "mic_meter_speech": "Voice",
-    "mic_meter_silence": "Silence",
     "mic_start_error": "Microphone start error: ",
     "history_search_placeholder": "Search history...",
     "history_filter_all": "All",
@@ -517,12 +491,6 @@ const i18nDict = {
     "replacements_trigger_ph": "Word or phrase (e.g. email)",
     "replacements_value_ph": "Replace with (e.g. name@mail.com)",
     "replacements_caret_hint": "The | symbol in the replacement text marks where to place the cursor after insertion (e.g. Hello, |!).",
-    "replacements_macro_hint": "Available macros: {date} (YYYY-MM-DD), {date_ru} (DD.MM.YYYY), {time} (HH:MM), {datetime}.",
-    "replacements_macros_label": "Insert template:",
-    "macro_chip_date_ru": "+ Date (RU)",
-    "macro_chip_date_iso": "+ Date (ISO)",
-    "macro_chip_time": "+ Time",
-    "macro_chip_datetime": "+ Date & Time",
     "btn_add": "Add",
     "replacements_empty": "No replacement rules configured yet",
     "replacements_delete_aria": "Delete replacement rule",
@@ -531,12 +499,6 @@ const i18nDict = {
     "gaming_mode_label": "Enable Gaming Mode manually",
     "gaming_mode_subdesc": "Disables keyboard hooks and unloads models from video memory (VRAM).",
     "gaming_auto_label": "Automatic Gaming Mode",
-    "gaming_auto_desc": "Suspends hotkeys and frees video memory (VRAM) when launching fullscreen 3D games.",
-    "gaming_status_label": "Current status",
-    "gaming_status_inactive": "Inactive",
-    "gaming_status_active": "Active (paused)",
-    "gaming_btn_toggle_on": "Enable manually",
-    "gaming_btn_toggle_off": "Disable",
     "gaming_tray_hint": "Manual toggle is also available via the Aura system tray menu.",
     "standby_title": "Standby Model Unloader (Sleep)",
     "standby_timeout_label": "Idle timeout before sleep",
@@ -555,7 +517,6 @@ const i18nDict = {
     "onboarding_prev": "Back",
     "onboarding_next": "Next",
     "onboarding_finish": "Get started",
-    "onboarding_replay": "Feature walkthrough tour",
     "onboarding_step_tag": "{current} / {total}",
     "onboarding_step_1_title": "Speech Recognition Methods",
     "onboarding_step_1_desc": "By default, Aura operates completely offline and private: speech is transcribed directly on your PC (NVIDIA CUDA or CPU) without network transfer. You can also connect Cloud AI via API if preferred.",
@@ -577,11 +538,7 @@ const i18nDict = {
     "smart_context_subdesc": "Starts with lowercase when inserting mid-sentence, strips trailing periods, and ensures clean spacing.",
     "smart_context_trailing_period_checkbox": "End with a period when continuing at the end of a sentence",
     "smart_context_trailing_period_subdesc": "When cursor is at the end of an open sentence, completes with a period. When unchecked, leaves open for further dictation.",
-    "sound_preview_btn": "Preview theme",
-    "sound_preview_label": "Test",
-    "api_key_status_saved": "Saved in Windows DPAPI",
     "api_key_shared_hint": "Unified Aura key: applies to voice dictation and AI editing.",
-    "api_key_btn_change": "Change"
   },
   "de": {
     "gpu_accel_label": "Lokale Hardware-Beschleunigung",
@@ -595,17 +552,11 @@ const i18nDict = {
     "cuda_license_cuda_link": "CUDA-Toolkit-Lizenz",
     "cuda_license_cudnn_link": "cuDNN-Lizenz",
     "cuda_license_accept": "Herunterladen",
-    "gpu_accel_dml_title": "DirectML (universell)",
-    "gpu_accel_dml_desc": "Für AMD-, Intel- und NVIDIA-Grafikkarten. Basisbeschleunigung.",
     "title_settings": "Einstellungen",
     "tab_general": "Allgemein",
     "tab_speech": "Diktat",
     "tab_text": "Text",
     "tab_hotkeys": "Tastenkombinationen",
-    "section_engine": "Erkennungsmodul",
-    "section_recognition": "Spracherkennung",
-    "section_input": "Eingabe",
-    "section_dictionary": "Wörterbuch",
     "tab_history": "Verlauf",
     "tab_about": "Über Aura",
     "general_autostart_title": "Aura Autostart",
@@ -664,7 +615,6 @@ const i18nDict = {
     "api_title": "API-Schlüssel Autorisierung",
     "api_desc": "Geben Sie Ihre API-Schlüssel für Gemini, OpenAI, Groq, Hugging Face oder einen benutzerdefinierten Server ein.",
     "api_provider": "API-Provider",
-    "section_cloud_ai": "Cloud-KI",
     "api_key": "API-Schlüssel",
     "api_key_placeholder": "Geben Sie Ihren API-Schlüssel ein...",
     "hotkey_prompt": "Tasten drücken...",
@@ -683,11 +633,8 @@ const i18nDict = {
     "history_unit_sec": "s",
     "history_group_today": "Heute",
     "history_group_yesterday": "Gestern",
-    "about_app_title": "Aura Spracheingabe",
     "about_version": "v1.2.0",
     "about_description": "Globales Spracheingabe-Tool für Windows. Die Anwendung überträgt Sprache in Text und fügt ihn mit automatischer Formatierung und Zeichensetzung in jedes aktive Fenster ein.",
-    "about_gratitude_text": "Danke, dass Sie Aura nutzen! Wenn das Tool Ihre Arbeit erleichtert, unterstützen Sie das Projekt gerne mit einem Stern auf GitHub.",
-    "btn_star_github": "Stern auf GitHub geben",
     "about_row_tour_title": "Funktionstour",
     "about_row_tour_desc": "Interaktive Einführung in die wichtigsten Funktionen",
     "about_row_changelog_title": "Was ist neu in dieser Version",
@@ -698,7 +645,6 @@ const i18nDict = {
     "about_row_star_desc": "Unterstützen Sie das Open-Source-Projekt",
     "about_btn_exit_app": "Aura beenden",
     "status_ready": "Bereit",
-    "btn_save": "Einstellungen speichern",
     "confirm_title": "Bestätigung",
     "confirm_message": "Sind Sie sicher, dass Sie diese Aktion ausführen möchten?",
     "confirm_cancel": "Abbrechen",
@@ -754,13 +700,10 @@ const i18nDict = {
     "copy_context_title": "Ausgewählten Text bearbeiten",
     "copy_context_desc": "Wenn aktiviert, sendet Aura Strg+C und übermittelt den ausgewählten Text als Kontext für einen Bearbeitungsbefehl an den Anbieter oder das lokale Modell. Deaktivieren Sie diese Funktion bei der Arbeit im Terminal.",
     "copy_context_checkbox": "Bearbeitung des ausgewählten Texts aktivieren",
-    "ai_edit_title": "Befehle für die Auswahl",
-    "ai_edit_desc": "Sprachbefehle für den ausgewählten Text: „übersetzen“, „Grammatik korrigieren“. Ein Befehl wird auf die Auswahl angewendet; normales Diktat wird unverändert eingefügt.",
     "ai_edit_mode_label": "Bearbeitungsmodus",
     "ai_edit_mode_auto": "Auto",
     "ai_edit_mode_cloud": "Cloud",
     "ai_edit_mode_local": "Lokal",
-    "ai_edit_mode_off": "Aus",
     "ai_edit_mode_sub": "Auto verwendet das lokale Modell, wenn es installiert ist, sonst den Cloud-Anbieter. Für Befehle auf die Auswahl aktivieren Sie „Erfassen der Auswahl und Bearbeitungsbefehle zulassen“.",
     "translate_target_label": "Standard-Zielsprache für Übersetzungen",
     "translate_target_sub": "Wird verwendet, wenn „übersetze“ ohne Zielangabe gesprochen wird.",
@@ -775,8 +718,18 @@ const i18nDict = {
     "toast_diagnostics_copied": "Diagnosebericht in Zwischenablage kopiert!",
     "diag_speech_text_title": "Sprachtext protokollieren (Entwicklermodus)",
     "diag_title": "Diagnose",
+    "backup_title": "Einstellungen sichern",
+    "backup_desc": "Speichern Sie Einstellungen, Wörterbuch und Textersetzungen in einer JSON-Datei. API-Schlüssel werden nie eingefügt.",
+    "backup_export": "Exportieren",
+    "backup_import": "Importieren",
+    "backup_exported": "Einstellungsdatei gespeichert",
+    "backup_import_confirm": "Einstellungen aus der ausgewählten Datei importieren? Die aktuellen Einstellungen werden ersetzt.",
+    "backup_import_invalid": "Die ausgewählte Datei ist keine gültige Aura-Einstellungssicherung.",
+    "first_run_title": "Offline diktieren",
+    "first_run_desc": "Für die lokale Erkennung ist ein Modell erforderlich. Base bietet den empfohlenen Kompromiss aus Geschwindigkeit und Genauigkeit (~145 MB).",
+    "first_run_download": "Base herunterladen",
+    "first_run_hint": "Das Modell wird einmal heruntergeladen und funktioniert ohne Internetverbindung.",
     "diag_speech_text_desc": "Exakten transkribierten Sprachtext in Diagnoseprotokollen speichern. Aus Datenschutzgründen standardmäßig deaktiviert.",
-    "diag_speech_text_checkbox": "Sprachtext in Protokolle aufnehmen",
     "api_custom_url": "Server-API-Adresse",
     "api_custom_model": "Modellname",
     "provider_opt_custom": "Benutzerdefinierter Server",
@@ -784,14 +737,11 @@ const i18nDict = {
     "overlay_timer_desc": "Zeitanzeige und Verarbeitungsstatus unter der Stimmanzeige anzeigen. Fehler werden immer angezeigt.",
     "overlay_timer_checkbox": "Timer und Status im Overlay anzeigen",
     "mic_meter_title": "Mikrofontest",
-    "mic_meter_desc": "Testen Sie den Eingangssignalpegel und die Spracherkennung in Echtzeit.",
+    "mic_meter_desc": "Prüfen Sie den Pegel des Eingangssignals in Echtzeit.",
     "audio_device_label": "Mikrofon (Eingabegerät)",
     "audio_device_default": "Standard (System)",
-    "audio_device_desc": "Wählen Sie ein physisches Mikrofon für die Sprachaufnahme aus.",
     "mic_meter_test_btn_start": "Test starten",
     "mic_meter_test_btn_stop": "Test stoppen",
-    "mic_meter_speech": "Sprache",
-    "mic_meter_silence": "Stille",
     "mic_start_error": "Fehler beim Starten des Mikrofons: ",
     "history_search_placeholder": "Verlauf durchsuchen...",
     "history_filter_all": "Alle",
@@ -803,12 +753,6 @@ const i18nDict = {
     "replacements_trigger_ph": "Wort oder Satz (z.B. E-Mail)",
     "replacements_value_ph": "Ersetzen durch (z.B. name@mail.com)",
     "replacements_caret_hint": "Das Symbol | im Ersatztext markiert die Cursorposition nach dem Einfügen (z.B. Hallo, |!).",
-    "replacements_macro_hint": "Verfügbare Makros: {date} (JJJJ-MM-TT), {date_ru} (TT.MM.JJJJ), {time} (HH:MM), {datetime}.",
-    "replacements_macros_label": "Vorlage einfügen:",
-    "macro_chip_date_ru": "+ Datum (RU)",
-    "macro_chip_date_iso": "+ Datum (ISO)",
-    "macro_chip_time": "+ Uhrzeit",
-    "macro_chip_datetime": "+ Datum & Zeit",
     "btn_add": "Hinzufügen",
     "replacements_empty": "Noch keine Ersetzungsregeln eingerichtet",
     "replacements_delete_aria": "Ersetzungsregel löschen",
@@ -817,12 +761,6 @@ const i18nDict = {
     "gaming_mode_label": "Spielemodus manuell aktivieren",
     "gaming_mode_subdesc": "Deaktiviert Tastatur-Hooks und entlädt Modelle aus dem Grafikspeicher (VRAM).",
     "gaming_auto_label": "Automatischer Spielemodus",
-    "gaming_auto_desc": "Pausiert Hotkeys und gibt Videospeicher (VRAM) frei, wenn Vollbild-3D-Spiele gestartet werden.",
-    "gaming_status_label": "Aktueller Status",
-    "gaming_status_inactive": "Inaktiv",
-    "gaming_status_active": "Aktiv (pausiert)",
-    "gaming_btn_toggle_on": "Manuell aktivieren",
-    "gaming_btn_toggle_off": "Deaktivieren",
     "gaming_tray_hint": "Manuelles Umschalten ist auch über das Aura-Taskleistenmenü möglich.",
     "standby_title": "Modell-Entladung im Leerlauf (Schlafmodus)",
     "standby_timeout_label": "Inaktivitätszeit vor dem Schlafmodus",
@@ -841,7 +779,6 @@ const i18nDict = {
     "onboarding_prev": "Zurück",
     "onboarding_next": "Weiter",
     "onboarding_finish": "Loslegen",
-    "onboarding_replay": "Funktionsüberblick starten",
     "onboarding_step_tag": "{current} / {total}",
     "onboarding_step_1_title": "Spracherkennungsmethoden",
     "onboarding_step_1_desc": "Standardmäßig arbeitet Aura vollständig offline und privat: Sprache wird direkt auf Ihrem PC (NVIDIA CUDA oder CPU) ohne Netzwerkübertragung verarbeitet. Bei Bedarf kann Cloud-KI per API genutzt werden.",
@@ -863,11 +800,7 @@ const i18nDict = {
     "smart_context_subdesc": "Beginnt mitten im Satz mit Kleinbuchstaben, entfernt überflüssige Punkte und formatiert Leerzeichen sauber.",
     "smart_context_trailing_period_checkbox": "Bei Fortsetzung am Satzende mit Punkt abschließen",
     "smart_context_trailing_period_subdesc": "Schließt den Satz mit einem Punkt ab, wenn der Cursor am Ende steht. Deaktiviert lassen, um weitersprechen zu können.",
-    "sound_preview_btn": "Thema anhören",
-    "sound_preview_label": "Testen",
-    "api_key_status_saved": "In Windows DPAPI gespeichert",
     "api_key_shared_hint": "Einheitlicher Aura-Schlüssel: gilt für Sprache und KI-Bearbeitung.",
-    "api_key_btn_change": "Ändern"
   },
   "es": {
     "title_settings": "Ajustes",
@@ -875,10 +808,6 @@ const i18nDict = {
     "tab_speech": "Voz",
     "tab_text": "Texto",
     "tab_hotkeys": "Accesos rápidos",
-    "section_engine": "Motor de reconocimiento",
-    "section_recognition": "Reconocimiento",
-    "section_input": "Entrada",
-    "section_dictionary": "Diccionario",
     "tab_history": "Historial",
     "tab_about": "Acerca de",
     "general_autostart_title": "Inicio automático",
@@ -937,7 +866,6 @@ const i18nDict = {
     "api_title": "Autorización de claves API",
     "api_desc": "Introduzca sus claves API para Gemini, OpenAI, Groq, Hugging Face o un servidor personalizado.",
     "api_provider": "Proveedor de API",
-    "section_cloud_ai": "IA en la nube",
     "api_key": "Clave API",
     "api_key_placeholder": "Introduzca su clave API...",
     "hotkey_prompt": "Pulse las teclas...",
@@ -956,11 +884,8 @@ const i18nDict = {
     "history_unit_sec": "s",
     "history_group_today": "Hoy",
     "history_group_yesterday": "Ayer",
-    "about_app_title": "Dictado por voz Aura",
     "about_version": "v1.2.0",
     "about_description": "Herramienta de entrada de voz global para Windows. El programa transcribe el habla en texto y lo inserta en cualquier ventana activa con formato y puntuación automáticos.",
-    "about_gratitude_text": "¡Gracias por usar Aura! Si hace tu trabajo más rápido y cómodo, apoya el proyecto con una estrella en GitHub.",
-    "btn_star_github": "Dar una estrella en GitHub",
     "about_row_tour_title": "Paseo de funciones",
     "about_row_tour_desc": "Guía interactiva de las funciones principales",
     "about_row_changelog_title": "Novedades en esta versión",
@@ -971,7 +896,6 @@ const i18nDict = {
     "about_row_star_desc": "Apoya el proyecto de código abierto",
     "about_btn_exit_app": "Salir de Aura",
     "status_ready": "Listo",
-    "btn_save": "Guardar ajustes",
     "confirm_title": "Confirmación",
     "confirm_message": "¿Está seguro de realizar esta acción?",
     "confirm_cancel": "Cancelar",
@@ -1023,8 +947,6 @@ const i18nDict = {
     "cuda_license_cuda_link": "Licencia de CUDA Toolkit",
     "cuda_license_cudnn_link": "Licencia de cuDNN",
     "cuda_license_accept": "Descargar",
-    "gpu_accel_dml_title": "DirectML (universal)",
-    "gpu_accel_dml_desc": "Para GPU AMD, Intel y NVIDIA. Aceleración básica.",
     "hotkey_reset_title": "Restablecer a Alt+V",
     "local_engine_label": "Motor de reconocimiento",
     "local_engine_whisper": "Whisper.cpp",
@@ -1040,13 +962,10 @@ const i18nDict = {
     "copy_context_title": "Editar texto seleccionado",
     "copy_context_desc": "Cuando está activado, Aura envía Ctrl+C y pasa el texto seleccionado al proveedor o al modelo local como contexto para una orden de edición. Desactive esta función al trabajar en una terminal.",
     "copy_context_checkbox": "Permitir edición del texto seleccionado",
-    "ai_edit_title": "Órdenes sobre la selección",
-    "ai_edit_desc": "Órdenes por voz para el texto seleccionado: «traducir», «corregir gramática». La orden se aplica a la selección; el dictado normal se inserta sin cambios.",
     "ai_edit_mode_label": "Modo de edición",
     "ai_edit_mode_auto": "Auto",
     "ai_edit_mode_cloud": "Nube",
     "ai_edit_mode_local": "Local",
-    "ai_edit_mode_off": "Desactivado",
     "ai_edit_mode_sub": "Auto usa el modelo local si está instalado; si no, el proveedor en la nube. Para órdenes sobre la selección, active «Permitir captura de selección y órdenes de edición».",
     "translate_target_label": "Idioma de traducción predeterminado",
     "translate_target_sub": "Se utiliza al decir «traduce» sin especificar un idioma de destino.",
@@ -1061,8 +980,18 @@ const i18nDict = {
     "toast_diagnostics_copied": "¡Informe de diagnóstico copiado al portapapeles!",
     "diag_speech_text_title": "Registrar texto de voz (Modo desarrollador)",
     "diag_title": "Diagnóstico",
+    "backup_title": "Copia de seguridad de ajustes",
+    "backup_desc": "Guarda los ajustes, el diccionario y las sustituciones de texto en un archivo JSON. Las claves API nunca se incluyen.",
+    "backup_export": "Exportar",
+    "backup_import": "Importar",
+    "backup_exported": "Archivo de ajustes guardado",
+    "backup_import_confirm": "¿Importar los ajustes del archivo seleccionado? Se reemplazarán los ajustes actuales.",
+    "backup_import_invalid": "El archivo seleccionado no es una copia de seguridad válida de Aura.",
+    "first_run_title": "Empieza a dictar sin conexión",
+    "first_run_desc": "El reconocimiento local necesita un modelo. Base es el equilibrio recomendado entre velocidad y precisión (~145 MB).",
+    "first_run_download": "Descargar Base",
+    "first_run_hint": "El modelo se descarga una vez y funciona sin conexión a Internet.",
     "diag_speech_text_desc": "Incluir texto de voz transcrito exacto en los registros de diagnóstico. Desactivado por defecto por privacidad.",
-    "diag_speech_text_checkbox": "Incluir texto de voz en los registros",
     "api_custom_url": "Dirección API del servidor",
     "api_custom_model": "Nombre del modelo",
     "provider_opt_custom": "Servidor personalizado",
@@ -1070,14 +999,11 @@ const i18nDict = {
     "overlay_timer_desc": "Mostrar temporizador de duración y estado de procesamiento debajo del indicador de voz. Los errores siempre se muestran.",
     "overlay_timer_checkbox": "Mostrar temporizador y estado en el overlay",
     "mic_meter_title": "Comprobación de micrófono",
-    "mic_meter_desc": "Pruebe el nivel de señal de entrada y la detección de voz en tiempo real.",
+    "mic_meter_desc": "Compruebe el nivel de la señal de entrada en tiempo real.",
     "audio_device_label": "Micrófono (dispositivo de entrada)",
     "audio_device_default": "Predeterminado (sistema)",
-    "audio_device_desc": "Seleccione el micrófono físico para la grabación de voz.",
     "mic_meter_test_btn_start": "Iniciar prueba",
     "mic_meter_test_btn_stop": "Detener prueba",
-    "mic_meter_speech": "Voz",
-    "mic_meter_silence": "Silencio",
     "mic_start_error": "Error al iniciar el micrófono: ",
     "history_search_placeholder": "Buscar en el historial...",
     "history_filter_all": "Todos",
@@ -1089,12 +1015,6 @@ const i18nDict = {
     "replacements_trigger_ph": "Palabra o frase (ej. correo)",
     "replacements_value_ph": "Reemplazar con (ej. name@mail.com)",
     "replacements_caret_hint": "El símbolo | en el texto de reemplazo indica dónde colocar el cursor tras la inserción (ej. Hola, |!).",
-    "replacements_macro_hint": "Macros disponibles: {date} (AAAA-MM-DD), {date_ru} (DD.MM.AAAA), {time} (HH:MM), {datetime}.",
-    "replacements_macros_label": "Insertar plantilla:",
-    "macro_chip_date_ru": "+ Fecha (RU)",
-    "macro_chip_date_iso": "+ Fecha (ISO)",
-    "macro_chip_time": "+ Hora",
-    "macro_chip_datetime": "+ Fecha y hora",
     "btn_add": "Añadir",
     "replacements_empty": "Aún no hay reglas de sustitución configuradas",
     "replacements_delete_aria": "Eliminar regla de sustitución",
@@ -1103,12 +1023,6 @@ const i18nDict = {
     "gaming_mode_label": "Activar modo de juego manualmente",
     "gaming_mode_subdesc": "Desactiva los ganchos de teclado y descarga modelos de la memoria de video (VRAM).",
     "gaming_auto_label": "Modo de juego automático",
-    "gaming_auto_desc": "Suspende las teclas de acceso rápido y libera memoria de video (VRAM) al iniciar juegos 3D a pantalla completa.",
-    "gaming_status_label": "Estado actual",
-    "gaming_status_inactive": "Inactivo",
-    "gaming_status_active": "Activo (en pausa)",
-    "gaming_btn_toggle_on": "Activar manualmente",
-    "gaming_btn_toggle_off": "Desactivar",
     "gaming_tray_hint": "El cambio manual también está disponible en el menú de Aura en la bandeja del sistema.",
     "standby_title": "Descarga de modelos por inactividad (Reposo)",
     "standby_timeout_label": "Tiempo de inactividad antes del reposo",
@@ -1127,7 +1041,6 @@ const i18nDict = {
     "onboarding_prev": "Atrás",
     "onboarding_next": "Siguiente",
     "onboarding_finish": "Comenzar",
-    "onboarding_replay": "Recorrido de funciones",
     "onboarding_step_tag": "{current} / {total}",
     "onboarding_step_1_title": "Métodos de reconocimiento de voz",
     "onboarding_step_1_desc": "De forma predeterminada, Aura funciona de manera totalmente autónoma y privada: la voz se transcribe en su PC (NVIDIA CUDA o CPU) sin enviarse a la red. Si lo prefiere, puede activar la IA en la nube mediante API.",
@@ -1149,11 +1062,7 @@ const i18nDict = {
     "smart_context_subdesc": "Comienza con minúscula en mitad de una frase, elimina puntos finales y ajusta los espacios limpios.",
     "smart_context_trailing_period_checkbox": "Finalizar con punto al continuar al final de la oración",
     "smart_context_trailing_period_subdesc": "Completa la frase con un punto si el cursor está al final. Desactívelo para seguir dictando.",
-    "sound_preview_btn": "Probar tema",
-    "sound_preview_label": "Probar",
-    "api_key_status_saved": "Guardado en Windows DPAPI",
     "api_key_shared_hint": "Clave única de Aura: se aplica al dictado y a la edición con IA.",
-    "api_key_btn_change": "Cambiar"
   },
   "fr": {
     "title_settings": "Paramètres",
@@ -1161,10 +1070,6 @@ const i18nDict = {
     "tab_speech": "Dictée",
     "tab_text": "Texte",
     "tab_hotkeys": "Raccourcis",
-    "section_engine": "Moteur de reconnaissance",
-    "section_recognition": "Reconnaissance",
-    "section_input": "Saisie",
-    "section_dictionary": "Dictionnaire",
     "tab_history": "Historique",
     "tab_about": "À propos",
     "general_autostart_title": "Lancement automatique",
@@ -1223,7 +1128,6 @@ const i18nDict = {
     "api_title": "Clés d'API",
     "api_desc": "Saisissez vos clés d'API pour Gemini, OpenAI, Groq, Hugging Face ou un serveur personnalisé.",
     "api_provider": "Fournisseur d'API",
-    "section_cloud_ai": "IA cloud",
     "api_key": "Clé d'API",
     "api_key_placeholder": "Saisissez votre clé d'API...",
     "hotkey_prompt": "Appuyez sur les touches...",
@@ -1242,11 +1146,8 @@ const i18nDict = {
     "history_unit_sec": "s",
     "history_group_today": "Aujourd'hui",
     "history_group_yesterday": "Hier",
-    "about_app_title": "Dictée vocale Aura",
     "about_version": "v1.2.0",
     "about_description": "Outil de saisie vocale globale pour Windows. Le programme transcrit la parole en texte et l'insère dans n'importe quelle fenêtre active avec un formatage et une ponctuation automatiques.",
-    "about_gratitude_text": "Merci d'utiliser Aura ! Si le programme vous fait gagner du temps, soutenez le projet avec une étoile sur GitHub.",
-    "btn_star_github": "Mettre une étoile sur GitHub",
     "about_row_tour_title": "Visite guidée",
     "about_row_tour_desc": "Présentation interactive des fonctionnalités clés",
     "about_row_changelog_title": "Nouveautés de cette version",
@@ -1257,7 +1158,6 @@ const i18nDict = {
     "about_row_star_desc": "Soutenez le projet open source",
     "about_btn_exit_app": "Quitter Aura",
     "status_ready": "Prêt",
-    "btn_save": "Enregistrer",
     "confirm_title": "Confirmation",
     "confirm_message": "Voulez-vous vraiment effectuer cette action?",
     "confirm_cancel": "Annuler",
@@ -1309,8 +1209,6 @@ const i18nDict = {
     "cuda_license_cuda_link": "Licence CUDA Toolkit",
     "cuda_license_cudnn_link": "Licence cuDNN",
     "cuda_license_accept": "Télécharger",
-    "gpu_accel_dml_title": "DirectML (universel)",
-    "gpu_accel_dml_desc": "Pour les GPU AMD, Intel et NVIDIA. Accélération de base.",
     "hotkey_reset_title": "Réinitialiser à Alt+V",
     "local_engine_label": "Moteur de reconnaissance",
     "local_engine_whisper": "Whisper.cpp",
@@ -1326,13 +1224,10 @@ const i18nDict = {
     "copy_context_title": "Modifier le texte sélectionné",
     "copy_context_desc": "Lorsque cette option est activée, Aura envoie Ctrl+C et transmet le texte sélectionné au fournisseur ou au modèle local comme contexte d’une commande de modification. Désactivez-la lorsque vous travaillez dans un terminal.",
     "copy_context_checkbox": "Activer la modification du texte sélectionné",
-    "ai_edit_title": "Commandes sur la sélection",
-    "ai_edit_desc": "Commandes vocales pour le texte sélectionné : « traduire », « corriger la grammaire ». La commande s’applique à la sélection ; la dictée simple est insérée inchangée.",
     "ai_edit_mode_label": "Mode de modification",
     "ai_edit_mode_auto": "Auto",
     "ai_edit_mode_cloud": "Cloud",
     "ai_edit_mode_local": "Local",
-    "ai_edit_mode_off": "Désactivé",
     "ai_edit_mode_sub": "Auto utilise le modèle local s’il est installé, sinon le fournisseur cloud. Pour les commandes sur la sélection, activez « Autoriser la capture de la sélection et les commandes de modification ».",
     "translate_target_label": "Langue de traduction par défaut",
     "translate_target_sub": "Utilisée lorsque vous dites « traduis » sans préciser de langue.",
@@ -1347,8 +1242,18 @@ const i18nDict = {
     "toast_diagnostics_copied": "Rapport de diagnostic copié dans le presse-papiers !",
     "diag_speech_text_title": "Consigner le texte vocal (Mode développeur)",
     "diag_title": "Diagnostic",
+    "backup_title": "Sauvegarde des paramètres",
+    "backup_desc": "Enregistrez vos paramètres, votre dictionnaire et vos remplacements de texte dans un fichier JSON. Les clés API ne sont jamais incluses.",
+    "backup_export": "Exporter",
+    "backup_import": "Importer",
+    "backup_exported": "Fichier de paramètres enregistré",
+    "backup_import_confirm": "Importer les paramètres du fichier sélectionné ? Les paramètres actuels seront remplacés.",
+    "backup_import_invalid": "Le fichier sélectionné n'est pas une sauvegarde de paramètres Aura valide.",
+    "first_run_title": "Commencez à dicter hors ligne",
+    "first_run_desc": "La reconnaissance locale nécessite un modèle. Base offre le meilleur équilibre entre vitesse et précision (~145 Mo).",
+    "first_run_download": "Télécharger Base",
+    "first_run_hint": "Le modèle est téléchargé une fois et fonctionne sans connexion Internet.",
     "diag_speech_text_desc": "Inclure le texte vocal transcrit exact dans les journaux de diagnostic. Désactivé par défaut par confidentialité.",
-    "diag_speech_text_checkbox": "Inclure le texte vocal dans les journaux",
     "api_custom_url": "Adresse API du serveur",
     "api_custom_model": "Nom du modèle",
     "provider_opt_custom": "Serveur personnalisé",
@@ -1356,14 +1261,11 @@ const i18nDict = {
     "overlay_timer_desc": "Afficher le compteur de temps et l'état du traitement sous l'indicateur vocal. Les erreurs sont toujours affichées.",
     "overlay_timer_checkbox": "Afficher le minuteur et l'état sur l'overlay",
     "mic_meter_title": "Vérification du microphone",
-    "mic_meter_desc": "Testez le niveau du signal d'entrée et la détection vocale en temps réel.",
+    "mic_meter_desc": "Vérifiez le niveau du signal d'entrée en temps réel.",
     "audio_device_label": "Microphone (périphérique d'entrée)",
     "audio_device_default": "Par défaut (système)",
-    "audio_device_desc": "Sélectionnez le microphone physique pour l'enregistrement vocal.",
     "mic_meter_test_btn_start": "Démarrer le test",
     "mic_meter_test_btn_stop": "Arrêter le test",
-    "mic_meter_speech": "Voix",
-    "mic_meter_silence": "Silence",
     "mic_start_error": "Erreur de démarrage du microphone : ",
     "history_search_placeholder": "Rechercher dans l'historique...",
     "history_filter_all": "Tous",
@@ -1375,12 +1277,6 @@ const i18nDict = {
     "replacements_trigger_ph": "Mot ou phrase (ex. e-mail)",
     "replacements_value_ph": "Remplacer par (ex. name@mail.com)",
     "replacements_caret_hint": "Le symbole | dans le texte de remplacement indique où placer le curseur après insertion (ex. Bonjour, |!).",
-    "replacements_macro_hint": "Macros disponibles : {date} (AAAA-MM-JJ), {date_ru} (JJ.MM.AAAA), {time} (HH:MM), {datetime}.",
-    "replacements_macros_label": "Insérer un modèle :",
-    "macro_chip_date_ru": "+ Date (RU)",
-    "macro_chip_date_iso": "+ Date (ISO)",
-    "macro_chip_time": "+ Heure",
-    "macro_chip_datetime": "+ Date et heure",
     "btn_add": "Ajouter",
     "replacements_empty": "Aucune règle de remplacement configurée pour l'instant",
     "replacements_delete_aria": "Supprimer la règle de remplacement",
@@ -1389,12 +1285,6 @@ const i18nDict = {
     "gaming_mode_label": "Activer le mode Jeu manuellement",
     "gaming_mode_subdesc": "Désactive les hooks clavier et décharge les modèles de la mémoire vidéo (VRAM).",
     "gaming_auto_label": "Mode Jeu automatique",
-    "gaming_auto_desc": "Suspend les raccourcis clavier et libère la mémoire vidéo (VRAM) lors du lancement de jeux 3D en plein écran.",
-    "gaming_status_label": "État actuel",
-    "gaming_status_inactive": "Inactif",
-    "gaming_status_active": "Actif (en pause)",
-    "gaming_btn_toggle_on": "Activer manuellement",
-    "gaming_btn_toggle_off": "Désactiver",
     "gaming_tray_hint": "Le basculement manuel est également disponible via le menu Aura dans la barre des tâches.",
     "standby_title": "Mise en veille des modèles en cas d'inactivité",
     "standby_timeout_label": "Délai d'inactivité avant la mise en veille",
@@ -1413,7 +1303,6 @@ const i18nDict = {
     "onboarding_prev": "Retour",
     "onboarding_next": "Suivant",
     "onboarding_finish": "Commencer",
-    "onboarding_replay": "Visite guidée des fonctionnalités",
     "onboarding_step_tag": "{current} / {total}",
     "onboarding_step_1_title": "Méthodes de reconnaissance vocale",
     "onboarding_step_1_desc": "Par défaut, Aura fonctionne de manière totalement autonome et privée : votre voix est transcrite sur votre PC (NVIDIA CUDA ou CPU) sans transfert réseau. Vous pouvez également activer l'IA cloud via API si besoin.",
@@ -1435,11 +1324,7 @@ const i18nDict = {
     "smart_context_subdesc": "Commence par une minuscule au milieu d'une phrase, supprime les points inutiles et ajuste les espaces.",
     "smart_context_trailing_period_checkbox": "Terminer par un point lors de la continuation en fin de phrase",
     "smart_context_trailing_period_subdesc": "Termine par un point si le curseur est en fin de phrase. Désactivez pour poursuivre la dictée.",
-    "sound_preview_btn": "Écouter le thème",
-    "sound_preview_label": "Tester",
-    "api_key_status_saved": "Enregistré dans Windows DPAPI",
     "api_key_shared_hint": "Clé unique Aura : s'applique à la dictée et à l'édition IA.",
-    "api_key_btn_change": "Modifier"
   },
   "it": {
     "title_settings": "Impostazioni",
@@ -1447,10 +1332,6 @@ const i18nDict = {
     "tab_speech": "Dettatura",
     "tab_text": "Testo",
     "tab_hotkeys": "Scorciatoie",
-    "section_engine": "Motore di riconoscimento",
-    "section_recognition": "Riconoscimento",
-    "section_input": "Digitazione",
-    "section_dictionary": "Dizionario",
     "tab_history": "Cronologia",
     "tab_about": "Informazioni",
     "general_autostart_title": "Avvio automatico",
@@ -1509,7 +1390,6 @@ const i18nDict = {
     "api_title": "Autorizzazione chiavi API",
     "api_desc": "Inserisci le tue chiavi API per Gemini, OpenAI, Groq, Hugging Face o un server personalizzato.",
     "api_provider": "Provider API",
-    "section_cloud_ai": "IA nel cloud",
     "api_key": "Chiave API",
     "api_key_placeholder": "Inserisci la tua chiave API...",
     "hotkey_prompt": "Premi i tasti...",
@@ -1528,11 +1408,8 @@ const i18nDict = {
     "history_unit_sec": "s",
     "history_group_today": "Oggi",
     "history_group_yesterday": "Ieri",
-    "about_app_title": "Dettatura vocale Aura",
     "about_version": "v1.2.0",
     "about_description": "Strumento di inserimento vocale globale per Windows. Il programma trascrive la voce in testo e la inserisce in qualsiasi finestra attiva con formattazione e punteggiatura automatiche.",
-    "about_gratitude_text": "Grazie per aver scelto Aura! Se rende il tuo lavoro più veloce e comodo, sostieni il progetto con una stella su GitHub.",
-    "btn_star_github": "Lascia una stella su GitHub",
     "about_row_tour_title": "Tour delle funzionalità",
     "about_row_tour_desc": "Guida interattiva alle funzionalità principali",
     "about_row_changelog_title": "Novità in questa versione",
@@ -1543,7 +1420,6 @@ const i18nDict = {
     "about_row_star_desc": "Sostieni il progetto open source",
     "about_btn_exit_app": "Esci da Aura",
     "status_ready": "Pronto",
-    "btn_save": "Salva impostazioni",
     "confirm_title": "Conferma",
     "confirm_message": "Sei sicuro di voler procedere?",
     "confirm_cancel": "Annulla",
@@ -1595,8 +1471,6 @@ const i18nDict = {
     "cuda_license_cuda_link": "Licenza CUDA Toolkit",
     "cuda_license_cudnn_link": "Licenza cuDNN",
     "cuda_license_accept": "Scarica",
-    "gpu_accel_dml_title": "DirectML (universale)",
-    "gpu_accel_dml_desc": "Per GPU AMD, Intel e NVIDIA. Accelerazione di base.",
     "hotkey_reset_title": "Ripristina ad Alt+V",
     "local_engine_label": "Motore di riconoscimento",
     "local_engine_whisper": "Whisper.cpp",
@@ -1612,13 +1486,10 @@ const i18nDict = {
     "copy_context_title": "Modifica testo selezionato",
     "copy_context_desc": "Quando è abilitata, Aura invia Ctrl+C e passa il testo selezionato al provider o al modello locale come contesto per un comando di modifica. Disattiva questa funzione quando lavori in un terminale.",
     "copy_context_checkbox": "Abilita modifica del testo selezionato",
-    "ai_edit_title": "Comandi sulla selezione",
-    "ai_edit_desc": "Comandi vocali per il testo selezionato: «traduci», «correggi la grammatica». Il comando si applica alla selezione; la dettatura semplice viene inserita invariata.",
     "ai_edit_mode_label": "Modalità di modifica",
     "ai_edit_mode_auto": "Auto",
     "ai_edit_mode_cloud": "Cloud",
     "ai_edit_mode_local": "Locale",
-    "ai_edit_mode_off": "Disattivo",
     "ai_edit_mode_sub": "Auto usa il modello locale se installato, altrimenti il provider cloud. Per i comandi sulla selezione, attiva «Consenti acquisizione della selezione e comandi di modifica».",
     "translate_target_label": "Lingua di traduzione predefinita",
     "translate_target_sub": "Utilizzata quando pronunci «traduci» senza specificare una lingua.",
@@ -1633,8 +1504,18 @@ const i18nDict = {
     "toast_diagnostics_copied": "Rapporto diagnostico copiato negli appunti!",
     "diag_speech_text_title": "Registra testo vocale (Modalità sviluppatore)",
     "diag_title": "Diagnostica",
+    "backup_title": "Backup delle impostazioni",
+    "backup_desc": "Salva impostazioni, dizionario e sostituzioni di testo in un file JSON. Le chiavi API non vengono mai incluse.",
+    "backup_export": "Esporta",
+    "backup_import": "Importa",
+    "backup_exported": "File delle impostazioni salvato",
+    "backup_import_confirm": "Importare le impostazioni dal file selezionato? Le impostazioni attuali verranno sostituite.",
+    "backup_import_invalid": "Il file selezionato non è un backup valido delle impostazioni di Aura.",
+    "first_run_title": "Inizia a dettare offline",
+    "first_run_desc": "Il riconoscimento locale richiede un modello. Base è il compromesso consigliato tra velocità e precisione (~145 MB).",
+    "first_run_download": "Scarica Base",
+    "first_run_hint": "Il modello viene scaricato una volta e funziona senza connessione Internet.",
     "diag_speech_text_desc": "Include il testo vocale trascritto esatto nei log di diagnostica. Disattivato di default per la privacy.",
-    "diag_speech_text_checkbox": "Includi testo vocale nei log",
     "api_custom_url": "Indirizzo API del server",
     "api_custom_model": "Nome del modello",
     "provider_opt_custom": "Server personalizzato",
@@ -1642,14 +1523,11 @@ const i18nDict = {
     "overlay_timer_desc": "Mostra il timer di durata e lo stato di elaborazione sotto l'indicatore vocale. Gli errori vengono sempre visualizzati.",
     "overlay_timer_checkbox": "Mostra timer e stato nell'overlay",
     "mic_meter_title": "Controllo microfono",
-    "mic_meter_desc": "Testa il livello del segnale di ingresso e il rilevamento vocale in tempo reale.",
+    "mic_meter_desc": "Controlla il livello del segnale in ingresso in tempo reale.",
     "audio_device_label": "Microfono (dispositivo di input)",
     "audio_device_default": "Predefinito (sistema)",
-    "audio_device_desc": "Seleziona il microfono fisico per la registrazione vocale.",
     "mic_meter_test_btn_start": "Avvia test",
     "mic_meter_test_btn_stop": "Arresta test",
-    "mic_meter_speech": "Voce",
-    "mic_meter_silence": "Silenzio",
     "mic_start_error": "Errore di avvio del microfono: ",
     "history_search_placeholder": "Cerca nella cronologia...",
     "history_filter_all": "Tutti",
@@ -1661,12 +1539,6 @@ const i18nDict = {
     "replacements_trigger_ph": "Parola o frase (es. email)",
     "replacements_value_ph": "Sostituisci con (es. name@mail.com)",
     "replacements_caret_hint": "Il simbolo | nel testo sostitutivo indica dove posizionare il cursore dopo l'inserimento (es. Ciao, |!).",
-    "replacements_macro_hint": "Macro disponibili: {date} (AAAA-MM-GG), {date_ru} (GG.MM.AAAA), {time} (OO:MM), {datetime}.",
-    "replacements_macros_label": "Inserisci modello:",
-    "macro_chip_date_ru": "+ Data (RU)",
-    "macro_chip_date_iso": "+ Data (ISO)",
-    "macro_chip_time": "+ Ora",
-    "macro_chip_datetime": "+ Data e ora",
     "btn_add": "Aggiungi",
     "replacements_empty": "Nessuna regola di sostituzione configurata",
     "replacements_delete_aria": "Elimina regola di sostituzione",
@@ -1675,12 +1547,6 @@ const i18nDict = {
     "gaming_mode_label": "Attiva modalità Gioco manualmente",
     "gaming_mode_subdesc": "Disattiva gli hook della tastiera e scarica i modelli dalla memoria video (VRAM).",
     "gaming_auto_label": "Modalità Gioco automatica",
-    "gaming_auto_desc": "Sospende i tasti di scelta rapida e libera la memoria video (VRAM) all'avvio di giochi 3D a schermo intero.",
-    "gaming_status_label": "Stato attuale",
-    "gaming_status_inactive": "Inattivo",
-    "gaming_status_active": "Attivo (in pausa)",
-    "gaming_btn_toggle_on": "Attiva manualmente",
-    "gaming_btn_toggle_off": "Disattiva",
     "gaming_tray_hint": "La commutazione manuale è disponibile anche dal menu della barra delle applicazioni di Aura.",
     "standby_title": "Sospensione modelli per inattività",
     "standby_timeout_label": "Tempo di inattività prima della sospensione",
@@ -1699,7 +1565,6 @@ const i18nDict = {
     "onboarding_prev": "Indietro",
     "onboarding_next": "Avanti",
     "onboarding_finish": "Inizia",
-    "onboarding_replay": "Tour guidato delle funzionalità",
     "onboarding_step_tag": "{current} / {total}",
     "onboarding_step_1_title": "Metodi di riconoscimento vocale",
     "onboarding_step_1_desc": "Per impostazione predefinita, Aura funziona in modo del tutto autonomo e privato: la voce viene trascritta direttamente sul PC (NVIDIA CUDA o CPU) senza trasmissione in rete. All'occorrenza è possibile usare l'IA cloud via API.",
@@ -1721,11 +1586,7 @@ const i18nDict = {
     "smart_context_subdesc": "Inizia con la minuscola a metà frase, rimuove i punti finali superflui e gestisce gli spazi in modo pulito.",
     "smart_context_trailing_period_checkbox": "Termina con un punto quando si continua alla fine della frase",
     "smart_context_trailing_period_subdesc": "Se il cursore si trova alla fine di una frase aperta, termina con un punto. Se disattivato, lascia la frase aperta per continuare la dettatura.",
-    "sound_preview_btn": "Ascolta tema",
-    "sound_preview_label": "Test",
-    "api_key_status_saved": "Salvato in Windows DPAPI",
     "api_key_shared_hint": "Chiave unificata Aura: valida per dettatura e modifica IA.",
-    "api_key_btn_change": "Modifica"
   },
   "zh": {
     "title_settings": "设置",
@@ -1733,10 +1594,6 @@ const i18nDict = {
     "tab_speech": "语音",
     "tab_text": "文本",
     "tab_hotkeys": "快捷键",
-    "section_engine": "识别引擎",
-    "section_recognition": "识别",
-    "section_input": "输入",
-    "section_dictionary": "词典",
     "tab_history": "历史记录",
     "tab_about": "关于我们",
     "general_autostart_title": "自启动设置",
@@ -1795,7 +1652,6 @@ const i18nDict = {
     "api_title": "API 密钥授权",
     "api_desc": "输入您在 Gemini、OpenAI、Groq、Hugging Face 或自定义服务器上的 API 密钥。",
     "api_provider": "API 供应商",
-    "section_cloud_ai": "云端 AI",
     "api_key": "API 密钥",
     "api_key_placeholder": "在此输入您的 API 密钥...",
     "hotkey_prompt": "按键...",
@@ -1814,11 +1670,8 @@ const i18nDict = {
     "history_unit_sec": "秒",
     "history_group_today": "今天",
     "history_group_yesterday": "昨天",
-    "about_app_title": "Aura 智能语音输入",
     "about_version": "v1.2.0",
     "about_description": "适用于 Windows 的全局语音输入工具。本程序可以将语音转录为文本，并以自动格式和标点符号插入到任何活动窗口中。",
-    "about_gratitude_text": "感谢您使用 Aura！如果它让您的输入更高效便捷，欢迎在 GitHub 上为本项目点亮一颗星。",
-    "btn_star_github": "在 GitHub 上点亮 Star",
     "about_row_tour_title": "功能导览",
     "about_row_tour_desc": "核心功能交互式引导介绍",
     "about_row_changelog_title": "此版本的新功能",
@@ -1829,7 +1682,6 @@ const i18nDict = {
     "about_row_star_desc": "在开源社区支持该项目",
     "about_btn_exit_app": "退出 Aura",
     "status_ready": "就绪",
-    "btn_save": "保存设置",
     "confirm_title": "确认",
     "confirm_message": "您确定要执行此操作吗？",
     "confirm_cancel": "取消",
@@ -1881,8 +1733,6 @@ const i18nDict = {
     "cuda_license_cuda_link": "CUDA Toolkit 许可证",
     "cuda_license_cudnn_link": "cuDNN 许可证",
     "cuda_license_accept": "下载",
-    "gpu_accel_dml_title": "DirectML（通用）",
-    "gpu_accel_dml_desc": "适用于 AMD、Intel 和 NVIDIA 显卡。基础加速。",
     "hotkey_reset_title": "重置为 Alt+V",
     "local_engine_label": "识别引擎",
     "local_engine_whisper": "Whisper.cpp",
@@ -1898,13 +1748,10 @@ const i18nDict = {
     "copy_context_title": "编辑选中文本",
     "copy_context_desc": "启用后，Aura 会发送 Ctrl+C，并将选中文本作为编辑指令的上下文传给服务提供商或本地模型。在终端中工作时请关闭此功能。",
     "copy_context_checkbox": "启用选中文本编辑",
-    "ai_edit_title": "选区指令",
-    "ai_edit_desc": "针对选中文本的语音指令：“翻译”、“修正语法”。指令作用于选区；普通听写原样插入。",
     "ai_edit_mode_label": "编辑模式",
     "ai_edit_mode_auto": "自动",
     "ai_edit_mode_cloud": "云端",
     "ai_edit_mode_local": "本地",
-    "ai_edit_mode_off": "关闭",
     "ai_edit_mode_sub": "自动模式在已安装本地模型时使用本地模型，否则使用云端服务。要使用选区指令，请开启“允许捕获选区和编辑指令”。",
     "translate_target_label": "默认翻译目标语言",
     "translate_target_sub": "当语音指令仅为“翻译”且未指定语言时使用。",
@@ -1919,8 +1766,18 @@ const i18nDict = {
     "toast_diagnostics_copied": "诊断报告已复制到剪贴板！",
     "diag_speech_text_title": "记录语音文本（开发者模式）",
     "diag_title": "诊断",
+    "backup_title": "设置备份",
+    "backup_desc": "将设置、词典和文本替换保存为 JSON 文件。不会包含 API 密钥。",
+    "backup_export": "导出",
+    "backup_import": "导入",
+    "backup_exported": "设置文件已保存",
+    "backup_import_confirm": "要从所选文件导入设置吗？当前设置将被替换。",
+    "backup_import_invalid": "所选文件不是有效的 Aura 设置备份。",
+    "first_run_title": "开始离线听写",
+    "first_run_desc": "本地识别需要模型。Base 是速度和准确率的推荐平衡（约 145 MB）。",
+    "first_run_download": "下载 Base",
+    "first_run_hint": "模型只需下载一次，之后无需联网即可使用。",
     "diag_speech_text_desc": "在诊断日志中包含精确的语音转写文本。出于隐私原因默认禁用。",
-    "diag_speech_text_checkbox": "在日志中包含语音文本",
     "api_custom_url": "服务器 API 地址",
     "api_custom_model": "模型名称",
     "provider_opt_custom": "自定义服务器",
@@ -1928,14 +1785,11 @@ const i18nDict = {
     "overlay_timer_desc": "在语音指示器下方显示录音计时器和处理状态。错误信息将始终显示。",
     "overlay_timer_checkbox": "在悬浮窗上显示计时器和状态",
     "mic_meter_title": "麦克风检测",
-    "mic_meter_desc": "实时测试输入信号强度和语音检测。",
+    "mic_meter_desc": "实时检查输入信号电平。",
     "audio_device_label": "麦克风（输入设备）",
     "audio_device_default": "默认（系统）",
-    "audio_device_desc": "选择用于语音录制的物理麦克风。",
     "mic_meter_test_btn_start": "开始测试",
     "mic_meter_test_btn_stop": "停止测试",
-    "mic_meter_speech": "语音",
-    "mic_meter_silence": "静音",
     "mic_start_error": "麦克风启动失败：",
     "history_search_placeholder": "搜索历史记录...",
     "history_filter_all": "全部",
@@ -1947,12 +1801,6 @@ const i18nDict = {
     "replacements_trigger_ph": "口述词或短语 (例如: 邮箱)",
     "replacements_value_ph": "替换为 (例如: name@mail.com)",
     "replacements_caret_hint": "替换文本中的 | 符号指示插入后光标的位置（例如：你好，|！）。",
-    "replacements_macro_hint": "可用宏: {date} (YYYY-MM-DD), {date_ru} (DD.MM.YYYY), {time} (HH:MM), {datetime}。",
-    "replacements_macros_label": "插入模板:",
-    "macro_chip_date_ru": "+ 日期 (RU)",
-    "macro_chip_date_iso": "+ 日期 (ISO)",
-    "macro_chip_time": "+ 时间",
-    "macro_chip_datetime": "+ 日期与时间",
     "btn_add": "添加",
     "replacements_empty": "暂未配置自动替换规则",
     "replacements_delete_aria": "删除替换规则",
@@ -1961,12 +1809,6 @@ const i18nDict = {
     "gaming_mode_label": "手动开启游戏模式",
     "gaming_mode_subdesc": "禁用键盘钩子并从显存中卸载模型。",
     "gaming_auto_label": "全屏 3D 游戏自动检测",
-    "gaming_auto_desc": "启动全屏 3D 游戏时暂停快捷键并释放显存 (VRAM)。",
-    "gaming_status_label": "当前状态",
-    "gaming_status_inactive": "未激活",
-    "gaming_status_active": "已激活 (已暂停)",
-    "gaming_btn_toggle_on": "手动开启",
-    "gaming_btn_toggle_off": "关闭",
     "gaming_tray_hint": "也可以通过 Windows 系统托盘菜单手动切换。",
     "standby_title": "闲置时释放模型（睡眠模式）",
     "standby_timeout_label": "进入睡眠前的闲置时间",
@@ -1985,7 +1827,6 @@ const i18nDict = {
     "onboarding_prev": "上一步",
     "onboarding_next": "下一步",
     "onboarding_finish": "开始使用",
-    "onboarding_replay": "功能入门导览",
     "onboarding_step_tag": "{current} / {total}",
     "onboarding_step_1_title": "语音识别方式",
     "onboarding_step_1_desc": "默认情况下，Aura 完全离线且私密运行：语音直接在您的电脑上处理（NVIDIA CUDA 或 CPU 硬件加速），无需上传至网络。需要时也可以通过 API 连接云端 AI。",
@@ -2007,11 +1848,7 @@ const i18nDict = {
     "smart_context_subdesc": "在句中插入时自动使用小写并去除结尾句号，精确处理两端空格。",
     "smart_context_trailing_period_checkbox": "句末续写时自动添加句号",
     "smart_context_trailing_period_subdesc": "若光标处于未完成句子末尾，则以句号结束。关闭时保持开放以便继续语音输入。",
-    "sound_preview_btn": "试听音效",
-    "sound_preview_label": "测试",
-    "api_key_status_saved": "已保存在 Windows DPAPI",
     "api_key_shared_hint": "Aura 统一密钥：适用于语音听写和 AI 编辑。",
-    "api_key_btn_change": "更改"
   },
   "pt": {
     "title_settings": "Configurações",
@@ -2019,10 +1856,6 @@ const i18nDict = {
     "tab_speech": "Voz",
     "tab_text": "Texto",
     "tab_hotkeys": "Teclas de atalho",
-    "section_engine": "Motor de reconhecimento",
-    "section_recognition": "Reconhecimento",
-    "section_input": "Entrada",
-    "section_dictionary": "Dicionário",
     "tab_history": "Histórico",
     "tab_about": "Sobre",
     "general_autostart_title": "Inicialização",
@@ -2081,7 +1914,6 @@ const i18nDict = {
     "api_title": "Autorização de chaves API",
     "api_desc": "Insira suas chaves API para Gemini, OpenAI, Groq, Hugging Face ou um servidor personalizado.",
     "api_provider": "Provedor de API",
-    "section_cloud_ai": "IA na nuvem",
     "api_key": "Chave API",
     "api_key_placeholder": "Insira sua chave API...",
     "hotkey_prompt": "Pressione as teclas...",
@@ -2100,11 +1932,8 @@ const i18nDict = {
     "history_unit_sec": "s",
     "history_group_today": "Hoje",
     "history_group_yesterday": "Ontem",
-    "about_app_title": "Ditado de voz Aura",
     "about_version": "v1.2.0",
     "about_description": "Ferramenta de entrada de voz global para Windows. O programa transcreve a fala em texto e a insere em qualquer janela ativa com formatação e pontuação automáticas.",
-    "about_gratitude_text": "Obrigado por usar o Aura! Se ele torna seu dia a dia mais ágil, apoie o projeto com uma estrela no GitHub.",
-    "btn_star_github": "Dar uma estrela no GitHub",
     "about_row_tour_title": "Tour de recursos",
     "about_row_tour_desc": "Guia interativo dos principais recursos",
     "about_row_changelog_title": "Novidades desta versão",
@@ -2115,7 +1944,6 @@ const i18nDict = {
     "about_row_star_desc": "Apoie o projeto de código aberto",
     "about_btn_exit_app": "Sair do Aura",
     "status_ready": "Pronto",
-    "btn_save": "Salvar configurações",
     "confirm_title": "Confirmação",
     "confirm_message": "Tem certeza de que deseja executar esta ação?",
     "confirm_cancel": "Cancelar",
@@ -2167,8 +1995,6 @@ const i18nDict = {
     "cuda_license_cuda_link": "Licença do CUDA Toolkit",
     "cuda_license_cudnn_link": "Licença do cuDNN",
     "cuda_license_accept": "Baixar",
-    "gpu_accel_dml_title": "DirectML (universal)",
-    "gpu_accel_dml_desc": "Para GPUs AMD, Intel e NVIDIA. Aceleração básica.",
     "hotkey_reset_title": "Redefinir para Alt+V",
     "local_engine_label": "Motor de reconhecimento",
     "local_engine_whisper": "Whisper.cpp",
@@ -2184,13 +2010,10 @@ const i18nDict = {
     "copy_context_title": "Editar texto selecionado",
     "copy_context_desc": "Quando ativado, o Aura envia Ctrl+C e encaminha o texto selecionado ao provedor ou ao modelo local como contexto para um comando de edição. Desative este recurso ao trabalhar em um terminal.",
     "copy_context_checkbox": "Ativar edição de texto selecionado",
-    "ai_edit_title": "Comandos sobre a seleção",
-    "ai_edit_desc": "Comandos de voz para o texto selecionado: «traduzir», «corrigir gramática». O comando é aplicado à seleção; a ditado comum é inserida sem alterações.",
     "ai_edit_mode_label": "Modo de edição",
     "ai_edit_mode_auto": "Auto",
     "ai_edit_mode_cloud": "Nuvem",
     "ai_edit_mode_local": "Local",
-    "ai_edit_mode_off": "Desativado",
     "ai_edit_mode_sub": "Auto usa o modelo local se estiver instalado; caso contrário, o provedor de nuvem. Para comandos sobre a seleção, ative «Permitir captura da seleção e comandos de edição».",
     "translate_target_label": "Idioma padrão para tradução",
     "translate_target_sub": "Usado ao dizer «traduza» sem especificar um idioma de destino.",
@@ -2205,8 +2028,18 @@ const i18nDict = {
     "toast_diagnostics_copied": "Relatório de diagnóstico copiado para a área de transferência!",
     "diag_speech_text_title": "Registrar texto de voz (Modo desenvolvedor)",
     "diag_title": "Diagnóstico",
+    "backup_title": "Backup das configurações",
+    "backup_desc": "Salve configurações, dicionário e substituições de texto em um arquivo JSON. As chaves de API nunca são incluídas.",
+    "backup_export": "Exportar",
+    "backup_import": "Importar",
+    "backup_exported": "Arquivo de configurações salvo",
+    "backup_import_confirm": "Importar as configurações do arquivo selecionado? As configurações atuais serão substituídas.",
+    "backup_import_invalid": "O arquivo selecionado não é um backup válido das configurações do Aura.",
+    "first_run_title": "Comece a ditar offline",
+    "first_run_desc": "O reconhecimento local precisa de um modelo. O Base é o equilíbrio recomendado entre velocidade e precisão (~145 MB).",
+    "first_run_download": "Baixar Base",
+    "first_run_hint": "O modelo é baixado uma vez e funciona sem conexão com a internet.",
     "diag_speech_text_desc": "Incluir texto de voz transcrito exato nos logs de diagnóstico. Desativado por padrão por privacidade.",
-    "diag_speech_text_checkbox": "Incluir texto de voz nos logs",
     "api_custom_url": "Endereço da API do servidor",
     "api_custom_model": "Nome do modelo",
     "provider_opt_custom": "Servidor personalizado",
@@ -2214,14 +2047,11 @@ const i18nDict = {
     "overlay_timer_desc": "Exibir contador de tempo e status de processamento abaixo do indicador de voz. Erros são sempre exibidos.",
     "overlay_timer_checkbox": "Exibir temporizador e status no overlay",
     "mic_meter_title": "Verificação de microfone",
-    "mic_meter_desc": "Teste o nível do sinal de entrada e a detecção de fala em tempo real.",
+    "mic_meter_desc": "Verifique o nível do sinal de entrada em tempo real.",
     "audio_device_label": "Microfone (dispositivo de entrada)",
     "audio_device_default": "Padrão (sistema)",
-    "audio_device_desc": "Selecione o microfone físico para gravação de voz.",
     "mic_meter_test_btn_start": "Iniciar teste",
     "mic_meter_test_btn_stop": "Parar teste",
-    "mic_meter_speech": "Voz",
-    "mic_meter_silence": "Silêncio",
     "mic_start_error": "Erro ao iniciar o microfone: ",
     "history_search_placeholder": "Pesquisar no histórico...",
     "history_filter_all": "Todos",
@@ -2233,12 +2063,6 @@ const i18nDict = {
     "replacements_trigger_ph": "Palavra ou frase (ex: email)",
     "replacements_value_ph": "Substituir por (ex: name@mail.com)",
     "replacements_caret_hint": "O símbolo | no texto de substituição indica onde posicionar o cursor após a inserção (ex: Olá, |!).",
-    "replacements_macro_hint": "Macros disponíveis: {date} (AAAA-MM-DD), {date_ru} (DD.MM.AAAA), {time} (HH:MM), {datetime}.",
-    "replacements_macros_label": "Inserir modelo:",
-    "macro_chip_date_ru": "+ Data (RU)",
-    "macro_chip_date_iso": "+ Data (ISO)",
-    "macro_chip_time": "+ Hora",
-    "macro_chip_datetime": "+ Data e hora",
     "btn_add": "Adicionar",
     "replacements_empty": "Nenhuma regra de substituição configurada ainda",
     "replacements_delete_aria": "Excluir regra de substituição",
@@ -2247,12 +2071,6 @@ const i18nDict = {
     "gaming_mode_label": "Ativar Modo de Jogo manualmente",
     "gaming_mode_subdesc": "Desativa ganchos de teclado e descarrega modelos da memória de vídeo (VRAM).",
     "gaming_auto_label": "Modo de Jogo Automático",
-    "gaming_auto_desc": "Suspende as teclas de atalho e libera memória de vídeo (VRAM) ao iniciar jogos 3D em tela cheia.",
-    "gaming_status_label": "Status atual",
-    "gaming_status_inactive": "Inativo",
-    "gaming_status_active": "Ativo (pausado)",
-    "gaming_btn_toggle_on": "Ativar manualmente",
-    "gaming_btn_toggle_off": "Desativar",
     "gaming_tray_hint": "A alternância manual também está disponível no menu do Aura na bandeja do sistema.",
     "standby_title": "Liberação de modelos por inatividade (Repouso)",
     "standby_timeout_label": "Tempo de inatividade antes do repouso",
@@ -2271,7 +2089,6 @@ const i18nDict = {
     "onboarding_prev": "Voltar",
     "onboarding_next": "Avançar",
     "onboarding_finish": "Começar",
-    "onboarding_replay": "Visita guiada de recursos",
     "onboarding_step_tag": "{current} / {total}",
     "onboarding_step_1_title": "Métodos de reconhecimento de voz",
     "onboarding_step_1_desc": "Por padrão, o Aura opera de forma totalmente autônoma e privada: sua voz é transcrita no próprio PC (NVIDIA CUDA ou CPU) sem envio para a rede. Se preferir, você também pode conectar a IA em nuvem via API.",
@@ -2293,11 +2110,7 @@ const i18nDict = {
     "smart_context_subdesc": "Inicia com letra minúscula no meio da frase, remove pontos finais extras e ajusta os espaços de forma limpa.",
     "smart_context_trailing_period_checkbox": "Finalizar com ponto ao continuar no fim da frase",
     "smart_context_trailing_period_subdesc": "Se o cursor estiver no fim de uma frase aberta, finaliza com ponto. Quando desativado, mantém aberto para mais ditado.",
-    "sound_preview_btn": "Ouvir tema",
-    "sound_preview_label": "Testar",
-    "api_key_status_saved": "Salvo no Windows DPAPI",
     "api_key_shared_hint": "Chave unificada do Aura: aplica-se ao ditado e à edição por IA.",
-    "api_key_btn_change": "Alterar"
   },
   "tr": {
     "title_settings": "Ayarlar",
@@ -2305,10 +2118,6 @@ const i18nDict = {
     "tab_speech": "Ses",
     "tab_text": "Metin",
     "tab_hotkeys": "Kısayollar",
-    "section_engine": "Tanıma motoru",
-    "section_recognition": "Tanıma",
-    "section_input": "Giriş",
-    "section_dictionary": "Sözlük",
     "tab_history": "Geçmiş",
     "tab_about": "Hakkında",
     "general_autostart_title": "Başlangıçta Çalıştır",
@@ -2367,7 +2176,6 @@ const i18nDict = {
     "api_title": "API Anahtarları Yetkilendirme",
     "api_desc": "Gemini, OpenAI, Groq, Hugging Face veya özel bir sunucu için API anahtarlarınızı girin.",
     "api_provider": "API Sağlayıcısı",
-    "section_cloud_ai": "Bulut yapay zekâsı",
     "api_key": "API Anahtarı",
     "api_key_placeholder": "API anahtarınızı buraya girin...",
     "hotkey_prompt": "Tuşlara basın...",
@@ -2386,11 +2194,8 @@ const i18nDict = {
     "history_unit_sec": "sn",
     "history_group_today": "Bugün",
     "history_group_yesterday": "Dün",
-    "about_app_title": "Aura Sesli Giriş",
     "about_version": "v1.2.0",
     "about_description": "Windows için genel sesli giriş aracı. Program, konuşmayı metne dönüştürür ve otomatik biçimlendirme ve noktalama işaretleriyle herhangi bir aktif pencereye ekler.",
-    "about_gratitude_text": "Aura'yı kullandığınız için teşekkürler! Çalışmanızı hızlandırıyorsa, projeyi GitHub'da yıldızlayarak destekleyebilirsiniz.",
-    "btn_star_github": "GitHub'da Yıldız Ver",
     "about_row_tour_title": "Özellik Turu",
     "about_row_tour_desc": "Temel özelliklere ilişkin etkileşimli rehber",
     "about_row_changelog_title": "Bu Sürümdeki Yenilikler",
@@ -2401,7 +2206,6 @@ const i18nDict = {
     "about_row_star_desc": "Açık kaynaklı projeyi destekleyin",
     "about_btn_exit_app": "Aura'dan Çık",
     "status_ready": "Hazır",
-    "btn_save": "Ayarları Kaydet",
     "confirm_title": "Onay",
     "confirm_message": "Bu işlemi gerçekleştirmek istediğinizden emin misiniz?",
     "confirm_cancel": "İptal",
@@ -2453,8 +2257,6 @@ const i18nDict = {
     "cuda_license_cuda_link": "CUDA Toolkit lisansı",
     "cuda_license_cudnn_link": "cuDNN lisansı",
     "cuda_license_accept": "İndir",
-    "gpu_accel_dml_title": "DirectML (evrensel)",
-    "gpu_accel_dml_desc": "AMD, Intel ve NVIDIA ekran kartları için. Temel hızlandırma.",
     "hotkey_reset_title": "Alt+V'ye Sıfırla",
     "local_engine_label": "Tanıma Motoru",
     "local_engine_whisper": "Whisper.cpp",
@@ -2470,13 +2272,10 @@ const i18nDict = {
     "copy_context_title": "Seçili metni düzenle",
     "copy_context_desc": "Etkinleştirildiğinde Aura, Ctrl+C gönderir ve seçili metni bir düzenleme komutu için bağlam olarak seçilen bulut sağlayıcısına veya yerel modele iletir. Terminalde çalışırken bu özelliği devre dışı bırakın.",
     "copy_context_checkbox": "Seçili metni düzenlemeyi etkinleştir",
-    "ai_edit_title": "Seçim üzerinde komutlar",
-    "ai_edit_desc": "Seçili metin için sesli komutlar: «çevir», «dilbilgisini düzelt». Komut seçime uygulanır; normal dikte olduğu gibi eklenir.",
     "ai_edit_mode_label": "Düzenleme modu",
     "ai_edit_mode_auto": "Otomatik",
     "ai_edit_mode_cloud": "Bulut",
     "ai_edit_mode_local": "Yerel",
-    "ai_edit_mode_off": "Kapalı",
     "ai_edit_mode_sub": "Otomatik, yerel model kuruluysa onu kullanır; değilse bulut sağlayıcısını kullanır. Seçim komutları için «Seçim yakalamaya ve düzenleme komutlarına izin ver» seçeneğini etkinleştirin.",
     "translate_target_label": "Varsayılan çeviri dili",
     "translate_target_sub": "Hedef dil belirtilmeden «çevir» komutu verildiğinde kullanılır.",
@@ -2491,8 +2290,18 @@ const i18nDict = {
     "toast_diagnostics_copied": "Teşhis raporu panoya kopyalandı!",
     "diag_speech_text_title": "Konuşma Metnini Günlüğe Kaydet (Geliştirici Modu)",
     "diag_title": "Teşhis",
+    "backup_title": "Ayar yedeği",
+    "backup_desc": "Ayarlarınızı, sözlüğünüzü ve metin değiştirmelerinizi bir JSON dosyasına kaydedin. API anahtarları hiçbir zaman eklenmez.",
+    "backup_export": "Dışa aktar",
+    "backup_import": "İçe aktar",
+    "backup_exported": "Ayar dosyası kaydedildi",
+    "backup_import_confirm": "Seçilen dosyadan ayarlar içe aktarılsın mı? Mevcut ayarlarınız değiştirilecek.",
+    "backup_import_invalid": "Seçilen dosya geçerli bir Aura ayar yedeği değil.",
+    "first_run_title": "Çevrimdışı dikte etmeye başlayın",
+    "first_run_desc": "Yerel tanıma için bir model gerekir. Base, hız ve doğruluk arasında önerilen dengedir (~145 MB).",
+    "first_run_download": "Base indir",
+    "first_run_hint": "Model bir kez indirilir ve internet bağlantısı olmadan çalışır.",
     "diag_speech_text_desc": "Teşhis günlüklerine tam transkribe edilmiş konuşma metnini dahil et. Gizlilik nedeniyle varsayılan olarak devre dışıdır.",
-    "diag_speech_text_checkbox": "Konuşma metnini günlüklere dahil et",
     "api_custom_url": "Sunucu API Adresi",
     "api_custom_model": "Model Adı",
     "provider_opt_custom": "Özel Sunucu",
@@ -2500,14 +2309,11 @@ const i18nDict = {
     "overlay_timer_desc": "Ses göstergesinin altında süre sayacını ve işleme durumunu göster. Hatalar her zaman görünür kalır.",
     "overlay_timer_checkbox": "Arayüzde zamanlayıcıyı ve durumu göster",
     "mic_meter_title": "Mikrofon Kontrolü",
-    "mic_meter_desc": "Giriş sinyali seviyesini ve gerçek zamanlı ses algılamayı test edin.",
+    "mic_meter_desc": "Gelen sinyal seviyesini gerçek zamanlı olarak kontrol edin.",
     "audio_device_label": "Mikrofon (giriş cihazı)",
     "audio_device_default": "Varsayılan (sistem)",
-    "audio_device_desc": "Ses kaydı için fiziksel mikrofonu seçin.",
     "mic_meter_test_btn_start": "Testi Başlat",
     "mic_meter_test_btn_stop": "Testi Durdur",
-    "mic_meter_speech": "Konuşma",
-    "mic_meter_silence": "Sessizlik",
     "mic_start_error": "Mikrofon başlatma hatası: ",
     "history_search_placeholder": "Geçmişte ara...",
     "history_filter_all": "Tümü",
@@ -2519,12 +2325,6 @@ const i18nDict = {
     "replacements_trigger_ph": "Kelime veya ifade (örn. e-posta)",
     "replacements_value_ph": "Şununla değiştir (örn. name@mail.com)",
     "replacements_caret_hint": "Değiştirme metnindeki | simgesi, eklemeden sonra imlecin nereye yerleştirileceğini belirtir (örn. Merhaba, |!).",
-    "replacements_macro_hint": "Kullanılabilir makrolar: {date} (YYYY-AA-GG), {date_ru} (GG.AA.YYYY), {time} (SS:DD), {datetime}.",
-    "replacements_macros_label": "Şablon ekle:",
-    "macro_chip_date_ru": "+ Tarih (RU)",
-    "macro_chip_date_iso": "+ Tarih (ISO)",
-    "macro_chip_time": "+ Saat",
-    "macro_chip_datetime": "+ Tarih ve saat",
     "btn_add": "Ekle",
     "replacements_empty": "Henüz yapılandırılmış değiştirme kuralı yok",
     "replacements_delete_aria": "Değiştirme kuralını sil",
@@ -2533,12 +2333,6 @@ const i18nDict = {
     "gaming_mode_label": "Oyun Modunu manuel etkinleştir",
     "gaming_mode_subdesc": "Klavye kancalarını devre dışı bırakır ve modelleri video belleğinden (VRAM) kaldırır.",
     "gaming_auto_label": "Otomatik Oyun Modu",
-    "gaming_auto_desc": "Tam ekran 3D oyunlar başlatıldığında kısayol tuşlarını askıya alır ve video belleğini (VRAM) serbest bırakır.",
-    "gaming_status_label": "Mevcut durum",
-    "gaming_status_inactive": "Etkin değil",
-    "gaming_status_active": "Aktif (duraklatıldı)",
-    "gaming_btn_toggle_on": "Manuel olarak etkinleştir",
-    "gaming_btn_toggle_off": "Devre dışı bırak",
     "gaming_tray_hint": "Manuel geçişe Windows sistem tepsisindeki Aura menüsünden de erişilebilir.",
     "standby_title": "Boşta Model Boşaltma (Uyku Modu)",
     "standby_timeout_label": "Uyku öncesi boşta kalma süresi",
@@ -2557,7 +2351,6 @@ const i18nDict = {
     "onboarding_prev": "Geri",
     "onboarding_next": "İleri",
     "onboarding_finish": "Başla",
-    "onboarding_replay": "Özellik tanıtım turu",
     "onboarding_step_tag": "{current} / {total}",
     "onboarding_step_1_title": "Konuşma Tanıma Yöntemleri",
     "onboarding_step_1_desc": "Aura varsayılan olarak tamamen çevrimdışı ve gizli çalışır: ses verileriniz ağa iletilmeden doğrudan bilgisayarınızda (NVIDIA CUDA veya CPU) işlenir. İhtiyaç duyulduğunda API üzerinden Bulut Yapay Zeka da kullanılabilir.",
@@ -2579,11 +2372,7 @@ const i18nDict = {
     "smart_context_subdesc": "Cümle ortasında küçük harfle başlar, fazladan noktaları kaldırır ve boşlukları düzenler.",
     "smart_context_trailing_period_checkbox": "Cümle sonunda devam ederken nokta ile bitir",
     "smart_context_trailing_period_subdesc": "İmleç tamamlanmamış cümlenin sonundaysa nokta ekler. Kapatılırsa dikteye devam etmek için açık bırakır.",
-    "sound_preview_btn": "Temayı dinle",
-    "sound_preview_label": "Test et",
-    "api_key_status_saved": "Windows DPAPI'de kayıtlı",
     "api_key_shared_hint": "Birleşik Aura anahtarı: sesli dikte ve yapay zeka düzenlemesi için geçerlidir.",
-    "api_key_btn_change": "Değiştir"
   }
 };
 
@@ -2595,7 +2384,9 @@ function syncPanelSelection(select) {
   if (!panel) return;
   const value = select.value;
   panel.querySelectorAll(".select-panel-item").forEach((item) => {
-    item.classList.toggle("is-selected", item.dataset.value === value);
+    const isSelected = item.dataset.value === value;
+    item.classList.toggle("is-selected", isSelected);
+    item.setAttribute("aria-selected", isSelected ? "true" : "false");
   });
 }
 
@@ -2604,12 +2395,16 @@ function buildSelectPanel(select) {
   const panel = wrap && wrap.querySelector(".select-panel");
   if (!panel) return;
   panel.textContent = "";
+  let optionIndex = 0;
   for (const option of select.options) {
     if (option.disabled) continue;
     const item = document.createElement("div");
     item.className = "select-panel-item";
+    item.id = `${select.id || panel.id || "select"}-option-${optionIndex}`;
+    optionIndex += 1;
     item.dataset.value = option.value;
     item.setAttribute("role", "option");
+    item.setAttribute("aria-selected", option.value === select.value ? "true" : "false");
 
     const main = document.createElement("div");
     main.className = "select-panel-item-main";
@@ -2651,6 +2446,7 @@ function closeSelectPanels() {
   });
   document.querySelectorAll("select.custom-select[aria-expanded]").forEach((el) => {
     el.setAttribute("aria-expanded", "false");
+    el.removeAttribute("aria-activedescendant");
   });
 }
 
@@ -2672,6 +2468,10 @@ function toggleSelectPanel(select) {
     syncPanelSelection(select);
     panel.classList.add("open");
     select.setAttribute("aria-expanded", "true");
+    const selectedItem = panel.querySelector(".select-panel-item.is-selected");
+    if (selectedItem?.id) {
+      select.setAttribute("aria-activedescendant", selectedItem.id);
+    }
   }
 }
 
@@ -2690,16 +2490,21 @@ function movePanelFocus(select, direction) {
   const panel = select.closest(".select-wrap").querySelector(".select-panel");
   if (!panel) return;
   const items = Array.from(panel.querySelectorAll(".select-panel-item"));
+  if (items.length === 0) return null;
   const currentIndex = items.findIndex((item) => item.classList.contains("is-focused"));
   let next = currentIndex === -1 ? 0 : currentIndex + direction;
   next = (next + items.length) % items.length;
+  const nextItem = items[next];
   items.forEach((item) => {
-    item.classList.toggle("is-focused", item === items[next]);
-    if (item === items[next] && typeof item.scrollIntoView === "function") {
-      item.scrollIntoView({ block: "nearest" });
-    }
+    item.classList.toggle("is-focused", item === nextItem);
   });
-  return items[next];
+  if (nextItem) {
+    select.setAttribute("aria-activedescendant", nextItem.id);
+    if (typeof nextItem.scrollIntoView === "function") {
+      nextItem.scrollIntoView({ block: "nearest" });
+    }
+  }
+  return nextItem;
 }
 
 function handleSelectMousedown(event) {
@@ -2747,6 +2552,10 @@ function initSelectPanels() {
   document.querySelectorAll("select.custom-select").forEach((select) => {
     const wrap = select.closest(".select-wrap");
     if (!wrap) return;
+    const panel = wrap.querySelector(".select-panel");
+    if (!panel) return;
+    select.setAttribute("aria-controls", panel.id);
+    select.setAttribute("aria-expanded", "false");
     const catcher = document.createElement("div");
     catcher.className = "select-catcher";
     catcher.setAttribute("aria-hidden", "true");
@@ -2759,6 +2568,8 @@ function initSelectPanels() {
     // label must open the panel itself instead.
     const label = document.querySelector(`label[for="${select.id}"]`);
     if (label) {
+      if (!label.id) label.id = `${select.id}-label`;
+      panel.setAttribute("aria-labelledby", label.id);
       label.addEventListener("mousedown", (event) => {
         event.preventDefault();
       });
@@ -2956,6 +2767,15 @@ const radioCloud = document.getElementById("radio-cloud");
       if (vocabCard) vocabCard.style.display = "none";
       if (streamingCard) streamingCard.style.display = "none";
     }
+    updateFirstRunCard();
+  }
+
+  function updateFirstRunCard() {
+    if (!firstRunCard) return;
+    const hasAsrModel = downloadedModelList.some(
+      (id) => id !== "punctuation" && !id.startsWith("qwen3-")
+    );
+    firstRunCard.hidden = !(radioLocal?.checked && !hasAsrModel);
   }
 
   function updateLocalEngineUI() {
@@ -4050,6 +3870,7 @@ const btnSaveSettings = document.getElementById("btn-save-settings");
     });
   }
   const modelCards = document.querySelectorAll(".model-card[data-model]");
+  const firstRunCard = document.getElementById("first-run-card");
 
   // WAI-ARIA radio group: arrow keys move between cards within the same group
   const arrowDirection = { ArrowUp: -1, ArrowLeft: -1, ArrowRight: 1, ArrowDown: 1 };
@@ -4447,6 +4268,7 @@ modelCards.forEach(card => {
         }
       }
 
+      updateFirstRunCard();
       refreshEngineHealth();
     } catch (err) {
       console.error("Failed to check downloaded models", err);
@@ -5295,6 +5117,17 @@ if (e.button === 0 && !e.target.closest(".window-control-btn") && !e.target.clos
     currentLanguage = lang;
     document.documentElement.lang = i18nDict[lang] ? lang : "ru";
     const dict = i18nDict[lang] || i18nDict.ru;
+
+    const windowTitle = `Aura — ${dict.title_settings || "Settings"}`;
+    document.title = windowTitle;
+    try {
+      const appWindow = window.__TAURI__?.window?.getCurrentWindow?.();
+      if (appWindow) {
+        appWindow.setTitle(windowTitle).catch(() => {});
+      }
+    } catch (_) {
+      // Browser preview: document.title above is sufficient.
+    }
     
     // Update data-i18n elements
     const elements = document.querySelectorAll("[data-i18n]");
@@ -5459,38 +5292,11 @@ if (e.button === 0 && !e.target.closest(".window-control-btn") && !e.target.clos
   const btnToggleMicMeter = document.getElementById("btn-toggle-mic-meter");
   const micMeterFill = document.getElementById("mic-meter-fill");
   const micMeterPeak = document.getElementById("mic-meter-peak");
-  const micVadIndicator = document.getElementById("mic-vad-indicator");
-  const micVadText = document.getElementById("mic-vad-text");
   let rawVolumeTarget = 0;
   let smoothedVolume = 0;
   let peakVolume = 0;
   let peakHoldFrames = 0;
   let micMeterAnimId = null;
-  let speechHangoverTimer = null;
-  let isSpeechActive = false;
-
-  function setSpeechState(speechDetected) {
-    if (speechDetected) {
-      if (speechHangoverTimer) {
-        clearTimeout(speechHangoverTimer);
-        speechHangoverTimer = null;
-      }
-      if (!isSpeechActive) {
-        isSpeechActive = true;
-        if (micVadIndicator) micVadIndicator.classList.add("speaking");
-        if (micVadText) micVadText.textContent = getTranslation("mic_meter_speech") || "Речь";
-      }
-    } else {
-      if (isSpeechActive && !speechHangoverTimer) {
-        speechHangoverTimer = setTimeout(() => {
-          isSpeechActive = false;
-          speechHangoverTimer = null;
-          if (micVadIndicator) micVadIndicator.classList.remove("speaking");
-          if (micVadText) micVadText.textContent = getTranslation("mic_meter_silence") || "Тишина";
-        }, 220);
-      }
-    }
-  }
 
   function runMicMeterPhysics() {
     if (!isMicTesting) return;
@@ -5531,11 +5337,6 @@ if (e.button === 0 && !e.target.closest(".window-control-btn") && !e.target.clos
       cancelAnimationFrame(micMeterAnimId);
       micMeterAnimId = null;
     }
-    if (speechHangoverTimer) {
-      clearTimeout(speechHangoverTimer);
-      speechHangoverTimer = null;
-    }
-    isSpeechActive = false;
     rawVolumeTarget = 0;
     smoothedVolume = 0;
     peakVolume = 0;
@@ -5555,12 +5356,6 @@ if (e.button === 0 && !e.target.closest(".window-control-btn") && !e.target.clos
       micMeterPeak.style.left = "0%";
       micMeterPeak.style.opacity = "0";
     }
-    if (micVadIndicator) {
-      micVadIndicator.classList.remove("speaking");
-    }
-    if (micVadText) {
-      micVadText.textContent = getTranslation("mic_meter_silence") || "Тишина";
-    }
   }
 
   if (btnToggleMicMeter) {
@@ -5573,11 +5368,6 @@ if (e.button === 0 && !e.target.closest(".window-control-btn") && !e.target.clos
         smoothedVolume = 0;
         peakVolume = 0;
         peakHoldFrames = 0;
-        isSpeechActive = false;
-        if (speechHangoverTimer) {
-          clearTimeout(speechHangoverTimer);
-          speechHangoverTimer = null;
-        }
 
         try {
           await invoke("start_mic_meter");
@@ -5594,11 +5384,39 @@ if (e.button === 0 && !e.target.closest(".window-control-btn") && !e.target.clos
 
     listen("mic-meter-level", (event) => {
       if (!isMicTesting) return;
-      const { volume, is_speech } = event.payload || {};
+      const { volume } = event.payload || {};
       const perceptual = Math.pow(Math.min(1.0, (volume || 0) * 2.0), 0.6);
       rawVolumeTarget = perceptual * 100;
+    });
+  }
 
-      setSpeechState(!!is_speech);
+  const btnFirstRunDownload = document.getElementById("btn-first-run-download");
+  const btnFirstRunTest = document.getElementById("btn-first-run-test");
+  if (btnFirstRunDownload) {
+    btnFirstRunDownload.addEventListener("click", () => {
+      const speechTab = document.getElementById("tab-btn-speech");
+      if (speechTab) activateTab(speechTab);
+      const baseCard = document.querySelector('.model-card[data-model="base"]');
+      if (baseCard) {
+        baseCard.scrollIntoView({ block: "center", behavior: "smooth" });
+      }
+      downloadModelCard("base");
+    });
+  }
+  if (btnFirstRunTest) {
+    btnFirstRunTest.addEventListener("click", () => {
+      const speechTab = document.getElementById("tab-btn-speech");
+      if (speechTab) activateTab(speechTab);
+      const micCard = document.getElementById("card-mic-meter");
+      if (micCard) {
+        micCard.scrollIntoView({ block: "center", behavior: "smooth" });
+      }
+      if (btnToggleMicMeter && !btnToggleMicMeter.classList.contains("active")) {
+        btnToggleMicMeter.click();
+      }
+      if (btnToggleMicMeter) {
+        btnToggleMicMeter.focus({ preventScroll: true });
+      }
     });
   }
 
@@ -5832,6 +5650,79 @@ if (e.button === 0 && !e.target.closest(".window-control-btn") && !e.target.clos
     });
   }
 
+  const btnExportSettings = document.getElementById("btn-export-settings");
+  if (btnExportSettings) {
+    btnExportSettings.addEventListener("click", async () => {
+      try {
+        const settingsView = await invoke("get_settings");
+        const payload = buildSettingsBackup(settingsView);
+        const blob = new Blob([JSON.stringify(payload, null, 2)], {
+          type: "application/json"
+        });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = settingsBackupFileName();
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 10_000);
+        showStatus(getTranslation("backup_exported"));
+      } catch (err) {
+        console.error("Failed to export settings", err);
+        showStatus(`${getTranslation("status_error")}${err}`, true);
+      }
+    });
+  }
+
+  const btnImportSettings = document.getElementById("btn-import-settings");
+  if (btnImportSettings) {
+    btnImportSettings.addEventListener("click", () => {
+      const input = document.createElement("input");
+      input.type = "file";
+      input.accept = ".json,application/json";
+      input.style.display = "none";
+      document.body.appendChild(input);
+      const discardInput = () => input.remove();
+      input.addEventListener("cancel", discardInput, { once: true });
+      input.addEventListener("change", async () => {
+        const file = input.files && input.files[0] ? input.files[0] : null;
+        discardInput();
+        if (!file) return;
+        try {
+          if (file.size > 2_000_000) {
+            throw Object.assign(
+              new Error("Settings backup is too large"),
+              { code: "invalid-backup" }
+            );
+          }
+          const current = await invoke("get_settings");
+          const candidate = parseSettingsBackup(
+            await file.text(),
+            Object.keys(current || {})
+          );
+          const confirmed = await showConfirm(
+            getTranslation("backup_title"),
+            getTranslation("backup_import_confirm"),
+            getTranslation("confirm_ok"),
+            getTranslation("confirm_cancel")
+          );
+          if (!confirmed) return;
+          await invoke("set_settings", { settings: candidate });
+          window.location.reload();
+        } catch (err) {
+          console.error("Failed to import settings", err);
+          const isInvalidBackup = err && err.code === "invalid-backup";
+          const message = isInvalidBackup
+            ? getTranslation("backup_import_invalid")
+            : (err instanceof Error ? err.message : String(err));
+          showStatus(`${getTranslation("status_error")}${message}`, true);
+        }
+      }, { once: true });
+      input.click();
+    });
+  }
+
   const btnExitApp = document.getElementById("btn-exit-app");
   if (btnExitApp) {
     btnExitApp.addEventListener("click", async () => {
@@ -6021,6 +5912,7 @@ if (e.button === 0 && !e.target.closest(".window-control-btn") && !e.target.clos
 
     let currentTourStep = 0;
     let isTourActive = false;
+    let lastFocusedElement = null;
 
     function initSpotlightTour() {
       const overlay = document.getElementById("spotlight-tour-overlay");
@@ -6098,11 +5990,13 @@ if (e.button === 0 && !e.target.closest(".window-control-btn") && !e.target.clos
         const cutoutLeft = Math.max(0, rect.left - padding);
         const cutoutWidth = rect.width + padding * 2;
         const cutoutHeight = rect.height + padding * 2;
+        const targetRadius = parseFloat(getComputedStyle(target).borderTopLeftRadius) || 0;
 
         cutout.style.top = `${Math.round(cutoutTop)}px`;
         cutout.style.left = `${Math.round(cutoutLeft)}px`;
         cutout.style.width = `${Math.round(cutoutWidth)}px`;
         cutout.style.height = `${Math.round(cutoutHeight)}px`;
+        cutout.style.borderRadius = `${Math.round(targetRadius + padding)}px`;
       }
 
       function showTourStep(index) {
@@ -6140,17 +6034,32 @@ if (e.button === 0 && !e.target.closest(".window-control-btn") && !e.target.clos
       }
 
       function startTour() {
+        if (isTourActive) return;
         isTourActive = true;
+        lastFocusedElement = document.activeElement instanceof HTMLElement
+          && document.activeElement !== document.body
+          ? document.activeElement
+          : null;
         overlay.hidden = false;
-        if (mainContent) mainContent.classList.add("tour-active-padding");
+        if (mainContent) {
+          // The tour is modal: content behind the spotlight must not be
+          // reachable with Tab or a screen reader while it is open.
+          mainContent.inert = true;
+          mainContent.classList.add("tour-active-padding");
+        }
         currentTourStep = 0;
         showTourStep(0);
+        btnNext.focus({ preventScroll: true });
       }
 
       function finishTour() {
+        if (!isTourActive) return;
         isTourActive = false;
         overlay.hidden = true;
-        if (mainContent) mainContent.classList.remove("tour-active-padding");
+        if (mainContent) {
+          mainContent.inert = false;
+          mainContent.classList.remove("tour-active-padding");
+        }
         hasCompletedOnboarding = true;
         try {
           localStorage.setItem("aura_onboarding_completed", "true");
@@ -6158,6 +6067,11 @@ if (e.button === 0 && !e.target.closest(".window-control-btn") && !e.target.clos
         invoke("complete_onboarding").catch(err => {
           console.error("Failed to mark onboarding as completed", err);
         });
+        const focusTarget = lastFocusedElement;
+        lastFocusedElement = null;
+        if (focusTarget && document.contains(focusTarget)) {
+          focusTarget.focus({ preventScroll: true });
+        }
       }
 
       btnNext.addEventListener("click", () => {
@@ -6209,6 +6123,23 @@ if (e.button === 0 && !e.target.closest(".window-control-btn") && !e.target.clos
         } else if (e.key === "ArrowLeft") {
           e.preventDefault();
           if (currentTourStep > 0) showTourStep(currentTourStep - 1);
+        } else if (e.key === "Tab") {
+          const focusables = Array.from(
+            popover.querySelectorAll("button:not([disabled])")
+          ).filter((element) => element.offsetParent !== null);
+          if (focusables.length === 0) return;
+          const first = focusables[0];
+          const last = focusables[focusables.length - 1];
+          if (!popover.contains(document.activeElement)) {
+            e.preventDefault();
+            first.focus();
+          } else if (e.shiftKey && document.activeElement === first) {
+            e.preventDefault();
+            last.focus();
+          } else if (!e.shiftKey && document.activeElement === last) {
+            e.preventDefault();
+            first.focus();
+          }
         }
       });
 

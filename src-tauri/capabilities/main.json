@@ -6,6 +6,7 @@
   "permissions": [
     "core:event:allow-listen",
     "core:event:allow-unlisten",
+    "core:window:allow-set-title",
     "allow-check-for-app-update",
     "allow-install-app-update",
     "allow-get-settings",

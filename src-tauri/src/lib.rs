@@ -3253,7 +3253,7 @@ async fn start_recording_session(app_handle: tauri::AppHandle) {
     }
 
     if session_settings.transcription_mode == "local" {
-        if session_settings.local_engine == "whisper" && session_settings.whisper_keep_in_memory {
+        if session_settings.local_engine == "whisper" {
             let prewarm_handle = app_handle.clone();
             let prewarm_settings = session_settings.clone();
             tauri::async_runtime::spawn_blocking(move || {
@@ -5614,7 +5614,7 @@ async fn apply_gaming_mode_state(app: &tauri::AppHandle, enabled: bool, auto_tri
             );
         } else {
             if let Ok(settings) = settings::load_settings(app) {
-                if settings.transcription_mode == "local" && settings.whisper_keep_in_memory {
+                if settings.transcription_mode == "local" {
                     if settings.local_engine == "whisper" {
                         whisper_runner::ensure_whisper_server_state(app, &settings);
                     } else if settings.local_engine == "parakeet" {

@@ -77,7 +77,6 @@ pub struct Settings {
     pub toggle_enabled: bool,
     pub language: String,
     pub dictionary: String,
-    pub voice_punctuation: bool,
     pub autostart: bool,
     pub automatic_update_checks: bool,
     pub overlay_sounds: bool,
@@ -101,7 +100,6 @@ pub struct Settings {
     pub smart_context_trailing_period: bool,
     pub log_speech_text: bool,
     pub overlay_show_timer: bool,
-    pub whisper_keep_in_memory: bool,
     #[serde(default = "default_audio_device")]
     pub audio_input_device: String,
     #[serde(default = "default_vram_standby_timeout_mins")]
@@ -164,7 +162,6 @@ impl Default for Settings {
             toggle_enabled: false,
             language: "auto".to_string(),
             dictionary: String::new(),
-            voice_punctuation: false,
             autostart: false,
             automatic_update_checks: false,
             overlay_sounds: true,
@@ -181,7 +178,6 @@ impl Default for Settings {
             smart_context_trailing_period: true,
             log_speech_text: false,
             overlay_show_timer: true,
-            whisper_keep_in_memory: true,
             audio_input_device: "default".to_string(),
             vram_standby_timeout_mins: 30,
             gaming_mode_enabled: false,

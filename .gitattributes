@@ -1,0 +1,27 @@
+# Keep source and documentation line endings stable across Windows checkouts.
+# Without this, core.autocrlf rewrites LF files to CRLF on checkout and Git
+# prints a warning for almost every edit.
+* text=auto
+.gitattributes text eol=lf
+*.rs text eol=lf
+*.js text eol=lf
+*.mjs text eol=lf
+*.cjs text eol=lf
+*.css text eol=lf
+*.html text eol=lf
+*.json text eol=lf
+*.md text eol=lf
+*.toml text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.ps1 text eol=crlf
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.nsi text eol=crlf
+*.exe binary
+*.dll binary
+*.ico binary
+*.png binary
+*.jpg binary
+*.gif binary
+*.woff2 binary

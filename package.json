@@ -8,7 +8,7 @@
   "scripts": {
     "tauri": "tauri",
     "dev": "tauri dev",
-    "lint": "node --check src/main.js && node --check src/overlay.js && node --check src/ui-accessibility.js",
+    "lint": "node --check src/main.js && node --check src/overlay.js && node --check src/ui-accessibility.js && node --check src/settings-backup.js",
     "typecheck": "tsc -p tsconfig.json",
     "check": "npm run lint && npm run typecheck",
     "test": "node --test tests/frontend-static.test.mjs",

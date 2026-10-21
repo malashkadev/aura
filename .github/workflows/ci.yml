@@ -51,9 +51,9 @@ jobs:
           rustup override set 1.96.0
 
       - name: Verify workspace is clean
-        # CI and release builds must run on exactly the committed tree; the
-        # release workflow does not run the static audit suite, so a dirty
-        # checkout here means the published installer was not verified.
+        # CI and release builds must run on exactly the committed tree; both
+        # workflows run the static audit suite, so a dirty checkout here means
+        # the published installer was not verified from the tested tree.
         run: |
           git diff --exit-code
           git diff --cached --exit-code

@@ -73,3 +73,18 @@ capture utilities. SDL2 is licensed under the zlib License:
 
 https://www.libsdl.org/license.php
 
+## Onest font
+
+Aura bundles the Onest variable font (`src/assets/fonts/onest-*.woff2`) so the
+interface renders with the intended typography without any network requests.
+Onest is licensed under the SIL Open Font License 1.1:
+
+https://openfontlicense.org
+
+## Silero VAD
+
+Aura uses Silero VAD (through the `voice_activity_detector` crate) to detect
+silence before transcription. Silero VAD is licensed under the MIT License:
+
+https://github.com/snakers4/silero-vad/blob/master/LICENSE
+

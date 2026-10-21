@@ -1191,8 +1191,9 @@ function initNavCapsule() {
   let indicator = navMenu.querySelector('.nav-pill-indicator');
 
   if (!indicator) {
-    indicator = document.createElement('div');
+    indicator = document.createElement('li');
     indicator.className = 'nav-pill-indicator';
+    indicator.setAttribute('aria-hidden', 'true');
     navMenu.prepend(indicator);
   }
 

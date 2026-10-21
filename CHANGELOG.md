@@ -3,9 +3,9 @@
 All notable changes to Aura are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/), versions follow [SemVer](https://semver.org/).
 
-## [1.2.0] — 2026-10-18
+## [1.2.0] — 2026-10-22
 
-_Audit follow-up pass added on 2026-10-19._
+_Comprehensive audit follow-up pass completed on 2026-10-22._
 
 ### Added
 - **Cursor Marker in Text Replacements (`|`)**: a `|` inside a replacement or snippet sets the final caret position after insertion (e.g. `Здравствуйте, |!`); the first marker wins, later pipes stay literal. Implemented in the shared normalizer (`text_normalizer.rs`), applied to live dictation, history reprocessing and paste/streaming paths, with a dedicated hint in all 9 UI locales.
@@ -13,11 +13,21 @@ _Audit follow-up pass added on 2026-10-19._
 - **Windows Session Lock/Unlock Hotkey Recovery (`keyboard_hook.rs`)**: a message-only window with `WTSRegisterSessionNotification` clears stale hotkey latches after lock/unlock or hook pause, so the hotkey cannot stay "stuck" after a locked session.
 - **Early Startup Logging & Panic Hook (`logger.rs`)**: diagnostics logging now starts before the Tauri builder (pid/cwd/args) and a panic hook records panics that happen before window creation.
 - **Engine Health "Starting" State (`lib.rs`, `main.js`)**: `get_engine_health` reports a `starting` flag and the first local dictation briefly waits for the resident Whisper prewarm instead of failing.
+- **Portable Settings Backup & Restore**: the About tab can export a secret-free JSON copy of settings, dictionary, and text replacements and restore it on another installation; format/version and completeness checks reject corrupt or foreign files before anything is saved.
+- **First-Run Setup Card**: when local mode has no speech model installed, the General tab now surfaces a one-click Base-model download and microphone test instead of a silent first-run failure.
 
 ### Changed
 - **Local speech recognition is now the out-of-the-box default**: `transcription_mode` defaults to `local` with the local engine radio preselected (`settings_secure.rs`); cloud AI remains an opt-in.
 - **Supported Commands guide redesigned**: balanced two-column chip layout; voice editing is documented as the 2 active commands (translate / fix grammar) across all locales and the HTML fallback.
 - **Onboarding tour narrative updated**: explains the local-first default, dictionary/replacements and the `|` marker, with a dedicated alternate narrative for modes where the language card is hidden.
+- **Accessibility pass**: custom selects expose `aria-controls`, `aria-activedescendant`, labelled listboxes, and per-option ids/selection state; the spotlight tour makes the settings content inert, traps Tab focus, and restores focus on close.
+- **Whisper prewarm parity**: removed the unreachable `whisper_keep_in_memory` setting; Whisper now prewarms unconditionally like Parakeet, eliminating a dead configuration field and settings drift.
+- **Release quality gates**: CI and the release workflow run `npm audit` alongside lint, typecheck, frontend tests, and static audits; a new test guards the frontend `Settings` round-trip.
+- **Documentation and repository hygiene**: corrected macOS CI claims, documented Onest/Silero licenses, and added LF/CRLF rules via `.gitattributes`.
+
+### Security
+- **Diagnostic report path redaction**: exported diagnostics replace the current Windows profile prefix (both slash styles) with `%USERPROFILE%` and keep unrelated account names intact.
+- **Backup secret isolation**: exported settings never include API keys; imported files have API-key fields stripped and are size/completeness validated before `set_settings`.
 
 ### Fixed
 - **UTF-8 Slicing Panic in Normalizer (`text_normalizer.rs`)**: Fixed byte boundary slicing panic (`FAULT-01`) when speech hallucination prefixes contain 3-byte UTF-8 em-dashes (`—`). Made subtitle prefix case-insensitive search fully Unicode-safe.
@@ -41,6 +51,7 @@ _Audit follow-up pass added on 2026-10-19._
 - **Tour Spotlight Fallback (`main.js`)**: the onboarding cutout no longer jumps to the top-left corner and now prefers the step-declared alternate card (`#card-replacements`) instead of the first visible card when the primary target is hidden.
 - **Engine Health Chip Synchronization (`lib.rs`, `main.js`)**: the chip is driven by the backend `starting` flag instead of a frontend timer, eliminating a "starting…" ghost state and matching the resident server boot.
 - **Installer Launch After Installation (`nsis/installer.nsi`)**: finish-page launch and `/R` restart now use `nsis_tauri_utils::RunAsUser` (never elevated) with a one-shot `FindProcessCurrentUser` check and retry, fixing "Aura did not start after installation" reports.
+- **Settings Persistence Drift (`main.js`, `settings_secure.rs`)**: a frontend/backend test now compares every non-secret native `Settings` field with the save payload, so a new option cannot silently reset or disappear.
 
 ## [1.1.2] — 2026-10-11
 

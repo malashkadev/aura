@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description" content="Настройка параметров голосового ввода Aura" />
-  <title>Настройки Aura</title>
+  <title>Aura</title>
 
   <link rel="stylesheet" href="style.css?v=2.0.16" />
   <script type="module" src="main.js" defer></script>
@@ -69,6 +69,16 @@
       <main class="settings-content" id="settings-main-content">
         <!-- 1. GENERAL PANEL -->
         <section class="tab-panel active" id="panel-general" role="tabpanel" tabindex="0" aria-labelledby="tab-btn-general">
+          <div class="card first-run-card" id="first-run-card" hidden>
+            <h2 class="card-title" data-i18n="first_run_title">Начните диктовать офлайн</h2>
+            <p class="card-desc" data-i18n="first_run_desc">Для локального распознавания нужна модель. Base — рекомендуемый баланс скорости и точности (~145 МБ).</p>
+            <div class="first-run-actions">
+              <button type="button" class="btn btn-primary" id="btn-first-run-download" data-i18n="first_run_download">Скачать Base</button>
+              <button type="button" class="btn btn-secondary" id="btn-first-run-test" data-i18n="mic_meter_test_btn_start">Начать тест</button>
+            </div>
+            <p class="field-hint" data-i18n="first_run_hint">Модель скачивается один раз и работает без интернета.</p>
+          </div>
+
           <div class="card">
             <h2 class="card-title" data-i18n="general_autostart_title">Автозапуск Aura</h2>
             <p class="card-desc" data-i18n="general_autostart_desc">Запускать приложение автоматически при входе в операционную систему Windows.</p>
@@ -110,7 +120,7 @@
             <div class="mic-meter-header">
               <div class="mic-meter-title-wrap">
                 <h2 class="card-title" data-i18n="mic_meter_title">Проверка микрофона</h2>
-                <p class="card-desc" data-i18n="mic_meter_desc">Проверьте уровень входящего сигнала и распознавание голоса в реальном времени.</p>
+                <p class="card-desc" data-i18n="mic_meter_desc">Проверьте уровень входящего сигнала в реальном времени.</p>
               </div>
               <button type="button" class="btn btn-secondary btn-mic-test" id="btn-toggle-mic-meter" data-i18n="mic_meter_test_btn_start">Начать тест</button>
             </div>
@@ -127,12 +137,6 @@
               <div class="mic-meter-bar-track">
                 <div class="mic-meter-bar-fill" id="mic-meter-fill"></div>
                 <div class="mic-meter-peak" id="mic-meter-peak"></div>
-              </div>
-              <div class="mic-meter-status">
-                <span class="mic-vad-indicator" id="mic-vad-indicator">
-                  <span class="mic-vad-dot"></span>
-                  <span class="mic-vad-text" id="mic-vad-text" data-i18n="mic_meter_silence">Тишина</span>
-                </span>
               </div>
             </div>
           </div>
@@ -893,6 +897,15 @@
             </label>
             <button type="button" class="btn btn-secondary" id="btn-copy-diagnostics" data-i18n="btn_copy_diagnostics">Скопировать отчет диагностики</button>
           </div>
+
+          <div class="card" id="card-backup">
+            <h2 class="card-title" data-i18n="backup_title">Резервная копия настроек</h2>
+            <p class="card-desc" data-i18n="backup_desc">Сохраните настройки, словарь и автозамены в JSON-файл. API-ключи в файл не попадают.</p>
+            <div class="first-run-actions">
+              <button type="button" class="btn btn-secondary" id="btn-export-settings" data-i18n="backup_export">Экспортировать</button>
+              <button type="button" class="btn btn-secondary" id="btn-import-settings" data-i18n="backup_import">Импортировать</button>
+            </div>
+          </div>
         </section>
       </main>
     </div>
@@ -923,7 +936,7 @@
   </dialog>
 
   <!-- Interactive Spotlight Tour Overlay -->
-  <div id="spotlight-tour-overlay" class="spotlight-overlay" hidden aria-modal="true" role="dialog" aria-labelledby="spotlight-title">
+  <div id="spotlight-tour-overlay" class="spotlight-overlay" hidden aria-modal="true" role="dialog" aria-labelledby="spotlight-title" aria-describedby="spotlight-desc">
     <div class="spotlight-backdrop" id="spotlight-backdrop"></div>
     <div id="spotlight-cutout" class="spotlight-cutout"></div>
     <div id="spotlight-popover" class="spotlight-popover spotlight-dock" role="region" aria-live="polite">
