@@ -310,18 +310,37 @@ body {
   color: var(--text-primary);
 }
 
-.first-run-card {
-  border-color: rgba(var(--accent-color-rgb), 0.35);
-}
-
-.first-run-actions {
+.first-run-heading {
   display: flex;
-  flex-wrap: wrap;
+  align-items: center;
   gap: 10px;
 }
 
-.first-run-actions .btn {
+.first-run-icon {
+  width: 20px;
+  height: 20px;
+  flex: 0 0 auto;
+  color: var(--accent-color);
+}
+
+.first-run-card .field-hint {
+  margin-top: 0;
+}
+
+.card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: 2px;
+}
+
+.card-actions .btn {
   flex: 0 1 auto;
+  height: 36px;
+  margin-top: 0;
+  padding: 0 16px;
+  font-size: 0.85rem;
 }
 
 .card-desc {
@@ -2443,15 +2462,16 @@ body {
 }
 
 .modal-actions .btn-primary {
-  background: none;
-  color: var(--text-secondary);
-  border: 1px solid var(--border-color);
+  background-color: var(--accent-color);
+  border-color: var(--accent-color);
+  color: hsl(0, 0%, 5%);
+  font-weight: 700;
 }
 
 .modal-actions .btn-primary:hover {
-  border-color: var(--accent-color);
-  color: var(--text-primary);
-  background-color: rgba(var(--accent-color-rgb), 0.08);
+  background-color: var(--accent-hover);
+  border-color: var(--accent-hover);
+  color: hsl(0, 0%, 5%);
 }
 
 .modal-actions .btn:active {

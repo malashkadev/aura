@@ -40,6 +40,7 @@
     "allow-toggle-gaming-mode",
     "allow-get-gaming-mode-state",
     "allow-complete-onboarding",
+    "allow-save-settings-backup",
     "allow-exit-app"
   ]
 }

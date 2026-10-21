@@ -254,6 +254,56 @@ async fn complete_onboarding(app_handle: tauri::AppHandle) -> Result<(), String>
     .map_err(|error| format!("Failed to complete onboarding: {error}"))?
 }
 
+#[tauri::command]
+async fn save_settings_backup(
+    contents: String,
+    suggested_name: String,
+    dialog_title: String,
+) -> Result<Option<String>, String> {
+    const MAX_BACKUP_BYTES: usize = 2_000_000;
+
+    if contents.len() > MAX_BACKUP_BYTES {
+        return Err("Settings backup is too large".to_string());
+    }
+    let parsed: serde_json::Value = serde_json::from_str(&contents)
+        .map_err(|error| format!("Settings backup is not valid JSON: {error}"))?;
+    if !parsed.is_object() {
+        return Err("Settings backup must be a JSON object".to_string());
+    }
+
+    let suggested_name = std::path::Path::new(&suggested_name)
+        .file_name()
+        .and_then(|name| name.to_str())
+        .filter(|name| !name.trim().is_empty())
+        .unwrap_or("aura-settings.json")
+        .to_string();
+    let dialog_title = if dialog_title.trim().is_empty() {
+        "Aura settings backup".to_string()
+    } else {
+        dialog_title
+    };
+
+    let selected = tauri::async_runtime::spawn_blocking(move || {
+        rfd::FileDialog::new()
+            .set_title(dialog_title)
+            .set_file_name(suggested_name)
+            .add_filter("JSON", &["json"])
+            .save_file()
+    })
+    .await
+    .map_err(|error| format!("Settings save dialog failed: {error}"))?;
+
+    let Some(mut path) = selected else {
+        return Ok(None);
+    };
+    if path.extension().is_none() {
+        path.set_extension("json");
+    }
+    std::fs::write(&path, contents)
+        .map_err(|error| format!("Failed to save settings backup: {error}"))?;
+    Ok(Some(path.display().to_string()))
+}
+
 fn tray_tooltip(gaming_mode: bool, language: &str) -> &'static str {
     if gaming_mode {
         match language {
@@ -5080,6 +5130,7 @@ pub fn run() {
             toggle_gaming_mode,
             get_gaming_mode_state,
             show_settings_window,
+            save_settings_backup,
             exit_app
         ])
         .build(tauri::generate_context!());

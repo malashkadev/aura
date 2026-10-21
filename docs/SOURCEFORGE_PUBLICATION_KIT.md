@@ -135,6 +135,6 @@ Unlike proprietary dictation software that locks you into paid subscriptions and
 
 - **Folder Path:** `/Aura 1.2.0/` (или `/v1.2.0/`)
 - **File Name:** `Aura_1.2.0_x64-setup.exe`
-- **File Size:** `23 777 918` bytes (22.67 MB)
-- **SHA-256 Checksum:** `BC50C4206AF57AE80CCA0C167E05EDC11A459411C0AE8F2934609397B0E29B2B`
+- **File Size:** `23 783 015` bytes (22.68 MB)
+- **SHA-256 Checksum:** `7F1A7D41DA02A94C4F37EFF0C168BC5FB16D15BAE89E43DEBE4BED5B2EFFE6E8`
 - **Default Download Setting:** После загрузки файла нажать на иконку `(i)` рядом с файлом и выбрать чекбокс **"Default download for: Windows"**.

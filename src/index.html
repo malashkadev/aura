@@ -6,8 +6,8 @@
   <meta name="description" content="Настройка параметров голосового ввода Aura" />
   <title>Aura</title>
 
-  <link rel="stylesheet" href="style.css?v=2.0.16" />
-  <script type="module" src="main.js" defer></script>
+  <link rel="stylesheet" href="style.css?v=2.0.17" />
+  <script type="module" src="main.js?v=2.0.17" defer></script>
 </head>
 <body>
   <div class="glass-container">
@@ -70,9 +70,17 @@
         <!-- 1. GENERAL PANEL -->
         <section class="tab-panel active" id="panel-general" role="tabpanel" tabindex="0" aria-labelledby="tab-btn-general">
           <div class="card first-run-card" id="first-run-card" hidden>
-            <h2 class="card-title" data-i18n="first_run_title">Начните диктовать офлайн</h2>
+            <div class="first-run-heading">
+              <svg class="first-run-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+                <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                <line x1="12" y1="19" x2="12" y2="23"></line>
+                <line x1="8" y1="23" x2="16" y2="23"></line>
+              </svg>
+              <h2 class="card-title" data-i18n="first_run_title">Начните диктовать офлайн</h2>
+            </div>
             <p class="card-desc" data-i18n="first_run_desc">Для локального распознавания нужна модель. Base — рекомендуемый баланс скорости и точности (~145 МБ).</p>
-            <div class="first-run-actions">
+            <div class="card-actions">
               <button type="button" class="btn btn-primary" id="btn-first-run-download" data-i18n="first_run_download">Скачать Base</button>
               <button type="button" class="btn btn-secondary" id="btn-first-run-test" data-i18n="mic_meter_test_btn_start">Начать тест</button>
             </div>
@@ -901,7 +909,7 @@
           <div class="card" id="card-backup">
             <h2 class="card-title" data-i18n="backup_title">Резервная копия настроек</h2>
             <p class="card-desc" data-i18n="backup_desc">Сохраните настройки, словарь и автозамены в JSON-файл. API-ключи в файл не попадают.</p>
-            <div class="first-run-actions">
+            <div class="card-actions">
               <button type="button" class="btn btn-secondary" id="btn-export-settings" data-i18n="backup_export">Экспортировать</button>
               <button type="button" class="btn btn-secondary" id="btn-import-settings" data-i18n="backup_import">Импортировать</button>
             </div>

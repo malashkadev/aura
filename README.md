@@ -46,7 +46,7 @@ Press and hold the hotkey, speak, and release — Aura instantly transcribes you
 - **12 language options** — auto-detect, keyboard-layout detection, or fixed selection (ru, en, de, es, fr, it, zh, pt, tr, nl).
 - **Polished overlay with 6 sound themes** — microphone VU meter, recording timer, 6 audio themes (Zen, Rhodes, Sci-Fi, Classic Bell, Bubble, Haptic), and display customization.
 - **Native High-DPI Tray Menu** — modern tray menu with per-monitor DPI scaling, instant gaming mode toggle, and settings access.
-- **System integration & security** — autostart with Windows, Windows DPAPI credential encryption, one-click diagnostic reports with profile-path redaction, and portable settings backup/restore (API keys are never exported).
+- **System integration & security** — autostart with Windows, Windows DPAPI credential encryption, one-click diagnostic reports with profile-path redaction, and portable settings backup/restore with a native Save As dialog (API keys are never exported).
 - **Guided first run** — if no local model is installed, the General tab offers a one-click Base-model download and microphone test.
 
 ## How Aura compares

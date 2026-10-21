@@ -38,6 +38,7 @@ const APP_COMMANDS: &[&str] = &[
     "toggle_gaming_mode",
     "get_gaming_mode_state",
     "show_settings_window",
+    "save_settings_backup",
     "exit_app",
 ];
 

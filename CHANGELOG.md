@@ -13,7 +13,7 @@ _Comprehensive audit follow-up pass completed on 2026-10-22._
 - **Windows Session Lock/Unlock Hotkey Recovery (`keyboard_hook.rs`)**: a message-only window with `WTSRegisterSessionNotification` clears stale hotkey latches after lock/unlock or hook pause, so the hotkey cannot stay "stuck" after a locked session.
 - **Early Startup Logging & Panic Hook (`logger.rs`)**: diagnostics logging now starts before the Tauri builder (pid/cwd/args) and a panic hook records panics that happen before window creation.
 - **Engine Health "Starting" State (`lib.rs`, `main.js`)**: `get_engine_health` reports a `starting` flag and the first local dictation briefly waits for the resident Whisper prewarm instead of failing.
-- **Portable Settings Backup & Restore**: the About tab can export a secret-free JSON copy of settings, dictionary, and text replacements and restore it on another installation; format/version and completeness checks reject corrupt or foreign files before anything is saved.
+- **Portable Settings Backup & Restore**: the About tab can export a secret-free JSON copy of settings, dictionary, and text replacements through the native Windows Save As dialog, and restore it on another installation; format/version and completeness checks reject corrupt or foreign files before anything is saved.
 - **First-Run Setup Card**: when local mode has no speech model installed, the General tab now surfaces a one-click Base-model download and microphone test instead of a silent first-run failure.
 
 ### Changed
@@ -52,6 +52,8 @@ _Comprehensive audit follow-up pass completed on 2026-10-22._
 - **Engine Health Chip Synchronization (`lib.rs`, `main.js`)**: the chip is driven by the backend `starting` flag instead of a frontend timer, eliminating a "starting…" ghost state and matching the resident server boot.
 - **Installer Launch After Installation (`nsis/installer.nsi`)**: finish-page launch and `/R` restart now use `nsis_tauri_utils::RunAsUser` (never elevated) with a one-shot `FindProcessCurrentUser` check and retry, fixing "Aura did not start after installation" reports.
 - **Settings Persistence Drift (`main.js`, `settings_secure.rs`)**: a frontend/backend test now compares every non-secret native `Settings` field with the save payload, so a new option cannot silently reset or disappear.
+- **Settings Export Destination (`main.js`, `lib.rs`)**: export now opens the native Windows Save As dialog and writes only to the path the user chooses, instead of silently downloading to the default folder.
+- **Confirmation and First-Run Styling (`style.css`, `index.html`)**: the primary confirmation action now uses the Tactical Orange accent, and the first-run recommendation card uses the standard card surface, aligned 36px actions, and a compact accent icon instead of an orange outline.
 
 ## [1.1.2] — 2026-10-11
 

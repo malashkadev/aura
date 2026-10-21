@@ -194,6 +194,14 @@ test("settings backup exports no secrets and validates imported files", async ()
   });
   assert.equal(settingsBackupFileName(exportedAt), "aura-settings-2026-10-22.json");
 
+  const main = read("src/main.js");
+  const build = read("src-tauri/build.rs");
+  const mainCapability = json("src-tauri/capabilities/main.json");
+  assert.match(main, /invoke\("save_settings_backup"/);
+  assert.doesNotMatch(main, /link\.download = settingsBackupFileName/);
+  assert.match(build, /"save_settings_backup"/);
+  assert.ok(mainCapability.permissions.includes("allow-save-settings-backup"));
+
   assert.deepEqual(
     parseSettingsBackup(JSON.stringify(backup), ["transcription_mode", "dictionary"]),
     { transcription_mode: "local", dictionary: "Aura" },
@@ -325,6 +333,10 @@ test("settings UI exposes native accessible controls and responsive motion-safe 
   assert.match(main, /btnClearHistorySearch/);
   assert.match(main, /historyFilterButtons/);
   assert.match(css, /\.select-panel-item\.is-focused/);
+  assert.match(html, /class="first-run-heading"/);
+  assert.match(css, /\.card-actions \.btn \{[\s\S]*?margin-top: 0/);
+  assert.match(css, /\.modal-actions \.btn-primary \{[\s\S]*?background-color: var\(--accent-color\)/);
+  assert.doesNotMatch(css, /\.first-run-card \{\s*border-color/);
   assert.doesNotMatch(main, /select\.style\.display\s*=\s*"none"/);
   assert.doesNotMatch(main, /initCustomSelects/);
   assert.match(main, /document\.documentElement\.lang/);

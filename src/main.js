@@ -5656,17 +5656,12 @@ if (e.button === 0 && !e.target.closest(".window-control-btn") && !e.target.clos
       try {
         const settingsView = await invoke("get_settings");
         const payload = buildSettingsBackup(settingsView);
-        const blob = new Blob([JSON.stringify(payload, null, 2)], {
-          type: "application/json"
+        const savedPath = await invoke("save_settings_backup", {
+          contents: JSON.stringify(payload, null, 2),
+          suggestedName: settingsBackupFileName(),
+          dialogTitle: getTranslation("backup_title")
         });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.href = url;
-        link.download = settingsBackupFileName();
-        document.body.appendChild(link);
-        link.click();
-        link.remove();
-        setTimeout(() => URL.revokeObjectURL(url), 10_000);
+        if (!savedPath) return;
         showStatus(getTranslation("backup_exported"));
       } catch (err) {
         console.error("Failed to export settings", err);
