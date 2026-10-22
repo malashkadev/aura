@@ -33,7 +33,9 @@ arboard = "3.4.0"
 tauri-plugin-autostart = "2"
 tauri-plugin-single-instance = "2"
 voice_activity_detector = "0.2.1"
-tauri-plugin-updater = "2"
+# `zip` feature is only used by the Windows `.zip` updater path; Aura ships
+# NSIS installers, so it stays off and avoids RUSTSEC-2026-0367/0368/0369.
+tauri-plugin-updater = { version = "2", default-features = false, features = ["rustls-tls"] }
 tauri-plugin-notification = "2"
 rfd = { version = "0.17", default-features = false, features = ["common-controls-v6"] }
 tungstenite = "0.20"
@@ -41,7 +43,7 @@ sha2 = "0.10"
 zeroize = "1"
 tar = "0.4"
 bzip2 = "0.6"
-zip = { version = "2.2", default-features = false, features = ["deflate"] }
+zip = { version = "9.0", default-features = false, features = ["deflate"] }
 
 [target.'cfg(target_os = "windows")'.dependencies]
 windows-sys = { version = "0.52", features = ["Win32_UI_WindowsAndMessaging", "Win32_Foundation", "Win32_Globalization", "Win32_Security", "Win32_Security_Authorization", "Win32_Security_Cryptography", "Win32_System_JobObjects", "Win32_System_Threading", "Win32_System_LibraryLoader", "Win32_System_RemoteDesktop", "Win32_System_SystemInformation", "Win32_UI_Input_KeyboardAndMouse", "Win32_Storage_FileSystem", "Win32_UI_Shell", "Win32_Graphics_Gdi", "Win32_System_DataExchange"] }

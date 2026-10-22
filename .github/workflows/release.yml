@@ -17,6 +17,24 @@ jobs:
       - name: Check out source
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
+      - name: Verify tag matches the app version
+        # A tag that disagrees with the version baked into the binary produces
+        # an installer whose name, updater manifest and release title diverge.
+        shell: pwsh
+        run: |
+          $version = (Get-Content package.json -Raw | ConvertFrom-Json).version
+          if ("v$version" -ne "${{ github.ref_name }}") {
+            throw "Tag ${{ github.ref_name }} does not match package.json version $version"
+          }
+
+      - name: Verify workspace is clean
+        # Release builds must run on exactly the committed tree; a dirty
+        # checkout means the published installer was never verified as-is.
+        run: |
+          git diff --exit-code
+          git diff --cached --exit-code
+          if (git ls-files --others --exclude-standard | Select-String .) { throw "Untracked files present" }
+
       - name: Set up Node.js
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
@@ -43,6 +61,9 @@ jobs:
 
       - name: Audit npm dependencies
         run: npm audit --audit-level=high
+
+      - name: Verify release surfaces match the manifest
+        run: npm run verify:manifest
 
       - name: Install pinned Rust toolchain
         run: |
@@ -101,5 +122,7 @@ jobs:
           tagName: ${{ github.ref_name }}
           releaseName: "Aura v__VERSION__"
           generateReleaseNotes: true
-          releaseDraft: false
+          # Publish only after the artifact hash is copied into the manifest,
+          # website and winget and the E2E checklist has passed.
+          releaseDraft: true
           prerelease: false

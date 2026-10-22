@@ -1,7 +1,7 @@
 # Integration plan: Silero VAD (voice activity detection)
 
-Status: **proposal / hand-off spec** (not implemented). Self-contained brief for an AI agent
-or manual implementation.
+Status: **implemented in 1.2.0** — see `src-tauri/src/vad.rs` and its unit tests.
+The plan below is kept as the original design brief.
 
 ## Goal
 

@@ -45,6 +45,9 @@ jobs:
       - name: Audit npm dependencies
         run: npm audit --audit-level=high
 
+      - name: Verify release surfaces match the manifest
+        run: npm run verify:manifest
+
       - name: Install pinned Rust toolchain
         run: |
           rustup toolchain install 1.96.0 --profile minimal --component rustfmt,clippy

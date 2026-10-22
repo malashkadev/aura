@@ -1,7 +1,8 @@
 # Integration plan: local NVIDIA Parakeet (via sherpa-onnx)
 
-Status: **proposal / hand-off spec** (not implemented). This document is a self-contained
-brief you can hand to an AI coding agent or implement yourself.
+Status: **implemented in 1.2.0** — see `src-tauri/src/parakeet_streaming.rs`,
+`parakeet.dll` in the bundle and the streaming tests in `lib.rs`.
+The plan below is kept as the original design brief.
 
 ## Goal
 
