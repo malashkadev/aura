@@ -136,7 +136,7 @@ const i18nDict = {
     "delete_model_confirm_pattern": "Вы действительно хотите удалить локальную модель {model}?",
     "delete_model_btn": "Удалить",
     "model_deleting_pattern": "Удаление модели {model}...",
-    "model_deleted_success": "Модель успешно удалена",
+    "model_deleted_success": "Модель удалена",
     "model_delete_error_pattern": "Ошибка удаления: {err}",
     "model_downloaded_success_pattern": "Модель {model} скачана",
     "confirm_clear_history_title": "Очистить историю",
@@ -398,7 +398,7 @@ const i18nDict = {
     "delete_model_confirm_pattern": "Are you sure you want to delete the local model {model}?",
     "delete_model_btn": "Delete",
     "model_deleting_pattern": "Deleting model {model}...",
-    "model_deleted_success": "Model deleted successfully",
+    "model_deleted_success": "Model deleted",
     "model_delete_error_pattern": "Delete error: {err}",
     "model_downloaded_success_pattern": "Model {model} downloaded",
     "confirm_clear_history_title": "Clear history",
@@ -668,7 +668,7 @@ const i18nDict = {
     "delete_model_confirm_pattern": "Möchten Sie das lokale Modell {model} wirklich löschen?",
     "delete_model_btn": "Löschen",
     "model_deleting_pattern": "Modell {model} wird gelöscht...",
-    "model_deleted_success": "Modell erfolgreich gelöscht",
+    "model_deleted_success": "Modell gelöscht",
     "model_delete_error_pattern": "Fehler beim Löschen: {err}",
     "model_downloaded_success_pattern": "Modell {model} heruntergeladen",
     "confirm_clear_history_title": "Verlauf löschen",
@@ -719,7 +719,7 @@ const i18nDict = {
     "diag_speech_text_title": "Sprachtext protokollieren (Entwicklermodus)",
     "diag_title": "Diagnose",
     "backup_title": "Einstellungen sichern",
-    "backup_desc": "Speichern Sie Einstellungen, Wörterbuch und Textersetzungen in einer JSON-Datei. API-Schlüssel werden nie eingefügt.",
+    "backup_desc": "Speichern Sie Einstellungen, Wörterbuch und Textersetzungen in einer JSON-Datei. API-Schlüssel sind nie enthalten.",
     "backup_export": "Exportieren",
     "backup_import": "Importieren",
     "backup_exported": "Einstellungsdatei gespeichert",
@@ -919,7 +919,7 @@ const i18nDict = {
     "delete_model_confirm_pattern": "¿Está seguro de que desea eliminar el modelo local {model}?",
     "delete_model_btn": "Eliminar",
     "model_deleting_pattern": "Eliminando modelo {model}...",
-    "model_deleted_success": "Modelo eliminado correctamente",
+    "model_deleted_success": "Modelo eliminado",
     "model_delete_error_pattern": "Error al eliminar: {err}",
     "model_downloaded_success_pattern": "Modelo {model} descargado",
     "confirm_clear_history_title": "Limpiar historial",
@@ -1181,7 +1181,7 @@ const i18nDict = {
     "delete_model_confirm_pattern": "Voulez-vous vraiment supprimer le modèle local {model} ?",
     "delete_model_btn": "Supprimer",
     "model_deleting_pattern": "Suppression du modèle {model}...",
-    "model_deleted_success": "Modèle supprimé avec succès",
+    "model_deleted_success": "Modèle supprimé",
     "model_delete_error_pattern": "Erreur de suppression: {err}",
     "model_downloaded_success_pattern": "Modèle {model} téléchargé",
     "confirm_clear_history_title": "Effacer l'historique",
@@ -1443,7 +1443,7 @@ const i18nDict = {
     "delete_model_confirm_pattern": "Sei sicuro di voler eliminare il modello locale {model}?",
     "delete_model_btn": "Elimina",
     "model_deleting_pattern": "Eliminazione del modello {model}...",
-    "model_deleted_success": "Modello eliminato con successo",
+    "model_deleted_success": "Modello eliminato",
     "model_delete_error_pattern": "Errore di eliminazione: {err}",
     "model_downloaded_success_pattern": "Modello {model} scaricato",
     "confirm_clear_history_title": "Cancella cronologia",
@@ -1867,7 +1867,7 @@ const i18nDict = {
     "engine_cloud_meta": "Gemini / OpenAI / Groq / Hugging Face (chave API necessária)",
     "engine_local": "IA Local",
     "engine_local_meta": "Whisper / Parakeet (100% offline e privado)",
-    "lang_bias_title": "Idioma do Diktat",
+    "lang_bias_title": "Idioma de ditado",
     "lang_bias_desc": "Forçar um idioma específico para a transcrição ou usar detecção automática.",
     "lang_bias_label": "Selecionar idioma",
     "lang_opt_auto": "Auto-detectar",
@@ -1967,7 +1967,7 @@ const i18nDict = {
     "delete_model_confirm_pattern": "Tem certeza de que deseja excluir o modelo local {model}?",
     "delete_model_btn": "Excluir",
     "model_deleting_pattern": "Excluindo modelo {model}...",
-    "model_deleted_success": "Modelo excluído com sucesso",
+    "model_deleted_success": "Modelo excluído",
     "model_delete_error_pattern": "Erro ao excluir: {err}",
     "model_downloaded_success_pattern": "Modelo {model} baixado",
     "confirm_clear_history_title": "Limpar histórico",
@@ -2229,7 +2229,7 @@ const i18nDict = {
     "delete_model_confirm_pattern": "Yerel {model} modelini silmek istediğinizden emin misiniz?",
     "delete_model_btn": "Sil",
     "model_deleting_pattern": "{model} modeli siliniyor...",
-    "model_deleted_success": "Model başarıyla silindi",
+    "model_deleted_success": "Model silindi",
     "model_delete_error_pattern": "Silme hatası: {err}",
     "model_downloaded_success_pattern": "{model} modeli indirildi",
     "confirm_clear_history_title": "Geçmişi Temizle",
@@ -4510,7 +4510,7 @@ await invoke("set_settings", { settings });
       console.error(err);
       const errStr = String(err).toLowerCase();
       if (errStr.includes("cancel")) {
-        showStatus(getTranslation("model_download_cancelled") || "Загрузка отменена");
+        showStatus(getTranslation("model_download_cancelled") || "Загрузка отменена", "neutral");
       } else {
         showStatus(getTranslation("model_download_error_pattern", { err }), true);
       }
@@ -4549,7 +4549,7 @@ await invoke("set_settings", { settings });
       showStatus(getTranslation("model_deleting_pattern", { model: modelDisplayName }));
       await invoke("delete_model_command", { modelName: model });
       
-      showStatus(getTranslation("model_deleted_success"));
+      showStatus(getTranslation("model_deleted_success"), "neutral");
       if (model === "parakeet-v3" && selectLocalEngine?.value === "parakeet") {
         selectLocalEngine.value = "whisper";
         updateLocalEngineUI();
@@ -4632,7 +4632,7 @@ await invoke("set_settings", { settings });
     if (payload.done) {
       const isInternalPayload = typeof model === "string" && (model.startsWith("llm-runtime-") || model === "punctuation");
       if (!isInternalPayload) {
-        showStatus(getTranslation("model_downloaded_success_pattern", { model: getModelDisplayName(model) }));
+        showStatus(getTranslation("model_downloaded_success_pattern", { model: getModelDisplayName(model) }), "success");
       }
       if (progressEl) {
         progressEl.classList.remove("installing");
@@ -4792,7 +4792,7 @@ cancelBtn.addEventListener("click", (e) => {
       console.error(err);
       const errStr = String(err).toLowerCase();
       if (errStr.includes("cancel")) {
-        showStatus(getTranslation("model_download_cancelled") || "Загрузка отменена");
+        showStatus(getTranslation("model_download_cancelled") || "Загрузка отменена", "neutral");
       } else {
         showStatus(`${getTranslation("status_error")}${err}`, true);
       }
@@ -5013,7 +5013,7 @@ card.addEventListener("keydown", async (e) => {
     }
 
     toastText.textContent = msg;
-    toastEl.classList.remove("toast-error", "toast-success", "toast-info", "toast-hiding");
+    toastEl.classList.remove("toast-error", "toast-success", "toast-neutral", "toast-info", "toast-hiding");
 
     if (toastIcon) {
       if (type === "error") {
@@ -5022,6 +5022,9 @@ card.addEventListener("keydown", async (e) => {
       } else if (type === "success") {
         toastEl.classList.add("toast-success");
         toastIcon.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+      } else if (type === "neutral") {
+        toastEl.classList.add("toast-neutral");
+        toastIcon.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>`;
       } else {
         toastEl.classList.add("toast-info");
         toastIcon.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>`;
@@ -5067,21 +5070,30 @@ card.addEventListener("keydown", async (e) => {
     return false;
   }
 
-  function showStatus(msg, isError = false, isModified = false) {
+  function showStatus(msg, isErrorOrType = false, isModified = false) {
     if (isModified || isSilentStatus(msg)) {
       return;
     }
 
-    if (isError) {
+    if (typeof isErrorOrType === "string") {
+      showToast(msg, isErrorOrType, isErrorOrType === "error" ? 4500 : 3000);
+      return;
+    }
+
+    if (isErrorOrType === true) {
       showToast(msg, "error", 4500);
       return;
     }
 
     const isSuccess =
-      /скопирован|успешно|удален|copied|success|deleted|erfolgreich|kopiert|succès|copié|copiado|éxito|eliminado|copiato|successo|sucesso|eliminato|excluído|kopyalandı|başarılı|silindi|已复制|成功|已删除|gekopieerd|geslaagd|verwijderd/i.test(
+      /скопирован|скачан|сохранен|copied|downloaded|saved|erfolgreich|kopiert|heruntergeladen|gespeichert|succès|copié|téléchargé|enregistré|copiado|éxito|descargado|guardado|copiato|successo|scaricato|salvato|sucesso|baixado|salvo|kopyalandı|başarılı|indirildi|kaydedildi|已复制|成功|已下载|已保存|gekopieerd|geslaagd/i.test(
         msg
       );
-    showToast(msg, isSuccess ? "success" : "info", 3000);
+    const isNeutral =
+      /удален|отменен|deleted|cancelled|canceled|gelöscht|abgebrochen|supprimé|annulé|eliminado|cancelado|eliminato|annullato|excluído|silindi|iptal|已删除|已取消|verwijderd|geannuleerd/i.test(
+        msg
+      );
+    showToast(msg, isSuccess ? "success" : (isNeutral ? "neutral" : "info"), 3000);
   }
 
   // Bind Events
@@ -5201,12 +5213,12 @@ if (e.button === 0 && !e.target.closest(".window-control-btn") && !e.target.clos
       btnToggleKeyEdit.setAttribute("title", toggleKeyText);
     }
 
-    const historyFiltersGroup = document.querySelector(".history-filter-pills");
+    const historyFiltersGroup = document.querySelector(".history-filters");
     if (historyFiltersGroup) {
       historyFiltersGroup.setAttribute("aria-label", dict.history_filters_label || "History filters");
     }
 
-    const gpuModesGroup = document.querySelector(".gpu-modes-grid");
+    const gpuModesGroup = document.getElementById("gpu-modes-container");
     if (gpuModesGroup) {
       gpuModesGroup.setAttribute("aria-label", dict.gpu_accel_label || "Hardware acceleration");
     }
@@ -5216,9 +5228,14 @@ if (e.button === 0 && !e.target.closest(".window-control-btn") && !e.target.clos
       llmModelsGroup.setAttribute("aria-label", dict.llm_model_label || "Local model");
     }
 
-    const modelsGridGroup = document.querySelector(".models-grid");
+    const modelsGridGroup = document.getElementById("model-cards-container");
     if (modelsGridGroup) {
-      modelsGridGroup.setAttribute("aria-label", dict.model_title || "Whisper Models");
+      modelsGridGroup.setAttribute("aria-label", dict.local_model_label || "Whisper models");
+    }
+
+    const parakeetModelsGroup = document.getElementById("parakeet-model-cards-container");
+    if (parakeetModelsGroup) {
+      parakeetModelsGroup.setAttribute("aria-label", dict.parakeet_model_label || "Parakeet model");
     }
 
     const settingsNav = document.querySelector(".settings-nav");
@@ -5645,7 +5662,7 @@ if (e.button === 0 && !e.target.closest(".window-control-btn") && !e.target.clos
           dialogTitle: getTranslation("backup_title")
         });
         if (!savedPath) return;
-        showStatus(getTranslation("backup_exported"));
+        showStatus(getTranslation("backup_exported"), "success");
       } catch (err) {
         console.error("Failed to export settings", err);
         showStatus(`${getTranslation("status_error")}${err}`, true);
@@ -5770,7 +5787,7 @@ if (e.button === 0 && !e.target.closest(".window-control-btn") && !e.target.clos
     try {
       showStatus(getTranslation("update_installing"));
       await invoke("install_app_update");
-      showStatus(getTranslation("update_installed_restarting"));
+      showStatus(getTranslation("update_installed_restarting"), "success");
       await invoke("relaunch_app");
     } catch (error) {
       console.error("Update installation failed", error);

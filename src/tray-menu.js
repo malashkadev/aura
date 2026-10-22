@@ -205,6 +205,9 @@ function applyTranslations(lang) {
 
   updateLanguageBadge((currentSettings && currentSettings.language) || "ru");
   renderLanguageList();
+  if (currentSettings) {
+    updateEngineSelection(currentSettings.transcription_mode || "local");
+  }
 }
 
 function updateEngineSelection(mode) {
@@ -216,8 +219,10 @@ function updateEngineSelection(mode) {
 
   const statusIcon = document.getElementById("recog-status-icon");
   if (statusIcon) {
+    const lang = (currentSettings && currentSettings.ui_language) || "ru";
+    const t = I18N[lang] || I18N.ru;
     statusIcon.innerHTML = isCloud ? CLOUD_ICON_SVG : LOCAL_ICON_SVG;
-    statusIcon.setAttribute("title", isCloud ? "Cloud AI" : "Local AI");
+    statusIcon.setAttribute("title", isCloud ? t.cloud : t.local);
   }
 }
 
