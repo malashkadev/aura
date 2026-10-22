@@ -1,5 +1,15 @@
 use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
 use std::sync::{Arc, Mutex};
+
+/// `dwExtraInfo` signature stamped on every `SendInput` event Aura emits.
+///
+/// The low-level hook must be able to tell Aura's own synthetic keystrokes
+/// apart from events injected by third-party keyboard utilities (layout
+/// switchers such as Caramba/Punto, key remappers, macro tools). Without the
+/// tag an injected target key cannot be distinguished from Aura's own paste,
+/// so the only safe policy was to pass every injected event through — which
+/// let a third-party tool retype the hotkey's own letter into the document.
+pub const AURA_INJECT_TAG: usize = 0x4155_5241; // "AURA"
 /// Re-assignable callback registries (C14): a failed hook installation must
 /// not permanently occupy its slot or recovery becomes impossible. The
 /// callback is taken out for the duration of each invocation and put back.
@@ -134,6 +144,8 @@ fn invoke_bool_callback(
 #[cfg(target_os = "windows")]
 mod windows_impl {
     use super::*;
+    use std::sync::atomic::AtomicU64;
+    use std::time::{SystemTime, UNIX_EPOCH};
     use windows_sys::Win32::Foundation::{HWND, LPARAM, LRESULT, WPARAM};
     use windows_sys::Win32::System::LibraryLoader::GetModuleHandleW;
     use windows_sys::Win32::System::RemoteDesktop::{
@@ -141,7 +153,7 @@ mod windows_impl {
     };
     use windows_sys::Win32::UI::Input::KeyboardAndMouse::{
         GetAsyncKeyState, SendInput, INPUT, INPUT_KEYBOARD, KEYBDINPUT, KEYEVENTF_EXTENDEDKEY,
-        KEYEVENTF_KEYUP, VK_CONTROL,
+        KEYEVENTF_KEYUP, KEYEVENTF_UNICODE, VK_CONTROL,
     };
     use windows_sys::Win32::UI::WindowsAndMessaging::{
         CallNextHookEx, CreateWindowExW, DefWindowProcW, DestroyWindow, DispatchMessageW,
@@ -155,6 +167,12 @@ mod windows_impl {
     const MOD_SHIFT: u32 = 1 << 2;
     const MOD_WIN: u32 = 1 << 3;
 
+    /// `KEYEVENTF_UNICODE` is a `KEYBDINPUT` flag, not a
+    /// `KBDLLHOOKSTRUCT.flags` bit: Windows reports such an injection to a
+    /// low-level hook as `vkCode = VK_PACKET` with the UTF-16 code unit in
+    /// `scanCode`. Checking `flags & 0x04` alone never matches.
+    const VK_PACKET: u32 = 0xE7;
+
     /// The configured hotkey packed into one word: (modifier_mask << 16) | key_vk.
     /// A zero key means the hotkey consists only of one or more modifiers.
     /// A single store/load means the hook thread can never observe a torn
@@ -164,6 +182,95 @@ mod windows_impl {
 
     /// Rate-limits the injected-target-key warning to one message per session.
     static INJECTED_TARGET_WARNED: AtomicBool = AtomicBool::new(false);
+
+    /// Wall-clock deadline (epoch ms) until which injected target-key events
+    /// are attributed to the hotkey aftermath. Layout switchers commit and
+    /// retype a word a short moment after the chord, sometimes after the key
+    /// itself was released, so the guard outlives `SHORTCUT_ACTIVE`.
+    static INJECTED_GUARD_UNTIL_MS: AtomicU64 = AtomicU64::new(0);
+    const INJECTED_GUARD_WINDOW_MS: u64 = 1_500;
+
+    fn now_ms() -> u64 {
+        SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .map(|d| d.as_millis() as u64)
+            .unwrap_or(0)
+    }
+
+    /// Decides whether an injected key event must be swallowed.
+    ///
+    /// Aura's own injections are tagged and always pass. A third-party tool
+    /// re-sending the hotkey's own letter shortly after the chord is a layout
+    /// switcher / remapper replaying the buffered hotkey key, and letting it
+    /// through types stray characters into the focused field. A modified
+    /// `Ctrl+V` (a real paste) is never suppressed.
+    fn should_suppress_foreign_injected_target(
+        is_own_injection: bool,
+        is_target_key: bool,
+        guard_active: bool,
+        ctrl_physically_down: bool,
+    ) -> bool {
+        !is_own_injection && is_target_key && guard_active && !ctrl_physically_down
+    }
+
+    /// Detects a `SendInput` Unicode injection.
+    ///
+    /// Windows delivers `KEYEVENTF_UNICODE` input to a low-level hook as
+    /// `vkCode = VK_PACKET` with the UTF-16 code unit in `scanCode`; the
+    /// `KBDLLHOOKSTRUCT.flags` field has no `KEYEVENTF_UNICODE` bit. The flag
+    /// is still checked as a fallback for tools that set it anyway.
+    fn is_unicode_injection(vk_code: u32, flags: u32) -> bool {
+        vk_code == VK_PACKET || (flags & KEYEVENTF_UNICODE) != 0
+    }
+
+    /// US-layout rows and their ЙЦУКЕН counterparts. Layout switchers replay
+    /// buffered text either as virtual keys (VK) or as Unicode code units, so
+    /// the hook has to recognize the hotkey's letter in both layouts.
+    const EN_ROW_TOP: &str = "qwertyuiop[]";
+    const RU_ROW_TOP: &str = "йцукенгшщзхъ";
+    const EN_ROW_HOME: &str = "asdfghjkl;'";
+    const RU_ROW_HOME: &str = "фывапролджэ";
+    const EN_ROW_BOTTOM: &str = "zxcvbnm,./";
+    const RU_ROW_BOTTOM: &str = "ячсмитьбю.";
+
+    fn russian_counterpart(ascii: char) -> Option<char> {
+        let lower = ascii.to_ascii_lowercase();
+        for (en, ru) in [
+            (EN_ROW_TOP, RU_ROW_TOP),
+            (EN_ROW_HOME, RU_ROW_HOME),
+            (EN_ROW_BOTTOM, RU_ROW_BOTTOM),
+        ] {
+            if let Some(index) = en.find(lower) {
+                return ru.chars().nth(index);
+            }
+        }
+        (lower == '`').then_some('ё')
+    }
+
+    /// Maps a virtual-key code to the ASCII character it produces on a US
+    /// layout. Only the keys `parse_hotkey` can bind are covered.
+    fn ascii_for_vk(vk: u32) -> Option<char> {
+        match vk {
+            0x30..=0x39 => char::from_u32(vk),
+            0x41..=0x5A => char::from_u32(vk).map(|c| c.to_ascii_lowercase()),
+            _ => None,
+        }
+    }
+
+    /// True when an injected Unicode code unit spells the hotkey's own letter
+    /// in either the English or the Russian layout.
+    fn is_hotkey_character(code_unit: u32, key_vk: u32) -> bool {
+        let Some(ch) = char::from_u32(code_unit) else {
+            return false;
+        };
+        let Some(ascii) = ascii_for_vk(key_vk) else {
+            return false;
+        };
+        if ch.eq_ignore_ascii_case(&ascii) {
+            return true;
+        }
+        russian_counterpart(ascii).is_some_and(|ru| ch.to_lowercase().eq(ru.to_lowercase()))
+    }
 
     /// Packed (modifier_mask << 16) | key_vk waiting to be applied once an
     /// in-flight recording releases; u32::MAX means "nothing pending".
@@ -179,7 +286,7 @@ mod windows_impl {
             wScan: scan,
             dwFlags: flags,
             time: 0,
-            dwExtraInfo: 0,
+            dwExtraInfo: AURA_INJECT_TAG,
         };
         input
     }
@@ -493,6 +600,12 @@ mod windows_impl {
     }
 
     fn notify_hotkey(is_down: bool) {
+        // Any hotkey edge re-arms the window in which third-party injected
+        // target-key events are treated as replay of the hotkey itself.
+        INJECTED_GUARD_UNTIL_MS.store(
+            now_ms().saturating_add(INJECTED_GUARD_WINDOW_MS),
+            Ordering::Relaxed,
+        );
         invoke_bool_callback(&CALLBACK, is_down, || {
             crate::logger::log(
                 "ERROR",
@@ -596,12 +709,45 @@ mod windows_impl {
             }
 
             let kbd_struct = *(lparam as *const KBDLLHOOKSTRUCT);
+            let vk_code = kbd_struct.vkCode;
+            let is_down = wparam == WM_KEYDOWN as usize || wparam == WM_SYSKEYDOWN as usize;
             let is_injected = (kbd_struct.flags & 0x10) != 0;
             if is_injected {
                 let packed_hotkey = HOTKEY_PAIR.load(Ordering::Relaxed);
                 let key_vk = packed_hotkey & 0xFFFF;
-                if key_vk != 0
-                    && kbd_struct.vkCode == key_vk
+                let is_own_injection = kbd_struct.dwExtraInfo == AURA_INJECT_TAG;
+                let guard_active = SHORTCUT_ACTIVE.load(Ordering::Relaxed)
+                    || now_ms() < INJECTED_GUARD_UNTIL_MS.load(Ordering::Relaxed);
+                let is_target_event = key_vk != 0
+                    && (vk_code == key_vk
+                        || (is_unicode_injection(vk_code, kbd_struct.flags)
+                            && is_hotkey_character(kbd_struct.scanCode, key_vk)));
+
+                if should_suppress_foreign_injected_target(
+                    is_own_injection,
+                    is_target_event,
+                    guard_active,
+                    modifier_is_down(MOD_CTRL),
+                ) {
+                    if !INJECTED_TARGET_WARNED.swap(true, Ordering::Relaxed) {
+                        crate::logger::log(
+                            "WARN",
+                            "Hotkey",
+                            None,
+                            &format!(
+                                "Suppressed injected target-key {} from a third-party input tool \
+                                 (vk=0x{vk_code:02X}, flags=0x{:02X}); a layout switcher or key \
+                                 remapper replayed the hotkey key into the focused field",
+                                if is_down { "key-down" } else { "key-up" },
+                                kbd_struct.flags,
+                            ),
+                        );
+                    }
+                    return 1;
+                }
+
+                if !is_own_injection
+                    && is_target_event
                     && SHORTCUT_ACTIVE.load(Ordering::Relaxed)
                     && !INJECTED_TARGET_WARNED.swap(true, Ordering::Relaxed)
                 {
@@ -615,8 +761,6 @@ mod windows_impl {
                 return CallNextHookEx(0, code, wparam, lparam);
             }
 
-            let vk_code = kbd_struct.vkCode;
-            let is_down = wparam == WM_KEYDOWN as usize || wparam == WM_SYSKEYDOWN as usize;
             let is_up = wparam == WM_KEYUP as usize || wparam == WM_SYSKEYUP as usize;
 
             if vk_code == VK_ESCAPE && is_down && RECORDING_ACTIVE.load(Ordering::SeqCst) {
@@ -810,6 +954,21 @@ mod windows_impl {
         }
 
         #[test]
+        fn unicode_injection_is_detected_by_vk_packet() {
+            use super::{is_unicode_injection, KEYEVENTF_UNICODE, VK_PACKET};
+
+            // Windows reports `KEYEVENTF_UNICODE` as VK_PACKET, flags carry
+            // only LLKHF_* bits (injected = 0x10).
+            assert!(is_unicode_injection(VK_PACKET, 0x10));
+            assert!(is_unicode_injection(VK_PACKET, 0));
+            // Defensive fallback for third-party tools that set 0x04 anyway.
+            assert!(is_unicode_injection(0x56, KEYEVENTF_UNICODE));
+            // A plain injected V or Cyrillic M key is not VK_PACKET.
+            assert!(!is_unicode_injection(0x56, 0x10));
+            assert!(!is_unicode_injection(0x4D, 0x10));
+        }
+
+        #[test]
         fn test_strict_modifier_mask_satisfaction() {
             use super::modifiers_satisfied_state;
 
@@ -886,6 +1045,56 @@ mod windows_impl {
                 !target_key_still_held(false, false),
                 "Neither latch nor async state means the key is up"
             );
+        }
+
+        #[test]
+        fn foreign_injected_target_is_suppressed_only_in_hotkey_aftermath() {
+            use super::should_suppress_foreign_injected_target;
+
+            // Regression (Caramba Switcher): a layout switcher whose hook runs
+            // before Aura's buffers the held hotkey letter, then replays it as
+            // injected keystrokes. Aura must swallow those replays, otherwise
+            // the document receives a burst of the hotkey letter.
+            assert!(should_suppress_foreign_injected_target(
+                false, true, true, false
+            ));
+            // Aura's own tagged paste must always pass.
+            assert!(!should_suppress_foreign_injected_target(
+                true, true, true, false
+            ));
+            // A real Ctrl+V injection (another tool pasting) must pass.
+            assert!(!should_suppress_foreign_injected_target(
+                false, true, true, true
+            ));
+            // Outside the hotkey window nothing is touched.
+            assert!(!should_suppress_foreign_injected_target(
+                false, true, false, false
+            ));
+            // Non-target keys are never filtered.
+            assert!(!should_suppress_foreign_injected_target(
+                false, false, true, false
+            ));
+        }
+
+        #[test]
+        fn hotkey_character_matches_both_layouts() {
+            use super::is_hotkey_character;
+
+            // A layout switcher may replay the buffered hotkey letter either as
+            // VK_V or as a Unicode code unit. The latter cannot be identified by
+            // virtual key, so the character must be recognized in EN and RU.
+            for ch in ['v', 'V', 'м', 'М'] {
+                assert!(
+                    is_hotkey_character(ch as u32, 0x56),
+                    "{ch} must be recognized as the V hotkey letter"
+                );
+            }
+            assert!(!is_hotkey_character('d' as u32, 0x56));
+            assert!(!is_hotkey_character('ы' as u32, 0x56));
+            assert!(is_hotkey_character('1' as u32, 0x31));
+            assert!(!is_hotkey_character('2' as u32, 0x31));
+            // Function keys have no character and must never match a replay.
+            assert!(!is_hotkey_character('v' as u32, 0x77));
         }
 
         #[test]

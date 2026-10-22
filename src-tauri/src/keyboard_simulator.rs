@@ -88,6 +88,10 @@ mod windows_impl {
         KEYEVENTF_UNICODE, VK_CONTROL, VK_LWIN, VK_MENU, VK_RWIN, VK_SHIFT,
     };
 
+    /// Stamped on every synthetic event so Aura's own hook can distinguish
+    /// its injections from third-party tools re-sending the hotkey's letter.
+    const AURA_TAG: usize = crate::keyboard_hook::AURA_INJECT_TAG;
+
     fn keyboard_input(virtual_key: u16, scan_code: u16, flags: u32) -> INPUT {
         let mut input = unsafe { std::mem::zeroed::<INPUT>() };
         input.r#type = INPUT_KEYBOARD;
@@ -96,7 +100,7 @@ mod windows_impl {
             wScan: scan_code,
             dwFlags: flags,
             time: 0,
-            dwExtraInfo: 0,
+            dwExtraInfo: AURA_TAG,
         };
         input
     }
@@ -274,7 +278,7 @@ mod windows_impl {
                     wScan: 0,
                     dwFlags: 0,
                     time: 0,
-                    dwExtraInfo: 0,
+                    dwExtraInfo: AURA_TAG,
                 };
                 let mut up = down;
                 up.Anonymous.ki.dwFlags = KEYEVENTF_KEYUP;
@@ -290,7 +294,7 @@ mod windows_impl {
                     wScan: 0,
                     dwFlags: KEYEVENTF_KEYUP,
                     time: 0,
-                    dwExtraInfo: 0,
+                    dwExtraInfo: AURA_TAG,
                 };
                 inputs.push(input);
                 released.push(vk);
@@ -327,7 +331,7 @@ mod windows_impl {
                     wScan: 0,
                     dwFlags: 0,
                     time: 0,
-                    dwExtraInfo: 0,
+                    dwExtraInfo: AURA_TAG,
                 };
                 SendInput(1, &input, std::mem::size_of::<INPUT>() as i32);
             }
@@ -346,7 +350,7 @@ mod windows_impl {
                 wScan: 0,
                 dwFlags: 0,
                 time: 0,
-                dwExtraInfo: 0,
+                dwExtraInfo: AURA_TAG,
             };
 
             inputs[1].r#type = INPUT_KEYBOARD;
@@ -355,7 +359,7 @@ mod windows_impl {
                 wScan: 0,
                 dwFlags: 0,
                 time: 0,
-                dwExtraInfo: 0,
+                dwExtraInfo: AURA_TAG,
             };
 
             inputs[2].r#type = INPUT_KEYBOARD;
@@ -364,7 +368,7 @@ mod windows_impl {
                 wScan: 0,
                 dwFlags: KEYEVENTF_KEYUP,
                 time: 0,
-                dwExtraInfo: 0,
+                dwExtraInfo: AURA_TAG,
             };
 
             inputs[3].r#type = INPUT_KEYBOARD;
@@ -373,7 +377,7 @@ mod windows_impl {
                 wScan: 0,
                 dwFlags: KEYEVENTF_KEYUP,
                 time: 0,
-                dwExtraInfo: 0,
+                dwExtraInfo: AURA_TAG,
             };
 
             let inserted = SendInput(4, inputs.as_mut_ptr(), std::mem::size_of::<INPUT>() as i32);
@@ -405,7 +409,7 @@ mod windows_impl {
                 wScan: 0,
                 dwFlags: 0,
                 time: 0,
-                dwExtraInfo: 0,
+                dwExtraInfo: AURA_TAG,
             };
 
             inputs[1].r#type = INPUT_KEYBOARD;
@@ -414,7 +418,7 @@ mod windows_impl {
                 wScan: 0,
                 dwFlags: 0,
                 time: 0,
-                dwExtraInfo: 0,
+                dwExtraInfo: AURA_TAG,
             };
 
             inputs[2].r#type = INPUT_KEYBOARD;
@@ -423,7 +427,7 @@ mod windows_impl {
                 wScan: 0,
                 dwFlags: KEYEVENTF_KEYUP,
                 time: 0,
-                dwExtraInfo: 0,
+                dwExtraInfo: AURA_TAG,
             };
 
             inputs[3].r#type = INPUT_KEYBOARD;
@@ -432,7 +436,7 @@ mod windows_impl {
                 wScan: 0,
                 dwFlags: KEYEVENTF_KEYUP,
                 time: 0,
-                dwExtraInfo: 0,
+                dwExtraInfo: AURA_TAG,
             };
 
             let inserted = SendInput(4, inputs.as_mut_ptr(), std::mem::size_of::<INPUT>() as i32);
@@ -460,7 +464,7 @@ mod windows_impl {
                 wScan: 0,
                 dwFlags: 0,
                 time: 0,
-                dwExtraInfo: 0,
+                dwExtraInfo: AURA_TAG,
             };
             inputs[1].r#type = INPUT_KEYBOARD;
             inputs[1].Anonymous.ki = KEYBDINPUT {
@@ -468,7 +472,7 @@ mod windows_impl {
                 wScan: 0,
                 dwFlags: KEYEVENTF_KEYUP,
                 time: 0,
-                dwExtraInfo: 0,
+                dwExtraInfo: AURA_TAG,
             };
             SendInput(2, inputs.as_mut_ptr(), std::mem::size_of::<INPUT>() as i32);
         }
@@ -550,7 +554,7 @@ mod windows_impl {
                             wScan: val,
                             dwFlags: KEYEVENTF_UNICODE,
                             time: 0,
-                            dwExtraInfo: 0,
+                            dwExtraInfo: AURA_TAG,
                         };
                         inputs[i * 2 + 1].r#type = INPUT_KEYBOARD;
                         inputs[i * 2 + 1].Anonymous.ki = KEYBDINPUT {
@@ -558,7 +562,7 @@ mod windows_impl {
                             wScan: val,
                             dwFlags: KEYEVENTF_UNICODE | KEYEVENTF_KEYUP,
                             time: 0,
-                            dwExtraInfo: 0,
+                            dwExtraInfo: AURA_TAG,
                         };
                     }
                     SendInput(4, inputs.as_mut_ptr(), std::mem::size_of::<INPUT>() as i32);
@@ -570,7 +574,7 @@ mod windows_impl {
                         wScan: val,
                         dwFlags: KEYEVENTF_UNICODE,
                         time: 0,
-                        dwExtraInfo: 0,
+                        dwExtraInfo: AURA_TAG,
                     };
                     inputs[1].r#type = INPUT_KEYBOARD;
                     inputs[1].Anonymous.ki = KEYBDINPUT {
@@ -578,7 +582,7 @@ mod windows_impl {
                         wScan: val,
                         dwFlags: KEYEVENTF_UNICODE | KEYEVENTF_KEYUP,
                         time: 0,
-                        dwExtraInfo: 0,
+                        dwExtraInfo: AURA_TAG,
                     };
                     SendInput(2, inputs.as_mut_ptr(), std::mem::size_of::<INPUT>() as i32);
                 }
@@ -601,7 +605,7 @@ mod windows_impl {
                     wScan: 0,
                     dwFlags: 0,
                     time: 0,
-                    dwExtraInfo: 0,
+                    dwExtraInfo: AURA_TAG,
                 };
 
                 inputs[1].r#type = INPUT_KEYBOARD;
@@ -610,7 +614,7 @@ mod windows_impl {
                     wScan: 0,
                     dwFlags: KEYEVENTF_KEYUP,
                     time: 0,
-                    dwExtraInfo: 0,
+                    dwExtraInfo: AURA_TAG,
                 };
 
                 SendInput(2, inputs.as_mut_ptr(), std::mem::size_of::<INPUT>() as i32);
@@ -633,7 +637,7 @@ mod windows_impl {
                     wScan: 0,
                     dwFlags: 0,
                     time: 0,
-                    dwExtraInfo: 0,
+                    dwExtraInfo: AURA_TAG,
                 };
 
                 inputs[1].r#type = INPUT_KEYBOARD;
@@ -642,7 +646,7 @@ mod windows_impl {
                     wScan: 0,
                     dwFlags: KEYEVENTF_KEYUP,
                     time: 0,
-                    dwExtraInfo: 0,
+                    dwExtraInfo: AURA_TAG,
                 };
 
                 SendInput(2, inputs.as_mut_ptr(), std::mem::size_of::<INPUT>() as i32);
