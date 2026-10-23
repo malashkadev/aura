@@ -18,8 +18,8 @@
 * **RustSec Vulnerability Resolution**: Upgraded `zip` to `9.0.5` (resolving RUSTSEC-2026-0367, 0368, 0369), `rustls-webpki` to `0.103.16` (RUSTSEC-2026-0382), `webpki-root-certs` to `1.0.10` (RUSTSEC-2026-0383), and pruned vulnerable updater dependencies.
 
 ### 🎨 Stealth Command Deck Design & Accessibility
-* **Refined Dark Surfaces**: 100% achromatic monochrome backgrounds with physical specular facets (`inset 0 1px 0 rgba(255, 255, 255, 0.08..0.12)`).
-* **Keyboard Navigation & WCAG AA**: Complete keyboard arrow cycling on tabs, visible `:focus-visible` rings on cards, and localized tray status tooltips across 9 languages.
+* **Refined Dark Surfaces**: Achromatic monochrome card and dialog surfaces with physical specular facets (`inset 0 1px 0 rgba(255, 255, 255, 0.08..0.12)`).
+* **Keyboard Navigation & Accessibility**: Complete keyboard arrow cycling on tabs, visible `:focus-visible` rings on interactive cards, proper ARIA semantics, and localized tray status tooltips across 9 languages.
 
 ### Package Manager (WinGet)
 ```cmd

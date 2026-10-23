@@ -112,6 +112,20 @@ jobs:
       - name: Install frontend dependencies
         run: npm ci
 
+      - name: Load release notes
+        id: release_notes
+        shell: pwsh
+        run: |
+          $version = (Get-Content package.json -Raw | ConvertFrom-Json).version
+          $notesFile = "RELEASE_NOTES_$version.md"
+          if (Test-Path $notesFile) {
+            $notes = Get-Content $notesFile -Raw
+            $delimiter = [System.Guid]::NewGuid().ToString("N")
+            "body<<$delimiter`n$notes`n$delimiter" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+          } else {
+            "body=" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+          }
+
       - name: Build, sign, and publish Tauri artifacts
         uses: tauri-apps/tauri-action@84b9d35b5fc46c1e45415bdb6144030364f7ebc5 # v0.6.2
         env:
@@ -121,8 +135,21 @@ jobs:
         with:
           tagName: ${{ github.ref_name }}
           releaseName: "Aura v__VERSION__"
-          generateReleaseNotes: true
+          releaseBody: ${{ steps.release_notes.outputs.body }}
+          generateReleaseNotes: false
           # Publish only after the artifact hash is copied into the manifest,
           # website and winget and the E2E checklist has passed.
           releaseDraft: true
           prerelease: false
+
+      - name: Verify built artifact against release manifest
+        shell: pwsh
+        run: |
+          $version = (Get-Content package.json -Raw | ConvertFrom-Json).version
+          $artifact = Get-ChildItem -Path "src-tauri/target/release/bundle/nsis/*$version*.exe" | Select-Object -First 1
+          if ($artifact) {
+            Write-Host "Verifying built CI artifact: $($artifact.FullName)"
+            node scripts/verify-release-manifest.mjs --file $artifact.FullName
+          } else {
+            throw "NSIS installer artifact not found after build"
+          }
