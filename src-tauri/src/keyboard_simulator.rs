@@ -539,92 +539,6 @@ mod windows_impl {
         }
     }
 
-    pub fn type_string(text: &str) {
-        let released = release_modifiers();
-        unsafe {
-            for (index, ch) in text.chars().enumerate() {
-                let mut buf = [0; 2];
-                let utf16_chars = ch.encode_utf16(&mut buf);
-                if utf16_chars.len() == 2 {
-                    let mut inputs = [std::mem::zeroed::<INPUT>(); 4];
-                    for (i, &val) in utf16_chars.iter().enumerate() {
-                        inputs[i * 2].r#type = INPUT_KEYBOARD;
-                        inputs[i * 2].Anonymous.ki = KEYBDINPUT {
-                            wVk: 0,
-                            wScan: val,
-                            dwFlags: KEYEVENTF_UNICODE,
-                            time: 0,
-                            dwExtraInfo: AURA_TAG,
-                        };
-                        inputs[i * 2 + 1].r#type = INPUT_KEYBOARD;
-                        inputs[i * 2 + 1].Anonymous.ki = KEYBDINPUT {
-                            wVk: 0,
-                            wScan: val,
-                            dwFlags: KEYEVENTF_UNICODE | KEYEVENTF_KEYUP,
-                            time: 0,
-                            dwExtraInfo: AURA_TAG,
-                        };
-                    }
-                    SendInput(4, inputs.as_mut_ptr(), std::mem::size_of::<INPUT>() as i32);
-                } else if let Some(&val) = utf16_chars.first() {
-                    let mut inputs = [std::mem::zeroed::<INPUT>(); 2];
-                    inputs[0].r#type = INPUT_KEYBOARD;
-                    inputs[0].Anonymous.ki = KEYBDINPUT {
-                        wVk: 0,
-                        wScan: val,
-                        dwFlags: KEYEVENTF_UNICODE,
-                        time: 0,
-                        dwExtraInfo: AURA_TAG,
-                    };
-                    inputs[1].r#type = INPUT_KEYBOARD;
-                    inputs[1].Anonymous.ki = KEYBDINPUT {
-                        wVk: 0,
-                        wScan: val,
-                        dwFlags: KEYEVENTF_UNICODE | KEYEVENTF_KEYUP,
-                        time: 0,
-                        dwExtraInfo: AURA_TAG,
-                    };
-                    SendInput(2, inputs.as_mut_ptr(), std::mem::size_of::<INPUT>() as i32);
-                }
-                let delay = if (index + 1) % 15 == 0 { 10 } else { 1 };
-                std::thread::sleep(std::time::Duration::from_millis(delay));
-            }
-        }
-        restore_modifiers(&released);
-    }
-
-    pub fn type_backspaces(count: usize) {
-        let released = release_modifiers();
-        unsafe {
-            for index in 0..count {
-                let mut inputs = [std::mem::zeroed::<INPUT>(); 2];
-
-                inputs[0].r#type = INPUT_KEYBOARD;
-                inputs[0].Anonymous.ki = KEYBDINPUT {
-                    wVk: 0x08,
-                    wScan: 0,
-                    dwFlags: 0,
-                    time: 0,
-                    dwExtraInfo: AURA_TAG,
-                };
-
-                inputs[1].r#type = INPUT_KEYBOARD;
-                inputs[1].Anonymous.ki = KEYBDINPUT {
-                    wVk: 0x08,
-                    wScan: 0,
-                    dwFlags: KEYEVENTF_KEYUP,
-                    time: 0,
-                    dwExtraInfo: AURA_TAG,
-                };
-
-                SendInput(2, inputs.as_mut_ptr(), std::mem::size_of::<INPUT>() as i32);
-                let delay = if (index + 1) % 10 == 0 { 15 } else { 3 };
-                std::thread::sleep(std::time::Duration::from_millis(delay));
-            }
-        }
-        restore_modifiers(&released);
-    }
-
     pub fn send_left_arrows(count: usize) {
         let released = release_modifiers();
         unsafe {
@@ -943,42 +857,6 @@ mod macos_impl {
         }
     }
 
-    pub fn type_string(text: &str) {
-        let Some(source) = create_event_source() else {
-            crate::logger::log(
-                "ERROR",
-                "Keyboard",
-                None,
-                "Failed to create macOS event source",
-            );
-            return;
-        };
-        for ch in text.chars() {
-            let mut buffer = [0; 2];
-            let utf16 = ch.encode_utf16(&mut buffer);
-            let _ = post_keyboard_event(&source, 0, true, 0, Some(utf16));
-            let _ = post_keyboard_event(&source, 0, false, 0, Some(utf16));
-            std::thread::sleep(std::time::Duration::from_millis(1));
-        }
-    }
-
-    pub fn type_backspaces(count: usize) {
-        let Some(source) = create_event_source() else {
-            crate::logger::log(
-                "ERROR",
-                "Keyboard",
-                None,
-                "Failed to create macOS event source",
-            );
-            return;
-        };
-        for _ in 0..count {
-            let _ = post_keyboard_event(&source, 51, true, 0, None);
-            let _ = post_keyboard_event(&source, 51, false, 0, None);
-            std::thread::sleep(std::time::Duration::from_millis(3));
-        }
-    }
-
     pub fn send_left_arrows(count: usize) {
         let Some(source) = create_event_source() else {
             crate::logger::log(
@@ -1071,13 +949,13 @@ mod macos_impl {
 #[cfg(target_os = "windows")]
 pub use windows_impl::{
     get_active_layout_language, get_focus_target, get_foreground_window, replace_text,
-    send_dummy_key, send_left_arrows, simulate_copy, simulate_paste, type_backspaces, type_string,
+    send_dummy_key, send_left_arrows, simulate_copy, simulate_paste,
 };
 
 #[cfg(target_os = "macos")]
 pub use macos_impl::{
     get_active_layout_language, get_focus_target, get_foreground_window, replace_text,
-    send_dummy_key, send_left_arrows, simulate_copy, simulate_paste, type_backspaces, type_string,
+    send_dummy_key, send_left_arrows, simulate_copy, simulate_paste,
 };
 
 #[cfg(test)]

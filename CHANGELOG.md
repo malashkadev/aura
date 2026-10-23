@@ -28,8 +28,10 @@ _Comprehensive audit follow-up pass completed on 2026-10-22._
 ### Security
 - **Diagnostic report path redaction**: exported diagnostics replace the current Windows profile prefix (both slash styles) with `%USERPROFILE%` and keep unrelated account names intact.
 - **Backup secret isolation**: exported settings never include API keys; imported files have API-key fields stripped and are size/completeness validated before `set_settings`.
+- **RustSec Dependency Vulnerability Upgrades**: upgraded `zip` 2.4.2 to `9.0.5` (resolving RUSTSEC-2026-0367, 0368, 0369), `rustls-webpki` 0.103.14 to `0.103.16` (RUSTSEC-2026-0382), `webpki-root-certs` 1.0.9 to `1.0.10` (RUSTSEC-2026-0383), and reconfigured `tauri-plugin-updater` with `default-features = false, features = ["rustls-tls"]` to prune vulnerable transitive zip 4.6.1.
 
 ### Fixed
+- **Layout-Switcher Key Replay Suppression (Caramba Switcher / PowerToys)**: third-party keyboard remappers and layout switchers replaying buffered hotkey characters after `Alt+V` are neutralized via `is_unicode_injection` (`VK_PACKET = 0xE7`), a 1500 ms `INJECTED_GUARD_UNTIL_MS` window, and Latin ↔ Cyrillic row counterpart mapping, while allowing real `Ctrl+V` clipboard pastes.
 - **UTF-8 Slicing Panic in Normalizer (`text_normalizer.rs`)**: Fixed byte boundary slicing panic (`FAULT-01`) when speech hallucination prefixes contain 3-byte UTF-8 em-dashes (`—`). Made subtitle prefix case-insensitive search fully Unicode-safe.
 - **Latent Multi-byte Ellipsis Slicing Panic (`text_normalizer.rs`)**: Fixed byte boundary slicing panic (`FAULT-02`) on multi-byte horizontal ellipsis `…` in sentence repetition pruning (`prune_trailing_repeated_sentences`).
 - **Use-After-Free in Windows Security DACL (`secure_storage.rs`)**: Eliminated dangling pointer UAF (`SEC-01`) by copying the security identifier (SID) before dropping the token information buffer.

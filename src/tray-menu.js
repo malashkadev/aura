@@ -146,22 +146,6 @@ const I18N = {
     opt_layout: "Klavye düzenine göre",
     badge_auto: "OTO",
     badge_layout: "KLAV"
-  },
-  nl: {
-    settings: "Instellingen openen",
-    recog: "Herkenningsmodus",
-    lang: "Herkenningstaal",
-    cloud: "Cloud AI",
-    local: "Lokale AI",
-    gaming: "Gamingmodus",
-    exit: "Afsluiten",
-    active: "Actief",
-    inactive: "Uit",
-    back: "Terug naar menu",
-    opt_auto: "Automatisch",
-    opt_layout: "Volgens toetsenbordindeling",
-    badge_auto: "AUTO",
-    badge_layout: "TOETS"
   }
 };
 
