@@ -15,10 +15,10 @@ InstallerSwitches:
   Silent: /S
   SilentWithProgress: /S
 UpgradeBehavior: install
-ReleaseDate: '2026-10-22'
+ReleaseDate: '2026-10-23'
 Installers:
   - Architecture: x64
     InstallerUrl: https://github.com/malashkadev/aura/releases/download/v1.2.0/Aura_1.2.0_x64-setup.exe
-    InstallerSha256: 104087EABBF1DBED2C4AB2503D8E16B9DC0C51A15A57E1B114019DC12D907554
+    InstallerSha256: 56D6B89029FE4F0A3B78A9BB1CD6777433DF0FFD9388868B5329D0EB8E74AB0B
 ManifestType: installer
 ManifestVersion: 1.6.0
