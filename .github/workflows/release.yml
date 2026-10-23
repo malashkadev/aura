@@ -123,7 +123,7 @@ jobs:
             $delimiter = [System.Guid]::NewGuid().ToString("N")
             "body<<$delimiter`n$notes`n$delimiter" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
           } else {
-            "body=" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+            throw "Release notes file $notesFile not found"
           }
 
       - name: Build, sign, and publish Tauri artifacts

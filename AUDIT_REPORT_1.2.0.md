@@ -17,8 +17,8 @@
 Проведён полный, сквозной, поэтапный аудит программы Aura (повышена до версии 1.2.0). В рамках аудита выполнена проверка кодовой базы (Rust Backend, JavaScript Frontend, Tauri IPC), Win32-хуков и симулятора ввода, архитектуры резидентных нейросетевых движков (Whisper/Parakeet), криптографической безопасности (DPAPI), звукового тракта (WASAPI/Silero VAD), соблюдения дизайн-системы («The Stealth Command Deck» и карантина сайта), качества текстов и анти-слоп копирайтинга, паритета интернационализации (9 словарей) и стандартов доступности.
 
 ### Ключевые показатели надёжности (Quality Gates):
-- **Rust Backend Unit Tests**: **203 пройден, 0 упало, 1 пропущен (сетевой)** (`cargo test --lib`)
-- **Frontend Static Integrity Gates**: **20 пройдены, 0 упало** (`npm test`)
+- **Rust Backend Unit Tests**: **230 пройден, 0 упало, 1 пропущен (сетевой)** (`cargo test --all-targets`)
+- **Frontend Static Integrity Gates**: **22 пройдены, 0 упало** (`npm test`)
 - **Static Analysis / Clippy**: **0 предупреждений, 0 ошибок** (`cargo clippy -- -D warnings`)
 - **Code Formatting**: **100% соответствует rustfmt** (`cargo fmt --check`)
 - **Lint & TypeScript Typecheck**: **0 ошибок** (`npm run check`)
@@ -99,7 +99,7 @@
 ### 2.8. Интернационализация (i18n) и Доступность (a11y)
 - **Файлы**: `src/main.js`, `src/overlay.js`, `src/tray-menu.js`, `src/ui-accessibility.js`
 - **Проверенные инварианты**:
-  1. **100% паритет словарей**: 9 локалей (`ru`, `en`, `de`, `es`, `fr`, `it`, `zh`, `pt`, `tr`), 270 уникальных ключей без пропусков.
+  1. **100% паритет словарей**: 9 локалей (`ru`, `en`, `de`, `es`, `fr`, `it`, `zh`, `pt`, `tr`), 260 уникальных ключей без пропусков.
   2. **Нулевой хардкод строк**: Устранены все статические строки в DOM и JS.
   3. **Доступность (Клавиатурная навигация и a11y)**: Навигация стрелками по табам с зацикливанием, фокус-кольца `:focus-visible` на карточках, фокус-ловушки в модальных окнах, корректные ARIA-атрибуты, поддержка `prefers-reduced-motion` (контрастность вспомогательного текста `--text-muted` намеренно зафиксирована на уровне ~4.1:1 для снижения визуального шума).
 
@@ -122,16 +122,16 @@
 
 | Проверка | Команда | Результат | Статус |
 | :--- | :--- | :--- | :--- |
-| **Rust Tests** | `cargo test --lib` | 203 passed, 0 failed, 1 ignored | ✅ PASS |
-| **Frontend Tests** | `npm test` | 20 passed, 0 failed | ✅ PASS |
+| **Rust Tests** | `cargo test --all-targets` | 230 passed, 0 failed, 1 ignored | ✅ PASS |
+| **Frontend Tests** | `npm test` | 22 passed, 0 failed | ✅ PASS |
 | **Typecheck & Lint** | `npm run check` | 0 errors, 0 type issues | ✅ PASS |
 | **Rustfmt Check** | `cargo fmt --check` | 100% clean formatting | ✅ PASS |
-| **Clippy Linter** | `cargo clippy -- -D warnings` | 0 warnings | ✅ PASS |
+| **Clippy Linter** | `cargo clippy --all-targets -- -D warnings` | 0 warnings | ✅ PASS |
 | **Security Audit** | `cargo audit` | 0 vulnerabilities found | ✅ PASS |
-| **Comprehensive Audit** | `node scripts/comprehensive-audit.mjs` | 164 IDs, 270 keys, 36 IPC cmds — 0 issues | ✅ PASS |
+| **Comprehensive Audit** | `node scripts/comprehensive-audit.mjs` | 162 IDs, 260 keys, 37 IPC cmds — 0 issues | ✅ PASS |
 | **Deep Integrity Audit** | `node scripts/deep-audit.mjs` | Themes, langs, events: 0 issues | ✅ PASS |
-| **All Elements Audit** | `node scripts/audit-all-elements.mjs` | 31 buttons (0 issues), 27 inputs (0 issues) | ✅ PASS |
-| **IPC Signatures** | `node scripts/check-ipc.mjs` | 36 commands registered & permitted | ✅ PASS |
+| **All Elements Audit** | `node scripts/audit-all-elements.mjs` | 32 buttons (0 issues), 27 inputs (0 issues) | ✅ PASS |
+| **IPC Signatures** | `node scripts/check-ipc.mjs` | 37 commands registered & permitted | ✅ PASS |
 | **CSS Invariants** | `node scripts/check-css-invariants.mjs` | Zero illegal glow/shadow violations | ✅ PASS |
 | **A11y & ARIA** | `node scripts/check-aria.mjs` | All required aria attributes valid | ✅ PASS |
 | **Overlay i18n Audit** | `node scripts/check-overlay-i18n.mjs` | 13 notices, 12 errors across all locales | ✅ PASS |
