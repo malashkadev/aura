@@ -137,6 +137,7 @@ jobs:
           releaseName: "Aura v__VERSION__"
           releaseBody: ${{ steps.release_notes.outputs.body }}
           generateReleaseNotes: false
+          updaterJsonPreferNsis: true
           # Publish only after the artifact hash is copied into the manifest,
           # website and winget and the E2E checklist has passed.
           releaseDraft: true
