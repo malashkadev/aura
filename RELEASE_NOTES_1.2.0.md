@@ -1,15 +1,15 @@
 ### 🎙️ Voice Selection Editing & AI Commands
 * **In-Place Voice Editing**: Select any text in any Windows application (editor, browser, messenger, IDE, office suite), press and hold your global hotkey, and speak a command — Aura processes the selected text directly in-place.
 * **Deterministic Core Commands**:
-  * **Fix Grammar & Punctuation** (`FixGrammar` — e.g. *«исправь ошибки»*, *«проверь пунктуацию»*, *«fix grammar»*).
-  * **Translate** (`Translate` — e.g. *«переведи на английский»*, *«переведи на русский»*, *«translate to Spanish»*).
+  * **Fix Grammar & Punctuation** (`FixGrammar` — e.g. *"fix grammar"*, *"check punctuation"*, *"fix typos"* across all supported languages).
+  * **Translate** (`Translate` — e.g. *"translate to English"*, *"translate to Spanish"*, *"translate to German"* across all supported languages).
 * **Safe Dictation Fallback**: Any spoken phrase that is not recognized as a command safely passes through as normal dictation, eliminating stalls, erroneous rewrites, and command hallucination.
 * **Supported Commands Guide**: Clean, balanced two-column interactive guide in Settings with syntax chips across 9 languages and a dedicated target language selector right under the translation command.
 * **Diffuse Contour Glow**: When selection editing is active, the HUD overlay illuminates with an amber contour highlight, providing clear visual feedback that context editing is in progress.
 
 ### 🧠 Smart Context-Aware Text Insertion
 * **Non-Invasive Caret-Context Inspection**: Aura inspects surrounding text before and after the caret via ultra-fast Win32 messages (`EM_GETSEL`, `WM_GETTEXT` on Edit, RichEdit, and Scintilla fields in ~0.05 ms) with a seamless fallback to Windows UI Automation (with a 20 ms fail-safe timeout). Password fields are automatically skipped.
-* **Intelligent Sentence Adaptation**: Automatically lowercases initial words when inserting mid-sentence or continuing a thought, while strictly preserving uppercase acronyms (like `NASA`, `API`, `НДС`) and the English pronoun `"I"`.
+* **Intelligent Sentence Adaptation**: Automatically lowercases initial words when inserting mid-sentence or continuing a thought, while strictly preserving uppercase acronyms (like `NASA`, `API`, `HTTP`, `UUID`) and the English pronoun `"I"`.
 * **Clean Boundaries**: Prevents double punctuation before commas or existing periods, normalizes boundary spaces, and includes a configurable toggle for trailing sentence periods on continuation.
 
 ### ⚡ Local-First Speech Recognition by Default
@@ -17,9 +17,9 @@
 * **First-Run Model Setup Card**: When no local model is installed, the General settings tab surfaces a streamlined recommendation card to download the balanced Base model (~145 MB) and test your microphone with a single click.
 
 ### 🎯 Smart Text Replacements & Caret Marker (`|`)
-* **Cursor Marker in Snippets (`|`)**: Place a `|` marker inside any text replacement template (e.g. `Здравствуйте, |!`, `Hello, |!`) to set the exact final caret position after insertion.
+* **Cursor Marker in Snippets (`|`)**: Place a `|` marker inside any text replacement template (e.g. `Hello, |!`, `Best regards, |!`) to set the exact final caret position after insertion.
 * **Flow-Controlled Key Simulation**: Automatically sends batch left-arrow key events conforming to Windows Input Buffer Flow Control guidelines, preventing dropped keystrokes in deep applications.
-* **Dynamic Time Tokens**: Insert live dates and times on the fly using `{date}`, `{date_ru}`, `{time}`, `{datetime}`.
+* **Dynamic Time Tokens**: Insert live dates and times on the fly using `{date}`, `{time}`, `{datetime}`.
 
 ### 🔮 Next-Generation HUD Overlay (Dual Beams & Morphing)
 * **Dual Beams Conic Orbit**: Hardware-accelerated CSS Houdini `@property --beam-angle` with dual symmetric orange rays along the outer card perimeter (`border-box`), smoothly accelerating to 1.1s during processing.
@@ -41,7 +41,7 @@
 * **Layout-Switcher Replay Suppression (Caramba Switcher / PowerToys)**: Neutralized phantom key repeats and letter flood when holding `Alt+V` by tagging synthetic injections (`dwExtraInfo = 0x41555241`), detecting Unicode packets (`VK_PACKET = 0xE7`), matching Latin ↔ Cyrillic keyboard rows, and enforcing a 1500 ms aftermath protection window while preserving real `Ctrl+V` pastes.
 * **Session Lock / Unlock Hotkey Recovery**: Message-only window with `WTSRegisterSessionNotification` prevents sticky hotkey latches after locking Windows (`Win+L`).
 * **Auto-Repeat Suppression**: Prevents held hotkeys from repeatedly starting and stopping recording sessions in both hold and toggle modes.
-* **Whisper Silence Hallucination Filtering**: Strips end-of-speech silence artifacts ("Спасибо за просмотр.", "Thank you for watching.") and looped filler utterances (`ммммм...`, `hmmm...`) while strictly preserving real gratitude.
+* **Whisper Silence Hallucination Filtering**: Strips end-of-speech silence artifacts (e.g. "Thank you for watching.", "Thanks for watching.") and looped filler utterances (e.g. `hmmmmm...`, `ummmmm...`) while strictly preserving real gratitude.
 
 ### 💾 Native Portable Settings Backup & Restore
 * **System Dialog Integration (`rfd`)**: Export your settings, personal dictionary, and text replacements through the native Windows Save As dialog with custom file path selection.
