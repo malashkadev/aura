@@ -130,15 +130,20 @@ cargo test
 
 ## What's new in v1.2.0
 
+- **Voice selection editing** — select any text in any Windows app, hold the hotkey, and speak a command: fix grammar or translate directly in-place.
+- **Smart context-aware text insertion** — inspects surrounding caret context via ultra-fast Win32 messages and UI Automation to adapt letter casing, spacing, and punctuation.
 - **Local recognition is now the default** — out of the box Aura transcribes with the resident Whisper/Parakeet engine on CPU or NVIDIA CUDA; cloud AI remains an opt-in.
+- **Next-gen HUD overlay** — hardware-accelerated Dual Beams border, Diffuse Contour Glow in edit mode, and kinetic morphing into a compact square.
+- **Interactive spotlight tour** — 5-step guided feature walkthrough with docked footer and concentric corner geometry.
 - **Cursor marker in replacements** — place `|` in a template to control the final caret position (e.g. `Hello, |!`).
+- **6 procedural Web Audio sound themes** — synthesized click-free sound themes with compact volume track and live feedback.
 - **Smarter caret-context capture** — a native Win32 fast path for standard edit controls, with UI Automation as a fallback; password fields are skipped.
+- **Input protection & switcher harmony** — suppresses layout-switcher replay (Caramba Switcher / PowerToys) and hotkey auto-repeat leaks.
 - **Locked-session recovery** — the global hotkey no longer stays stuck after a Windows lock/unlock cycle.
-- **Hotkey auto-repeat fix** — holding the toggle hotkey can no longer start or stop a session repeatedly.
 - **Filler-loop filtering** — `ммммм` / `hmmmm` silence hallucinations are discarded while real short words survive.
 - **Redesigned Commands Guide** — a cleaner two-column reference for the active voice-editing commands.
 - **Installer reliability** — Aura launches de-elevated after installation, with a one-shot retry if the first start is missed.
-- **Portable settings backup** — export/import settings, dictionary, and replacements as JSON without API keys.
+- **Portable settings backup** — export/import settings, dictionary, and replacements as JSON without API keys via native Save As dialog.
 - **Guided first run** — a model-download and microphone-test card appears when local mode has no speech model.
 - **Privacy and accessibility polish** — diagnostic reports redact the profile path; selects and the spotlight tour have full keyboard focus management.
 
