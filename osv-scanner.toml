@@ -41,6 +41,16 @@ ignore = true
 reason = "Transitive Linux GTK binding in Tauri v2"
 
 [[PackageOverrides]]
+name = "cairo-rs"
+ignore = true
+reason = "Transitive Linux GTK/Cairo binding in Tauri v2"
+
+[[PackageOverrides]]
+name = "cairo-sys-rs"
+ignore = true
+reason = "Transitive Linux GTK/Cairo binding in Tauri v2"
+
+[[PackageOverrides]]
 name = "gdk"
 ignore = true
 reason = "Transitive Linux GTK binding in Tauri v2"
@@ -66,6 +76,26 @@ ignore = true
 reason = "Transitive Linux GTK binding in Tauri v2"
 
 [[PackageOverrides]]
+name = "gio"
+ignore = true
+reason = "Transitive Linux GTK/GLib binding in Tauri v2"
+
+[[PackageOverrides]]
+name = "gio-sys"
+ignore = true
+reason = "Transitive Linux GTK/GLib binding in Tauri v2"
+
+[[PackageOverrides]]
+name = "glib"
+ignore = true
+reason = "Transitive Linux GTK/GLib binding in Tauri v2 (unused on Windows)"
+
+[[PackageOverrides]]
+name = "glib-sys"
+ignore = true
+reason = "Transitive Linux GTK/GLib binding in Tauri v2 (unused on Windows)"
+
+[[PackageOverrides]]
 name = "gtk"
 ignore = true
 reason = "Transitive Linux GTK binding in Tauri v2"
@@ -79,6 +109,16 @@ reason = "Transitive Linux GTK binding in Tauri v2"
 name = "gtk3-macros"
 ignore = true
 reason = "Transitive Linux GTK binding in Tauri v2"
+
+[[PackageOverrides]]
+name = "pango"
+ignore = true
+reason = "Transitive Linux GTK/Pango binding in Tauri v2"
+
+[[PackageOverrides]]
+name = "pango-sys"
+ignore = true
+reason = "Transitive Linux GTK/Pango binding in Tauri v2"
 
 [[PackageOverrides]]
 name = "zbus_names"
