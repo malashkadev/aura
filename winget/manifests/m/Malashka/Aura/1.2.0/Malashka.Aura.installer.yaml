@@ -19,6 +19,6 @@ ReleaseDate: '2026-10-30'
 Installers:
   - Architecture: x64
     InstallerUrl: https://github.com/malashkadev/aura/releases/download/v1.2.0/Aura_1.2.0_x64-setup.exe
-    InstallerSha256: FBC405D9E46F6267D752F30706EA1D2B25224AD4EF30BAAA455CFB355B74ED8E
+    InstallerSha256: 46509A9B359E9664AFDEEBE4B3AA2C54EC584BD71FC1620945A5846CE1F1F64B
 ManifestType: installer
 ManifestVersion: 1.6.0

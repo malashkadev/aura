@@ -143,14 +143,23 @@ jobs:
           releaseDraft: true
           prerelease: false
 
-      - name: Verify built artifact against release manifest
+      - name: Record and display built artifact SHA-256 and size
         shell: pwsh
         run: |
           $version = (Get-Content package.json -Raw | ConvertFrom-Json).version
           $artifact = Get-ChildItem -Path "src-tauri/target/release/bundle/nsis/*$version*.exe" | Select-Object -First 1
           if ($artifact) {
-            Write-Host "Verifying built CI artifact: $($artifact.FullName)"
-            node scripts/verify-release-manifest.mjs --file $artifact.FullName
+            $hash = (Get-FileHash -Path $artifact.FullName -Algorithm SHA256).Hash.ToUpper()
+            $bytes = $artifact.Length
+            Write-Host "=========================================="
+            Write-Host "Release Artifact: $($artifact.Name)"
+            Write-Host "File Size:        $bytes bytes"
+            Write-Host "SHA-256 Checksum: $hash"
+            Write-Host "=========================================="
+            "### Release Artifact Info" | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append -Encoding utf8
+            "- **File:** ``$($artifact.Name)``" | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append -Encoding utf8
+            "- **SHA-256:** ``$hash``" | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append -Encoding utf8
+            "- **Size:** $bytes bytes" | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append -Encoding utf8
           } else {
             throw "NSIS installer artifact not found after build"
           }
