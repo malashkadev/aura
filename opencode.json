@@ -1,0 +1,13 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "om": {
+      "type": "local",
+      "command": ["node", "G:\\Aura\\2.0\\.claude\\scripts\\om-mcp.mjs"],
+      "environment": {
+        "OM_VAULT_PATH": "G:\\Aura\\my-vault"
+      },
+      "enabled": true
+    }
+  }
+}
