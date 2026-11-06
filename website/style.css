@@ -2,18 +2,19 @@
    AURA — Official Modern Landing Page Stylesheet
    Crafted with Impeccable & Design Taste standards:
    - Zero AI Slop (No purple gradient mesh, no 3-card monotony, no side stripes)
-   - Strict Tactical Obsidian Palette (#000000, #0a0a0c, #ff4200)
+   - Strict Tactical Obsidian Palette (#000000, #0d0d0d, #ff4200)
+   - Zero Blue/Indigo Undertone Invariant (Achromatic Charcoal-Black Glass)
    - Responsive, Accessible (WCAG AA), Emil Kowalski Spring Physics
    ========================================================================== */
 
 :root {
   --bg: #000000;
   --bg-gradient: radial-gradient(circle at 50% 0%, rgba(255, 66, 0, 0.04) 0%, transparent 65%);
-  --surface: #0a0a0c;
-  --surface-glass: rgba(16, 16, 20, 0.7);
-  --surface-card: rgba(20, 20, 24, 0.6);
-  --surface-card-hover: rgba(28, 28, 34, 0.85);
-  --surface-input: #0e0e12;
+  --surface: #0d0d0d;
+  --surface-glass: rgba(16, 16, 16, 0.7);
+  --surface-card: rgba(18, 18, 18, 0.65);
+  --surface-card-hover: rgba(26, 26, 26, 0.85);
+  --surface-input: #111111;
   
   --border: rgba(255, 255, 255, 0.08);
   --border-hover: rgba(255, 255, 255, 0.16);
@@ -60,7 +61,7 @@ html {
 }
 
 body {
-  background-color: #030305;
+  background-color: #080808;
   background-image: 
     radial-gradient(ellipse 90% 45% at 50% 950px, rgba(255, 66, 0, 0.045) 0%, rgba(20, 10, 8, 0.015) 50%, transparent 75%),
     radial-gradient(ellipse 70% 40% at 85% 1650px, rgba(255, 66, 0, 0.035) 0%, transparent 65%),
@@ -122,7 +123,7 @@ strong, b {
   height: 100vh;
   z-index: 0;
   pointer-events: none;
-  background-color: #030305;
+  background-color: #080808;
   transition: opacity 0.25s ease-out;
 }
 
@@ -181,7 +182,7 @@ strong, b {
   height: 56px;
   position: relative;
   border-radius: 9999px;
-  background: rgba(10, 10, 14, 0.85);
+  background: rgba(12, 12, 12, 0.85);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
   border: 1px solid rgba(255, 255, 255, 0.13);
@@ -870,17 +871,17 @@ strong, b {
 .monolith-canvas {
   position: relative;
   width: 100%;
-  height: 236px;
-  min-height: 236px;
-  max-height: 236px;
-  background: linear-gradient(155deg, rgba(18, 18, 25, 0.72) 0%, rgba(8, 8, 12, 0.94) 100%);
+  height: 244px;
+  min-height: 244px;
+  max-height: 244px;
+  background: linear-gradient(155deg, rgba(18, 18, 18, 0.72) 0%, rgba(9, 9, 9, 0.94) 100%);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: var(--radius-lg);
   overflow: hidden;
   box-shadow: inset 0 1px 1px 0 rgba(255, 255, 255, 0.15);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
-  padding: 26px 32px 24px 32px;
+  padding: 24px 32px 20px 32px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -907,65 +908,15 @@ strong, b {
 }
 
 .membrane-ripple-field {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 170px;
-  height: 50px;
-  pointer-events: none;
-  z-index: 0;
+  display: none !important;
 }
 
-.ripple-circle {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%) scale(1);
-  width: 100%;
-  height: 100%;
-  border-radius: 16px;
-  border: 1px solid rgba(255, 66, 0, 0.45);
-  opacity: 0;
-  pointer-events: none;
-}
-
-.monolith-canvas.recording .ripple-1 {
-  animation: acousticRipple 2.4s infinite cubic-bezier(0.2, 0.8, 0.4, 1) 0s;
-}
-
-.monolith-canvas.recording .ripple-2 {
-  animation: acousticRipple 2.4s infinite cubic-bezier(0.2, 0.8, 0.4, 1) 0.8s;
-}
-
-.monolith-canvas.recording .ripple-3 {
-  animation: acousticRipple 2.4s infinite cubic-bezier(0.2, 0.8, 0.4, 1) 1.6s;
-}
-
-@keyframes acousticRipple {
-  0% {
-    transform: translate(-50%, -50%) scale(0.96);
-    opacity: 0.75;
-    border-color: rgba(255, 80, 0, 0.6);
-  }
-  50% {
-    opacity: 0.35;
-  }
-  100% {
-    transform: translate(-50%, -50%) scale(2.0);
-    opacity: 0;
-    border-color: rgba(255, 80, 0, 0);
-  }
-}
-
-/* Typographic Content Surface (Reserved Fixed Space) */
+/* Typographic Content Surface (Reserved Fixed Space, Overflow Visible) */
 .monolith-editor-surface {
   position: relative;
   z-index: 2;
-  height: 72px;
-  min-height: 72px;
-  max-height: 72px;
-  overflow: hidden;
+  min-height: 80px;
+  overflow: visible;
   display: flex;
   align-items: flex-start;
   text-align: left;
@@ -1028,7 +979,25 @@ strong, b {
   }
 }
 
-/* Authentic Dictation Overlay Pill */
+@property --beam-angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+
+@property --edit-beam-angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+
+@property --beam-opacity {
+  syntax: '<number>';
+  initial-value: 0;
+  inherits: false;
+}
+
+/* Authentic Dictation & Voice Editing Overlay Pill */
 .mock-aura-overlay-wrapper {
   position: absolute;
   bottom: 24px;
@@ -1053,17 +1022,109 @@ strong, b {
   transform: scale(1);
 }
 
+.mock-overlay-card {
+  width: 170px;
+  height: 50px;
+  position: relative;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.2px solid rgba(255, 255, 255, 0.08);
+  box-shadow: none;
+  overflow: hidden;
+  transition: border-color 0.45s ease;
+  --beam-opacity: 0;
+  background: linear-gradient(#090909, #090909) padding-box,
+              conic-gradient(
+                from var(--beam-angle, 0deg),
+                transparent 0deg,
+                transparent 110deg,
+                rgba(254, 66, 0, var(--beam-opacity, 0)) 160deg,
+                transparent 180deg,
+                transparent 290deg,
+                rgba(254, 66, 0, var(--beam-opacity, 0)) 340deg,
+                transparent 360deg
+              ) border-box;
+}
+
+.mock-overlay-card::before {
+  content: "";
+  position: absolute;
+  inset: -32px;
+  background: conic-gradient(
+    from var(--edit-beam-angle, 0deg),
+    transparent 0deg,
+    rgba(254, 66, 0, 0.6) 80deg,
+    rgba(255, 120, 50, 0.85) 100deg,
+    rgba(254, 66, 0, 0.4) 140deg,
+    transparent 200deg,
+    transparent 360deg
+  );
+  animation: mockSpinEditBeam 2.5s linear infinite;
+  filter: blur(14px);
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.mock-overlay-card::after {
+  content: "";
+  position: absolute;
+  inset: 1px;
+  background: rgba(9, 9, 9, 0.72);
+  border-radius: 15px;
+  z-index: 2;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.mock-overlay-card.edit-context {
+  border-color: transparent;
+  --beam-opacity: 0;
+}
+
+.mock-overlay-card.edit-context::before,
+.mock-overlay-card.edit-context::after {
+  opacity: 1;
+  transition: opacity 0.25s ease-out;
+}
+
+.mock-overlay-card.processing {
+  border-color: transparent;
+  --beam-opacity: 0.85;
+  animation: mockSpinBeam 1.1s linear infinite;
+}
+
+.mock-overlay-card.processing::before,
+.mock-overlay-card.processing::after {
+  opacity: 0;
+  transition: opacity 0.2s ease-out;
+}
+
+@keyframes mockSpinBeam {
+  to {
+    --beam-angle: 360deg;
+  }
+}
+
+@keyframes mockSpinEditBeam {
+  to {
+    --edit-beam-angle: 360deg;
+  }
+}
+
 .overlay-pill-svg {
   position: relative;
-  z-index: 1;
+  z-index: 5;
   width: 170px;
   height: 50px;
   display: block;
-  background-color: #090909;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: transparent;
+  border: none;
   border-radius: 16px;
-  box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.12);
-  transition: border-color 0.3s var(--ease-out);
 }
 
 #mock-overlay-status {
@@ -1073,41 +1134,40 @@ strong, b {
   font-weight: 500;
   line-height: 13px;
   color: #e8e8e8;
-  background: rgba(9, 9, 9, 0.75);
+  background: rgba(9, 9, 9, 0.85);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 6px;
   padding: 3px 10px;
-  
   text-align: center;
   white-space: nowrap;
+  transition: opacity 0.2s ease;
 }
 
-/* Audio EQ waves layout */
+/* Editor Selected Text Highlight for Voice Editing Scenario (Authentic OS Sharp Rectangle, Centered) */
+.real-text-selection,
+.mock-selected-text {
+  background-color: rgba(254, 66, 0, 0.38) !important;
+  color: #ffffff !important;
+  border-radius: 0 !important;
+  border: none !important;
+  outline: none !important;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+  display: inline;
+  padding: 0 0 6px 0 !important;
+}
+
+.kinetic-cursor.hidden {
+  display: none !important;
+}
+
+/* Authentic Sound Wave Bars (Direct SVG attribute physics matching src/overlay.js) */
+#bars-group {
+  transition: opacity 0.22s ease;
+}
+
 .sound-bar {
-  transform-origin: center;
-  transform-box: fill-box;
-  transition: transform 0.1s var(--ease-out);
-}
-
-.mock-overlay-pill.active:not(.processing) .sound-bar {
-  animation: mockEqualizerWave 0.8s infinite alternate ease-in-out;
-}
-
-/* Equalizer offsets for smooth staggered animation */
-.mock-overlay-pill.active:not(.processing) .sound-bar:nth-child(1) { animation-duration: 0.55s; animation-delay: 0.12s; }
-.mock-overlay-pill.active:not(.processing) .sound-bar:nth-child(2) { animation-duration: 0.75s; animation-delay: 0.28s; }
-.mock-overlay-pill.active:not(.processing) .sound-bar:nth-child(3) { animation-duration: 0.48s; animation-delay: 0.05s; }
-.mock-overlay-pill.active:not(.processing) .sound-bar:nth-child(4) { animation-duration: 0.85s; animation-delay: 0.38s; }
-.mock-overlay-pill.active:not(.processing) .sound-bar:nth-child(5) { animation-duration: 0.65s; animation-delay: 0.18s; }
-.mock-overlay-pill.active:not(.processing) .sound-bar:nth-child(6) { animation-duration: 0.55s; animation-delay: 0.12s; }
-.mock-overlay-pill.active:not(.processing) .sound-bar:nth-child(7) { animation-duration: 0.75s; animation-delay: 0.28s; }
-.mock-overlay-pill.active:not(.processing) .sound-bar:nth-child(8) { animation-duration: 0.48s; animation-delay: 0.05s; }
-.mock-overlay-pill.active:not(.processing) .sound-bar:nth-child(9) { animation-duration: 0.85s; animation-delay: 0.38s; }
-.mock-overlay-pill.active:not(.processing) .sound-bar:nth-child(10) { animation-duration: 0.65s; animation-delay: 0.18s; }
-
-@keyframes mockEqualizerWave {
-  0% { transform: scaleY(0.3); }
-  100% { transform: scaleY(2.2); }
+  /* Dynamic SVG geometry attributes (y, height, rx, fill) strictly managed by JS with zero scale distortion */
 }
 
 /* ==========================================================================
@@ -1201,7 +1261,7 @@ strong, b {
 }
 
 .pipeline-card {
-  background: linear-gradient(160deg, rgba(20, 20, 26, 0.65) 0%, rgba(10, 10, 14, 0.85) 100%);
+  background: linear-gradient(160deg, rgba(18, 18, 18, 0.65) 0%, rgba(10, 10, 10, 0.85) 100%);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: var(--radius-lg);
   padding: 1.75rem 1.65rem;
@@ -1407,7 +1467,7 @@ strong, b {
   user-select: none;
   height: 132px;
   padding: 8px 2.25rem 0 2.25rem;
-  background: linear-gradient(160deg, rgba(20, 20, 26, 0.45) 0%, rgba(10, 10, 14, 0.65) 100%);
+  background: linear-gradient(160deg, rgba(18, 18, 18, 0.45) 0%, rgba(10, 10, 10, 0.65) 100%);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border-color: rgba(255, 255, 255, 0.05);
@@ -1417,7 +1477,7 @@ strong, b {
 .deck-card:not(.is-active):hover {
   --deck-lift-y: -6px;
   opacity: 0.95 !important;
-  background: linear-gradient(160deg, rgba(24, 24, 32, 0.70) 0%, rgba(14, 14, 20, 0.85) 100%);
+  background: linear-gradient(160deg, rgba(24, 24, 24, 0.70) 0%, rgba(14, 14, 14, 0.85) 100%);
   border-color: rgba(255, 255, 255, 0.20);
   box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.06);
 }
@@ -1463,7 +1523,7 @@ strong, b {
   cursor: default;
   height: 132px;
   padding: 0 2.25rem;
-  background: linear-gradient(160deg, rgba(20, 20, 26, 0.65) 0%, rgba(10, 10, 14, 0.85) 100%);
+  background: linear-gradient(160deg, rgba(18, 18, 18, 0.65) 0%, rgba(10, 10, 10, 0.85) 100%);
   border: 1px solid rgba(255, 255, 255, 0.08);
   box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.05);
   backdrop-filter: blur(16px);
@@ -1756,7 +1816,7 @@ strong, b {
   bottom: calc(100% + 6px);
   left: 50%;
   transform: translateX(-50%) translateY(3px);
-  background: #121217;
+  background: #121212;
   color: #ffffff;
   font-family: var(--font-body);
   font-size: 0.75rem;
@@ -1783,7 +1843,7 @@ strong, b {
   transform: translateX(-50%);
   border-width: 4px;
   border-style: solid;
-  border-color: #121217 transparent transparent transparent;
+  border-color: #121212 transparent transparent transparent;
 }
 
 .app-logo-item:hover .app-logo-tooltip,
@@ -1874,6 +1934,115 @@ strong, b {
   color: var(--text-muted);
   line-height: 1.2;
   white-space: nowrap;
+}
+
+/* Bento Visual: Syntax Comparison Plate (Voice Editing & Snippets) */
+.deck-card .bento-syntax-plate {
+  margin-top: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  background: rgba(13, 13, 13, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  width: auto;
+  min-width: 320px;
+  max-width: 440px;
+  box-sizing: border-box;
+}
+
+.syntax-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-mono, monospace);
+  font-size: 0.82rem;
+  line-height: 1.35;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.syntax-tag {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 2px 5px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.syntax-tag.tag-before {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-muted);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.syntax-tag.tag-after {
+  background: rgba(46, 213, 115, 0.12);
+  color: #2ed573;
+  border: 1px solid rgba(46, 213, 115, 0.25);
+}
+
+.syntax-row.diff-before .syntax-code {
+  color: #8c939e;
+  text-decoration: line-through;
+  text-decoration-color: rgba(255, 255, 255, 0.3);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.syntax-row.diff-after .syntax-code {
+  color: #f5f7fa;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.syntax-snippet {
+  color: #ff9153;
+  background: rgba(254, 66, 0, 0.12);
+  border-radius: 3px;
+  padding: 0 4px;
+  border: 1px solid rgba(254, 66, 0, 0.25);
+}
+
+.syntax-caret-marker {
+  display: inline-block;
+  color: #ff4200;
+  font-weight: 800;
+  animation: syntaxCaretBlink 1s infinite;
+  margin-left: 1px;
+}
+
+@keyframes syntaxCaretBlink {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+
+.syntax-action-badge {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  gap: 6px;
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: #ff8c42;
+  background: rgba(254, 66, 0, 0.10);
+  border: 1px solid rgba(254, 66, 0, 0.22);
+  border-radius: 9999px;
+  padding: 2px 9px;
+  margin-left: 2px;
+}
+
+.syntax-action-badge svg {
+  stroke: #ff8c42;
 }
 
 /* Bento Visual: GitHub Repository Action */
@@ -2066,7 +2235,7 @@ strong, b {
    Section: Comparison Table (Obsidian Glass)
    ========================================================================== */
 .comparison-table-wrap {
-  background: linear-gradient(160deg, rgba(20, 20, 26, 0.65) 0%, rgba(10, 10, 14, 0.85) 100%);
+  background: linear-gradient(160deg, rgba(18, 18, 18, 0.65) 0%, rgba(10, 10, 10, 0.85) 100%);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: var(--radius-lg);
   overflow-x: auto;
@@ -2137,7 +2306,7 @@ strong, b {
    Section: Engine Matrix (Interactive Local vs Cloud — Unified Obsidian Glass)
    ========================================================================== */
 .engine-matrix-wrap {
-  background: linear-gradient(160deg, rgba(20, 20, 26, 0.65) 0%, rgba(10, 10, 14, 0.85) 100%);
+  background: linear-gradient(160deg, rgba(18, 18, 18, 0.65) 0%, rgba(10, 10, 10, 0.85) 100%);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: var(--radius-lg);
   position: relative;
@@ -2444,7 +2613,7 @@ strong, b {
   width: 38px;
   height: 38px;
   border-radius: 9999px;
-  background-color: rgba(20, 20, 26, 0.85);
+  background-color: rgba(18, 18, 18, 0.85);
   border: 1px solid rgba(255, 255, 255, 0.12);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
@@ -2469,7 +2638,7 @@ strong, b {
 }
 
 .back-to-top:hover {
-  background-color: rgba(28, 28, 36, 0.95);
+  background-color: rgba(26, 26, 26, 0.95);
   border-color: rgba(255, 255, 255, 0.24);
   color: #ffffff;
 }
@@ -3019,12 +3188,18 @@ strong, b {
 }
 
 .app-showcase-window .engine-option:hover .engine-card {
-  border-color: rgba(var(--accent-color-rgb), 0.45);
+  border-color: rgba(255, 255, 255, 0.16);
+  background-color: hsla(0, 0%, 10%, 0.5);
 }
 
 .app-showcase-window .engine-option input:checked + .engine-card {
-  border-color: var(--accent-color);
-  background-color: rgba(var(--accent-color-rgb), 0.04);
+  border-color: rgba(255, 255, 255, 0.22);
+  background-color: rgba(255, 255, 255, 0.06);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.app-showcase-window .engine-option input:checked + .engine-card .engine-name {
+  color: var(--text-primary);
 }
 
 .app-showcase-window .engine-name {
@@ -3037,7 +3212,7 @@ strong, b {
 }
 
 .app-showcase-window .engine-option input:checked + .engine-card .engine-name {
-  color: var(--accent-color);
+  color: var(--text-primary);
 }
 
 .app-showcase-window .engine-meta {
@@ -3070,12 +3245,18 @@ strong, b {
 }
 
 .app-showcase-window .model-card:hover {
-  border-color: rgba(var(--accent-color-rgb), 0.45);
+  border-color: rgba(255, 255, 255, 0.16);
+  background-color: hsla(0, 0%, 10%, 0.5);
 }
 
 .app-showcase-window .model-card.active {
-  border-color: var(--accent-color);
-  background-color: rgba(var(--accent-color-rgb), 0.04);
+  border-color: rgba(255, 255, 255, 0.22);
+  background-color: rgba(255, 255, 255, 0.06);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.app-showcase-window .model-card.active .model-name {
+  color: var(--text-primary);
 }
 
 .app-showcase-window .model-card:active {
@@ -3103,7 +3284,7 @@ strong, b {
 }
 
 .app-showcase-window .model-card.active .model-name {
-  color: var(--accent-color);
+  color: var(--text-primary);
 }
 
 .app-showcase-window .model-meta {
@@ -3503,6 +3684,67 @@ strong, b {
   font-size: 13px;
   font-weight: 500;
   white-space: nowrap;
+}
+
+/* Commands Guide in Text Tab */
+.app-showcase-window .commands-info-guide {
+  background-color: rgba(13, 13, 13, 0.6);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.app-showcase-window .commands-info-guide .guide-item {
+  display: grid;
+  grid-template-columns: 190px 1fr;
+  align-items: baseline;
+  gap: 16px;
+}
+
+.app-showcase-window .commands-info-guide .guide-item:not(:last-child) {
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.app-showcase-window .commands-info-guide .guide-item-title {
+  font-family: var(--font-display);
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+}
+
+.app-showcase-window .commands-info-guide .command-chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-top: 0;
+}
+
+.app-showcase-window .commands-info-guide .chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 8px;
+  background-color: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  font-family: var(--font-mono, monospace);
+  line-height: 1.3;
+  cursor: default;
+}
+
+@media (max-width: 680px) {
+  .app-showcase-window .commands-info-guide .guide-item {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
 }
 
 /* History Panel */
@@ -4046,7 +4288,7 @@ body.modal-open {
   position: fixed;
   inset: 0;
   z-index: 9999;
-  background: rgba(3, 3, 5, 0.82);
+  background: rgba(6, 6, 6, 0.82);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   display: flex;
@@ -4068,7 +4310,7 @@ body.modal-open {
 .download-modal-card {
   width: 100%;
   max-width: 490px;
-  background: linear-gradient(160deg, rgba(22, 22, 28, 0.96) 0%, rgba(10, 10, 14, 0.99) 100%);
+  background: linear-gradient(160deg, rgba(18, 18, 18, 0.96) 0%, rgba(10, 10, 10, 0.99) 100%);
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: var(--radius-lg);
   box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.08);

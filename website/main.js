@@ -46,18 +46,29 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 /* ==========================================================================
-   Live Dictation Typing Simulator (Monolith + Kinetic Luminescence)
+   Live Dictation & Voice Editing Simulator (Monolith + Dual-Beam HUD)
    ========================================================================== */
 let simulationRunId = 0;
 let simulationTimeouts = [];
+
+function escapeHtml(text) {
+  return String(text)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
 
 function startTypingSimulator() {
   const currentRunId = ++simulationRunId;
   const canvas = document.getElementById('monolith-canvas');
   const editorText = document.getElementById('demo-editor-text');
   const overlayPill = document.getElementById('mock-overlay-pill');
+  const overlayCard = document.getElementById('mock-overlay-card') || (overlayPill ? overlayPill.querySelector('.mock-overlay-card') : null);
   const overlayStatus = document.getElementById('mock-overlay-status');
   const soundBars = document.querySelectorAll('#mock-overlay-pill .sound-bar');
+  const kineticCursor = canvas ? canvas.querySelector('.kinetic-cursor') : null;
   
   if (!editorText || !overlayPill || !overlayStatus) return;
 
@@ -66,77 +77,189 @@ function startTypingSimulator() {
   simulationTimeouts = [];
 
   const isRu = (document.documentElement.lang || 'ru') === 'ru';
-  const phrases = isRu ? [
+  const scenarios = isRu ? [
     {
+      type: 'dictation',
       raw: "Привет, во сколько созвонимся, чтобы обсудить новый релиз",
       clean: "Привет, во сколько созвонимся, чтобы обсудить новый релиз?"
     },
     {
+      type: 'edit',
+      initialBefore: "",
+      initialSelected: "Отправте пажалуста отчет клиенту как можно скорее.",
+      initialAfter: "",
+      command: "«Исправь ошибки»",
+      finalText: "Отправьте, пожалуйста, отчёт клиенту как можно скорее."
+    },
+    {
+      type: 'dictation',
       raw: "Напиши функцию валидации: проверь email, пароль и токен доступа",
       clean: "Напиши функцию валидации: проверь email, пароль и токен доступа."
     },
     {
-      raw: "Почему падает тест авторизации, если передать пустой заголовок",
-      clean: "Почему падает тест авторизации, если передать пустой заголовок?"
+      type: 'edit',
+      initialBefore: "",
+      initialSelected: "Создай асинхронный обработчик запросов с логированием ошибок.",
+      initialAfter: "",
+      command: "«Переведи на английский»",
+      finalText: "Create an asynchronous request handler with error logging."
     },
     {
+      type: 'dictation',
       raw: "Идея для фичи — добавить умную паузу, пока пользователь думает",
       clean: "Идея для фичи — добавить умную паузу, пока пользователь думает."
     },
     {
-      raw: "Спасибо за отчёт, все правки внесены — отправляю клиенту на подпись",
-      clean: "Спасибо за отчёт, все правки внесены — отправляю клиенту на подпись."
-    },
-    {
-      raw: "Проверь логи сервера: время ответа базы данных резко выросло",
-      clean: "Проверь логи сервера: время ответа базы данных резко выросло!"
+      type: 'edit',
+      initialBefore: "",
+      initialSelected: "Вся история транскрипций храница в открытом виде на локальном диске.",
+      initialAfter: "",
+      command: "«Исправь грамматику»",
+      finalText: "Вся история транскрипций хранится в зашифрованном виде на локальном диске."
     }
   ] : [
     {
+      type: 'dictation',
       raw: "Hey, what time can we sync to discuss the new release",
       clean: "Hey, what time can we sync to discuss the new release?"
     },
     {
+      type: 'edit',
+      initialBefore: "",
+      initialSelected: "Plz send the reprot to the client as soon as possible.",
+      initialAfter: "",
+      command: "“Fix errors”",
+      finalText: "Please send the report to the client as soon as possible."
+    },
+    {
+      type: 'dictation',
       raw: "Write a validation function: check email, password, and auth token",
       clean: "Write a validation function: check email, password, and auth token."
     },
     {
-      raw: "Why does the auth test fail when an empty header is passed",
-      clean: "Why does the auth test fail when an empty header is passed?"
-    },
-    {
-      raw: "Feature idea — add a smart pause while the user is thinking",
-      clean: "Feature idea — add a smart pause while the user is thinking."
-    },
-    {
-      raw: "Thanks for the report, edits are done — sending to the client",
-      clean: "Thanks for the report, edits are done — sending to the client."
-    },
-    {
-      raw: "Check the server logs: database response time spiked suddenly",
-      clean: "Check the server logs: database response time spiked suddenly!"
+      type: 'edit',
+      initialBefore: "",
+      initialSelected: "Function must validate the access token and expire time.",
+      initialAfter: "",
+      command: "“Translate to French”",
+      finalText: "La fonction doit valider le jeton d'accès et le délai d'expiration."
     }
   ];
 
-  let phraseIndex = 0;
-  let breathingInterval = null;
+  let scenarioIndex = 0;
   let timerInterval = null;
 
+  // Authentic Sound Wave Engine directly imported from src/overlay.js
+  const restHeight = 2.5;
+  const maxHeight = 16.0;
+  const COLOR_SILENCE = { r: 114, g: 34, b: 5 };
+  const COLOR_SPEECH = { r: 254, g: 66, b: 0 };
+
+  function getBarHeatColor(energy) {
+    const clamped = Math.max(0, Math.min(1, energy));
+    const r = Math.round(COLOR_SILENCE.r + (COLOR_SPEECH.r - COLOR_SILENCE.r) * clamped);
+    const g = Math.round(COLOR_SILENCE.g + (COLOR_SPEECH.g - COLOR_SILENCE.g) * clamped);
+    const b = Math.round(COLOR_SILENCE.b + (COLOR_SPEECH.b - COLOR_SILENCE.b) * clamped);
+    return `rgb(${r}, ${g}, ${b})`;
+  }
+
+  // Exact bar tracking from src/overlay.js
+  const barStates = Array.from(soundBars).map(() => ({
+    currentHeight: restHeight,
+    targetHeight: restHeight
+  }));
+
+  function resetBars() {
+    barStates.forEach(state => {
+      state.targetHeight = restHeight;
+      state.currentHeight = restHeight;
+    });
+    soundBars.forEach(bar => {
+      bar.setAttribute("height", restHeight.toString());
+      bar.setAttribute("y", (15.0 - restHeight / 2).toString());
+      bar.setAttribute("rx", (restHeight / 2).toString());
+      bar.setAttribute("fill", "rgb(114, 34, 5)");
+    });
+  }
+
+  let waveAnimId = null;
+  let waveMode = 'idle'; // 'speech' | 'processing' | 'idle'
+  let waveAngle = 0;
+
+  function runWaveLoop() {
+    if (currentRunId !== simulationRunId) return;
+
+    const now = performance.now();
+    const isProc = waveMode === 'processing';
+    const isSpeech = waveMode === 'speech';
+
+    if (isSpeech) {
+      // Authentic speech frequency ripples from src/overlay.js
+      const volume = 0.04;
+      const boosted = Math.sqrt(volume);
+      const time = now * 0.007;
+
+      barStates.forEach((state, index) => {
+        const wave = 0.35 +
+          Math.sin(time * (0.9 + index * 0.12) + index * 1.6) * 0.4 +
+          Math.cos(time * 0.65 - index * 0.95) * 0.25;
+
+        let h = restHeight + (boosted * 36.0 * Math.max(0.05, wave));
+        h = Math.min(maxHeight, Math.max(restHeight, h));
+        state.targetHeight = h;
+      });
+    } else if (waveMode === 'idle') {
+      barStates.forEach(state => { state.targetHeight = restHeight; });
+    }
+
+    waveAngle += 0.05;
+
+    soundBars.forEach((bar, index) => {
+      const state = barStates[index];
+      let blendedTarget = state.targetHeight;
+
+      if (isProc) {
+        const distFromCenter = Math.abs(index - 4.5);
+        blendedTarget = 4.0 + Math.sin(waveAngle - distFromCenter * 0.45) * 3.5;
+      }
+
+      // Smooth linear interpolation (lerp) at 60fps matching src/overlay.js
+      state.currentHeight += (blendedTarget - state.currentHeight) * 0.16;
+
+      const y = 15.0 - (state.currentHeight / 2);
+      bar.setAttribute("height", state.currentHeight.toFixed(2));
+      bar.setAttribute("y", y.toFixed(2));
+      bar.setAttribute("rx", (Math.min(1.5, state.currentHeight / 2)).toFixed(2));
+
+      const barEnergy = Math.max(0, Math.min(1, (state.currentHeight - restHeight) / 7.0));
+      const effectiveEnergy = isProc ? 1.0 : barEnergy;
+      bar.setAttribute("fill", getBarHeatColor(effectiveEnergy));
+    });
+
+    waveAnimId = requestAnimationFrame(runWaveLoop);
+  }
+
+  function startEqualizerAnimation(mode = 'speech') {
+    waveMode = mode;
+    if (!waveAnimId) {
+      waveAnimId = requestAnimationFrame(runWaveLoop);
+    }
+  }
+
   function stopAllAnimations() {
-    if (breathingInterval) {
-      clearInterval(breathingInterval);
-      breathingInterval = null;
+    if (kineticCursor) kineticCursor.classList.remove('hidden');
+    waveMode = 'idle';
+    if (waveAnimId) {
+      cancelAnimationFrame(waveAnimId);
+      waveAnimId = null;
     }
     if (timerInterval) {
       clearInterval(timerInterval);
       timerInterval = null;
     }
-    
-    soundBars.forEach(bar => {
-      bar.removeAttribute("style");
-      bar.setAttribute("height", "6");
-      bar.setAttribute("y", "11.6001");
-    });
+    resetBars();
+    simulationTimeouts.forEach(t => clearTimeout(t));
+    simulationTimeouts = [];
   }
 
   function sleep(ms) {
@@ -150,96 +273,200 @@ function startTypingSimulator() {
     if (currentRunId !== simulationRunId) return;
     stopAllAnimations();
 
-    const currentItem = phrases[phraseIndex % phrases.length];
-    phraseIndex++;
+    const scenario = scenarios[scenarioIndex % scenarios.length];
+    scenarioIndex++;
 
     // Clean reset of editor state
     editorText.innerHTML = "";
     if (canvas) canvas.classList.remove('recording', 'processing');
-    overlayPill.classList.remove('active', 'processing');
+    overlayPill.classList.remove('active', 'edit-mode', 'processing');
+    if (overlayCard) {
+      overlayCard.classList.remove('edit-context', 'processing');
+      overlayCard.style.setProperty('--beam-opacity', '0');
+    }
     overlayStatus.textContent = "0:00";
+    resetBars();
     
-    await sleep(1000);
-    if (currentRunId !== simulationRunId) return;
-    
-    // Step 1: Open Dictation Pill Overlay & activate Acoustic Resonance Ripples
-    overlayPill.classList.add('active');
-    if (canvas) canvas.classList.add('recording');
-    
-    let seconds = 0;
-    timerInterval = setInterval(() => {
-      if (currentRunId !== simulationRunId) {
-        clearInterval(timerInterval);
-        return;
-      }
-      seconds++;
-      overlayStatus.textContent = `0:0${seconds}`;
-    }, 1000);
-    
-    await sleep(600);
-    if (currentRunId !== simulationRunId) return;
-    
-    // Step 2: Dictate phrase with kinetic luminescence on each character
-    for (let i = 0; i < currentItem.raw.length; i++) {
+    if (scenario.type === 'dictation') {
+      // SCENARIO 1: DIRECT VOICE DICTATION
+      await sleep(900);
       if (currentRunId !== simulationRunId) return;
-      const char = currentItem.raw[i];
-      const token = document.createElement('span');
-      token.className = 'kinetic-token';
-      token.textContent = char;
-      editorText.appendChild(token);
-      await sleep(26 + Math.random() * 30);
-    }
-    
-    if (currentRunId !== simulationRunId) return;
-    if (timerInterval) clearInterval(timerInterval);
-    await sleep(350);
-    if (currentRunId !== simulationRunId) return;
-    
-    // Step 3: Transcription processing state
-    if (canvas) {
-      canvas.classList.remove('recording');
-      canvas.classList.add('processing');
-    }
-    overlayPill.classList.add('processing');
-    overlayStatus.textContent = isRu ? "Вставка…" : "Transcribing...";
-    
-    let angle = 0;
-    breathingInterval = setInterval(() => {
-      if (currentRunId !== simulationRunId) {
-        clearInterval(breathingInterval);
-        return;
+      
+      // Step 1: Open Dictation Pill Overlay (Zero dual beam during voice recording!)
+      if (kineticCursor) kineticCursor.classList.remove('hidden');
+      overlayPill.classList.add('active');
+      if (overlayCard) {
+        overlayCard.classList.remove('edit-context', 'processing');
+        overlayCard.style.setProperty('--beam-opacity', '0');
       }
-      soundBars.forEach((bar, index) => {
-        const distFromCenter = Math.abs(index - 4.5);
-        const h = 5 + Math.sin(angle - distFromCenter * 0.45) * 5.5;
-        const y = 14.6 - (h / 2);
-        bar.setAttribute("height", Math.max(2, h).toString());
-        bar.setAttribute("y", y.toString());
-      });
-      angle += 0.08;
-    }, 16);
-    
-    await sleep(800);
-    if (currentRunId !== simulationRunId) return;
-    
-    // Step 4: Final punctuation & insertion completed
-    editorText.textContent = currentItem.clean;
-    
-    stopAllAnimations();
-    if (canvas) canvas.classList.remove('recording', 'processing');
-    overlayPill.classList.remove('active', 'processing');
-    
-    // Pause before repeating next cycle
-    await sleep(3600);
-    if (currentRunId !== simulationRunId) return;
-    runSimulationLoop();
+      if (canvas) canvas.classList.add('recording');
+      startEqualizerAnimation('speech');
+      
+      let seconds = 0;
+      timerInterval = setInterval(() => {
+        if (currentRunId !== simulationRunId) {
+          clearInterval(timerInterval);
+          return;
+        }
+        seconds++;
+        overlayStatus.textContent = `0:0${seconds}`;
+      }, 1000);
+      
+      await sleep(600);
+      if (currentRunId !== simulationRunId) return;
+      
+      // Step 2: Dictate phrase character by character
+      for (let i = 0; i < scenario.raw.length; i++) {
+        if (currentRunId !== simulationRunId) return;
+        const char = scenario.raw[i];
+        const token = document.createElement('span');
+        token.className = 'kinetic-token';
+        token.textContent = char;
+        editorText.appendChild(token);
+        await sleep(24 + Math.random() * 26);
+      }
+      
+      if (currentRunId !== simulationRunId) return;
+      if (timerInterval) clearInterval(timerInterval);
+      await sleep(300);
+      if (currentRunId !== simulationRunId) return;
+      
+      // Step 3: Transcription processing state (Dual rotating beam activates ONLY here!)
+      if (canvas) {
+        canvas.classList.remove('recording');
+        canvas.classList.add('processing');
+      }
+      overlayPill.classList.add('processing');
+      if (overlayCard) {
+        overlayCard.classList.add('processing');
+        overlayCard.style.setProperty('--beam-opacity', '0.85');
+      }
+      overlayStatus.textContent = isRu ? "Вставка…" : "Transcribing...";
+      
+      startEqualizerAnimation('processing');
+      await sleep(800);
+      if (currentRunId !== simulationRunId) return;
+      
+      // Step 4: Final punctuation & insertion completed
+      editorText.textContent = scenario.clean;
+      
+      stopAllAnimations();
+      if (canvas) canvas.classList.remove('recording', 'processing');
+      overlayPill.classList.remove('active', 'processing');
+      if (overlayCard) {
+        overlayCard.classList.remove('processing');
+        overlayCard.style.setProperty('--beam-opacity', '0');
+      }
+      
+      await sleep(3400);
+      if (currentRunId !== simulationRunId) return;
+      runSimulationLoop();
+
+    } else {
+      // SCENARIO 2: VOICE EDITING OF SELECTED TEXT
+      // Step 1: Smooth appearance of initial rough text (keystroke stream with kinetic cursor)
+      editorText.innerHTML = "";
+      if (kineticCursor) kineticCursor.classList.remove('hidden');
+      const fullInitialText = scenario.initialBefore + scenario.initialSelected + scenario.initialAfter;
+      const initialStep = 3;
+      for (let i = 0; i <= fullInitialText.length; i += initialStep) {
+        if (currentRunId !== simulationRunId) return;
+        editorText.textContent = fullInitialText.slice(0, i);
+        await sleep(16);
+      }
+      editorText.textContent = fullInitialText;
+      await sleep(750);
+      if (currentRunId !== simulationRunId) return;
+
+      // Step 2: Progressive Left-to-Right Selection (Smooth & fast, Caret suppressed)
+      if (kineticCursor) kineticCursor.classList.add('hidden');
+      const targetText = scenario.initialSelected;
+      const charDelay = Math.max(10, Math.min(16, Math.round(750 / targetText.length)));
+      for (let i = 1; i <= targetText.length; i++) {
+        if (currentRunId !== simulationRunId) return;
+        const selected = escapeHtml(targetText.slice(0, i));
+        const unselected = escapeHtml(targetText.slice(i));
+        editorText.innerHTML = escapeHtml(scenario.initialBefore) + 
+                               '<span class="real-text-selection">' + selected + '</span>' + 
+                               unselected + 
+                               escapeHtml(scenario.initialAfter);
+        await sleep(charDelay);
+      }
+      await sleep(350);
+      if (currentRunId !== simulationRunId) return;
+
+      // Step 3: Overlay pops up with Diffuse Contour Glow (.edit-context, ZERO dual beam!)
+      if (overlayCard) {
+        overlayCard.classList.remove('processing');
+        overlayCard.classList.add('edit-context');
+        overlayCard.style.setProperty('--beam-opacity', '0');
+      }
+      overlayPill.classList.add('active', 'edit-mode');
+      if (canvas) canvas.classList.add('recording');
+      // Real Aura 1:1 Achromatic Recording Timer (0:01)
+      overlayStatus.textContent = "0:01";
+
+      // Authentic speech wave matching dictation mode exactly!
+      startEqualizerAnimation('speech');
+      await sleep(1100);
+      if (currentRunId !== simulationRunId) return;
+
+      // Step 4: Switch to AI command processing (Dual rotating beam activates ONLY here!)
+      if (canvas) {
+        canvas.classList.remove('recording');
+        canvas.classList.add('processing');
+      }
+      overlayPill.classList.remove('edit-mode');
+      overlayPill.classList.add('processing');
+      if (overlayCard) {
+        overlayCard.classList.remove('edit-context');
+        overlayCard.classList.add('processing');
+        overlayCard.style.setProperty('--beam-opacity', '0.85');
+      }
+      // Real Aura 1:1 Achromatic Processing Status
+      overlayStatus.textContent = isRu ? "Обработка…" : "Processing...";
+
+      startEqualizerAnimation('processing');
+      await sleep(850);
+      if (currentRunId !== simulationRunId) return;
+
+      // Step 5: Replace text seamlessly with fast keystroke stream (Aura 1:1 Win32 Hook Emulation)
+      stopAllAnimations();
+      if (canvas) canvas.classList.remove('recording', 'processing');
+      overlayPill.classList.remove('active', 'edit-mode', 'processing');
+      if (overlayCard) {
+        overlayCard.classList.remove('edit-context', 'processing');
+        overlayCard.style.setProperty('--beam-opacity', '0');
+      }
+
+      editorText.innerHTML = "";
+      if (kineticCursor) kineticCursor.classList.remove('hidden');
+
+      const replacementText = scenario.finalText;
+      const stepSize = 2;
+      for (let i = 0; i <= replacementText.length; i += stepSize) {
+        if (currentRunId !== simulationRunId) return;
+        editorText.textContent = replacementText.slice(0, i);
+        await sleep(14);
+      }
+      editorText.textContent = replacementText;
+
+      await sleep(3800);
+      if (currentRunId !== simulationRunId) return;
+      runSimulationLoop();
+    }
   }
 
   stopAllAnimations();
   editorText.innerHTML = "";
   if (canvas) canvas.classList.remove('recording', 'processing');
-  overlayPill.classList.remove('active', 'processing');
+  overlayPill.classList.remove('active', 'edit-mode', 'processing');
+  if (overlayCard) {
+    overlayCard.classList.remove('edit-context', 'processing');
+    overlayCard.style.setProperty('--beam-opacity', '0');
+  }
   overlayStatus.textContent = "0:00";
+  resetBars();
 
   runSimulationLoop();
 }
@@ -715,7 +942,7 @@ function initFluidGradientCanvas() {
       float bandEdge = smoothstep(0.0, 0.06, bandVal) * (1.0 - smoothstep(0.06, 0.14, bandVal));
 
       // 3. Palette Definition
-      vec3 obsidian = vec3(0.015, 0.015, 0.02);  // Deep Obsidian Black
+      vec3 obsidian = vec3(0.012, 0.012, 0.012);  // Pure Achromatic Charcoal Black (Zero Blue/Indigo Tint)
       vec3 ember    = vec3(0.18, 0.035, 0.005);  // Warm Obsidian Amber
       vec3 auraCore = vec3(0.95, 0.26, 0.0);      // Pure Aura Flame (#ff4200)
       vec3 laser    = vec3(1.0, 0.58, 0.15);     // Radiant Highlight
@@ -1312,7 +1539,13 @@ function initFeaturesDeck() {
   let activeIndex = 0;
   let isTransitioning = false;
 
-  const slotConfigs = [
+  const slotConfigs = cards.length === 5 ? [
+    { top: 0, scale: 0.92, zIndex: 1, opacity: 0.25 },
+    { top: 28, scale: 0.94, zIndex: 2, opacity: 0.45 },
+    { top: 56, scale: 0.96, zIndex: 3, opacity: 0.65 },
+    { top: 84, scale: 0.98, zIndex: 4, opacity: 0.85 },
+    { top: 112, scale: 1.0, zIndex: 10, opacity: 1.0 }
+  ] : [
     { top: 0, scale: 0.94, zIndex: 1, opacity: 0.35 },
     { top: 38, scale: 0.96, zIndex: 2, opacity: 0.55 },
     { top: 76, scale: 0.98, zIndex: 3, opacity: 0.75 },
@@ -1321,15 +1554,12 @@ function initFeaturesDeck() {
 
   function applySlots(targetIndex) {
     const total = cards.length;
-    // Circular rolling wheel assignment:
-    // Slot 3 (front active) = cards[targetIndex]
-    // Slot 2 (1 step behind) = cards[(targetIndex + 1) % total]
-    // Slot 1 (2 steps behind) = cards[(targetIndex + 2) % total]
-    // Slot 0 (furthest back)  = cards[(targetIndex + 3) % total]
+    const activeSlotIdx = slotConfigs.length - 1;
+
     for (let offset = 1; offset < total; offset++) {
       const cardIdx = (targetIndex + offset) % total;
       const card = cards[cardIdx];
-      const slotIdx = total - 1 - offset;
+      const slotIdx = activeSlotIdx - offset;
       const conf = slotConfigs[slotIdx];
 
       card.classList.remove('is-active');
@@ -1344,7 +1574,7 @@ function initFeaturesDeck() {
     const activeCard = cards[targetIndex];
     activeCard.classList.add('is-active');
     activeCard.setAttribute('aria-expanded', 'true');
-    const conf = slotConfigs[3];
+    const conf = slotConfigs[activeSlotIdx];
     activeCard.style.setProperty('--deck-top', `${conf.top}px`);
     activeCard.style.setProperty('--deck-scale', conf.scale);
     activeCard.style.top = `${conf.top}px`;
