@@ -425,6 +425,51 @@ pub(crate) fn whisper_model_is_installed(model_name: &str, path: &Path) -> bool 
         .unwrap_or(false)
 }
 
+/// Cheap gate for `set_settings`: refuses a local selection whose files are not
+/// installed, so a saved model can never point at a missing or truncated file.
+/// Sizes are checked against the pinned manifest; the download path already
+/// verifies SHA-256, and Parakeet re-verifies it when the server starts.
+pub(crate) fn validate_local_model_selection<R: Runtime>(
+    app_handle: &tauri::AppHandle<R>,
+    settings: &crate::settings::Settings,
+) -> Result<(), String> {
+    if settings.transcription_mode != "local" {
+        return Ok(());
+    }
+    let app_local_data = app_handle
+        .path()
+        .app_local_data_dir()
+        .map_err(|error| format!("Failed to locate the model directory: {error}"))?;
+    let models_dir = app_local_data.join("models");
+
+    if settings.local_engine == "parakeet" {
+        let model_dir = models_dir.join("parakeet-v3");
+        for spec in PARAKEET_ARTIFACTS {
+            let path = model_dir.join(spec.filename);
+            let installed = std::fs::metadata(&path)
+                .map(|metadata| metadata.is_file() && metadata.len() == spec.expected_size)
+                .unwrap_or(false);
+            if !installed {
+                return Err(format!(
+                    "model_not_installed: Parakeet is not installed completely ('{}' is missing or incomplete).",
+                    spec.filename
+                ));
+            }
+        }
+        return Ok(());
+    }
+
+    let filename = whisper_model_filename(&settings.model_name)?;
+    let path = models_dir.join(&filename);
+    if !whisper_model_is_installed(&settings.model_name, &path) {
+        return Err(format!(
+            "model_not_installed: Speech model '{}' is not installed completely.",
+            settings.model_name
+        ));
+    }
+    Ok(())
+}
+
 /// Model paths whose SHA-256 was verified at least once in this process.
 /// Runtime checks are size-first (cheap, catches truncation) plus one hash
 /// pass per process, which catches same-size corruption that a size check
@@ -2897,6 +2942,69 @@ pub fn build_whisper_prompt(language: &str, user_dictionary: &str) -> String {
     }
 }
 
+/// Drops a transcript that is only the Whisper priming prompt echoed back.
+///
+/// Whisper is known to return the prompt verbatim on silence or noise, which
+/// would paste dictionary terms the user never said. The comparison ignores
+/// case, punctuation and whitespace, and only drops an exact match: speech that
+/// merely contains a term is kept. A single dictionary term is never dropped on
+/// its own, because the user may have dictated it deliberately.
+pub(crate) fn strip_prompt_echo(text: &str, language: &str, dictionary: &str) -> String {
+    if text.trim().is_empty() {
+        return text.to_string();
+    }
+    let full_prompt = build_whisper_prompt(language, dictionary);
+    if full_prompt.is_empty() {
+        return text.to_string();
+    }
+
+    let normalized_text = normalize_for_echo(text);
+    if normalized_text.is_empty() {
+        return text.to_string();
+    }
+
+    let dict = dictionary.trim();
+    let normalized_dict = normalize_for_echo(dict);
+    let normalized_full = normalize_for_echo(&full_prompt);
+    let term_count = dict
+        .split([',', ';', '\n'])
+        .filter(|term| !term.trim().is_empty())
+        .count();
+
+    let mut candidates = Vec::new();
+    // With no dictionary the prompt is pure boilerplate, and an echo of it is
+    // never something the user said. With a dictionary, skip the full prompt
+    // when it is only the dictionary itself: a single dictated term must stay.
+    if dict.is_empty() || normalized_full != normalized_dict {
+        candidates.push(normalized_full);
+    }
+    if term_count >= 2 {
+        candidates.push(normalized_dict);
+    }
+
+    if candidates
+        .iter()
+        .any(|candidate| !candidate.is_empty() && *candidate == normalized_text)
+    {
+        return String::new();
+    }
+    text.to_string()
+}
+
+/// Lowercases and removes punctuation so two spellings of the same prompt
+/// compare equal. `ё` folds to `е` because Whisper is inconsistent about it.
+fn normalize_for_echo(value: &str) -> String {
+    value
+        .chars()
+        .flat_map(char::to_lowercase)
+        .map(|ch| if ch == 'ё' { 'е' } else { ch })
+        .map(|ch| if ch.is_alphanumeric() { ch } else { ' ' })
+        .collect::<String>()
+        .split_whitespace()
+        .collect::<Vec<_>>()
+        .join(" ")
+}
+
 pub async fn transcribe_via_whisper_server(
     port: u16,
     wav_path: &Path,
@@ -3927,5 +4035,44 @@ mod tests {
         // Russian ("ru") must retain its Russian sample.
         let prompt_ru = super::build_whisper_prompt("ru", "");
         assert!(prompt_ru.contains("Привет, вот пример"));
+    }
+
+    #[test]
+    fn prompt_echo_is_dropped() {
+        let prompt = super::build_whisper_prompt("ru", "Аура, Kubernetes");
+        assert_eq!(
+            super::strip_prompt_echo(&prompt, "ru", "Аура, Kubernetes"),
+            ""
+        );
+        // Case and punctuation do not make an echo real speech.
+        assert_eq!(
+            super::strip_prompt_echo(&prompt.to_uppercase(), "ru", "Аура, Kubernetes"),
+            ""
+        );
+    }
+
+    #[test]
+    fn dictionary_echo_without_boilerplate_is_dropped() {
+        assert_eq!(
+            super::strip_prompt_echo("Аура, Kubernetes.", "auto", "Аура, Kubernetes"),
+            ""
+        );
+    }
+
+    #[test]
+    fn speech_containing_a_dictionary_term_is_kept() {
+        let text = "Сегодня я настроил Kubernetes в Ауре и всё заработало.";
+        assert_eq!(
+            super::strip_prompt_echo(text, "ru", "Аура, Kubernetes"),
+            text
+        );
+    }
+
+    #[test]
+    fn single_dictionary_term_dictation_is_kept() {
+        assert_eq!(
+            super::strip_prompt_echo("Kubernetes.", "auto", "Kubernetes"),
+            "Kubernetes."
+        );
     }
 }

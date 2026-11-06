@@ -4,6 +4,8 @@ pub mod ai_client;
 pub mod artifact_download;
 pub mod audio_recorder;
 pub mod caret_context;
+#[cfg(target_os = "windows")]
+pub mod clipboard_win;
 pub mod edit_intent;
 pub mod edit_validate;
 #[path = "history_secure.rs"]
@@ -192,6 +194,18 @@ async fn set_settings(
                     }
                 }
             }
+            // A model/engine/mode change is accepted only when the files it
+            // needs are actually installed. Everything else (volume, hotkey,
+            // dictionary) saves exactly as before.
+            let previous = settings::load_settings(&save_handle).ok();
+            let selection_changed = previous.as_ref().is_some_and(|current| {
+                current.model_name != saved_settings.model_name
+                    || current.local_engine != saved_settings.local_engine
+                    || current.local_acceleration != saved_settings.local_acceleration
+            });
+            if selection_changed {
+                whisper_runner::validate_local_model_selection(&save_handle, &saved_settings)?;
+            }
             settings::save_settings(&save_handle, &saved_settings)?;
             sync_autostart(&save_handle, saved_settings.autostart);
             Ok(())
@@ -374,9 +388,25 @@ async fn delete_model_command(
     model_name: String,
 ) -> Result<(), String> {
     let model_name = canonical_model_name(&model_name)?;
+    // An active model is never deleted: doing so leaves the saved selection
+    // pointing at a file that no longer exists, and the next dictation fails.
+    if let Ok(current) = load_settings_async(app_handle.clone()).await {
+        let is_active_speech = current.model_name == model_name
+            || (model_name == "parakeet-v3" && current.local_engine == "parakeet");
+        if is_active_speech {
+            return Err(format!(
+                "model_in_use: '{model_name}' is the selected speech model."
+            ));
+        }
+        if llm_runner::is_llm_model_id(&model_name) && current.llm_model == model_name {
+            return Err(format!(
+                "edit_model_in_use: '{model_name}' is the selected local editing model."
+            ));
+        }
+    }
     if whisper_runner::is_model_download_active(&model_name) {
         return Err(format!(
-            "Cannot delete '{model_name}' while its download is active"
+            "model_download_active: Cannot delete '{model_name}' while its download is active"
         ));
     }
     let app_local_data = app_handle
@@ -1323,6 +1353,20 @@ fn is_clipboard_empty_os() -> bool {
     false
 }
 
+/// Writes a transient transcript for the paste keystroke. On Windows the write
+/// is marked so the text does not reach Win+V or the cloud clipboard; if that
+/// fails we fall back to an ordinary write rather than losing the paste.
+fn write_transcript_to_clipboard(text: &str) -> bool {
+    #[cfg(target_os = "windows")]
+    if clipboard_win::set_text_private(text) {
+        return true;
+    }
+    arboard::Clipboard::new()
+        .ok()
+        .map(|mut clipboard| clipboard.set_text(text.to_string()).is_ok())
+        .unwrap_or(false)
+}
+
 fn backup_clipboard() -> ClipboardBackup {
     for _ in 0..3 {
         if let Ok(mut cb) = arboard::Clipboard::new() {
@@ -1351,6 +1395,24 @@ fn backup_clipboard() -> ClipboardBackup {
     }
 }
 
+#[cfg(target_os = "windows")]
+fn restore_clipboard_preserving_history(backup: &ClipboardBackup) -> bool {
+    match backup {
+        ClipboardBackup::Text(text) => clipboard_win::set_text_private(text),
+        ClipboardBackup::Image {
+            width,
+            height,
+            bytes,
+        } => clipboard_win::set_image_private(*width, *height, bytes),
+        ClipboardBackup::Empty | ClipboardBackup::Preserve => false,
+    }
+}
+
+#[cfg(not(target_os = "windows"))]
+fn restore_clipboard_preserving_history(_backup: &ClipboardBackup) -> bool {
+    false
+}
+
 fn restore_clipboard(backup: ClipboardBackup) {
     if matches!(backup, ClipboardBackup::Preserve) {
         crate::logger::log(
@@ -1359,6 +1421,12 @@ fn restore_clipboard(backup: ClipboardBackup) {
             None,
             "Clipboard held non-text/non-image formats (e.g. files/tables); skipped clearing to prevent data loss",
         );
+        return;
+    }
+    // The previous item is already in Win+V from its original copy. Restoring
+    // it through the ordinary writer would add another duplicate for every
+    // dictation, so restore it as transient content instead.
+    if restore_clipboard_preserving_history(&backup) {
         return;
     }
     for _ in 0..5 {
@@ -1545,7 +1613,13 @@ async fn run_local_whisper_async(
             )
             .await
             {
-                Ok(text) => return Ok(text),
+                Ok(text) => {
+                    return Ok(whisper_runner::strip_prompt_echo(
+                        &text,
+                        &language,
+                        &dictionary,
+                    ))
+                }
                 Err(server_err) => {
                     crate::logger::log(
                         "WARN",
@@ -1561,6 +1635,7 @@ async fn run_local_whisper_async(
 
         tauri::async_runtime::spawn_blocking(move || {
             whisper_runner::run_local_whisper(&app_handle, &model, &wav, &language, &dictionary)
+                .map(|text| whisper_runner::strip_prompt_echo(&text, &language, &dictionary))
         })
         .await
         .map_err(|e| format!("Local ASR task failed: {e}"))?
@@ -3996,6 +4071,24 @@ async fn finalize_recording(app_handle: tauri::AppHandle) {
             }
         };
 
+        // OpenAI-compatible cloud endpoints take the dictionary in Whisper's
+        // `prompt` field, so they can echo it on silence exactly like the local
+        // server. Gemini does not take that prompt, so leave its text alone.
+        if settings.transcription_mode != "local"
+            && matches!(
+                settings.api_provider.as_str(),
+                "openai" | "groq" | "huggingface" | "custom"
+            )
+        {
+            if let Ok(text) = transcription_result.as_ref() {
+                let cleaned =
+                    whisper_runner::strip_prompt_echo(text, &language, &settings.dictionary);
+                if cleaned.is_empty() && !text.trim().is_empty() {
+                    transcription_result = Ok(cleaned);
+                }
+            }
+        }
+
         if settings.transcription_mode != "local" && settings.cloud_fallback_enabled {
             if let Err(cloud_err) = &transcription_result {
                 if is_cloud_unreachable(cloud_err) {
@@ -4432,10 +4525,8 @@ async fn finalize_recording(app_handle: tauri::AppHandle) {
                             if let Some(state) = app_handle_clone.try_state::<AppState>() {
                                 if let Ok(_guard) = state.clipboard_mutex.lock() {
                                     original_clipboard = backup_clipboard();
-                                    if let Ok(mut cb) = arboard::Clipboard::new() {
-                                        if cb.set_text(final_text.clone()).is_ok() {
-                                            clipboard_written = true;
-                                        }
+                                    if write_transcript_to_clipboard(&final_text) {
+                                        clipboard_written = true;
                                     }
                                     if clipboard_written {
                                         paste_blocked = !keyboard_simulator::simulate_paste();
@@ -4501,8 +4592,14 @@ async fn finalize_recording(app_handle: tauri::AppHandle) {
                                 "Focus changed; leaving text in clipboard instead of pasting.",
                             );
                             final_notice = Some("focus-changed-copied");
-                            if let Ok(mut cb) = arboard::Clipboard::new() {
-                                let _ = cb.set_text(final_text.clone());
+                            // Same clipboard serialization as the paste path: a
+                            // concurrent session must not interleave writes.
+                            if let Some(state) = app_handle_clone.try_state::<AppState>() {
+                                if let Ok(_guard) = state.clipboard_mutex.lock() {
+                                    let _ = write_transcript_to_clipboard(&final_text);
+                                }
+                            } else {
+                                let _ = write_transcript_to_clipboard(&final_text);
                             }
                         } else {
                             crate::logger::log(

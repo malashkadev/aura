@@ -6,8 +6,8 @@
   <meta name="description" content="Настройка параметров голосового ввода Aura" />
   <title>Aura</title>
 
-  <link rel="stylesheet" href="style.css?v=2.0.19" />
-  <script type="module" src="main.js?v=2.0.19" defer></script>
+  <link rel="stylesheet" href="style.css?v=2.0.20" />
+  <script type="module" src="main.js?v=2.0.20" defer></script>
 </head>
 <body>
   <div class="glass-container">
@@ -123,13 +123,12 @@
           <div class="card" id="card-mic-meter">
             <div class="mic-meter-header">
               <div class="mic-meter-title-wrap">
-                <h2 class="card-title" data-i18n="mic_meter_title">Проверка микрофона</h2>
-                <p class="card-desc" data-i18n="mic_meter_desc">Проверьте уровень входящего сигнала в реальном времени.</p>
+                <h2 class="card-title" data-i18n="mic_meter_title">Микрофон</h2>
               </div>
-              <button type="button" class="btn btn-secondary btn-mic-test" id="btn-toggle-mic-meter" data-i18n="mic_meter_test_btn_start">Начать тест</button>
+              <button type="button" class="btn btn-secondary btn-mic-test" id="btn-toggle-mic-meter" data-i18n="mic_meter_test_btn_start">Проверить</button>
             </div>
-            <div class="form-group" style="margin-top: 12px; margin-bottom: 12px;">
-              <label for="select-audio-device" class="field-label" data-i18n="audio_device_label">Микрофон (устройство ввода)</label>
+            <div class="form-group" style="margin-top: 12px; margin-bottom: 0;">
+              <label for="select-audio-device" class="field-label sr-only" data-i18n="audio_device_label">Микрофон (устройство ввода)</label>
               <div class="select-wrap">
                 <select id="select-audio-device" class="custom-select" aria-haspopup="listbox" aria-expanded="false">
                   <option value="default" data-i18n="audio_device_default">По умолчанию (системное)</option>
@@ -137,7 +136,7 @@
                 <div class="select-panel" id="panel-select-audio-device" role="listbox"></div>
               </div>
             </div>
-            <div class="mic-meter-display">
+            <div class="mic-meter-display" id="mic-meter-display" hidden>
               <div class="mic-meter-bar-track">
                 <div class="mic-meter-bar-fill" id="mic-meter-fill"></div>
                 <div class="mic-meter-peak" id="mic-meter-peak"></div>
@@ -146,22 +145,20 @@
           </div>
 
           <div class="card" id="card-engine">
-            <h2 class="card-title" data-i18n="engine_title">Способ распознавания</h2>
-            <p class="card-desc" data-i18n="engine_desc">Выберите между облачной обработкой высокого качества или полностью автономным локальным распознаванием речи.</p>
-            
+            <h2 class="card-title" data-i18n="engine_title">Распознавание</h2>
             <div class="engine-toggle-group">
               <label class="engine-option" id="label-cloud">
                 <input type="radio" name="transcription_mode" value="cloud" id="radio-cloud" />
                 <span class="engine-card">
-                  <span class="engine-name" data-i18n="engine_cloud">Облачный ИИ</span>
-                  <span class="engine-meta" data-i18n="engine_cloud_meta">Gemini / OpenAI / Groq / Hugging Face (требуется API-ключ)</span>
+                  <span class="engine-name" data-i18n="engine_cloud">В облаке</span>
+                  <span class="engine-meta" data-i18n="engine_cloud_meta">Gemini, OpenAI, Groq</span>
                 </span>
               </label>
               <label class="engine-option" id="label-local">
                 <input type="radio" name="transcription_mode" value="local" checked id="radio-local" />
                 <span class="engine-card">
-                  <span class="engine-name" data-i18n="engine_local">Локальный ИИ</span>
-                  <span class="engine-meta" data-i18n="engine_local_meta">Whisper / Parakeet (100% офлайн)</span>
+                  <span class="engine-name" data-i18n="engine_local">Локально</span>
+                  <span class="engine-meta" data-i18n="engine_local_meta">Приватно, офлайн</span>
                 </span>
               </label>
             </div>
@@ -205,7 +202,6 @@
             </div>
           </div>
 
-
           <div class="card" id="card-cloud-fallback" style="display: none;">
             <h2 class="card-title" data-i18n="fallback_title">Автопереключение при недоступности облака</h2>
             <p class="card-desc" data-i18n="fallback_desc">Если облачный ИИ недоступен (VPN, блокировка региона, нет сети), автоматически использовать уже скачанную локальную модель для этой записи.</p>
@@ -219,225 +215,232 @@
           </div>
 
           <div id="local-engine-section" style="display: none;">
-            <!-- Локальное распознавание: карточка показывается только в локальном режиме -->
-            <div class="card" id="card-local-model">
-              <h2 class="card-title" data-i18n="local_model_title">Локальное распознавание</h2>
-              <p class="card-desc" data-i18n="local_model_desc">Настройте локальный движок распознавания речи для полной приватности.</p>
-            
-            <div class="form-group">
-              <label for="select-local-engine" class="field-label" data-i18n="local_engine_label">Движок распознавания</label>
-              <div class="select-wrap">
-                <select id="select-local-engine" class="custom-select" aria-haspopup="listbox" aria-expanded="false">
-                  <option value="whisper" data-i18n="local_engine_whisper">Whisper.cpp</option>
-                  <option value="parakeet" data-i18n="local_engine_parakeet">NVIDIA Parakeet</option>
-                </select>
-                <div class="select-panel" id="panel-select-local-engine" role="listbox"></div>
+            <div class="summary-block" id="card-local-model">
+              <button type="button" class="summary-row" id="btn-local-model-summary" aria-expanded="false" aria-controls="local-model-body">
+                <span class="summary-left">
+                  <span class="summary-title" data-i18n="local_model_title">Локальная модель</span>
+                  <span class="summary-hint" data-i18n="local_model_hint">Движок, ускорение и размер модели.</span>
+                </span>
+                <span class="summary-spec">
+                  <span class="spec-row"><span class="spec-label" data-i18n="local_model_label">Модель</span><span class="spec-value" id="local-model-spec-value">Whisper Base</span></span>
+                  <span class="spec-row"><span class="spec-label" data-i18n="gpu_accel_label">Ускорение</span><span class="spec-value" id="local-accel-spec-value">CPU</span></span>
+                </span>
+                <span class="summary-action summary-action-icon">
+                  <svg class="summary-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                </span>
+              </button>
+              <div class="collapsible-wrapper" id="local-model-body">
+                <div class="collapsible-content summary-body">
+                  <div class="form-group">
+                    <label for="select-local-engine" class="field-label" data-i18n="local_engine_label">Движок</label>
+                    <div class="select-wrap">
+                      <select id="select-local-engine" class="custom-select" aria-haspopup="listbox" aria-expanded="false">
+                        <option value="whisper" data-i18n="local_engine_whisper">Whisper.cpp</option>
+                        <option value="parakeet" data-i18n="local_engine_parakeet">NVIDIA Parakeet</option>
+                      </select>
+                      <div class="select-panel" id="panel-select-local-engine" role="listbox"></div>
+                    </div>
+                    <span id="engine-health-chip" class="engine-health-chip" role="status" style="display:none;"></span>
+                  </div>
+
+                  <div class="form-group" id="gpu-acceleration-settings">
+                    <label class="field-label" data-i18n="gpu_accel_label">Ускорение</label>
+                    <div class="model-cards-group" id="gpu-modes-container" role="radiogroup" aria-label="Выберите режим GPU">
+                      <div class="model-card" data-gpu="cpu" role="radio" aria-checked="true" tabindex="0">
+                        <div class="model-card-main">
+                          <div class="model-card-info">
+                            <span class="model-name" data-i18n="gpu_accel_cpu_title">CPU</span>
+                            <span class="model-meta" data-i18n="gpu_accel_cpu_desc">Универсально</span>
+                          </div>
+                          <div class="model-card-action" id="action-gpu-cpu">
+                            <span class="status-ready-badge" data-i18n-title="model_status_ready" title="Установлено" aria-label="Установлено">
+                              <svg class="status-ready-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="model-card" data-gpu="cuda" role="radio" aria-checked="false" tabindex="0">
+                        <div class="model-card-main">
+                          <div class="model-card-info">
+                            <span class="model-name" data-i18n="gpu_accel_cuda_title">NVIDIA CUDA</span>
+                            <span class="model-meta" data-i18n="gpu_accel_cuda_desc">GeForce RTX/GTX</span>
+                          </div>
+                          <div class="model-card-action" id="action-gpu-cuda"></div>
+                        </div>
+                        <div class="model-card-progress" id="progress-gpu-cuda" style="display: none;">
+                          <div class="progress-bar-bg"><div class="progress-bar-fill" id="fill-gpu-cuda"></div></div>
+                          <span class="progress-pct" id="pct-gpu-cuda">0%</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="form-group" id="group-whisper-models">
+                    <label class="field-label" data-i18n="local_model_label">Модель</label>
+                    <div class="model-cards-group" id="model-cards-container" role="radiogroup" aria-label="Выберите модель">
+                      <div class="model-card" data-model="tiny" role="radio" aria-checked="false" tabindex="0">
+                        <div class="model-card-main">
+                          <div class="model-card-info">
+                            <span class="model-name">Tiny</span>
+                            <span class="model-meta" data-i18n="model_meta_tiny">75 МБ</span>
+                          </div>
+                          <div class="model-card-action" id="action-tiny"></div>
+                        </div>
+                        <div class="model-card-progress" id="progress-tiny" style="display: none;">
+                          <div class="progress-bar-bg"><div class="progress-bar-fill" id="fill-tiny"></div></div>
+                          <span class="progress-pct" id="pct-tiny">0%</span>
+                        </div>
+                      </div>
+                      <div class="model-card" data-model="base" role="radio" aria-checked="false" tabindex="0">
+                        <div class="model-card-main">
+                          <div class="model-card-info">
+                            <span class="model-name">Base</span>
+                            <span class="model-meta" data-i18n="model_meta_base">145 МБ · рекомендуем</span>
+                          </div>
+                          <div class="model-card-action" id="action-base"></div>
+                        </div>
+                        <div class="model-card-progress" id="progress-base" style="display: none;">
+                          <div class="progress-bar-bg"><div class="progress-bar-fill" id="fill-base"></div></div>
+                          <span class="progress-pct" id="pct-base">0%</span>
+                        </div>
+                      </div>
+                      <div class="model-card" data-model="small" role="radio" aria-checked="false" tabindex="0">
+                        <div class="model-card-main">
+                          <div class="model-card-info">
+                            <span class="model-name">Small</span>
+                            <span class="model-meta" data-i18n="model_meta_small">465 МБ</span>
+                          </div>
+                          <div class="model-card-action" id="action-small"></div>
+                        </div>
+                        <div class="model-card-progress" id="progress-small" style="display: none;">
+                          <div class="progress-bar-bg"><div class="progress-bar-fill" id="fill-small"></div></div>
+                          <span class="progress-pct" id="pct-small">0%</span>
+                        </div>
+                      </div>
+                      <div class="model-card" data-model="medium" role="radio" aria-checked="false" tabindex="0">
+                        <div class="model-card-main">
+                          <div class="model-card-info">
+                            <span class="model-name">Medium</span>
+                            <span class="model-meta" data-i18n="model_meta_medium">1.5 ГБ</span>
+                          </div>
+                          <div class="model-card-action" id="action-medium"></div>
+                        </div>
+                        <div class="model-card-progress" id="progress-medium" style="display: none;">
+                          <div class="progress-bar-bg"><div class="progress-bar-fill" id="fill-medium"></div></div>
+                          <span class="progress-pct" id="pct-medium">0%</span>
+                        </div>
+                      </div>
+                      <div class="model-card" data-model="large-v3-turbo-q5_0" role="radio" aria-checked="false" tabindex="0">
+                        <div class="model-card-main">
+                          <div class="model-card-info">
+                            <span class="model-name">Large v3 Turbo (Q5)</span>
+                            <span class="model-meta" data-i18n="model_meta_turbo_q5">550 МБ</span>
+                          </div>
+                          <div class="model-card-action" id="action-large-v3-turbo-q5_0"></div>
+                        </div>
+                        <div class="model-card-progress" id="progress-large-v3-turbo-q5_0" style="display: none;">
+                          <div class="progress-bar-bg"><div class="progress-bar-fill" id="fill-large-v3-turbo-q5_0"></div></div>
+                          <span class="progress-pct" id="pct-large-v3-turbo-q5_0">0%</span>
+                        </div>
+                      </div>
+                      <div class="model-card" data-model="large-v3-turbo" role="radio" aria-checked="false" tabindex="0">
+                        <div class="model-card-main">
+                          <div class="model-card-info">
+                            <span class="model-name">Large v3 Turbo</span>
+                            <span class="model-meta" data-i18n="model_meta_turbo">1.6 ГБ</span>
+                          </div>
+                          <div class="model-card-action" id="action-large-v3-turbo"></div>
+                        </div>
+                        <div class="model-card-progress" id="progress-large-v3-turbo" style="display: none;">
+                          <div class="progress-bar-bg"><div class="progress-bar-fill" id="fill-large-v3-turbo"></div></div>
+                          <span class="progress-pct" id="pct-large-v3-turbo">0%</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="form-group" id="group-parakeet-models" style="display: none;">
+                    <label class="field-label" data-i18n="parakeet_model_label">Модель Parakeet</label>
+                    <div class="model-cards-group" id="parakeet-model-cards-container" role="radiogroup" aria-label="Выберите модель Parakeet">
+                      <div class="model-card" data-model="parakeet-v3" role="radio" aria-checked="false" tabindex="0">
+                        <div class="model-card-main">
+                          <div class="model-card-info">
+                            <span class="model-name">Parakeet TDT 0.6b v3 (int8)</span>
+                            <span class="model-meta" data-i18n="model_meta_parakeet">670 МБ</span>
+                          </div>
+                          <div class="model-card-action" id="action-parakeet-v3"></div>
+                        </div>
+                        <div class="model-card-progress" id="progress-parakeet-v3" style="display: none;">
+                          <div class="progress-bar-bg"><div class="progress-bar-fill" id="fill-parakeet-v3"></div></div>
+                          <span class="progress-pct" id="pct-parakeet-v3">0%</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
-              <span id="engine-health-chip" class="engine-health-chip" role="status" style="display:none;"></span>
             </div>
 
-            <div class="form-group" id="gpu-acceleration-settings">
-              <label class="field-label" data-i18n="gpu_accel_label">Локальное аппаратное ускорение</label>
-              <div class="model-cards-group" id="gpu-modes-container" role="radiogroup" aria-label="Выберите режим GPU">
-                <!-- CPU Card -->
-                <div class="model-card" data-gpu="cpu" role="radio" aria-checked="true" tabindex="0">
-                  <div class="model-card-main">
-                    <div class="model-card-info">
-                      <span class="model-name" data-i18n="gpu_accel_cpu_title">CPU (без ускорения)</span>
-                      <span class="model-meta" data-i18n="gpu_accel_cpu_desc">Стандартный режим. Надёжен, но нагружает процессор.</span>
+            <div class="summary-block" id="performance-block">
+              <button type="button" class="summary-row" id="btn-performance-summary" aria-expanded="false" aria-controls="performance-body">
+                <span class="summary-left">
+                  <span class="summary-title" data-i18n="performance_title">Производительность</span>
+                  <span class="summary-hint" data-i18n="performance_hint">Освобождение VRAM и игровой режим.</span>
+                </span>
+                <span class="summary-spec">
+                  <span class="spec-row"><span class="spec-label" data-i18n="summary_label_vram">VRAM</span><span class="spec-value" id="performance-vram-spec-value">30 мин</span></span>
+                  <span class="spec-row"><span class="spec-label" data-i18n="gaming_title">Игровой режим</span><span class="spec-value" id="performance-gaming-spec-value">выкл.</span></span>
+                </span>
+                <span class="summary-action summary-action-icon">
+                  <svg class="summary-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                </span>
+              </button>
+              <div class="collapsible-wrapper" id="performance-body">
+                <div class="collapsible-content summary-body">
+                  <div class="card-section" id="card-vram-standby">
+                    <div class="form-group">
+                      <label for="select-vram-standby" class="field-label" data-i18n="standby_timeout_label">Выгружать модель через</label>
+                      <div class="select-wrap">
+                        <select id="select-vram-standby" class="custom-select" aria-haspopup="listbox" aria-expanded="false">
+                          <option value="15" data-i18n="standby_15m">15 минут</option>
+                          <option value="30" data-i18n="standby_30m" selected>30 минут (рекомендуется)</option>
+                          <option value="60" data-i18n="standby_60m">1 час</option>
+                          <option value="0" data-i18n="standby_never">Никогда (держать в VRAM)</option>
+                        </select>
+                        <div class="select-panel" id="panel-select-vram-standby" role="listbox"></div>
+                      </div>
                     </div>
-                    <div class="model-card-action" id="action-gpu-cpu">
-                      <span class="status-ready-badge" data-i18n-title="model_status_ready" title="Установлено" aria-label="Установлено">
-                        <svg class="status-ready-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                  </div>
+                  <div class="card-section" id="card-gaming-mode">
+                    <label class="toggle-switch">
+                      <input type="checkbox" id="checkbox-gaming-mode-auto-detect" />
+                      <span class="toggle-track">
+                        <span class="toggle-thumb"></span>
                       </span>
-                    </div>
-                  </div>
-                </div>
-                <!-- CUDA Card -->
-                <div class="model-card" data-gpu="cuda" role="radio" aria-checked="false" tabindex="0">
-                  <div class="model-card-main">
-                    <div class="model-card-info">
-                      <span class="model-name" data-i18n="gpu_accel_cuda_title">NVIDIA CUDA (максимальная скорость)</span>
-                      <span class="model-meta" data-i18n="gpu_accel_cuda_desc">Для видеокарт GeForce RTX/GTX. Использует тензорные ядра.</span>
-                    </div>
-                    <div class="model-card-action" id="action-gpu-cuda"></div>
-                  </div>
-                  <div class="model-card-progress" id="progress-gpu-cuda" style="display: none;">
-                    <div class="progress-bar-bg"><div class="progress-bar-fill" id="fill-gpu-cuda"></div></div>
-                    <span class="progress-pct" id="pct-gpu-cuda">0%</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div class="form-group" id="group-whisper-models">
-              <label class="field-label" data-i18n="local_model_label">Размер модели</label>
-              <div class="model-cards-group" id="model-cards-container" role="radiogroup" aria-label="Выберите модель">
-                <!-- Tiny -->
-                <div class="model-card" data-model="tiny" role="radio" aria-checked="false" tabindex="0">
-                  <div class="model-card-main">
-                    <div class="model-card-info">
-                      <span class="model-name">Tiny</span>
-                      <span class="model-meta" data-i18n="model_meta_tiny">~75 МБ — сверхбыстрая</span>
-                    </div>
-                    <div class="model-card-action" id="action-tiny"></div>
-                  </div>
-                  <div class="model-card-progress" id="progress-tiny" style="display: none;">
-                    <div class="progress-bar-bg"><div class="progress-bar-fill" id="fill-tiny"></div></div>
-                    <span class="progress-pct" id="pct-tiny">0%</span>
-                  </div>
-                </div>
-                <!-- Base -->
-                <div class="model-card" data-model="base" role="radio" aria-checked="false" tabindex="0">
-                  <div class="model-card-main">
-                    <div class="model-card-info">
-                      <span class="model-name">Base</span>
-                      <span class="model-meta" data-i18n="model_meta_base">~145 МБ — рекомендуемая</span>
-                    </div>
-                    <div class="model-card-action" id="action-base"></div>
-                  </div>
-                  <div class="model-card-progress" id="progress-base" style="display: none;">
-                    <div class="progress-bar-bg"><div class="progress-bar-fill" id="fill-base"></div></div>
-                    <span class="progress-pct" id="pct-base">0%</span>
-                  </div>
-                </div>
-                <!-- Small -->
-                <div class="model-card" data-model="small" role="radio" aria-checked="false" tabindex="0">
-                  <div class="model-card-main">
-                    <div class="model-card-info">
-                      <span class="model-name">Small</span>
-                      <span class="model-meta" data-i18n="model_meta_small">~465 МБ — точная для русского</span>
-                    </div>
-                    <div class="model-card-action" id="action-small"></div>
-                  </div>
-                  <div class="model-card-progress" id="progress-small" style="display: none;">
-                    <div class="progress-bar-bg"><div class="progress-bar-fill" id="fill-small"></div></div>
-                    <span class="progress-pct" id="pct-small">0%</span>
-                  </div>
-                </div>
-                <!-- Medium -->
-                <div class="model-card" data-model="medium" role="radio" aria-checked="false" tabindex="0">
-                  <div class="model-card-main">
-                    <div class="model-card-info">
-                      <span class="model-name">Medium</span>
-                      <span class="model-meta" data-i18n="model_meta_medium">~1.5 ГБ — продвинутая</span>
-                    </div>
-                    <div class="model-card-action" id="action-medium"></div>
-                  </div>
-                  <div class="model-card-progress" id="progress-medium" style="display: none;">
-                    <div class="progress-bar-bg"><div class="progress-bar-fill" id="fill-medium"></div></div>
-                    <span class="progress-pct" id="pct-medium">0%</span>
-                  </div>
-                </div>
-                <!-- Large v3 Turbo (Quantized) -->
-                <div class="model-card" data-model="large-v3-turbo-q5_0" role="radio" aria-checked="false" tabindex="0">
-                  <div class="model-card-main">
-                    <div class="model-card-info">
-                      <span class="model-name">Large v3 Turbo (Q5)</span>
-                      <span class="model-meta" data-i18n="model_meta_turbo_q5">~550 МБ — почти как Turbo, вдвое легче</span>
-                    </div>
-                    <div class="model-card-action" id="action-large-v3-turbo-q5_0"></div>
-                  </div>
-                  <div class="model-card-progress" id="progress-large-v3-turbo-q5_0" style="display: none;">
-                    <div class="progress-bar-bg"><div class="progress-bar-fill" id="fill-large-v3-turbo-q5_0"></div></div>
-                    <span class="progress-pct" id="pct-large-v3-turbo-q5_0">0%</span>
-                  </div>
-                </div>
-                <!-- Large v3 Turbo -->
-                <div class="model-card" data-model="large-v3-turbo" role="radio" aria-checked="false" tabindex="0">
-                  <div class="model-card-main">
-                    <div class="model-card-info">
-                      <span class="model-name">Large v3 Turbo</span>
-                      <span class="model-meta" data-i18n="model_meta_turbo">~1.6 ГБ — лучшая точность для RU/EN</span>
-                    </div>
-                    <div class="model-card-action" id="action-large-v3-turbo"></div>
-                  </div>
-                  <div class="model-card-progress" id="progress-large-v3-turbo" style="display: none;">
-                    <div class="progress-bar-bg"><div class="progress-bar-fill" id="fill-large-v3-turbo"></div></div>
-                    <span class="progress-pct" id="pct-large-v3-turbo">0%</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div class="form-group" id="group-parakeet-models" style="display: none;">
-              <label class="field-label" data-i18n="parakeet_model_label">Модель Parakeet</label>
-              <div class="model-cards-group" id="parakeet-model-cards-container" role="radiogroup" aria-label="Выберите модель Parakeet">
-                <div class="model-card" data-model="parakeet-v3" role="radio" aria-checked="false" tabindex="0">
-                  <div class="model-card-main">
-                    <div class="model-card-info">
-                      <span class="model-name">Parakeet TDT 0.6b v3 (int8)</span>
-                      <span class="model-meta" data-i18n="model_meta_parakeet">~670 МБ — оптимизировано NVIDIA</span>
-                    </div>
-                    <div class="model-card-action" id="action-parakeet-v3"></div>
-                  </div>
-                  <div class="model-card-progress" id="progress-parakeet-v3" style="display: none;">
-                    <div class="progress-bar-bg"><div class="progress-bar-fill" id="fill-parakeet-v3"></div></div>
-                    <span class="progress-pct" id="pct-parakeet-v3">0%</span>
+                      <span class="toggle-label" data-i18n="gaming_auto_label">Автоматически в играх</span>
+                    </label>
+                    <hr class="divider" />
+                    <label class="toggle-switch">
+                      <input type="checkbox" id="checkbox-gaming-mode" />
+                      <span class="toggle-track">
+                        <span class="toggle-thumb"></span>
+                      </span>
+                      <span class="toggle-label" data-i18n="gaming_mode_label">Включить вручную</span>
+                    </label>
+                    <p class="field-hint" data-i18n="gaming_tray_hint">Также доступно в меню Aura в трее.</p>
                   </div>
                 </div>
               </div>
             </div>
           </div>
-
-          <div class="card" id="card-vram-standby">
-            <h2 class="card-title" data-i18n="standby_title">Выгрузка моделей при бездействии (Сон)</h2>
-            <p class="card-desc" data-i18n="standby_desc">Освобождает видеопамять (VRAM), если голосовой ввод не используется указанное время.</p>
-            <div class="form-group">
-              <label for="select-vram-standby" class="field-label" data-i18n="standby_timeout_label">Время бездействия до перехода в сон</label>
-              <div class="select-wrap">
-                <select id="select-vram-standby" class="custom-select" aria-haspopup="listbox" aria-expanded="false">
-                  <option value="15" data-i18n="standby_15m">Через 15 минут</option>
-                  <option value="30" data-i18n="standby_30m" selected>Через 30 минут (рекомендуется)</option>
-                  <option value="60" data-i18n="standby_60m">Через 1 час</option>
-                  <option value="0" data-i18n="standby_never">Никогда (держать в VRAM)</option>
-                </select>
-                <div class="select-panel" id="panel-select-vram-standby" role="listbox"></div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="card" id="card-gaming-mode">
-          <h2 class="card-title" data-i18n="gaming_title">Игровой режим</h2>
-          <p class="card-desc" data-i18n="gaming_desc">Автоматическая пауза перехвата клавиш и выгрузка моделей для максимального FPS в играх.</p>
-          
-          <div class="card-section">
-            <label class="toggle-switch">
-              <input type="checkbox" id="checkbox-gaming-mode-auto-detect" />
-              <span class="toggle-track">
-                <span class="toggle-thumb"></span>
-              </span>
-              <span class="toggle-label" data-i18n="gaming_auto_label">Автоматический игровой режим</span>
-            </label>
-          </div>
-
-          <hr class="divider" />
-
-          <div class="card-section">
-            <label class="toggle-switch">
-              <input type="checkbox" id="checkbox-gaming-mode" />
-              <span class="toggle-track">
-                <span class="toggle-thumb"></span>
-              </span>
-              <span class="toggle-label" data-i18n="gaming_mode_label">Включить игровой режим вручную</span>
-            </label>
-            <p class="switch-desc" data-i18n="gaming_mode_subdesc">
-              Отключает перехват клавиатуры и выгружает модели из видеопамяти (VRAM).
-            </p>
-          </div>
-          <p class="field-hint" data-i18n="gaming_tray_hint" style="margin-top: 12px;">Ручное переключение также доступно через меню Aura в трее Windows.</p>
-        </div>
-
         </section>
 
         <!-- 3. TEXT PANEL -->
         <section class="tab-panel" id="panel-text" role="tabpanel" tabindex="0" aria-labelledby="tab-btn-text" style="display: none;">
           <div class="card" id="card-language">
             <h2 class="card-title" data-i18n="lang_bias_title">Язык распознавания</h2>
-            <p class="card-desc" data-i18n="lang_bias_desc">Выберите принудительный язык ввода или включите автоопределение.</p>
             <div class="form-group">
-              <label for="select-language" class="field-label" data-i18n="lang_bias_label">Выберите язык</label>
+              <label for="select-language" class="field-label sr-only" data-i18n="lang_bias_label">Выберите язык</label>
               <div class="select-wrap">
                 <select id="select-language" class="custom-select" aria-haspopup="listbox" aria-expanded="false">
                   <option value="auto" data-i18n="lang_opt_auto">Автоопределение</option>
@@ -472,8 +475,8 @@
           </div>
 
           <div class="card" id="card-vocabulary">
-            <h2 class="card-title" data-i18n="vocab_title">Пользовательский словарь</h2>
-            <p class="card-desc" data-i18n="vocab_desc">Внесите термины, имена или брендовые названия через запятую, чтобы улучшить их распознавание.</p>
+            <h2 class="card-title" data-i18n="vocab_title">Словарь</h2>
+            <p class="card-desc" data-i18n="vocab_desc">Термины и имена через запятую.</p>
             <div class="form-group">
               <textarea id="textarea-dictionary" class="custom-textarea" placeholder="Например: Аура, коммит, репозиторий..." autocomplete="off"></textarea>
             </div>
@@ -481,19 +484,19 @@
 
           <div class="card" id="card-replacements">
             <h2 class="card-title" data-i18n="replacements_title">Автозамена</h2>
-            <p class="card-desc" data-i18n="replacements_desc">Автоматически заменяет надиктованные слова и фразы на точные термины, адреса почты или готовый текст.</p>
+            <p class="card-desc" data-i18n="replacements_desc">Заменяет слова и фразы на точный текст.</p>
             <div class="replacements-list" id="replacements-list"></div>
             <div class="replacement-add-row">
               <input type="text" id="input-rep-trigger" class="custom-input" placeholder="Слово или фраза (напр. почта)" data-i18n-placeholder="replacements_trigger_ph" autocomplete="off" />
               <input type="text" id="input-rep-value" class="custom-input" placeholder="Заменить на (напр. name@mail.ru)" data-i18n-placeholder="replacements_value_ph" autocomplete="off" />
               <button type="button" id="btn-add-replacement" class="btn btn-secondary btn-add-replacement" data-i18n="btn_add">Добавить</button>
             </div>
-            <p class="field-hint" data-i18n="replacements_caret_hint" style="margin-top: 8px;">Символ | в тексте замены указывает, куда переместить курсор после вставки (напр. Здравствуйте, |!).</p>
+            <p class="field-hint" data-i18n="replacements_caret_hint" style="margin-top: 8px;">Символ | указывает, куда поставить курсор.</p>
           </div>
 
           <div class="card" id="card-smart-context">
-            <h2 class="card-title" data-i18n="smart_context_title">Умная контекстная вставка</h2>
-            <p class="card-desc" data-i18n="smart_context_desc">Автоматически адаптирует регистр букв, знаки препинания и пробелы под положение курсора в документе.</p>
+            <h2 class="card-title" data-i18n="smart_context_title">Умная вставка</h2>
+            <p class="card-desc" data-i18n="smart_context_desc">Подстраивает регистр и пробелы под курсор.</p>
             <div class="card-section">
               <label class="toggle-switch">
                 <input type="checkbox" id="checkbox-smart-context-enabled" />
@@ -502,11 +505,7 @@
                 </span>
                 <span class="toggle-label" data-i18n="smart_context_checkbox">Учитывать контекст вокруг курсора</span>
               </label>
-              <p class="switch-desc" data-i18n="smart_context_subdesc">
-                Начинает со строчной буквы при вставке в середину предложения, убирает лишние точки и аккуратно расставляет пробелы.
-              </p>
             </div>
-
             <div id="smart-context-suboptions" class="collapsible-wrapper">
               <div class="collapsible-content">
                 <hr class="divider" />
@@ -516,11 +515,8 @@
                     <span class="toggle-track">
                       <span class="toggle-thumb"></span>
                     </span>
-                    <span class="toggle-label" data-i18n="smart_context_trailing_period_checkbox">Завершать точкой при дополнении в конце предложения</span>
+                    <span class="toggle-label" data-i18n="smart_context_trailing_period_checkbox">Завершать точкой в конце фразы</span>
                   </label>
-                  <p class="switch-desc" data-i18n="smart_context_trailing_period_subdesc">
-                    Если курсор стоит в конце незавершенной фразы, завершает фразу точкой. При выключении оставляет конец открытым для дальнейшей речи.
-                  </p>
                 </div>
               </div>
             </div>
@@ -528,141 +524,171 @@
 
           <div class="card" id="card-selection-edit">
             <h2 class="card-title" data-i18n="copy_context_title">Редактирование выделенного текста</h2>
-            <p class="card-desc" data-i18n="copy_context_desc">Если включено, Aura отправляет Ctrl+C и передаёт выделенный текст провайдеру или локальной модели как контекст для команды редактирования. Отключите эту функцию при работе в терминале.</p>
+            <p class="card-desc" data-i18n="copy_context_desc">Команды над выделенным текстом.</p>
             <label class="toggle-switch">
               <input type="checkbox" id="checkbox-selection-edit-enabled" />
               <span class="toggle-track">
                 <span class="toggle-thumb"></span>
               </span>
-              <span class="toggle-label" data-i18n="copy_context_checkbox">Разрешить редактирование выделенного текста</span>
+              <span class="toggle-label" data-i18n="copy_context_checkbox" data-i18n-title="copy_context_terminal_hint">Разрешить редактирование выделенного текста</span>
             </label>
 
-            <!-- Inner settings container: visible only when the toggle is enabled -->
             <div id="selection-edit-inner" class="collapsible-wrapper">
-              <div class="collapsible-content">
-                <div class="form-group" id="group-supported-commands">
-                  <label class="field-label" data-i18n="commands_guide_label">Поддерживаемые команды</label>
-                  <p class="switch-desc" data-i18n="commands_guide_sub" style="margin-top: 2px; margin-bottom: 8px;">Голосовые фразы для действий над выделенным текстом</p>
-                  <div class="commands-info-guide" id="commands-info-guide"></div>
-                </div>
-
-                <div class="form-group" id="group-translate-target">
-                  <label for="select-translate-target" class="field-label" data-i18n="translate_target_label">Язык перевода по умолчанию</label>
-                  <div class="select-wrap">
-                    <select id="select-translate-target" class="custom-select" aria-haspopup="listbox" aria-expanded="false">
-                      <option value="en">English</option>
-                      <option value="ru">Русский</option>
-                      <option value="de">Deutsch</option>
-                      <option value="es">Español</option>
-                      <option value="fr">Français</option>
-                      <option value="it">Italiano</option>
-                      <option value="zh">中文</option>
-                      <option value="pt">Português</option>
-                      <option value="tr">Türkçe</option>
-                      <option value="nl">Nederlands</option>
-                    </select>
-                    <div class="select-panel" id="select-panel-translate-target" role="listbox"></div>
-                  </div>
-                  <p class="switch-desc" data-i18n="translate_target_sub">Используется при голосовой команде «переведи» без указания языка.</p>
-                </div>
-
-                <div class="form-group">
-                  <label for="select-ai-edit-mode" class="field-label" data-i18n="ai_edit_mode_label">Режим редактирования</label>
-                  <div class="select-wrap">
-                    <select id="select-ai-edit-mode" class="custom-select" aria-haspopup="listbox" aria-expanded="false">
-                      <option value="auto" data-i18n="ai_edit_mode_auto">Авто</option>
-                      <option value="local" data-i18n="ai_edit_mode_local">Локальный</option>
-                      <option value="cloud" data-i18n="ai_edit_mode_cloud">Облачный</option>
-                    </select>
-                    <div class="select-panel" id="select-panel-ai-edit-mode" role="listbox"></div>
-                  </div>
-                  <p class="switch-desc" data-i18n="ai_edit_mode_sub">Авто использует локальную модель, если она установлена, иначе облачный провайдер. Для команд над выделением включите «Разрешить захват выделения и команды редактирования».</p>
-                </div>
-
-              <div class="form-group" id="group-llm-models">
-                <label class="field-label" data-i18n="llm_model_label">Локальная модель</label>
-                <div class="model-cards-group" id="llm-model-cards-container" role="radiogroup" aria-label="Выберите локальную модель">
-                  <div class="model-card" data-model="qwen3-0.6b" role="radio" aria-checked="false" tabindex="0">
-                    <div class="model-card-main">
-                      <div class="model-card-info">
-                        <span class="model-name">Qwen3 0.6B</span>
-                        <span class="model-meta" data-i18n="model_meta_llm_0_6b">~460 МБ — минимальная, простые команды</span>
+              <div class="collapsible-content selection-groups">
+                <div class="summary-block">
+                  <button type="button" class="summary-row" id="btn-commands-summary" aria-expanded="false" aria-controls="commands-body">
+                    <span class="summary-left">
+                      <span class="summary-title" data-i18n="commands_guide_label">Голосовые команды</span>
+                      <span class="summary-hint" data-i18n="commands_hint">Что можно сказать над выделенным текстом.</span>
+                    </span>
+                    <span class="summary-spec">
+                      <span class="spec-row"><span class="spec-label" data-i18n="summary_label_commands">Команды</span><span class="spec-value" id="commands-spec-value">2</span></span>
+                    </span>
+                    <span class="summary-action summary-action-icon">
+                      <svg class="summary-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                    </span>
+                  </button>
+                  <div class="collapsible-wrapper" id="commands-body">
+                    <div class="collapsible-content summary-body">
+                      <div class="form-group" id="group-supported-commands">
+                        <div class="commands-info-guide" id="commands-info-guide"></div>
                       </div>
-                      <div class="model-card-action" id="action-qwen3-0.6b"></div>
-                    </div>
-                    <div class="model-card-progress" id="progress-qwen3-0.6b" style="display: none;">
-                      <div class="progress-bar-bg"><div class="progress-bar-fill" id="fill-qwen3-0.6b"></div></div>
-                      <span class="progress-pct" id="pct-qwen3-0.6b">0%</span>
-                    </div>
-                  </div>
-                  <div class="model-card" data-model="qwen3-1.7b" role="radio" aria-checked="false" tabindex="0">
-                    <div class="model-card-main">
-                      <div class="model-card-info">
-                        <span class="model-name">Qwen3 1.7B</span>
-                        <span class="model-meta" data-i18n="model_meta_llm_1_7b">~1,2 ГБ — сбалансированная</span>
+                      <div class="form-group" id="group-translate-target">
+                        <label for="select-translate-target" class="field-label" data-i18n="translate_target_label">Язык перевода</label>
+                        <div class="select-wrap">
+                          <select id="select-translate-target" class="custom-select" aria-haspopup="listbox" aria-expanded="false">
+                            <option value="en">English</option>
+                            <option value="ru">Русский</option>
+                            <option value="de">Deutsch</option>
+                            <option value="es">Español</option>
+                            <option value="fr">Français</option>
+                            <option value="it">Italiano</option>
+                            <option value="zh">中文</option>
+                            <option value="pt">Português</option>
+                            <option value="tr">Türkçe</option>
+                            <option value="nl">Nederlands</option>
+                          </select>
+                          <div class="select-panel" id="select-panel-translate-target" role="listbox"></div>
+                        </div>
                       </div>
-                      <div class="model-card-action" id="action-qwen3-1.7b"></div>
-                    </div>
-                    <div class="model-card-progress" id="progress-qwen3-1.7b" style="display: none;">
-                      <div class="progress-bar-bg"><div class="progress-bar-fill" id="fill-qwen3-1.7b"></div></div>
-                      <span class="progress-pct" id="pct-qwen3-1.7b">0%</span>
                     </div>
                   </div>
-                  <div class="model-card" data-model="qwen3-4b" role="radio" aria-checked="false" tabindex="0">
-                    <div class="model-card-main">
-                      <div class="model-card-info">
-                        <span class="model-name">Qwen3 4B</span>
-                        <span class="model-meta" data-i18n="model_meta_llm_4b">~2,3 ГБ — максимальное качество</span>
+                </div>
+
+                <div class="summary-block">
+                  <button type="button" class="summary-row" id="btn-edit-engine-summary" aria-expanded="false" aria-controls="edit-engine-body">
+                    <span class="summary-left">
+                      <span class="summary-title" data-i18n="edit_engine_title">Движок редактирования</span>
+                      <span class="summary-hint" data-i18n="edit_engine_hint">Чем выполняется перевод и правка.</span>
+                    </span>
+                    <span class="summary-spec">
+                      <span class="spec-row"><span class="spec-label" data-i18n="ai_edit_mode_label">Режим</span><span class="spec-value" id="edit-engine-mode-spec-value">Авто</span></span>
+                      <span class="spec-row"><span class="spec-label" data-i18n="local_model_label">Модель</span><span class="spec-value" id="edit-engine-model-spec-value">Qwen3 1.7B</span></span>
+                    </span>
+                    <span class="summary-action summary-action-icon">
+                      <svg class="summary-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                    </span>
+                  </button>
+                  <div class="collapsible-wrapper" id="edit-engine-body">
+                    <div class="collapsible-content summary-body">
+                      <div class="form-group">
+                        <label for="select-ai-edit-mode" class="field-label" data-i18n="ai_edit_mode_label">Режим</label>
+                        <div class="select-wrap">
+                          <select id="select-ai-edit-mode" class="custom-select" aria-haspopup="listbox" aria-expanded="false">
+                            <option value="auto" data-i18n="ai_edit_mode_auto">Авто</option>
+                            <option value="local" data-i18n="ai_edit_mode_local">Локальный</option>
+                            <option value="cloud" data-i18n="ai_edit_mode_cloud">Облачный</option>
+                          </select>
+                          <div class="select-panel" id="select-panel-ai-edit-mode" role="listbox"></div>
+                        </div>
                       </div>
-                      <div class="model-card-action" id="action-qwen3-4b"></div>
-                    </div>
-                    <div class="model-card-progress" id="progress-qwen3-4b" style="display: none;">
-                      <div class="progress-bar-bg"><div class="progress-bar-fill" id="fill-qwen3-4b"></div></div>
-                      <span class="progress-pct" id="pct-qwen3-4b">0%</span>
+
+                      <div class="form-group" id="group-llm-models">
+                        <label class="field-label" data-i18n="llm_model_label">Локальная модель</label>
+                        <div class="model-cards-group" id="llm-model-cards-container" role="radiogroup" aria-label="Выберите локальную модель">
+                          <div class="model-card" data-model="qwen3-0.6b" role="radio" aria-checked="false" tabindex="0">
+                            <div class="model-card-main">
+                              <div class="model-card-info">
+                                <span class="model-name">Qwen3 0.6B</span>
+                                <span class="model-meta" data-i18n="model_meta_llm_0_6b">460 МБ</span>
+                              </div>
+                              <div class="model-card-action" id="action-qwen3-0.6b"></div>
+                            </div>
+                            <div class="model-card-progress" id="progress-qwen3-0.6b" style="display: none;">
+                              <div class="progress-bar-bg"><div class="progress-bar-fill" id="fill-qwen3-0.6b"></div></div>
+                              <span class="progress-pct" id="pct-qwen3-0.6b">0%</span>
+                            </div>
+                          </div>
+                          <div class="model-card" data-model="qwen3-1.7b" role="radio" aria-checked="false" tabindex="0">
+                            <div class="model-card-main">
+                              <div class="model-card-info">
+                                <span class="model-name">Qwen3 1.7B</span>
+                                <span class="model-meta" data-i18n="model_meta_llm_1_7b">1,2 ГБ · рекомендуем</span>
+                              </div>
+                              <div class="model-card-action" id="action-qwen3-1.7b"></div>
+                            </div>
+                            <div class="model-card-progress" id="progress-qwen3-1.7b" style="display: none;">
+                              <div class="progress-bar-bg"><div class="progress-bar-fill" id="fill-qwen3-1.7b"></div></div>
+                              <span class="progress-pct" id="pct-qwen3-1.7b">0%</span>
+                            </div>
+                          </div>
+                          <div class="model-card" data-model="qwen3-4b" role="radio" aria-checked="false" tabindex="0">
+                            <div class="model-card-main">
+                              <div class="model-card-info">
+                                <span class="model-name">Qwen3 4B</span>
+                                <span class="model-meta" data-i18n="model_meta_llm_4b">2,3 ГБ</span>
+                              </div>
+                              <div class="model-card-action" id="action-qwen3-4b"></div>
+                            </div>
+                            <div class="model-card-progress" id="progress-qwen3-4b" style="display: none;">
+                              <div class="progress-bar-bg"><div class="progress-bar-fill" id="fill-qwen3-4b"></div></div>
+                              <span class="progress-pct" id="pct-qwen3-4b">0%</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div class="form-group" id="group-edit-cloud-provider" style="display: none;">
+                        <label for="select-edit-cloud-provider" class="field-label" data-i18n="edit_cloud_provider_label">Облачный сервис</label>
+                        <div class="select-wrap">
+                          <select id="select-edit-cloud-provider" class="custom-select" aria-haspopup="listbox" aria-expanded="false">
+                            <option value="gemini">Google Gemini AI</option>
+                            <option value="openai">OpenAI</option>
+                            <option value="groq">Groq</option>
+                            <option value="huggingface">Hugging Face</option>
+                            <option value="custom" data-i18n="provider_opt_custom">Пользовательский сервер</option>
+                          </select>
+                          <div class="select-panel" id="select-panel-edit-cloud-provider" role="listbox"></div>
+                        </div>
+
+                        <div class="form-group" id="edit-custom-provider-url-group" style="display: none; margin-top: 8px;">
+                          <label for="input-edit-custom-url" class="field-label" data-i18n="api_custom_url">Адрес API сервера</label>
+                          <input type="text" id="input-edit-custom-url" class="custom-input" placeholder="https://api.deepinfra.com/v1/openai" autocomplete="off" />
+                        </div>
+                        <div class="form-group" id="edit-custom-provider-model-group" style="display: none; margin-top: 8px;">
+                          <label for="input-edit-custom-model" class="field-label" data-i18n="api_custom_model">Имя модели</label>
+                          <input type="text" id="input-edit-custom-model" class="custom-input" placeholder="openai/whisper-large-v3-turbo" autocomplete="off" />
+                        </div>
+
+                        <div class="form-group" style="margin-top: 8px;">
+                          <label for="input-edit-api-key" class="field-label" data-i18n="api_key">API-ключ</label>
+                          <div class="api-key-input-wrapper">
+                            <input type="password" id="input-edit-api-key" class="custom-input" placeholder="Введите ваш API-ключ..." autocomplete="off" />
+                            <button type="button" class="btn-toggle-visibility" id="btn-toggle-key-edit" aria-label="Показать/скрыть ключ">
+                              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="eye-icon"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                            </button>
+                          </div>
+                          <p class="field-hint" id="hint-edit-api-key" data-i18n="api_key_shared_hint" style="margin-top: 6px;">Единый ключ для диктовки и редактирования.</p>
+                        </div>
+                        <div class="api-link-wrapper">
+                          <a href="https://aistudio.google.com/" target="_blank" class="help-link" id="link-get-key-edit" data-i18n="api_get_key">Получить ключ API</a>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </div>
-
-              <div class="form-group" id="group-edit-cloud-provider" style="display: none;">
-                <label for="select-edit-cloud-provider" class="field-label" data-i18n="edit_cloud_provider_label">Облачный сервис</label>
-                <div class="select-wrap">
-                  <select id="select-edit-cloud-provider" class="custom-select" aria-haspopup="listbox" aria-expanded="false">
-                    <option value="gemini">Google Gemini AI</option>
-                    <option value="openai">OpenAI</option>
-                    <option value="groq">Groq</option>
-                    <option value="huggingface">Hugging Face</option>
-                    <option value="custom" data-i18n="provider_opt_custom">Пользовательский сервер</option>
-                  </select>
-                  <div class="select-panel" id="select-panel-edit-cloud-provider" role="listbox"></div>
-                </div>
-                <p class="switch-desc" id="desc-edit-cloud-provider" data-i18n="edit_cloud_provider_sub">Модель, выполняющая команды перевода и исправления грамматики текста.</p>
-
-                <div class="form-group" id="edit-custom-provider-url-group" style="display: none; margin-top: 8px;">
-                  <label for="input-edit-custom-url" class="field-label" data-i18n="api_custom_url">Адрес API сервера</label>
-                  <input type="text" id="input-edit-custom-url" class="custom-input" placeholder="https://api.deepinfra.com/v1/openai" autocomplete="off" />
-                </div>
-                <div class="form-group" id="edit-custom-provider-model-group" style="display: none; margin-top: 8px;">
-                  <label for="input-edit-custom-model" class="field-label" data-i18n="api_custom_model">Имя модели</label>
-                  <input type="text" id="input-edit-custom-model" class="custom-input" placeholder="openai/whisper-large-v3-turbo" autocomplete="off" />
-                </div>
-
-                <div class="form-group" style="margin-top: 8px;">
-                  <label for="input-edit-api-key" class="field-label" data-i18n="api_key">API-ключ</label>
-                  <div class="api-key-input-wrapper">
-                    <input type="password" id="input-edit-api-key" class="custom-input" placeholder="Введите ваш API-ключ..." autocomplete="off" />
-                    <button type="button" class="btn-toggle-visibility" id="btn-toggle-key-edit" aria-label="Показать/скрыть ключ">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="eye-icon"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-                    </button>
-                  </div>
-                  <p class="field-hint" id="hint-edit-api-key" data-i18n="api_key_shared_hint" style="margin-top: 6px;">Единый ключ Aura: действует для диктовки и AI-редактирования.</p>
-                </div>
-                <div class="api-link-wrapper">
-                  <a href="https://aistudio.google.com/" target="_blank" class="help-link" id="link-get-key-edit" data-i18n="api_get_key">Получить ключ API</a>
                 </div>
               </div>
             </div>
-          </div>
           </div>
         </section>
 
@@ -693,12 +719,12 @@
           </div>
 
           <div class="card" id="card-overlay-timer">
-            <h2 class="card-title" data-i18n="overlay_timer_title">Таймер и статус оверлея</h2>
-            <p class="card-desc" data-i18n="overlay_timer_desc">Отображать счетчик времени и статус обработки под индикатором голоса. Ошибки отображаются всегда.</p>
+            <h2 class="card-title" data-i18n="overlay_timer_title">Таймер оверлея</h2>
+            <p class="card-desc" data-i18n="overlay_timer_desc">Счётчик времени под индикатором. Ошибки отображаются всегда.</p>
             <label class="toggle-switch">
               <input type="checkbox" id="checkbox-overlay-show-timer" checked />
               <span class="toggle-track"><span class="toggle-thumb"></span></span>
-              <span class="toggle-label" data-i18n="overlay_timer_checkbox">Показывать таймер и статус в оверлее</span>
+              <span class="toggle-label" data-i18n="overlay_timer_checkbox">Показывать таймер в оверлее</span>
             </label>
           </div>
 
@@ -921,10 +947,16 @@
     </div>
 
     <!-- Floating Toast Notification -->
-    <div id="toast-container" class="toast-container" aria-live="polite" aria-atomic="true">
-      <div id="app-toast" class="app-toast" role="status" hidden>
-        <span id="toast-icon" class="toast-icon"></span>
-        <span id="toast-text" class="toast-text"></span>
+    <div id="toast-container" class="toast-container">
+      <div id="app-toast" class="app-toast" hidden>
+        <span id="toast-icon" class="toast-icon" aria-hidden="true"></span>
+        <span id="toast-text" class="toast-text" role="status" aria-live="polite" aria-atomic="true"></span>
+        <button type="button" id="toast-close" class="toast-close" data-i18n-title="toast_close" title="Закрыть" aria-label="Закрыть">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
       </div>
     </div>
     <button type="button" id="btn-save-settings" hidden aria-hidden="true"></button>

@@ -259,8 +259,7 @@ test("settings translations cover every supported locale without fallback gaps",
     "update_checks_title", "update_checks_desc", "update_checks_checkbox", "update_check_now",
     "local_model_desc", "fallback_title",
     "copy_context_title", "copy_context_desc", "copy_context_checkbox",
-    "gpu_accel_label", "gpu_accel_cpu_title", "gpu_accel_cpu_desc",
-    "gpu_accel_cuda_title", "gpu_accel_cuda_desc",
+    "gpu_accel_label", "gpu_accel_cpu_desc",
     "update_current", "update_available_pattern", "update_check_error_pattern",
     "update_installing", "update_installed_restarting", "update_install_error_open_release",
     "window_minimize", "window_close", "history_copy_title", "history_search_clear",
@@ -268,6 +267,20 @@ test("settings translations cover every supported locale without fallback gaps",
     "smart_context_title", "smart_context_desc", "smart_context_checkbox", "smart_context_subdesc",
     "smart_context_trailing_period_checkbox", "smart_context_trailing_period_subdesc",
   ];
+  // Product and technology names stay identical in every locale by design
+  // ("CPU", "NVIDIA CUDA", "GeForce RTX/GTX"). Their presence in each
+  // dictionary is still enforced above, but they are not translation
+  // fallbacks.
+  const universalLabels = [
+    "gpu_accel_cpu_title",
+    "gpu_accel_cuda_title",
+    "gpu_accel_cuda_desc",
+  ];
+  for (const key of universalLabels) {
+    for (const locale of expectedLocales) {
+      assert.equal(dictionaries[locale][key], dictionaries.ru[key]);
+    }
+  }
   for (const locale of expectedLocales.slice(1)) {
     for (const key of newlyLocalizedSettings) {
       assert.notEqual(
@@ -551,6 +564,46 @@ test("model card actions render visible download icons and delete buttons with d
   assert.match(main, /class="btn-delete-card-model"[^>]*title="[^"]+"[^>]*aria-label="[^"]+"/);
   assert.match(main, /<svg class="btn-icon" width="14" height="14"/);
   assert.match(main, /actionEl\.querySelector\("\.btn-delete-card-model"\)\.addEventListener\("click",\s*\(e\)\s*=>/);
+
+  // The active model cannot be deleted: the button is disabled and the guard
+  // explains why if the IPC is reached anyway.
+  assert.match(main, /model_status_active/);
+  assert.match(main, /disabled aria-disabled/);
+  assert.match(main, /getTranslation\("model_delete_active_error"\)/);
+});
+
+test("status toast can be dismissed and backend model errors stay human-readable", () => {
+  const html = read("src/index.html");
+  const main = read("src/main.js");
+
+  assert.match(html, /id="toast-close"/);
+  assert.match(main, /toastClose\.addEventListener\("click", hideToast\)/);
+  assert.match(main, /localizedBackendError/);
+
+  for (const code of [
+    "model_not_installed:",
+    "model_in_use:",
+    "edit_model_in_use:",
+    "model_download_active:",
+  ]) {
+    assert.ok(main.includes(code), `${code} must map to a localized message`);
+  }
+  // Raw Rust diagnostics must never be interpolated into the toast.
+  assert.doesNotMatch(main, /status_save_error"\}\$\{err\}/);
+  // A permanent validation failure must not be auto-retried: that recreates
+  // the toast every time the user closes it.
+  assert.match(main, /isPermanentSaveError/);
+  assert.match(main, /!permanentFailure && \(savePending \|\| settingsModified\)/);
+});
+
+test("history re-renders only when data changes and never replays the entry animation", () => {
+  const main = read("src/main.js");
+  const css = read("src/style.css");
+
+  assert.match(main, /historyContainer\.replaceChildren\(fragment\)/);
+  assert.match(main, /JSON\.stringify\(next\) !== JSON\.stringify\(cachedHistoryList\)/);
+  assert.match(main, /renderHistoryItems\(\{ animate: false \}\)/);
+  assert.match(css, /\.history-item-static\s*\{[^}]*animation:\s*none/);
 });
 
 test("typography reset and button font consistency across application UI", () => {

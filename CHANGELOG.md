@@ -3,6 +3,15 @@
 All notable changes to Aura are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/), versions follow [SemVer](https://semver.org/).
 
+## [Unreleased]
+
+### Changed
+- **Transient clipboard writes** — dictation transcripts are now marked so they do not appear in Win+V history or the Windows cloud clipboard; the previous clipboard is still restored untouched.
+- **Model selection is validated** — switching to a model whose files are missing or truncated is refused with an actionable error instead of saving a broken selection, and the active model can no longer be deleted.
+- **Human-readable model errors** — model validation and deletion failures are shown as short translated sentences instead of Rust diagnostics, file names, and internal model IDs.
+- **Dismissible status toast** — every toast now has a close button, so an error can be dismissed immediately instead of waiting for the timer.
+- **Whisper prompt echo** — a transcript that is only the custom dictionary or priming prompt echoed back on silence is discarded instead of pasted. The same guard applies to OpenAI-compatible cloud transcription.
+
 ## [1.2.0] — 2026-10-30
 
 _First major public release since v1.1.1, consolidating all performance, voice selection editing, context awareness, and design system milestones._

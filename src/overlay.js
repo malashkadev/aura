@@ -535,7 +535,12 @@ function updateTimer() {
       setOverlayText("");
       return;
     }
-    const secs = Math.floor((Date.now() - recordStart) / 1000);
+    const elapsed = Date.now() - recordStart;
+    if (elapsed < 3000) {
+      setOverlayText("");
+      return;
+    }
+    const secs = Math.floor(elapsed / 1000);
     const m = Math.floor(secs / 60);
     const s = String(secs % 60).padStart(2, "0");
     setOverlayText(`${m}:${s}`);
@@ -641,33 +646,19 @@ function updateAnimation() {
 // Start the animation loop
 updateAnimation();
 
-const processingTranslations = {
-  ru: "Обработка…",
-  en: "Processing…",
-  de: "Verarbeitung…",
-  fr: "Traitement…",
-  it: "Elaborazione…",
-  es: "Procesando…",
-  pt: "Processamento…",
-  zh: "处理中…",
-  ja: "処理中…",
-  tr: "İşleniyor…",
-  nl: "Verwerken…"
-};
-
 const noticeTranslations = {
   "edit-failed": {
-    ru: "Команда не выполнена — выделенный текст не изменён",
-    en: "Command not applied — selected text left unchanged",
-    de: "Befehl nicht angewendet — ausgewählter Text unverändert",
-    fr: "Commande non appliquée — texte sélectionné inchangé",
-    it: "Comando non applicato — testo selezionato invariato",
-    es: "Orden no aplicada — texto seleccionado sin cambios",
-    pt: "Comando não aplicado — texto selecionado inalterado",
-    zh: "指令未应用——选中文本未改动",
-    ja: "コマンドを適用できません — 選択テキストは変更されていません",
-    tr: "Komut uygulanamadı — seçili metin değiştirilmedi",
-    nl: "Opdracht niet toegepast — geselecteerde tekst ongewijzigd"
+    ru: "Текст не изменён",
+    en: "Text unchanged",
+    de: "Text unverändert",
+    fr: "Texte inchangé",
+    it: "Testo invariato",
+    es: "Texto sin cambios",
+    pt: "Texto inalterado",
+    zh: "文本未改动",
+    ja: "変更なし",
+    tr: "Metin değişmedi",
+    nl: "Tekst ongewijzigd"
   },
   "edit-model-missing": {
     ru: "Локальная модель не скачана — скачайте её в настройках",
@@ -1030,7 +1021,7 @@ listen("recording-state", (event) => {
       currentWave: transitionState.currentWave
     };
     recordStart = Date.now();
-    setOverlayText(overlayShowTimer ? "0:00" : "");
+    setOverlayText("");
     statusEl.classList.remove("error");
     setBarColor("rgb(114, 34, 5)");
     resetBars();
@@ -1059,7 +1050,7 @@ listen("recording-state", (event) => {
     };
     angle = 0;
     const uiLang = localStorage.getItem("aura_ui_lang") || "ru";
-    setOverlayText(overlayShowTimer ? (processingTranslations[uiLang] || processingTranslations.en) : "");
+    setOverlayText("");
     statusEl.classList.remove("error");
   } else if (currentState.startsWith("notice:")) {
     isEditContext = false;

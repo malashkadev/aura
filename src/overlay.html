@@ -175,6 +175,8 @@
       max-width: 150px;
       word-wrap: break-word;
       white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
       pointer-events: none;
       transition: opacity 0.22s ease, transform 0.22s ease;
     }
@@ -182,6 +184,14 @@
     #overlay-status.error {
       color: #ff5c5c;
       font-weight: 600;
+    }
+
+    #overlay-status-text {
+      display: block;
+      max-width: 136px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
     .overlay-card.square ~ #overlay-status {
