@@ -1,0 +1,73 @@
+{
+  "project": "Aura",
+  "intro": "Проектный навык побеждает глобальный роутер. Раздел «Core Architectural Invariants» в этом файле важнее любого совета из глобальных навыков.",
+  "projectSkillRoots": [".agents/skills", ".opencode/skills"],
+  "routers": ["software-engineering", "ui-design-craft", "knowledge-memory-vault", "text-copywriting-craft"],
+  "artifacts": ".opencode/artifacts/",
+  "routes": [
+    {
+      "task": "UI десктопного приложения",
+      "project": ["aura-product-sync"],
+      "global": ["ui-design-craft → ui-interface-craft"]
+    },
+    {
+      "task": "Rust / Tauri / IPC / хуки Windows",
+      "project": ["tauri-v2"],
+      "global": ["software-engineering → core-app-architecture", "software-engineering → win32-system-hooks"]
+    },
+    {
+      "task": "Лендинг или website/",
+      "project": ["aura-product-sync"],
+      "global": ["ui-design-craft → landing-page-system", "text-copywriting-craft → unslop-engine"]
+    },
+    {
+      "task": "Тексты о продукте и тексты интерфейса",
+      "project": ["aura-product-sync"],
+      "global": ["text-copywriting-craft → ux-copy / redaktura", "unslop-engine"]
+    },
+    {
+      "task": "Схема, флоу, дашборд, «покажи, как будет»",
+      "project": [],
+      "global": ["ui-design-craft → generative-ui"]
+    },
+    {
+      "task": "Прототип конкретного окна 1:1 по коду",
+      "project": ["interactive-demo-previews"],
+      "global": ["ui-design-craft → interactive-demo-previews"]
+    },
+    {
+      "task": "Заметки, ADR, диаграммы Obsidian",
+      "project": ["obsidian-cli", "obsidian-markdown", "obsidian-bases", "mermaid-visualizer", "json-canvas", "excalidraw-diagram"],
+      "global": ["knowledge-memory-vault"]
+    },
+    {
+      "task": "Извлечь контент со страницы",
+      "project": ["defuddle"],
+      "global": []
+    },
+    {
+      "task": "Баг, сбой сборки, падающий тест",
+      "project": [],
+      "global": ["software-engineering → systematic-debugging"]
+    },
+    {
+      "task": "Структура кода, кто кого вызывает",
+      "project": [],
+      "global": ["MCP codebase-memory, проект G-Aura-2.0"]
+    }
+  ],
+  "overrides": [
+    {
+      "skill": "ui-interface-craft",
+      "why": "допускает синие и индиго-подтоны, тени и внешние шрифты — в десктопном UI Ауры это запрещено разделом Core Architectural Invariants."
+    },
+    {
+      "skill": "landing-page-system",
+      "why": "его шрифты и палитра относятся только к website/; перенос в src/ запрещён правилом Zero Cross-Contamination."
+    },
+    {
+      "skill": "stageshow, creative-ui-fx",
+      "why": "декоративные эффекты не применяются к рабочему UI без явной просьбы владельца."
+    }
+  ]
+}

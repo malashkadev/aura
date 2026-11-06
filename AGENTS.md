@@ -1,5 +1,53 @@
 # Aura — Agent Guide
 
+<!-- skills-project:start — генерируется skills-project-init.mjs, руками не править -->
+## Skills routing (Aura)
+
+Проектный навык побеждает глобальный роутер. Раздел «Core Architectural Invariants» в этом файле важнее любого совета из глобальных навыков.
+
+### Проектные навыки
+
+| Навык | Где | Что делает |
+|---|---|---|
+| `aura-product-sync` | `.agents/skills` | Enforces Aura's core product invariants, anti-slop copywriting standards, settings mockup architecture (6 tabs v1.1.0+), multi-… |
+| `defuddle` | `.agents/skills` | Extract clean markdown content from web pages using Defuddle CLI, removing clutter and navigation to save tokens. |
+| `excalidraw-diagram` | `.agents/skills` | Generate Excalidraw diagrams from text content. |
+| `interactive-demo-previews` | `.agents/skills` | Превью окна, модалки или компонента перед правкой проекта Аура. |
+| `json-canvas` | `.agents/skills` | Create and edit JSON Canvas files (.canvas) with nodes, edges, groups, and connections. |
+| `mermaid-visualizer` | `.agents/skills` | Transform text content into professional Mermaid diagrams for presentations and documentation. |
+| `obsidian-bases` | `.agents/skills` | Create and edit Obsidian Bases (.base files) with views, filters, formulas, and summaries. |
+| `obsidian-cli` | `.agents/skills` | Interact with Obsidian vaults using the Obsidian CLI to read, create, search, and manage notes, tasks, properties, and more. |
+| `obsidian-markdown` | `.agents/skills` | Create and edit Obsidian Flavored Markdown with wikilinks, embeds, callouts, properties, and other Obsidian-specific syntax. |
+| `tauri-v2` | `.agents/skills` | Tauri v2+ cross-platform app development with Rust backend. |
+
+### Куда идти с задачей
+
+| Задача | Сначала проектное | Потом глобальное |
+|---|---|---|
+| UI десктопного приложения | `aura-product-sync` | `ui-design-craft → ui-interface-craft` |
+| Rust / Tauri / IPC / хуки Windows | `tauri-v2` | `software-engineering → core-app-architecture`, `software-engineering → win32-system-hooks` |
+| Лендинг или website/ | `aura-product-sync` | `ui-design-craft → landing-page-system`, `text-copywriting-craft → unslop-engine` |
+| Тексты о продукте и тексты интерфейса | `aura-product-sync` | `text-copywriting-craft → ux-copy / redaktura`, `unslop-engine` |
+| Схема, флоу, дашборд, «покажи, как будет» | — | `ui-design-craft → generative-ui` |
+| Прототип конкретного окна 1:1 по коду | `interactive-demo-previews` | `ui-design-craft → interactive-demo-previews` |
+| Заметки, ADR, диаграммы Obsidian | `obsidian-cli`, `obsidian-markdown`, `obsidian-bases`, `mermaid-visualizer`, `json-canvas`, `excalidraw-diagram` | `knowledge-memory-vault` |
+| Извлечь контент со страницы | `defuddle` | — |
+| Баг, сбой сборки, падающий тест | — | `software-engineering → systematic-debugging` |
+| Структура кода, кто кого вызывает | — | `MCP codebase-memory, проект G-Aura-2.0` |
+
+### Глобальные советы, которые здесь не действуют
+
+- `ui-interface-craft` — допускает синие и индиго-подтоны, тени и внешние шрифты — в десктопном UI Ауры это запрещено разделом Core Architectural Invariants.
+- `landing-page-system` — его шрифты и палитра относятся только к website/; перенос в src/ запрещён правилом Zero Cross-Contamination.
+- `stageshow, creative-ui-fx` — декоративные эффекты не применяются к рабочему UI без явной просьбы владельца.
+
+### Артефакты и проверка
+
+- Артефакты: `.opencode/artifacts/`.
+- Релевантные глобальные роутеры: `software-engineering`, `ui-design-craft`, `knowledge-memory-vault`, `text-copywriting-craft`.
+- Индекс глобальных навыков: `C:/Users/Ваня/.gemini/config/skills/ROUTES.md`.
+<!-- skills-project:end -->
+
 ## Where design decisions live
 
 Two stores. They answer different questions — do not confuse them.
