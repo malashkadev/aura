@@ -572,6 +572,29 @@ test("model card actions render visible download icons and delete buttons with d
   assert.match(main, /getTranslation\("model_delete_active_error"\)/);
 });
 
+test("model delete state follows the active selection without a full refresh", () => {
+  const main = read("src/main.js");
+
+  // One rule decides whether a delete button is blocked; the render path and
+  // the click guard must both use it.
+  assert.match(main, /function isModelActive\(model\)\s*\{/);
+  assert.match(main, /const isActiveModel = isModelActive\(model\);/);
+  assert.match(main, /if \(isModelActive\(model\)\) \{/);
+
+  // Selection changes update the buttons immediately instead of waiting for
+  // the next download/delete/language refresh.
+  assert.match(main, /function syncModelCardActions\(\)\s*\{/);
+  assert.match(main, /updateEditEngineSummary\(\);\s*syncModelCardActions\(\);/);
+  assert.match(main, /updateLocalModelSummary\(\);\s*syncModelCardActions\(\);/);
+  assert.match(main, /syncModelCardActions\(\);\s*\n\s*updateFirstRunCard\(\);/);
+
+  // Parakeet activity is engine-based, exactly like delete_model_command.
+  assert.match(
+    main,
+    /model === "parakeet-v3"[\s\S]{0,200}selectLocalEngine\.value === "parakeet"/,
+  );
+});
+
 test("status toast can be dismissed and backend model errors stay human-readable", () => {
   const html = read("src/index.html");
   const main = read("src/main.js");

@@ -3091,6 +3091,7 @@ const radioCloud = document.getElementById("radio-cloud");
         selectModelCard(lastSelectedWhisperModel || "large-v3-turbo-q5_0");
       }
     }
+    syncModelCardActions();
   }
 
 async function refreshEngineHealth() {
@@ -4149,6 +4150,47 @@ const btnSaveSettings = document.getElementById("btn-save-settings");
   const modelCards = document.querySelectorAll(".model-card[data-model]");
   const firstRunCard = document.getElementById("first-run-card");
 
+  // Single source of truth for "this model is currently selected". The same
+  // rule is enforced by delete_model_command in Rust; keeping it in one place
+  // prevents the trash button from drifting away from the real selection.
+  function isModelActive(model) {
+    if (model === "punctuation") {
+      return false;
+    }
+    if (model.startsWith("qwen3-")) {
+      return selectedLlmModel === model;
+    }
+    if (model === "parakeet-v3") {
+      return selectedModelName === model
+        || Boolean(selectLocalEngine && selectLocalEngine.value === "parakeet");
+    }
+    return selectedModelName === model;
+  }
+
+  // Refresh only the delete affordances. Selection changes call this directly;
+  // a full refreshDownloadedModels() would re-fetch the model list and replay
+  // the ready-badge animations on every click.
+  function syncModelCardActions() {
+    const dict = i18nDict[currentLanguage] || i18nDict.ru;
+    document.querySelectorAll(".model-card[data-model]").forEach(card => {
+      const model = card.dataset.model;
+      const button = card.querySelector(".btn-delete-card-model");
+      if (!button) {
+        return;
+      }
+
+      const active = isModelActive(model);
+      const label = active
+        ? (dict.model_status_active || "Используется")
+        : (dict.model_action_delete || "Удалить");
+
+      button.disabled = active;
+      button.setAttribute("aria-disabled", active ? "true" : "false");
+      button.title = label;
+      button.setAttribute("aria-label", label);
+    });
+  }
+
   // WAI-ARIA radio group: arrow keys move between cards within the same group
   const arrowDirection = { ArrowUp: -1, ArrowLeft: -1, ArrowRight: 1, ArrowDown: 1 };
 
@@ -4232,6 +4274,7 @@ const btnSaveSettings = document.getElementById("btn-save-settings");
         c.setAttribute("aria-checked", isCurrent ? "true" : "false");
       });
       updateEditEngineSummary();
+      syncModelCardActions();
       return;
     }
     if (model !== "parakeet-v3") {
@@ -4252,6 +4295,7 @@ const btnSaveSettings = document.getElementById("btn-save-settings");
       c.setAttribute("aria-checked", isCurrent ? "true" : "false");
     });
     updateLocalModelSummary();
+    syncModelCardActions();
   }
 
   // Load Settings from Backend
@@ -4494,10 +4538,7 @@ modelCards.forEach(card => {
         }
         if (actionEl) actionEl.style.display = "flex";
 
-        const isLlmCard = model.startsWith("qwen3-");
-        const isActiveModel = model !== "punctuation" && (isLlmCard
-          ? selectedLlmModel === model
-          : selectedModelName === model);
+        const isActiveModel = isModelActive(model);
         const deleteLabel = isActiveModel
           ? (dict.model_status_active || "Используется")
           : (dict.model_action_delete || "Удалить");
@@ -4549,6 +4590,8 @@ modelCards.forEach(card => {
           selectModelCard(downloadedLlm[0], false);
         }
       }
+
+      syncModelCardActions();
 
       updateFirstRunCard();
       refreshEngineHealth();
@@ -4913,10 +4956,7 @@ await invoke("set_settings", { settings });
 
   async function deleteModelCard(model) {
     const modelDisplayName = getModelDisplayName(model);
-    const isActiveModel = model !== "punctuation" && (model.startsWith("qwen3-")
-      ? selectedLlmModel === model
-      : selectedModelName === model);
-    if (isActiveModel) {
+    if (isModelActive(model)) {
       showStatus(getTranslation("model_delete_active_error"), true);
       return;
     }
