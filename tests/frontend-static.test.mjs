@@ -554,6 +554,7 @@ test("tab keyboard navigation advances through tabs on arrow keys and wraps corr
 
 test("model card actions render visible download icons and delete buttons with defined dimensions", () => {
   const main = read("src/main.js");
+  const models = read("src/model-cards.js");
   const css = read("src/style.css");
 
   // CSS must explicitly define .btn-icon and button SVG sizing so flex containers never collapse icons to 0x0
@@ -561,34 +562,36 @@ test("model card actions render visible download icons and delete buttons with d
   assert.match(css, /\.btn-delete-card-model\s*\{[^}]*width:\s*28px;[^}]*height:\s*28px;/);
   assert.match(css, /\.btn-download-card-model\s*\{[^}]*display:\s*inline-flex;/);
 
-  // main.js must render the action icons through the icon registry at explicit sizes
-  assert.match(main, /class="btn-delete-card-model"[^>]*title="[^"]+"[^>]*aria-label="[^"]+"/);
-  assert.match(main, /getIcon\("download",\s*\{\s*size:\s*14,\s*className:\s*"btn-icon"\s*\}\)/);
-  assert.match(main, /getIcon\("trash",\s*\{\s*size:\s*14,\s*className:\s*"btn-icon"\s*\}\)/);
-  assert.match(main, /actionEl\.querySelector\("\.btn-delete-card-model"\)\.addEventListener\("click",\s*\(e\)\s*=>/);
+  // model-cards.js must render the action icons through the icon registry at explicit sizes
+  assert.match(models, /class="btn-delete-card-model"[^>]*title="[^"]+"[^>]*aria-label="[^"]+"/);
+  assert.match(models, /getIcon\("download",\s*\{\s*size:\s*14,\s*className:\s*"btn-icon"\s*\}\)/);
+  assert.match(models, /getIcon\("trash",\s*\{\s*size:\s*14,\s*className:\s*"btn-icon"\s*\}\)/);
+  assert.match(models, /actionEl\.querySelector\("\.btn-delete-card-model"\)\.addEventListener\("click",\s*\(e\)\s*=>/);
 
   // The active model cannot be deleted: the button is disabled and the guard
   // explains why if the IPC is reached anyway.
-  assert.match(main, /model_status_active/);
-  assert.match(main, /disabled aria-disabled/);
-  assert.match(main, /getTranslation\("model_delete_active_error"\)/);
+  assert.match(models, /model_status_active/);
+  assert.match(models, /disabled aria-disabled/);
+  assert.match(models, /getTranslation\("model_delete_active_error"\)/);
 });
 
 test("model delete state follows the active selection without a full refresh", () => {
   const main = read("src/main.js");
+  const models = read("src/model-cards.js");
 
   // One rule decides whether a delete button is blocked; the render path and
   // the click guard must both use it.
   assert.match(main, /function isModelActive\(model\)\s*\{/);
-  assert.match(main, /const isActiveModel = isModelActive\(model\);/);
-  assert.match(main, /if \(isModelActive\(model\)\) \{/);
+  assert.match(models, /const isActiveModel = isModelActive\(model\);/);
+  assert.match(models, /if \(isModelActive\(model\)\) \{/);
 
   // Selection changes update the buttons immediately instead of waiting for
   // the next download/delete/language refresh.
-  assert.match(main, /function syncModelCardActions\(\)\s*\{/);
-  assert.match(main, /updateEditEngineSummary\(\);\s*syncModelCardActions\(\);/);
-  assert.match(main, /updateLocalModelSummary\(\);\s*syncModelCardActions\(\);/);
-  assert.match(main, /syncModelCardActions\(\);\s*\n\s*updateFirstRunCard\(\);/);
+  assert.match(main, /function selectModelCard\(/);
+  assert.match(models, /function syncActions\(\)\s*\{/);
+  assert.match(main, /updateEditEngineSummary\(\);\s*modelCardsView\.syncActions\(\);/);
+  assert.match(main, /updateLocalModelSummary\(\);\s*modelCardsView\.syncActions\(\);/);
+  assert.match(models, /syncActions\(\);\s*\n\s*onRefreshComplete\(\);/);
 
   // Parakeet activity is engine-based, exactly like delete_model_command.
   assert.match(

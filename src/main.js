@@ -7,6 +7,7 @@ import {
 import { getIcon, getBrandIcon } from "./icon-system-api.js";
 import { hydrateAppIcons } from "./icon-system-integration.js";
 import { createHistoryView } from "./history-view.js";
+import { createModelCards } from "./model-cards.js";
 
 try {
   hydrateAppIcons();
@@ -25,6 +26,36 @@ const historyView = createHistoryView({
   getLanguage: () => currentLanguage,
 });
 const loadHistoryList = historyView.loadHistoryList;
+
+const modelCardsView = createModelCards({
+  invoke,
+  listen,
+  showConfirm,
+  showStatus,
+  getDict: () => i18nDict[currentLanguage] || i18nDict.ru,
+  getTranslation,
+  localizedBackendError,
+  isModelActive: (model) => isModelActive(model),
+  selectModelCard: (model, markModified = true) => selectModelCard(model, markModified),
+  getSelectedModel: () => selectedModelName,
+  getSelectedLlm: () => selectedLlmModel,
+  setSelectedLlm: (model) => {
+    selectedLlmModel = model;
+  },
+  notifySelectionChanged: () => markSettingsModified(true),
+  onModelDeleted: (model) => {
+    if (model === "parakeet-v3" && selectLocalEngine?.value === "parakeet") {
+      selectLocalEngine.value = "whisper";
+      syncPanelSelection(selectLocalEngine);
+      updateLocalEngineUI();
+      markSettingsModified();
+    }
+  },
+  onRefreshComplete: () => {
+    updateFirstRunCard();
+    refreshEngineHealth();
+  },
+});
 
 window.logEvent = function(level, tag, message) {
   invoke("log_frontend_event", { level, tag, session: null, message }).catch(err => {
@@ -3540,7 +3571,7 @@ const radioCloud = document.getElementById("radio-cloud");
 
   function updateFirstRunCard() {
     if (!firstRunCard) return;
-    const hasAsrModel = downloadedModelList.some(
+    const hasAsrModel = modelCardsView.getDownloadedModels().some(
       (id) => !id.startsWith("qwen3-")
     );
     firstRunCard.hidden = !(radioLocal?.checked && !hasAsrModel);
@@ -3581,7 +3612,7 @@ const radioCloud = document.getElementById("radio-cloud");
         selectModelCard(lastSelectedWhisperModel || "large-v3-turbo-q5_0");
       }
     }
-    syncModelCardActions();
+    modelCardsView.syncActions();
   }
 
 async function refreshEngineHealth() {
@@ -4350,7 +4381,6 @@ const btnSaveSettings = document.getElementById("btn-save-settings");
   let lastSelectedWhisperModel = "large-v3-turbo-q5_0";
   let selectedLlmModel = "qwen3-1.7b";
   let disabledEditCommands = [];
-  let downloadedModelList = [];
   let activeLocalAcceleration = "cpu";
 
   let settingsModified = false;
@@ -4657,30 +4687,6 @@ const btnSaveSettings = document.getElementById("btn-save-settings");
     return selectedModelName === model;
   }
 
-  // Refresh only the delete affordances. Selection changes call this directly;
-  // a full refreshDownloadedModels() would re-fetch the model list and replay
-  // the ready-badge animations on every click.
-  function syncModelCardActions() {
-    const dict = i18nDict[currentLanguage] || i18nDict.ru;
-    document.querySelectorAll(".model-card[data-model]").forEach(card => {
-      const model = card.dataset.model;
-      const button = card.querySelector(".btn-delete-card-model");
-      if (!button) {
-        return;
-      }
-
-      const active = isModelActive(model);
-      const label = active
-        ? (dict.model_status_active || "Используется")
-        : (dict.model_action_delete || "Удалить");
-
-      button.disabled = active;
-      button.setAttribute("aria-disabled", active ? "true" : "false");
-      button.title = label;
-      button.setAttribute("aria-label", label);
-    });
-  }
-
   // WAI-ARIA radio group: arrow keys move between cards within the same group
   const arrowDirection = { ArrowUp: -1, ArrowLeft: -1, ArrowRight: 1, ArrowDown: 1 };
 
@@ -4694,8 +4700,7 @@ const btnSaveSettings = document.getElementById("btn-save-settings");
         return;
       }
       const model = card.dataset.model;
-      const downloaded = await invoke("get_downloaded_models").catch(() => []);
-      if (downloaded.includes(model)) {
+      if (modelCardsView.isDownloaded(model)) {
         selectModelCard(model);
       }
     });
@@ -4712,7 +4717,7 @@ const btnSaveSettings = document.getElementById("btn-save-settings");
         e.preventDefault();
         const model = card.dataset.model;
         const downloaded = await invoke("get_downloaded_models").catch(() => []);
-        if (downloaded.includes(model)) {
+        if (modelCardsView.isDownloaded(model)) {
           selectModelCard(model);
         }
         return;
@@ -4734,8 +4739,7 @@ const btnSaveSettings = document.getElementById("btn-save-settings");
       const next = groupCards[(index + direction + groupCards.length) % groupCards.length];
       next.focus();
       const model = next.dataset.model;
-      const downloaded = await invoke("get_downloaded_models").catch(() => []);
-      if (downloaded.includes(model)) {
+      if (modelCardsView.isDownloaded(model)) {
         selectModelCard(model);
       }
     });
@@ -4745,7 +4749,7 @@ const btnSaveSettings = document.getElementById("btn-save-settings");
     if (model.startsWith("qwen3-")) {
       // Local edit models are a separate setting (settings.llm_model); they
       // must never overwrite the ASR model_name selection.
-      const isDownloaded = downloadedModelList.includes(model);
+      const isDownloaded = modelCardsView.isDownloaded(model);
       if (selectedLlmModel !== model) {
         selectedLlmModel = model;
         if (markModified) {
@@ -4761,7 +4765,7 @@ const btnSaveSettings = document.getElementById("btn-save-settings");
         c.setAttribute("aria-checked", isCurrent ? "true" : "false");
       });
       updateEditEngineSummary();
-      syncModelCardActions();
+      modelCardsView.syncActions();
       return;
     }
     if (model !== "parakeet-v3") {
@@ -4782,7 +4786,7 @@ const btnSaveSettings = document.getElementById("btn-save-settings");
       c.setAttribute("aria-checked", isCurrent ? "true" : "false");
     });
     updateLocalModelSummary();
-    syncModelCardActions();
+    modelCardsView.syncActions();
   }
 
   // Load Settings from Backend
@@ -4967,7 +4971,7 @@ const btnSaveSettings = document.getElementById("btn-save-settings");
  
         updateEngineUI(true);
         await loadAudioDevices(settings.audio_input_device || "default");
-        await refreshDownloadedModels();
+        await modelCardsView.refresh();
 
         activeLocalAcceleration = settings.local_acceleration || "cpu";
         selectGpuProvider(activeLocalAcceleration);
@@ -5000,91 +5004,6 @@ const btnSaveSettings = document.getElementById("btn-save-settings");
     } catch (err) {
       console.error(err);
         showStatus(`${getTranslation("status_load_error")}${localizedBackendError(err)}`, true);
-    }
-  }
-
-  async function refreshDownloadedModels() {
-    try {
-      const downloaded = await invoke("get_downloaded_models");
-      downloadedModelList = Array.isArray(downloaded) ? downloaded : [];
-      const dict = i18nDict[currentLanguage] || i18nDict.ru;
-modelCards.forEach(card => {
-        const model = card.dataset.model;
-        // Never tear down the UI of a download that is still running
-        // (a refresh triggered by a sibling download must not do it either).
-        if (inFlightModelDownloads.has(model)) {
-          return;
-        }
-        const isDownloaded = downloadedModelList.includes(model);
-        const actionEl = document.getElementById(`action-${model}`);
-
-        // Always restore a clean, non-downloading state. Without this, a cancelled
-        // download leaves the progress bar frozen and the action button hidden.
-        const progressEl = document.getElementById(`progress-${model}`);
-        if (progressEl) {
-          const cancelBtn = progressEl.querySelector(".btn-cancel-download");
-          if (cancelBtn) cancelBtn.remove();
-          progressEl.style.display = "none";
-        }
-        if (actionEl) actionEl.style.display = "flex";
-
-        const isActiveModel = isModelActive(model);
-        const deleteLabel = isActiveModel
-          ? (dict.model_status_active || "Используется")
-          : (dict.model_action_delete || "Удалить");
-
-        if (isDownloaded) {
-          actionEl.innerHTML = `
-            <span class="status-ready-badge" title="${dict.model_status_ready || "Установлено"}" aria-label="${dict.model_status_ready || "Установлено"}" data-i18n-title="model_status_ready">
-              ${getIcon("check", { size: 12, className: "status-ready-icon", strokeWidth: 2.2 })}
-            </span>
-            <button type="button" class="btn-delete-card-model" title="${deleteLabel}" aria-label="${deleteLabel}"${isActiveModel ? " disabled aria-disabled=\"true\"" : ""} data-model="${model}">
-              ${getIcon("trash", { size: 14, className: "btn-icon" })}
-            </button>
-          `;
-          // Bind click to the delete button
-          actionEl.querySelector(".btn-delete-card-model").addEventListener("click", (e) => {
-            e.stopPropagation();
-            deleteModelCard(model);
-          });
-        } else {
-          actionEl.innerHTML = `
-            <button type="button" class="btn-download-card-model" data-model="${model}">
-              ${getIcon("download", { size: 14, className: "btn-icon" })}
-              ${dict.model_action_download || "Скачать"}
-            </button>
-          `;
-// Bind click to the download button
-          actionEl.querySelector(".btn-download-card-model").addEventListener("click", (e) => {
-            e.stopPropagation();
-            downloadModelCard(model);
-          });
-        }
-      });
-
-      // Reconcile Qwen3 LLM cards active state against downloaded models:
-      const downloadedLlm = downloadedModelList.filter(id => id.startsWith("qwen3-"));
-      if (downloadedLlm.length === 0) {
-        modelCards.forEach(c => {
-          if (c.dataset.model.startsWith("qwen3-")) {
-            c.classList.remove("active");
-            c.setAttribute("aria-checked", "false");
-          }
-        });
-      } else {
-        if (downloadedLlm.includes(selectedLlmModel)) {
-          selectModelCard(selectedLlmModel, false);
-        } else {
-          selectModelCard(downloadedLlm[0], false);
-        }
-      }
-
-      syncModelCardActions();
-
-      updateFirstRunCard();
-      refreshEngineHealth();
-    } catch (err) {
-      console.error("Failed to check downloaded models", err);
     }
   }
 
@@ -5269,29 +5188,6 @@ const autostartWarning = await invoke("set_settings", { settings });
     return BACKEND_ERROR_KEYS.some(([prefix]) => text.startsWith(prefix));
   }
 
-  function getModelDisplayName(model) {
-    if (!model) return "";
-    const card = document.querySelector(`.model-card[data-model="${model}"]`);
-    if (card) {
-      const nameEl = card.querySelector(".model-name");
-      if (nameEl && nameEl.textContent) {
-        return nameEl.textContent.trim();
-      }
-    }
-    const names = {
-      "tiny": "Whisper Tiny",
-      "base": "Whisper Base",
-      "small": "Whisper Small",
-      "medium": "Whisper Medium",
-      "large-v3-turbo-q5_0": "Whisper Large v3 Turbo",
-      "parakeet-v3": "NVIDIA Parakeet v3",
-      "qwen3-0.6b": "Qwen3 0.6B",
-      "qwen3-1.7b": "Qwen3 1.7B",
-      "qwen3-4b": "Qwen3 4B",
-    };
-    return names[model] || model;
-  }
-
   function updateLocalModelSummary() {
     const modelEl = document.getElementById("local-model-spec-value");
     const accelEl = document.getElementById("local-accel-spec-value");
@@ -5305,7 +5201,7 @@ const autostartWarning = await invoke("set_settings", { settings });
       "large-v3-turbo": "Whisper Large v3 Turbo",
       "parakeet-v3": "NVIDIA Parakeet v3",
     };
-    const modelName = summaryNames[selectedModelName] || getModelDisplayName(selectedModelName) || "Whisper Base";
+    const modelName = summaryNames[selectedModelName] || modelCardsView.getModelDisplayName(selectedModelName) || "Whisper Base";
     if (modelEl) modelEl.textContent = modelName;
     if (accelEl) accelEl.textContent = activeLocalAcceleration === "cuda" ? "CUDA" : "CPU";
   }
@@ -5336,7 +5232,7 @@ const autostartWarning = await invoke("set_settings", { settings });
       const provider = document.getElementById("select-edit-cloud-provider");
       engineLabel = provider && provider.selectedOptions[0] ? provider.selectedOptions[0].textContent.trim() : "";
     } else {
-      engineLabel = getModelDisplayName(selectedLlmModel);
+      engineLabel = modelCardsView.getModelDisplayName(selectedLlmModel);
     }
     if (modeEl) modeEl.textContent = modeLabel;
     if (modelEl) modelEl.textContent = engineLabel || "—";
@@ -5368,145 +5264,6 @@ const autostartWarning = await invoke("set_settings", { settings });
     });
   }
 
-  async function downloadModelCard(model) {
-    if (inFlightModelDownloads.has(model)) {
-      return;
-    }
-    inFlightModelDownloads.add(model);
-    const actionEl = document.getElementById(`action-${model}`);
-    const progressEl = document.getElementById(`progress-${model}`);
-    const fillEl = document.getElementById(`fill-${model}`);
-    const pctEl = document.getElementById(`pct-${model}`);
-    const modelAtStart = selectedModelName;
-    const llmAtStart = selectedLlmModel;
-
-    try {
-      showStatus(getTranslation("model_downloading_pattern", { model: getModelDisplayName(model) }));
-
-      // Hide actions, show progress
-      if (actionEl) actionEl.style.display = "none";
-      if (progressEl) {
-        progressEl.classList.remove("installing");
-        progressEl.style.display = "flex";
-        const oldBtn = progressEl.querySelector(".btn-cancel-download");
-        if (oldBtn) oldBtn.remove();
-        const cancelBtn = document.createElement("button");
-        cancelBtn.type = "button";
-        cancelBtn.className = "btn-cancel-download";
-        const cancelLabel = getTranslation("model_cancel_download") || "Отменить загрузку";
-        cancelBtn.title = cancelLabel;
-        cancelBtn.setAttribute("aria-label", cancelLabel);
-        cancelBtn.innerHTML = getIcon("close", { size: 16 });
-        cancelBtn.addEventListener("click", (e) => {
-          e.stopPropagation();
-          cancelBtn.disabled = true;
-          invoke("cancel_model_download", { modelName: model }).catch((e2) => {
-            console.error("Cancel model download error:", e2);
-            cancelBtn.disabled = false;
-          });
-        });
-        progressEl.appendChild(cancelBtn);
-      }
-      if (fillEl) {
-        fillEl.style.width = "0%";
-      }
-      if (pctEl) {
-        pctEl.textContent = "0%";
-      }
-
-      await invoke("download_model_command", { modelName: model });
-      // Only auto-select when the user has not picked a different model
-      // during the (potentially long) download. LLM cards write to a
-      // different setting (llm_model), so they compare against their own
-      // snapshot instead of the speech model.
-      const isLlmCard = model.startsWith("qwen3-");
-      const selectionUntouched = isLlmCard
-        ? selectedLlmModel === llmAtStart
-        : selectedModelName === modelAtStart;
-      if (selectionUntouched) {
-        selectModelCard(model);
-      }
-    } catch (err) {
-      console.error(err);
-      const errStr = String(err).toLowerCase();
-      if (errStr.includes("cancel")) {
-        showStatus(getTranslation("model_download_cancelled") || "Загрузка отменена", "neutral");
-      } else {
-        showStatus(getTranslation("model_download_error_pattern", { err: localizedBackendError(err) }), true);
-      }
-    } finally {
-      inFlightModelDownloads.delete(model);
-      if (progressEl) {
-        progressEl.classList.remove("installing");
-        const cancelBtn = progressEl.querySelector(".btn-cancel-download");
-        if (cancelBtn) cancelBtn.remove();
-        progressEl.style.display = "none";
-      }
-      if (actionEl) {
-        actionEl.style.display = "flex";
-      }
-      await refreshDownloadedModels();
-    }
-  }
-
-  async function deleteModelCard(model) {
-    const modelDisplayName = getModelDisplayName(model);
-    if (isModelActive(model)) {
-      showStatus(getTranslation("model_delete_active_error"), true);
-      return;
-    }
-    const confirmTitle = getTranslation("delete_model_title");
-    const confirmMsg = getTranslation("delete_model_confirm_pattern", { model: modelDisplayName });
-    const confirmBtn = getTranslation("delete_model_btn");
-    const cancelBtn = getTranslation("confirm_cancel");
-
-    const confirmed = await showConfirm(
-      confirmTitle,
-      confirmMsg,
-      confirmBtn,
-      cancelBtn
-    );
-    if (!confirmed) {
-      return;
-    }
-    try {
-      showStatus(getTranslation("model_deleting_pattern", { model: modelDisplayName }));
-      await invoke("delete_model_command", { modelName: model });
-      
-      showStatus(getTranslation("model_deleted_success"), "neutral");
-      if (model === "parakeet-v3" && selectLocalEngine?.value === "parakeet") {
-        selectLocalEngine.value = "whisper";
-        syncPanelSelection(selectLocalEngine);
-        updateLocalEngineUI();
-        markSettingsModified();
-      }
-      // A deleted local edit model can still be the selected one. Move the
-      // selection to a model that is still installed so the saved setting
-      // never points at a file that no longer exists.
-      if (model.startsWith("qwen3-") && selectedLlmModel === model) {
-        try {
-          const downloaded = await invoke("get_downloaded_models");
-          const replacement = (Array.isArray(downloaded) ? downloaded : []).find(
-            id => id.startsWith("qwen3-") && id !== model
-          );
-          if (replacement) {
-            selectModelCard(replacement);
-            markSettingsModified(true);
-          } else {
-            selectedLlmModel = "qwen3-1.7b";
-            markSettingsModified(true);
-          }
-        } catch (err) {
-          console.error("Failed to reselect local edit model", err);
-        }
-      }
-      await refreshDownloadedModels();
-    } catch (err) {
-      console.error(err);
-      showStatus(getTranslation("model_delete_error_pattern", { err: localizedBackendError(err) }), true);
-    }
-  }
-
   // Cross-window sync: tray-driven changes, live history updates and
   // streaming degradation notices emitted by the Rust side.
   listen("settings-changed", () => {
@@ -5526,48 +5283,6 @@ const autostartWarning = await invoke("set_settings", { settings });
   listen("streaming-degraded", (event) => {
     console.warn("Streaming degraded:", event.payload);
     showStatus(getTranslation("status_streaming_degraded"), true);
-  });
-
-  // Listen to model-download-progress events from Rust
-  listen("model-download-progress", (event) => {
-    const payload = event.payload;
-    if (!payload) return;
-
-    const model = payload.model;
-    const percent = typeof payload.percentage === "number" ? Math.round(payload.percentage) : 0;
-    
-    const fillEl = document.getElementById(`fill-${model}`);
-    const pctEl = document.getElementById(`pct-${model}`);
-    const progressEl = document.getElementById(`progress-${model}`);
-    const actionEl = document.getElementById(`action-${model}`);
-    
-    if (fillEl && pctEl) {
-      if (payload.status === "installing" || (percent >= 100 && !payload.done)) {
-        if (progressEl) progressEl.classList.add("installing");
-        fillEl.style.width = "100%";
-        const installText = getTranslation("gpu_status_installing") || "Установка...";
-        pctEl.innerHTML = `<span class="spinner-inline" aria-hidden="true"></span> ${installText}`;
-      } else {
-        if (progressEl) progressEl.classList.remove("installing");
-        fillEl.style.width = `${percent}%`;
-        pctEl.textContent = `${percent}%`;
-      }
-    }
-
-    if (payload.done) {
-      const isInternalPayload = typeof model === "string" && model.startsWith("llm-runtime-");
-      if (!isInternalPayload) {
-        showStatus(getTranslation("model_downloaded_success_pattern", { model: getModelDisplayName(model) }), "success");
-      }
-      if (progressEl) {
-        progressEl.classList.remove("installing");
-        const cancelBtn = progressEl.querySelector(".btn-cancel-download");
-        if (cancelBtn) cancelBtn.remove();
-        progressEl.style.display = "none";
-      }
-      if (actionEl) actionEl.style.display = "flex";
-      refreshDownloadedModels();
-    }
   });
 
   // --- Local GPU Acceleration Logic ---
@@ -5595,9 +5310,6 @@ const autostartWarning = await invoke("set_settings", { settings });
   }
 
   const activeGpuDownloads = new Set();
-  // Whisper-model downloads in flight; refreshDownloadedModels must leave
-  // their progress UI untouched until they finish or fail.
-  const inFlightModelDownloads = new Set();
 
   async function updateGpuCardStates() {
     const providers = ["cuda"];
@@ -6260,7 +5972,7 @@ if (e.button === 0 && !e.target.closest(".window-control-btn") && !e.target.clos
     renderProviderKeyInput();
     
     // Refresh model cards status/actions
-    refreshDownloadedModels();
+    modelCardsView.refresh();
     updateGpuCardStates();
     renderSupportedCommandsGuide();
     updateAllSummaries();
@@ -6406,7 +6118,7 @@ if (e.button === 0 && !e.target.closest(".window-control-btn") && !e.target.clos
       if (baseCard) {
         baseCard.scrollIntoView({ block: "center", behavior: "smooth" });
       }
-      downloadModelCard("base");
+      modelCardsView.download("base");
     });
   }
 
