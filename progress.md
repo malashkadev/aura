@@ -1,7 +1,7 @@
 # Aura 2.0 — Progress
 
 **Updated:** 2026-11-15
-**Baseline:** `main` at `cac731f` (Phase 4 complete)
+**Baseline:** `main` at `31a82ae` (Phase 5 started)
 **Status:** green — working tree clean, every local gate passes.
 
 ## Current state
@@ -23,6 +23,7 @@ Completed in this cycle:
 - `19eb873` — removed the unreachable punctuation pipeline, its 12 MB sidecar, diagnostics fields, and UI branches.
 - `ff6e1ac` — production icon-registry tests added; the legacy catalog suite keeps its own file.
 - `cac731f` — 2026 audits, handoffs, and E2E checklist moved to `docs/history/`; New Design assets moved under `docs/design/`.
+- `31a82ae` — history rendering, search, filters, and clear confirmation extracted from `main.js` into `src/history-view.js`.
 
 ## Quality gates (last run)
 
@@ -50,13 +51,13 @@ Completed in this cycle:
 
 ## Next
 
-Start with `feat-009` (structural refactor), first module:
+Continue `feat-009` with the next `main.js` module:
 
-1. Extract history rendering, search, and filters from `main.js` into a focused module.
+1. Extract model-card rendering, download/delete progress, and display-name mapping.
 2. Keep `main.js` as the orchestrator; no behavior changes.
-3. After each extraction run `npm test`, `npm run audit`, `cargo test`.
+3. Run `npm test`, `npm run audit`, `cargo test` after the extraction.
 
-Then `models`, `settings-form`, `i18n`; then `lib.rs` commands by domain (`feat-010`); finish with `feat-011` polish and `feat-012` verification.
+Then `settings-form`, `i18n`; then `lib.rs` commands by domain (`feat-010`); finish with `feat-011` polish and `feat-012` verification.
 
 ## How to resume
 
