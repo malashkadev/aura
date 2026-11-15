@@ -46,6 +46,47 @@ fn normalize_proxy_url(addr: &str, default_scheme: &str) -> String {
     }
 }
 
+/// Custom OpenAI-compatible endpoints may use plain HTTP only on loopback.
+/// Any other plain-HTTP endpoint would send the API key and the transcript in
+/// clear text over the network.
+pub(crate) fn validate_custom_endpoint(raw: &str) -> Result<(), String> {
+    const PREFIX: &str = "custom_api_url_insecure:";
+    let trimmed = raw.trim();
+    if trimmed.is_empty() {
+        return Err(format!("{PREFIX} endpoint is empty"));
+    }
+
+    let parsed = reqwest::Url::parse(trimmed)
+        .map_err(|_| format!("{PREFIX} endpoint is not a valid URL"))?;
+
+    if !parsed.username().is_empty() || parsed.password().is_some() {
+        return Err(format!(
+            "{PREFIX} credentials must not be embedded in the URL"
+        ));
+    }
+
+    match parsed.scheme() {
+        "https" => Ok(()),
+        "http" => {
+            let host = parsed
+                .host_str()
+                .unwrap_or("")
+                .trim_matches(|ch| ch == '[' || ch == ']');
+            let is_loopback = host.eq_ignore_ascii_case("localhost")
+                || host
+                    .parse::<std::net::IpAddr>()
+                    .map(|address| address.is_loopback())
+                    .unwrap_or(false);
+            if is_loopback {
+                Ok(())
+            } else {
+                Err(format!("{PREFIX} use HTTPS or a loopback address"))
+            }
+        }
+        _ => Err(format!("{PREFIX} only http(s) endpoints are supported")),
+    }
+}
+
 #[cfg(target_os = "windows")]
 fn windows_system_proxy() -> Option<String> {
     use winreg::enums::HKEY_CURRENT_USER;
@@ -841,6 +882,7 @@ pub async fn transcribe_and_clean(
             let base_url = custom_endpoint_url
                 .unwrap_or("https://api.deepinfra.com/v1/openai")
                 .trim_end_matches('/');
+            validate_custom_endpoint(base_url)?;
             let transcribe_url = if base_url.ends_with("/audio/transcriptions") {
                 base_url.to_string()
             } else {
@@ -1298,6 +1340,7 @@ pub async fn edit_text_with_provider(
             let base_url = custom_endpoint_url
                 .unwrap_or("https://api.deepinfra.com/v1/openai")
                 .trim_end_matches('/');
+            validate_custom_endpoint(base_url)?;
             let chat_url = if base_url.ends_with("/audio/transcriptions") {
                 let root = base_url
                     .strip_suffix("/audio/transcriptions")
@@ -1472,6 +1515,20 @@ mod tests {
         let json = r#"{"text":"Привет, мир!"}"#;
         let resp: HuggingFaceResponse = serde_json::from_str(json).unwrap();
         assert_eq!(resp.text, "Привет, мир!");
+    }
+
+    #[test]
+    fn custom_endpoint_requires_https_or_loopback() {
+        assert!(validate_custom_endpoint("https://api.example.com/v1").is_ok());
+        assert!(validate_custom_endpoint("http://127.0.0.1:11434/v1").is_ok());
+        assert!(validate_custom_endpoint("http://localhost:1234/v1").is_ok());
+        assert!(validate_custom_endpoint("http://[::1]:8080/v1").is_ok());
+
+        assert!(validate_custom_endpoint("http://api.example.com/v1").is_err());
+        assert!(validate_custom_endpoint("http://192.168.1.10:1234/v1").is_err());
+        assert!(validate_custom_endpoint("ftp://api.example.com").is_err());
+        assert!(validate_custom_endpoint("http://user:pass@127.0.0.1/v1").is_err());
+        assert!(validate_custom_endpoint("").is_err());
     }
 
     #[test]

@@ -987,6 +987,20 @@ function translateError(errStr, lang) {
     const prefix = netTranslations[lang] || netTranslations.en;
     return `${prefix} ${details}`;
   }
+  if (errStr.startsWith("custom_api_url_insecure:")) {
+    const insecureTranslations = {
+      ru: "Пользовательский сервер должен использовать HTTPS. HTTP разрешён только для localhost.",
+      en: "The custom server must use HTTPS. HTTP is allowed only for localhost.",
+      de: "Der benutzerdefinierte Server muss HTTPS verwenden. HTTP ist nur für localhost erlaubt.",
+      fr: "Le serveur personnalisé doit utiliser HTTPS. HTTP n'est autorisé que pour localhost.",
+      it: "Il server personalizzato deve usare HTTPS. HTTP è consentito solo per localhost.",
+      es: "El servidor personalizado debe usar HTTPS. HTTP solo se permite para localhost.",
+      pt: "O servidor personalizado deve usar HTTPS. HTTP é permitido apenas para localhost.",
+      zh: "自定义服务器必须使用 HTTPS。HTTP 仅允许用于 localhost。",
+      tr: "Özel sunucu HTTPS kullanmalıdır. HTTP yalnızca localhost için izinlidir."
+    };
+    return insecureTranslations[lang] || insecureTranslations.en;
+  }
   return errStr;
 }
 

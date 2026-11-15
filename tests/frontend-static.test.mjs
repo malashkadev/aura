@@ -928,6 +928,28 @@ test("autostart failures are surfaced instead of silently succeeding", () => {
   assert.match(main, /getTranslation\("autostart_error"\)/);
 });
 
+test("custom API endpoints reject cleartext non-loopback URLs", () => {
+  const main = read("src/main.js");
+  const dicts = parseI18nDictionaries();
+
+  for (const [locale, dict] of Object.entries(dicts)) {
+    assert.ok(
+      typeof dict.custom_api_url_insecure_error === "string"
+        && dict.custom_api_url_insecure_error.trim().length > 0,
+      `${locale} needs a translated custom_api_url_insecure_error`
+    );
+  }
+
+  assert.match(
+    main,
+    /\["custom_api_url_insecure:", "custom_api_url_insecure_error"\]/
+  );
+
+  const overlay = read("src/overlay.js");
+  assert.match(overlay, /errStr\.startsWith\("custom_api_url_insecure:"\)/);
+  assert.match(overlay, /Пользовательский сервер должен использовать HTTPS/);
+});
+
 test("engine health polling avoids decrypting provider secrets", () => {
   const lib = read("src-tauri/src/lib.rs");
   const start = lib.indexOf("fn get_engine_health");
