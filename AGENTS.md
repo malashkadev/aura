@@ -126,7 +126,7 @@ A dependency limitation that would bite any project is a `remember`. "Landed the
      - **Zero Shadows & Specular Facet Rule (Strict)**: Outer drop shadows (`box-shadow`) and outer glows (`--accent-glow`, `filter`) are banned across all app surfaces. Use only physical top-edge specular facet lines: `inset 0 1px 0 rgba(255, 255, 255, 0.08)` for cards, `rgba(255, 255, 255, 0.12)` for modals.
      - **Direct Feedback & Zero Redundancy**: Controls that produce feedback (like sound themes and volume) must play feedback directly on adjustment. **NEVER** inject redundant "Test" / "Preview" buttons when the control itself already previews.
      - **Quiet Shared Credentials**: Multi-tab credentials (like API keys) synchronize silently in real-time backed by Windows DPAPI. **NEVER** clutter form labels with internal technical badges (e.g. "Saved in Windows DPAPI").
-     - **Native Desktop Interaction**: `user-select: none` is globally enforced on `*, *::before, *::after` and all dialogs/modals. Only `<input>`, `<textarea>`, and `.history-text` permit text selection.
+     - **Native Desktop Interaction**: `user-select: none` is globally enforced on `*, *::before, *::after` and all dialogs/modals. Only `<input>`, `<textarea>`, and `.history-item-text` permit text selection.
      - **Button Invariants in Desktop App**:
        - Standard & utility action buttons (e.g. "Add", "Reset", "Clear", "Test", secondary dialog actions) MUST use `.btn.btn-secondary` or standard quiet desktop styling.
        - **Rest (Static) State**: Background is transparent/dark, border is `1px solid var(--border-color)` (`#29292980`), text is `var(--text-secondary)`. **NEVER use bright orange borders or orange tinted backgrounds in static state.**
@@ -144,8 +144,8 @@ A dependency limitation that would bite any project is a `remember`. "Landed the
 Before writing code:
 1. **Confirm working directory** with `pwd`
 2. **Read this file** completely
-3. **Read project docs**: `PRODUCT.md`, `ROADMAP.md`, `docs/`
-4. **Run `./init.sh`** to verify environment is healthy
+3. **Read project docs**: `PRODUCT.md`, `ROADMAP.md`, `DESIGN.md`, `docs/`
+4. **Run `./init.sh`** (Git Bash) or `.\init.ps1` (Windows PowerShell) to verify environment is healthy
 5. **Read `feature_list.json`** to see current feature state and dependencies
 6. **Review `progress.md`** for active tasks and continuity
 
@@ -164,7 +164,11 @@ If baseline verification is failing, repair that first before adding new scope.
 - `feature_list.json` — Feature state tracker (source of truth)
 - `progress.md` — Session continuity and progress log
 - `session-handoff.md` — Handoff between sessions
-- `init.sh` — Standard startup and verification path
+- `init.sh` — Standard startup and verification path (Git Bash)
+- `init.ps1` — Same path for Windows PowerShell
+- `ROADMAP.md` — Program roadmap and phase status
+- `PRODUCT.md` — Canonical product positioning and capability limits
+- `DESIGN.md` — Canonical desktop design system
 
 ## Definition of Done
 
@@ -186,10 +190,14 @@ Before ending a session:
 ## Verification Commands
 
 ```bash
-# Full verification entrypoint
+# Full verification entrypoint (Git Bash)
 ./init.sh
+
+# Windows PowerShell equivalent
+.\init.ps1
 ```
 
-Required checks:
-- Build check: `npm run build-storybook`
-- Testing: `npm test` or `cargo test` in `2.0/src-tauri`
+Required checks (also run by the entrypoint above):
+- Frontend: `npm run check && npm test && npm run audit`
+- Release surfaces: `npm run verify:manifest`
+- Rust: `cargo fmt --manifest-path src-tauri/Cargo.toml -- --check`, `cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets -- -D warnings`, `cargo test --manifest-path src-tauri/Cargo.toml --all-targets`

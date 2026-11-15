@@ -1,0 +1,105 @@
+{
+  "version": 1,
+  "updated": "2026-11-15",
+  "source": "AUDIT_2026-11-15",
+  "features": [
+    {
+      "id": "feat-001",
+      "title": "Monochrome icon system rollout",
+      "status": "done",
+      "priority": "P1",
+      "commit": "f8ba73a",
+      "evidence": "npm test 49/49; icon catalog 20/20; npm run check; registry hydrated in settings and tray",
+      "depends_on": []
+    },
+    {
+      "id": "feat-002",
+      "title": "Static audit gates and all test files wired",
+      "status": "done",
+      "priority": "P0",
+      "commit": "793579f",
+      "evidence": "npm run audit exit 0 with 10 PASS results; npm test 49/49; negative exit-code checks for CSS, titles, hardcoded text, ARIA, elements and dynamic strings",
+      "depends_on": ["feat-001"]
+    },
+    {
+      "id": "feat-003",
+      "title": "Harness artifacts and startup entrypoint",
+      "status": "done",
+      "priority": "P0",
+      "evidence": "init.sh, init.ps1, progress.md, session-handoff.md, feature_list.json, ROADMAP.md; AGENTS.md has no stale artifact or storybook references",
+      "depends_on": []
+    },
+    {
+      "id": "feat-004",
+      "title": "Product and design records tracked and corrected",
+      "status": "done",
+      "priority": "P1",
+      "evidence": "PRODUCT.md rewritten without filler-removal or neon claims; PRODUCT.md and DESIGN.md tracked in git",
+      "depends_on": ["feat-003"]
+    },
+    {
+      "id": "feat-005",
+      "title": "User-facing correctness: select fallback, localized errors, autostart status, health caching",
+      "status": "planned",
+      "priority": "P2",
+      "evidence": "",
+      "depends_on": ["feat-003"]
+    },
+    {
+      "id": "feat-006",
+      "title": "Security hygiene: HTTPS custom URL, temp WAV sweep, yanked dependency update",
+      "status": "planned",
+      "priority": "P2",
+      "evidence": "",
+      "depends_on": ["feat-003"]
+    },
+    {
+      "id": "feat-007",
+      "title": "Remove unused punctuation pipeline",
+      "status": "planned",
+      "priority": "P2",
+      "evidence": "",
+      "depends_on": ["feat-006"]
+    },
+    {
+      "id": "feat-008",
+      "title": "Move icon tests onto the production registry",
+      "status": "planned",
+      "priority": "P2",
+      "evidence": "",
+      "depends_on": ["feat-001"]
+    },
+    {
+      "id": "feat-009",
+      "title": "Modularize main.js by responsibility",
+      "status": "planned",
+      "priority": "P1",
+      "evidence": "",
+      "depends_on": ["feat-005", "feat-007", "feat-008"]
+    },
+    {
+      "id": "feat-010",
+      "title": "Modularize lib.rs commands by domain",
+      "status": "planned",
+      "priority": "P1",
+      "evidence": "",
+      "depends_on": ["feat-006", "feat-009"]
+    },
+    {
+      "id": "feat-011",
+      "title": "P3 desktop polish",
+      "status": "planned",
+      "priority": "P3",
+      "evidence": "",
+      "depends_on": ["feat-005", "feat-006"]
+    },
+    {
+      "id": "feat-012",
+      "title": "Final verification and session handoff",
+      "status": "planned",
+      "priority": "P0",
+      "evidence": "",
+      "depends_on": ["feat-009", "feat-010", "feat-011"]
+    }
+  ]
+}
