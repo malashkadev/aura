@@ -7,7 +7,7 @@ import { getIcon } from "./icon-system-api.js";
  * The host supplies the Tauri bridge, the confirmation dialog and the current
  * locale dictionary so this module stays independent of the settings state.
  */
-export function createHistoryView({ invoke, showConfirm, getDict, getLanguage }) {
+export function createHistoryView({ invoke, showConfirm, getDict, getLanguage, onFilterChange = undefined }) {
   const historyContainer = document.getElementById("history-items-container");
   const btnClearHistory = document.getElementById("btn-clear-history");
   const inputHistorySearch = document.getElementById("input-history-search");
@@ -204,6 +204,7 @@ export function createHistoryView({ invoke, showConfirm, getDict, getLanguage })
       historyFilterButtons.forEach(b => b.classList.remove("active"));
       btn.classList.add("active");
       historyActiveFilter = btn.dataset.filter || "all";
+      onFilterChange?.(historyActiveFilter);
       renderHistoryItems({ animate: false });
     });
   });

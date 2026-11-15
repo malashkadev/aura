@@ -129,8 +129,8 @@ A dependency limitation that would bite any project is a `remember`. "Landed the
      - **Native Desktop Interaction**: `user-select: none` is globally enforced on `*, *::before, *::after` and all dialogs/modals. Only `<input>`, `<textarea>`, and `.history-item-text` permit text selection.
      - **Button Invariants in Desktop App**:
        - Standard & utility action buttons (e.g. "Add", "Reset", "Clear", "Test", secondary dialog actions) MUST use `.btn.btn-secondary` or standard quiet desktop styling.
-       - **Rest (Static) State**: Background is transparent/dark, border is `1px solid var(--border-color)` (`#29292980`), text is `var(--text-secondary)`. **NEVER use bright orange borders or orange tinted backgrounds in static state.**
-       - **Hover State**: Subtle border highlight (`border-color: var(--accent-color)`) or subtle white glow (`rgba(255, 255, 255, 0.05)`). **NEVER fill buttons with solid orange (`#ff4200`) on hover.**
+       - **Rest (Static) State**: Primary CTA uses elevated graphite (`#272727`, `1px solid rgba(255, 255, 255, 0.24)`, `inset 0 1px 0 rgba(255, 255, 255, 0.15)`, white text/icons). Secondary & utility buttons are borderless tonal plates (`rgba(255, 255, 255, 0.055)`, `1px solid transparent`, `inset 0 1px 0 rgba(255, 255, 255, 0.07)`, `#d6d6d6` text). **NEVER use bright orange borders or orange tinted backgrounds in static state.**
+       - **Hover State**: Subtle tonal lift (`#303030` / `rgba(255, 255, 255, 0.34)` on primary; `rgba(255, 255, 255, 0.105)` with `inset 0 1px 0 rgba(255, 255, 255, 0.13)` on secondary). **NEVER fill buttons with solid orange (`#ff4200`) on hover.**
        - **Component Reuse First**: NEVER create ad-hoc button classes (like `.btn-action-sm`). Always reuse existing classes (`.btn.btn-secondary`, `.custom-input`, `.form-group`).
      - **Form Layout & Spacing**:
        - Use `.form-group` structure and standard application padding (`12px`/`16px`). Do not inject ad-hoc small rows with arbitrary non-standard heights.

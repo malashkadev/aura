@@ -430,9 +430,9 @@ function playThemeError() {
 const restHeight = 2.5;
 const maxHeight = 16.0;
 
-// Exact silence reference color (#722205) and Aura tactical orange (#FE4200)
+// Exact silence reference color (#722205) and Aura tactical orange (#FF4200)
 const COLOR_SILENCE = { r: 114, g: 34, b: 5 };
-const COLOR_SPEECH = { r: 254, g: 66, b: 0 };
+const COLOR_SPEECH = { r: 255, g: 66, b: 0 };
 
 function getBarHeatColor(energy) {
   const clamped = Math.max(0, Math.min(1, energy));
@@ -563,7 +563,7 @@ function updateAnimation() {
       bars.forEach(bar => {
         bar.setAttribute("height", "4.0");
         bar.setAttribute("y", "12.6");
-        bar.setAttribute("fill", "#FE4200");
+        bar.setAttribute("fill", "#FF4200");
       });
     }
     requestAnimationFrame(updateAnimation);

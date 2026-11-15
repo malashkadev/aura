@@ -3172,6 +3172,7 @@ document.addEventListener("DOMContentLoaded", () => {
     showConfirm,
     getDict: () => i18nDict[currentLanguage] || i18nDict.ru,
     getLanguage: () => currentLanguage,
+    onFilterChange: () => updateHistoryFilterIndicator(false),
   });
   const loadHistoryList = historyView.loadHistoryList;
 
@@ -3247,6 +3248,29 @@ document.addEventListener("DOMContentLoaded", () => {
     );
   }
 
+  /**
+   * Aligns a segmented sliding indicator pill to an active child element within its track.
+   *
+   * @param {HTMLElement | null} track
+   * @param {Element | null | undefined} activeItem
+   * @param {HTMLElement | null} indicator
+   * @param {boolean} [immediate]
+   * @returns {number | null}
+   */
+  function positionTrackIndicator(track, activeItem, indicator, immediate = false) {
+    if (!track || !indicator || !(activeItem instanceof HTMLElement)) return null;
+    if (activeItem.offsetWidth <= 0 || activeItem.offsetHeight <= 0) return null;
+    positionSlidingIndicator(
+      indicator,
+      activeItem.offsetLeft,
+      activeItem.offsetTop,
+      activeItem.offsetWidth,
+      activeItem.offsetHeight,
+      immediate
+    );
+    return track.offsetWidth;
+  }
+
   const engineTrack = document.getElementById("engine-segmented-track");
   const engineIndicator = document.getElementById("engine-indicator");
   let lastEngineTrackWidth = 0;
@@ -3255,19 +3279,29 @@ document.addEventListener("DOMContentLoaded", () => {
   function updateEngineIndicator(immediate = false) {
     if (!engineTrack || !engineIndicator) return;
     const checked = engineTrack.querySelector('input[type="radio"]:checked');
-    const activeSegment = checked?.closest(".engine-segment");
-    if (!(activeSegment instanceof HTMLElement)) return;
-    if (activeSegment.offsetWidth <= 0 || activeSegment.offsetHeight <= 0) return;
-
-    lastEngineTrackWidth = engineTrack.offsetWidth;
-    positionSlidingIndicator(
+    const nextWidth = positionTrackIndicator(
+      engineTrack,
+      checked?.closest(".engine-segment"),
       engineIndicator,
-      activeSegment.offsetLeft,
-      activeSegment.offsetTop,
-      activeSegment.offsetWidth,
-      activeSegment.offsetHeight,
       immediate
     );
+    if (nextWidth !== null) lastEngineTrackWidth = nextWidth;
+  }
+
+  const historyFilterTrack = document.getElementById("history-filters");
+  const historyFilterIndicator = document.getElementById("history-filter-indicator");
+  let lastHistoryFilterTrackWidth = 0;
+
+  /** @param {boolean} [immediate] */
+  function updateHistoryFilterIndicator(immediate = false) {
+    if (!historyFilterTrack || !historyFilterIndicator) return;
+    const nextWidth = positionTrackIndicator(
+      historyFilterTrack,
+      historyFilterTrack.querySelector(".history-filter-btn.active"),
+      historyFilterIndicator,
+      immediate
+    );
+    if (nextWidth !== null) lastHistoryFilterTrackWidth = nextWidth;
   }
 
   const STAGGER_STEP_MS = 75;
@@ -3462,7 +3496,10 @@ document.addEventListener("DOMContentLoaded", () => {
     if (tab.dataset.tab === "speech") {
       updateEngineIndicator(true);
     }
-    if (tab.dataset.tab === "history") loadHistoryList();
+    if (tab.dataset.tab === "history") {
+      loadHistoryList();
+      updateHistoryFilterIndicator(true);
+    }
     if (tab.dataset.tab !== "speech" && isMicTesting) {
       stopMicTesting();
     }
@@ -3485,23 +3522,40 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  if (engineTrack && engineIndicator) {
-    engineTrack.classList.add("has-indicator");
-    updateEngineIndicator(true);
-    requestAnimationFrame(() => updateEngineIndicator(true));
-    window.addEventListener("resize", () => updateEngineIndicator(true));
+  /**
+   * Initializes sliding indicator positioning and layout observers for a segmented track.
+   *
+   * @param {HTMLElement | null} track
+   * @param {HTMLElement | null} indicator
+   * @param {(immediate?: boolean) => void} updateFn
+   * @param {() => number} getLastWidth
+   */
+  function initTrackIndicator(track, indicator, updateFn, getLastWidth) {
+    if (!track || !indicator) return;
+    track.classList.add("has-indicator");
+    updateFn(true);
+    requestAnimationFrame(() => updateFn(true));
+    window.addEventListener("resize", () => updateFn(true));
     if (typeof ResizeObserver === "function") {
-      const engineTrackObserver = new ResizeObserver(() => {
-        if (engineTrack.offsetWidth !== lastEngineTrackWidth) {
-          updateEngineIndicator(true);
+      const observer = new ResizeObserver(() => {
+        if (track.offsetWidth !== getLastWidth()) {
+          updateFn(true);
         }
       });
-      engineTrackObserver.observe(engineTrack);
+      observer.observe(track);
     }
     if (document.fonts && document.fonts.ready) {
-      document.fonts.ready.then(() => updateEngineIndicator(true));
+      document.fonts.ready.then(() => updateFn(true));
     }
   }
+
+  initTrackIndicator(engineTrack, engineIndicator, updateEngineIndicator, () => lastEngineTrackWidth);
+  initTrackIndicator(
+    historyFilterTrack,
+    historyFilterIndicator,
+    updateHistoryFilterIndicator,
+    () => lastHistoryFilterTrackWidth
+  );
 
   const initialTabMatch = (location.hash || "").replace("#", "") || new URLSearchParams(location.search).get("tab");
   if (initialTabMatch) {
@@ -5899,6 +5953,9 @@ if (e.button === 0 && !e.target.closest(".window-control-btn") && !e.target.clos
     }
     if (typeof updateEngineIndicator === "function") {
       updateEngineIndicator(true);
+    }
+    if (typeof updateHistoryFilterIndicator === "function") {
+      updateHistoryFilterIndicator(true);
     }
   }
 
