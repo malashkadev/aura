@@ -49,9 +49,10 @@
     {
       "id": "feat-006",
       "title": "Security hygiene: HTTPS custom URL, temp WAV sweep, yanked dependency update",
-      "status": "planned",
+      "status": "done",
       "priority": "P2",
-      "evidence": "",
+      "commit": "8e842ab, 7978a47, 8580b3e",
+      "evidence": "npm test 54/54; cargo test 241 passed; cargo audit 0 CVE / 10 allowed warnings; init.ps1 exit 0; withGlobalTauri kept with capabilities as the tested boundary",
       "depends_on": ["feat-003"]
     },
     {

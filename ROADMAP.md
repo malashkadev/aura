@@ -38,14 +38,14 @@ Program-only roadmap. The marketing website is tracked separately and is out of 
 
 ## Phase 3 — Security and hygiene
 
-**Status:** planned.
+**Status:** done.
 
-- Require HTTPS for non-local custom API endpoints; allow `http` only for loopback.
-- Sweep `aura-rec-*.wav` / `aura-chunk-*.wav` at startup and keep them in a restricted directory.
-- Update yanked `clipboard-win` and verify `async-executor`.
-- Revisit `withGlobalTauri` exposure for the overlay and tray windows.
+- Custom endpoints require HTTPS; plain HTTP is allowed only for loopback, and embedded credentials are rejected.
+- Leftover `aura-rec-*` / `aura-chunk-*` files are swept at startup; pending and finalized WAV files receive the current-user/SYSTEM ACL.
+- `clipboard-win` 5.4.3 and `async-executor` 1.14.1 replace the yanked versions.
+- `withGlobalTauri` stays enabled deliberately: the frontend is unbundled and needs the global bridge, while per-window capabilities remain the security boundary and are covered by the exact-permission test.
 
-**Exit:** `cargo audit`, `cargo test`, `npm audit`, no residual temp audio after an abnormal exit.
+**Evidence:** `npm test` 54/54, `cargo test` 241 passed, `cargo audit` 0 CVE / 10 allowed warnings, `init.ps1` exit 0.
 
 ## Phase 4 — Dead code and test honesty
 

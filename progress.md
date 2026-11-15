@@ -1,7 +1,7 @@
 # Aura 2.0 — Progress
 
 **Updated:** 2026-11-15
-**Baseline:** `main` at `404363d` (Phase 2 complete)
+**Baseline:** `main` at `8580b3e` (Phase 3 complete)
 **Status:** green — working tree clean, every local gate passes.
 
 ## Current state
@@ -17,6 +17,9 @@ Completed in this cycle:
 - `f04c0c2` — raw backend errors replaced with translated messages; detail stays in the console log.
 - `1fd16fc` — autostart registration failures are surfaced as a non-fatal warning instead of a false success.
 - `404363d` — engine-health polling reads non-secret settings, so DPAPI is no longer decrypted every 10 seconds.
+- `8e842ab` — custom API endpoints require HTTPS outside loopback; embedded credentials are rejected.
+- `7978a47` — stale `aura-rec-*`/`aura-chunk-*` files are swept at startup; WAV files get the current-user/SYSTEM ACL.
+- `8580b3e` — `clipboard-win` 5.4.3 and `async-executor` 1.14.1 replace the yanked versions.
 
 ## Quality gates (last run)
 
@@ -24,14 +27,14 @@ Completed in this cycle:
 |---|---|
 | `npm ci` | 0 vulnerabilities |
 | `npm run check` | pass |
-| `npm test` | 53/53 pass |
+| `npm test` | 54/54 pass |
 | `npm run audit` | 10/10 checks PASS |
 | `npm run verify:manifest` | 5/5 surfaces |
 | `npm audit --audit-level=high` | 0 vulnerabilities |
 | `cargo fmt --check` | pass |
 | `cargo clippy -D warnings` | pass |
-| `cargo test --all-targets` | 239 passed, 0 failed, 3 ignored |
-| `cargo audit` | 0 CVE, 12 allowed warnings |
+| `cargo test --all-targets` | 241 passed, 0 failed, 3 ignored |
+| `cargo audit` | 0 CVE, 10 allowed warnings |
 | Clean tree | `git diff` 0, `git diff --cached` 0, untracked 0 |
 
 ## Decisions
@@ -44,14 +47,13 @@ Completed in this cycle:
 
 ## Next
 
-Start with `feat-006` (security hygiene):
+Start with `feat-007` (dead code and test honesty):
 
-1. Require HTTPS for non-local custom API endpoints; allow `http` only for loopback.
-2. Sweep `aura-rec-*.wav` / `aura-chunk-*.wav` at startup and keep them in a restricted directory.
-3. Update yanked `clipboard-win` and verify `async-executor`.
-4. Revisit `withGlobalTauri` exposure for the overlay and tray windows.
+1. Remove the unused punctuation pipeline, model download, and UI branches.
+2. Move the 20 icon-catalog tests onto the production `src/icon-system.js` registry.
+3. Move root-level historical artifacts into `docs/` or `design-lab/`.
 
-Then `feat-007` (punctuation removal), `feat-008` (icon tests on production registry), and only then the structural refactor.
+Then `feat-008`, `feat-011`, and the structural refactor.
 
 ## How to resume
 
