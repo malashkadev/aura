@@ -58,17 +58,19 @@
     {
       "id": "feat-007",
       "title": "Remove unused punctuation pipeline",
-      "status": "planned",
+      "status": "done",
       "priority": "P2",
-      "evidence": "",
+      "commit": "19eb873",
+      "evidence": "npm test guard passes; cargo test 237 passed; 12 MB sidecar binary and provenance entry removed; no run_punctuation references remain",
       "depends_on": ["feat-006"]
     },
     {
       "id": "feat-008",
       "title": "Move icon tests onto the production registry",
-      "status": "planned",
+      "status": "done",
       "priority": "P2",
-      "evidence": "",
+      "commit": "ff6e1ac",
+      "evidence": "tests/icon-system.test.mjs 10/10 on src/icon-system.js; legacy catalog suite kept as tests/icon-legacy-catalog.test.mjs",
       "depends_on": ["feat-001"]
     },
     {

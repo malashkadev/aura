@@ -49,13 +49,13 @@ Program-only roadmap. The marketing website is tracked separately and is out of 
 
 ## Phase 4 — Dead code and test honesty
 
-**Status:** planned; requires owner decision.
+**Status:** done.
 
-- Remove the unused punctuation pipeline (`run_punctuation`, punctuation model download, UI branches). The pinned model is Chinese/English only and nothing calls it.
-- Move the 20 icon-catalog tests onto the production `src/icon-system.js` registry; keep the legacy catalog as a separate comparison test.
-- Move root-level historical artifacts into `docs/` or `design-lab/`.
+- Removed the unused punctuation pipeline, its model download, diagnostics fields, UI branches, provenance entry, and the 12 MB sidecar binary.
+- Added a direct production-registry test suite for `src/icon-system.js`; the legacy registry tests remain as the catalog comparison suite.
+- Moved the 2026 audits, handoffs, and E2E checklist into `docs/history/`; the New Design source assets now live in `docs/design/new-design/`.
 
-**Exit:** no unreachable public pipeline, production icon registry has direct tests, root stays clean.
+**Evidence:** `npm test` 65/65, `cargo test` 237 passed, `npm run audit` 10/10, `init.ps1` exit 0.
 
 ## Phase 5 — Structural refactor
 

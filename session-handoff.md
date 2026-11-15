@@ -1,7 +1,7 @@
 # Session Handoff — Aura 2.0
 
 **Date:** 2026-11-15
-**Baseline:** `main` at `8580b3e` (Phase 3 complete)
+**Baseline:** `main` at `cac731f` (Phase 4 complete)
 **Scope:** desktop program only; `website/` is out of scope.
 
 ## What changed
@@ -12,27 +12,28 @@
 - Phase 1 docs: `PRODUCT.md` rewritten, `PRODUCT.md` and `DESIGN.md` tracked (`fa02b6a`).
 - Phase 2: select fallback (`1d0f204`), localized backend errors (`f04c0c2`), honest autostart (`1fd16fc`), health without DPAPI (`404363d`).
 - Phase 3: HTTPS custom-endpoint guard (`8e842ab`), stale-audio sweep and ACL (`7978a47`), yanked dependency updates (`8580b3e`).
+- Phase 4: punctuation pipeline removed (`19eb873`), production icon tests (`ff6e1ac`), history docs moved (`cac731f`).
 
 ## Verification
 
 Run `./init.sh` (Git Bash) or `.\init.ps1` (PowerShell). Last recorded result:
 
-- `npm test` 54/54
+- `npm test` 65/65
 - `npm run audit` 10/10 PASS
-- `cargo test --all-targets` 241 passed, 3 ignored
+- `cargo test --all-targets` 237 passed, 2 ignored
 - `cargo audit` 0 CVE, 10 allowed warnings
 - `npm run verify:manifest` 5/5
 - clean tree
 
 ## Next task
 
-`feat-007` — dead code and test honesty:
+`feat-009` — structural refactor, first module:
 
-1. Remove `run_punctuation`, `download_punctuation_model`, the punctuation model download, and the UI branches. The pinned model is Chinese/English only and nothing calls it.
-2. Move the 20 icon-catalog tests onto the production `src/icon-system.js` registry; keep the legacy catalog as a comparison test.
-3. Move root-level historical artifacts into `docs/` or `design-lab/`.
+1. Extract history rendering, search, and filters from `main.js` into a focused module.
+2. Keep `main.js` as the orchestrator; no behavior changes.
+3. Run `npm test`, `npm run audit`, `cargo test` after each extraction.
 
-Acceptance: no unreachable public pipeline, production icon registry has direct tests, root stays clean.
+Then `models`, `settings-form`, `i18n`; then `lib.rs` commands by domain (`feat-010`); finish with `feat-011` polish and `feat-012` verification.
 
 ## Constraints
 
@@ -44,5 +45,5 @@ Acceptance: no unreachable public pipeline, production icon registry has direct 
 ## Known gaps
 
 - OSV-Scanner not run locally (no Go).
-- Icon-catalog tests target the legacy registry; production registry is covered by frontend-static tests (`feat-008`).
+- The legacy icon-catalog suite remains intentionally separate from the production-registry suite.
 - `cargo audit` has 10 allowed warnings, no CVE.

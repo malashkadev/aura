@@ -1,7 +1,7 @@
 # Aura 2.0 — Progress
 
 **Updated:** 2026-11-15
-**Baseline:** `main` at `8580b3e` (Phase 3 complete)
+**Baseline:** `main` at `cac731f` (Phase 4 complete)
 **Status:** green — working tree clean, every local gate passes.
 
 ## Current state
@@ -20,6 +20,9 @@ Completed in this cycle:
 - `8e842ab` — custom API endpoints require HTTPS outside loopback; embedded credentials are rejected.
 - `7978a47` — stale `aura-rec-*`/`aura-chunk-*` files are swept at startup; WAV files get the current-user/SYSTEM ACL.
 - `8580b3e` — `clipboard-win` 5.4.3 and `async-executor` 1.14.1 replace the yanked versions.
+- `19eb873` — removed the unreachable punctuation pipeline, its 12 MB sidecar, diagnostics fields, and UI branches.
+- `ff6e1ac` — production icon-registry tests added; the legacy catalog suite keeps its own file.
+- `cac731f` — 2026 audits, handoffs, and E2E checklist moved to `docs/history/`; New Design assets moved under `docs/design/`.
 
 ## Quality gates (last run)
 
@@ -27,13 +30,13 @@ Completed in this cycle:
 |---|---|
 | `npm ci` | 0 vulnerabilities |
 | `npm run check` | pass |
-| `npm test` | 54/54 pass |
+| `npm test` | 65/65 pass |
 | `npm run audit` | 10/10 checks PASS |
 | `npm run verify:manifest` | 5/5 surfaces |
 | `npm audit --audit-level=high` | 0 vulnerabilities |
 | `cargo fmt --check` | pass |
 | `cargo clippy -D warnings` | pass |
-| `cargo test --all-targets` | 241 passed, 0 failed, 3 ignored |
+| `cargo test --all-targets` | 237 passed, 0 failed, 2 ignored |
 | `cargo audit` | 0 CVE, 10 allowed warnings |
 | Clean tree | `git diff` 0, `git diff --cached` 0, untracked 0 |
 
@@ -47,13 +50,13 @@ Completed in this cycle:
 
 ## Next
 
-Start with `feat-007` (dead code and test honesty):
+Start with `feat-009` (structural refactor), first module:
 
-1. Remove the unused punctuation pipeline, model download, and UI branches.
-2. Move the 20 icon-catalog tests onto the production `src/icon-system.js` registry.
-3. Move root-level historical artifacts into `docs/` or `design-lab/`.
+1. Extract history rendering, search, and filters from `main.js` into a focused module.
+2. Keep `main.js` as the orchestrator; no behavior changes.
+3. After each extraction run `npm test`, `npm run audit`, `cargo test`.
 
-Then `feat-008`, `feat-011`, and the structural refactor.
+Then `models`, `settings-form`, `i18n`; then `lib.rs` commands by domain (`feat-010`); finish with `feat-011` polish and `feat-012` verification.
 
 ## How to resume
 
