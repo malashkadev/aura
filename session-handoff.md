@@ -1,7 +1,7 @@
 # Session Handoff — Aura 2.0
 
 **Date:** 2026-11-15
-**Baseline:** `main` at `8dc69e0` (Phase 5 in progress)
+**Baseline:** `main` at `a3d8f74` (Phase 5 in progress)
 **Scope:** desktop program only; `website/` is out of scope.
 
 ## What changed
@@ -13,13 +13,13 @@
 - Phase 2: select fallback (`1d0f204`), localized backend errors (`f04c0c2`), honest autostart (`1fd16fc`), health without DPAPI (`404363d`).
 - Phase 3: HTTPS custom-endpoint guard (`8e842ab`), stale-audio sweep and ACL (`7978a47`), yanked dependency updates (`8580b3e`).
 - Phase 4: punctuation pipeline removed (`19eb873`), production icon tests (`ff6e1ac`), history docs moved (`cac731f`).
-- Phase 5: history view extracted from `main.js` into `src/history-view.js` (`31a82ae`); model cards extracted into `src/model-cards.js` (`2e05c6e`); autosave extracted into `src/settings-autosave.js` (`2ede29f`); form collection extracted into `src/settings-form.js` (`8dc69e0`).
+- Phase 5: history view extracted from `main.js` into `src/history-view.js` (`31a82ae`); model cards extracted into `src/model-cards.js` (`2e05c6e`); autosave extracted into `src/settings-autosave.js` (`2ede29f`); form collection extracted into `src/settings-form.js` (`8dc69e0`); view factories moved inside `DOMContentLoaded` to fix dead tabs/selects (`a3d8f74`).
 
 ## Verification
 
 Run `./init.sh` (Git Bash) or `.\init.ps1` (PowerShell). Last recorded result:
 
-- `npm test` 69/69
+- `npm test` 70/70
 - `npm run audit` 10/10 PASS
 - `cargo test --all-targets` 237 passed, 2 ignored
 - `cargo audit` 0 CVE, 10 allowed warnings

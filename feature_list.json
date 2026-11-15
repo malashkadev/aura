@@ -79,7 +79,7 @@
       "status": "in_progress",
       "priority": "P1",
       "commit": "31a82ae, 2e05c6e, 2ede29f, 8dc69e0",
-      "evidence": "history -> src/history-view.js; model cards -> src/model-cards.js; autosave -> src/settings-autosave.js with unit tests; form collection -> src/settings-form.js; npm test 69/69; npm run audit 10/10; behavior unchanged",
+      "evidence": "history -> src/history-view.js; model cards -> src/model-cards.js; autosave -> src/settings-autosave.js with unit tests; form collection -> src/settings-form.js; DOMContentLoaded init fix a3d8f74; npm test 70/70; npm run audit 10/10; behavior unchanged",
       "depends_on": ["feat-005", "feat-007", "feat-008"]
     },
     {

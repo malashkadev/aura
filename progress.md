@@ -1,7 +1,7 @@
 # Aura 2.0 — Progress
 
 **Updated:** 2026-11-15
-**Baseline:** `main` at `8dc69e0` (Phase 5 in progress)
+**Baseline:** `main` at `a3d8f74` (Phase 5 in progress)
 **Status:** green — working tree clean, every local gate passes.
 
 ## Current state
@@ -27,6 +27,7 @@ Completed in this cycle:
 - `2e05c6e` — model cards, download/delete progress, and display names extracted into `src/model-cards.js`; card clicks use the refreshed cache.
 - `2ede29f` — autosave timer, dirty/revision state and in-flight handshake extracted into `src/settings-autosave.js`, with unit tests.
 - `8dc69e0` — DOM-backed settings payload extracted into `src/settings-form.js`; `saveSettings` keeps the backend call, API keys and warnings.
+- `a3d8f74` — view factories moved inside `DOMContentLoaded`; fixes the runtime `ReferenceError` that left tabs and custom selects dead.
 
 ## Quality gates (last run)
 
