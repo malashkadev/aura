@@ -3532,7 +3532,7 @@ const radioCloud = document.getElementById("radio-cloud");
   function updateFirstRunCard() {
     if (!firstRunCard) return;
     const hasAsrModel = downloadedModelList.some(
-      (id) => id !== "punctuation" && !id.startsWith("qwen3-")
+      (id) => !id.startsWith("qwen3-")
     );
     firstRunCard.hidden = !(radioLocal?.checked && !hasAsrModel);
   }
@@ -4638,9 +4638,6 @@ const btnSaveSettings = document.getElementById("btn-save-settings");
   // rule is enforced by delete_model_command in Rust; keeping it in one place
   // prevents the trash button from drifting away from the real selection.
   function isModelActive(model) {
-    if (model === "punctuation") {
-      return false;
-    }
     if (model.startsWith("qwen3-")) {
       return selectedLlmModel === model;
     }
@@ -4736,9 +4733,6 @@ const btnSaveSettings = document.getElementById("btn-save-settings");
   });
 
   function selectModelCard(model, markModified = true) {
-    if (model === "punctuation") {
-      return;
-    }
     if (model.startsWith("qwen3-")) {
       // Local edit models are a separate setting (settings.llm_model); they
       // must never overwrite the ASR model_name selection.
@@ -4807,7 +4801,7 @@ const btnSaveSettings = document.getElementById("btn-save-settings");
           radioCloud.checked = true;
         }
         
-        if (settings.model_name && settings.model_name !== "parakeet-v3" && settings.model_name !== "punctuation") {
+        if (settings.model_name && settings.model_name !== "parakeet-v3") {
           lastSelectedWhisperModel = settings.model_name;
         }
         selectModelCard(settings.model_name || "base", false);
@@ -5285,7 +5279,6 @@ const autostartWarning = await invoke("set_settings", { settings });
       "qwen3-0.6b": "Qwen3 0.6B",
       "qwen3-1.7b": "Qwen3 1.7B",
       "qwen3-4b": "Qwen3 4B",
-      "punctuation": "Silero Punctuation",
     };
     return names[model] || model;
   }
@@ -5421,7 +5414,7 @@ const autostartWarning = await invoke("set_settings", { settings });
       const selectionUntouched = isLlmCard
         ? selectedLlmModel === llmAtStart
         : selectedModelName === modelAtStart;
-      if (model !== "punctuation" && selectionUntouched) {
+      if (selectionUntouched) {
         selectModelCard(model);
       }
     } catch (err) {
@@ -5553,7 +5546,7 @@ const autostartWarning = await invoke("set_settings", { settings });
     }
 
     if (payload.done) {
-      const isInternalPayload = typeof model === "string" && (model.startsWith("llm-runtime-") || model === "punctuation");
+      const isInternalPayload = typeof model === "string" && model.startsWith("llm-runtime-");
       if (!isInternalPayload) {
         showStatus(getTranslation("model_downloaded_success_pattern", { model: getModelDisplayName(model) }), "success");
       }

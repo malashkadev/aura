@@ -343,7 +343,7 @@ fn canonical_model_name(model_name: &str) -> Result<String, String> {
     if llm_runner::is_llm_model_id(model_name) {
         return Ok(model_name.to_string());
     }
-    if model_name == "parakeet-v3" || model_name == "punctuation" {
+    if model_name == "parakeet-v3" {
         return Ok(model_name.to_string());
     }
     let filename = whisper_runner::whisper_model_filename(model_name)?;
@@ -431,19 +431,6 @@ async fn delete_model_command(
         return Ok(());
     }
 
-    if model_name == "punctuation" {
-        let punctuation_dir = app_local_data.join("models").join("punctuation");
-        return tauri::async_runtime::spawn_blocking(move || {
-            match std::fs::remove_dir_all(&punctuation_dir) {
-                Ok(()) => Ok(()),
-                Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(()),
-                Err(error) => Err(format!("Failed to delete punctuation model: {error}")),
-            }
-        })
-        .await
-        .map_err(|error| format!("Punctuation deletion worker failed: {error}"))?;
-    }
-
     if llm_runner::is_llm_model_id(&model_name) {
         let model_path = llm_runner::llm_model_path(&app_handle, &model_name)?;
         let worker_handle = app_handle.clone();
@@ -506,9 +493,6 @@ async fn get_downloaded_models(app_handle: tauri::AppHandle) -> Result<Vec<Strin
         let parakeet_dir = models_dir.join("parakeet-v3");
         if whisper_runner::parakeet_model_is_installed(&parakeet_dir) {
             downloaded.push("parakeet-v3".to_string());
-        }
-        if whisper_runner::punctuation_files_complete(&models_dir.join("punctuation")) {
-            downloaded.push("punctuation".to_string());
         }
         for llm_id in llm_runner::LLM_MODEL_IDS {
             if llm_runner::llm_model_is_installed(&app_handle, llm_id) {
@@ -6705,8 +6689,7 @@ mod tests {
     }
 
     #[test]
-    fn canonical_model_name_accepts_punctuation_and_parakeet() {
-        assert_eq!(canonical_model_name("punctuation").unwrap(), "punctuation");
+    fn canonical_model_name_accepts_parakeet() {
         assert_eq!(canonical_model_name("parakeet-v3").unwrap(), "parakeet-v3");
         assert_eq!(canonical_model_name("base").unwrap(), "base");
         assert!(canonical_model_name("../../evil").is_err());

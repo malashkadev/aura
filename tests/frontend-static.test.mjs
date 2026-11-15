@@ -950,6 +950,30 @@ test("custom API endpoints reject cleartext non-loopback URLs", () => {
   assert.match(overlay, /Пользовательский сервер должен использовать HTTPS/);
 });
 
+test("unused punctuation pipeline is removed", () => {
+  const whisper = read("src-tauri/src/whisper_runner.rs");
+  const lib = read("src-tauri/src/lib.rs");
+  const logger = read("src-tauri/src/logger.rs");
+  const main = read("src/main.js");
+  const config = json("src-tauri/tauri.conf.json");
+
+  assert.doesNotMatch(whisper, /run_punctuation|download_punctuation_model|PUNCTUATION_ARCHIVE/);
+  assert.doesNotMatch(whisper, /find_sherpa_punctuation_exe|punctuation_files_complete/);
+  assert.doesNotMatch(lib, /"punctuation"/);
+  assert.doesNotMatch(logger, /punctuation_file|punctuation-archive/);
+  assert.doesNotMatch(main, /"punctuation"/);
+  assert.equal(
+    config.bundle.resources.includes("binaries/sherpa-onnx-offline-punctuation.exe"),
+    false
+  );
+  assert.equal(
+    existsSync(
+      new URL("../src-tauri/binaries/sherpa-onnx-offline-punctuation.exe", import.meta.url)
+    ),
+    false
+  );
+});
+
 test("engine health polling avoids decrypting provider secrets", () => {
   const lib = read("src-tauri/src/lib.rs");
   const start = lib.indexOf("fn get_engine_health");

@@ -80,8 +80,7 @@
       "binaries/ggml.dll",
       "binaries/ggml-base.dll",
       "binaries/ggml-cpu-*.dll",
-      "binaries/sherpa-onnx-offline-websocket-server.exe",
-      "binaries/sherpa-onnx-offline-punctuation.exe"
+      "binaries/sherpa-onnx-offline-websocket-server.exe"
     ],
     "externalBin": [
       "binaries/whisper-sidecar",

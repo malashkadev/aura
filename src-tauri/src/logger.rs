@@ -350,7 +350,6 @@ struct DiagnosticSnapshot {
     gaming_mode_active: Option<bool>,
     detected_audio_devices: Vec<String>,
     parakeet_files: Vec<FileCheck>,
-    punctuation_file: FileCheck,
     cuda_runtime_source: &'static str,
     cuda_files: Vec<FileCheck>,
     whisper_models: Vec<FileCheck>,
@@ -448,7 +447,6 @@ fn collect_partial_downloads(app_local_data: &Path) -> Vec<FileCheck> {
     let candidate_directories = [
         app_local_data.join("models"),
         app_local_data.join("models").join("parakeet-v3"),
-        app_local_data.join("models").join("punctuation-archive"),
         app_local_data.join("binaries").join("cuda-archives"),
     ];
     let mut partials = Vec::new();
@@ -612,12 +610,6 @@ fn troubleshooting_hints(snapshot: &DiagnosticSnapshot) -> Vec<String> {
                             ));
                         }
                     }
-                    if !snapshot.punctuation_file.is_present() {
-                        push_hint(
-                            "The optional punctuation model is not installed. Re-download it in Settings -> Voice if Whisper output lacks punctuation."
-                                .to_string(),
-                        );
-                    }
                 }
                 _ => {}
             }
@@ -760,10 +752,6 @@ pub fn generate_diagnostic_report<R: tauri::Runtime>(
         })
         .collect();
 
-    let punc_dir = models_dir.join("punctuation");
-    let punctuation_file =
-        FileCheck::inspect("model.int8.onnx", &punc_dir.join("model.int8.onnx"), None);
-
     let cuda_bin_dir = binaries_dir.join("cuda").join("bin");
     let cuda_files = [
         "onnxruntime_providers_cuda.dll",
@@ -888,7 +876,6 @@ pub fn generate_diagnostic_report<R: tauri::Runtime>(
         gaming_mode_active,
         detected_audio_devices,
         parakeet_files,
-        punctuation_file,
         cuda_runtime_source,
         cuda_files,
         whisper_models,
@@ -1155,21 +1142,6 @@ fn format_diagnostic_report(snapshot: &DiagnosticSnapshot) -> String {
 
     let _ = writeln!(
         report,
-        "- **Punctuation Model**: {}",
-        if snapshot.punctuation_file.is_present() {
-            "Installed"
-        } else {
-            "Missing or incomplete"
-        }
-    );
-    let _ = writeln!(
-        report,
-        "  - `model.int8.onnx`: {}",
-        snapshot.punctuation_file.summary()
-    );
-
-    let _ = writeln!(
-        report,
         "- **CUDA Runtime Source**: {}",
         snapshot.cuda_runtime_source
     );
@@ -1381,7 +1353,6 @@ mod tests {
             gaming_mode_active: Some(false),
             detected_audio_devices: vec!["Microphone (USB)".to_string()],
             parakeet_files,
-            punctuation_file: present_check("model.int8.onnx", 123_456, None),
             cuda_runtime_source: "System NVIDIA runtime (PATH)",
             cuda_files: vec![
                 present_check("onnxruntime_providers_cuda.dll", 1_000, None),

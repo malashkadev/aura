@@ -161,15 +161,6 @@
       "enabled": false,
       "required_for_whisper": false,
       "provenance_status": "disabled-unverified-origin-and-unauthenticated-network-service"
-    },
-    {
-      "filename": "sherpa-onnx-offline-punctuation.exe",
-      "source_member": null,
-      "expected_size": 12006912,
-      "sha256": "1ac6a016017c61b86878d7288f77fb5519b9aeb31f45c8b5e6c01df270993ac0",
-      "enabled": false,
-      "required_for_whisper": false,
-      "provenance_status": "disabled-unverified-origin"
     }
   ]
 }
