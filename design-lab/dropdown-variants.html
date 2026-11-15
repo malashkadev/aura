@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Aura — варианты выпадающего списка</title>
+<style>
+@font-face {
+  font-family: 'Onest'; font-weight: 100 900; font-display: swap;
+  src: url('../src/assets/fonts/onest-cyrillic.woff2') format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+@font-face {
+  font-family: 'Onest'; font-weight: 100 900; font-display: swap;
+  src: url('../src/assets/fonts/onest-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+2000-206F, U+20AC, U+2122;
+}
+
+:root {
+  --bg: #090909;
+  --field: hsl(0, 0%, 8%);
+  --card: rgba(18, 18, 18, 0.7);
+  --border: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.18);
+  --text: #f5f7fa;
+  --dim: #9ba6b3;
+  --muted: #737f91;
+  --accent: #ff4200;
+  --ease: cubic-bezier(0.23, 1, 0.32, 1);
+  --font: 'Onest', 'Segoe UI Variable Text', system-ui, sans-serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  padding: 36px 32px 64px;
+  -webkit-font-smoothing: antialiased;
+}
+
+.head { max-width: 820px; }
+.head h1 { font-size: 26px; font-weight: 700; letter-spacing: -0.025em; }
+.head p { margin-top: 8px; color: var(--dim); font-size: 13px; line-height: 1.6; }
+
+.grid { max-width: 820px; margin-top: 28px; display: flex; flex-direction: column; gap: 22px; }
+
+.variant {
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background: var(--card);
+  padding: 22px 24px 26px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07);
+}
+.vhead { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 18px; }
+.vhead .id { font-size: 10.5px; letter-spacing: 0.14em; color: var(--accent); font-weight: 600; }
+.vhead .name { font-size: 15px; font-weight: 600; letter-spacing: -0.012em; }
+.vhead .note { font-size: 12.5px; color: var(--muted); }
+
+/* shared field */
+.field {
+  display: flex; align-items: center; justify-content: space-between;
+  height: 40px; padding: 0 14px;
+  background: var(--field);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  font-size: 14px;
+  cursor: pointer;
+}
+.field .chev { width: 13px; height: 13px; stroke: var(--muted); fill: none; stroke-width: 1.8; stroke-linecap: round; }
+
+.chev {
+  width: 13px; height: 13px; flex: none;
+  stroke: var(--muted); fill: none; stroke-width: 1.8; stroke-linecap: round;
+}
+
+.item {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 12px; border-radius: 8px;
+  font-size: 14px; color: var(--dim); cursor: pointer;
+}
+.item:hover { background: rgba(255, 255, 255, 0.05); color: var(--text); }
+.item.sel { color: var(--text); }
+.item .check { width: 13px; height: 13px; stroke: var(--accent); fill: none; stroke-width: 2.2; stroke-linecap: round; }
+
+/* ---------- A. Attached sheet ---------- */
+.a .combo { width: 100%; }
+.a .field { border-radius: 12px 12px 0 0; border-bottom-color: transparent; background: var(--field); }
+.a .field.open { border-color: var(--accent); border-bottom-color: transparent; }
+.a .panel {
+  border: 1px solid var(--border);
+  border-top: 1px solid var(--border);
+  border-radius: 0 0 12px 12px;
+  background: var(--field);
+  padding: 6px;
+  margin-top: -1px;
+}
+.a .panel .item:first-child { margin-top: 2px; }
+
+/* ---------- B. Floating card ---------- */
+.b .combo { width: 100%; }
+.b .field.open { border-color: var(--accent); }
+.b .panel {
+  margin-top: 4px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--field);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07);
+  padding: 6px;
+}
+
+/* ---------- C. Overlay command ---------- */
+.c .combo { position: relative; width: 100%; height: 40px; }
+.c .field.open { opacity: 0; }
+.c .panel {
+  position: absolute; top: 0; left: 0; right: 0;
+  border: 1px solid var(--accent);
+  border-radius: 12px;
+  background: var(--field);
+  padding: 6px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07);
+}
+.c .panel-head {
+  display: flex; align-items: center; gap: 10px;
+  height: 36px; padding: 0 8px 0 10px;
+  border-bottom: 1px solid var(--border);
+  margin: 0 0 6px;
+  font-size: 14px;
+}
+.c .panel-head .chev { margin-left: auto; }
+.c .panel-head .picked { color: var(--text); }
+.c .panel-head .hint { color: var(--muted); font-size: 12px; }
+</style>
+</head>
+<body>
+
+<div class="head">
+  <h1>Выпадающий список — три конструкции</h1>
+  <p>Сейчас панель висит отдельно от поля и читается как чужой элемент. Ниже — варианты, где поле и список образуют одно целое. Ширина как у колонки настроек.</p>
+</div>
+
+<div class="grid">
+
+  <div class="variant a">
+    <div class="vhead"><span class="id">A</span><span class="name">Attached sheet</span><span class="note">— список прирастает к полю, общая рамка, нижние углы скругляются</span></div>
+    <div class="combo">
+      <div class="field open">Автоопределение <svg class="chev" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></div>
+      <div class="panel">
+        <div class="item sel">Автоопределение <svg class="check" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+        <div class="item">English</div>
+        <div class="item">Deutsch</div>
+        <div class="item">Español</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="variant b">
+    <div class="vhead"><span class="id">B</span><span class="name">Floating card</span><span class="note">— отдельная карточка, но на 4 px и в том же материале, что поле</span></div>
+    <div class="combo">
+      <div class="field open">Автоопределение <svg class="chev" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></div>
+      <div class="panel">
+        <div class="item sel">Автоопределение <svg class="check" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+        <div class="item">English</div>
+        <div class="item">Deutsch</div>
+        <div class="item">Español</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="variant c">
+    <div class="vhead"><span class="id">C</span><span class="name">Overlay command</span><span class="note">— список раскрывается поверх поля, текущее значение становится его шапкой</span></div>
+    <div class="combo">
+      <div class="field open">Автоопределение <svg class="chev" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></div>
+      <div class="panel">
+        <div class="panel-head"><span class="picked">Автоопределение</span><span class="hint">выбрано</span><svg class="chev" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></div>
+        <div class="item">English</div>
+        <div class="item">Deutsch</div>
+        <div class="item">Español</div>
+        <div class="item">Français</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

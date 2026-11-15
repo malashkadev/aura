@@ -1,4 +1,13 @@
 // Aura Minimalist Desktop Tray Menu Controller
+import { getIcon, iconBody } from "./icon-system-api.js";
+import { hydrateAppIcons } from "./icon-system-integration.js";
+
+try {
+  hydrateAppIcons();
+} catch (err) {
+  console.error("Icon hydration failed", err);
+}
+
 const { invoke } = window.__TAURI__.core;
 const { listen } = window.__TAURI__.event;
 
@@ -164,8 +173,8 @@ const SUPPORTED_LANGS = [
   { code: "nl", name: "Nederlands", badge: "NL" }
 ];
 
-const CLOUD_ICON_SVG = '<path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/>';
-const LOCAL_ICON_SVG = '<rect width="20" height="14" x="2" y="3" rx="2"/><line x1="8" x2="16" y1="21" y2="21"/><line x1="12" x2="12" y1="17" y2="21"/>';
+const CLOUD_ICON_SVG = iconBody("cloud");
+const LOCAL_ICON_SVG = iconBody("device");
 
 let currentSettings = null;
 
@@ -217,10 +226,21 @@ function updateLanguageBadge(code) {
   const t = I18N[lang] || I18N.ru;
 
   if (code === "auto") {
-    badge.textContent = t.badge_auto || "AUTO";
+    const label = t.opt_auto || t.badge_auto || "Auto";
+    badge.classList.add("is-icon");
+    badge.setAttribute("aria-label", label);
+    badge.setAttribute("title", label);
+    badge.innerHTML = getIcon("globe", { size: 14 });
   } else if (code === "layout") {
-    badge.textContent = t.badge_layout || "КЛАВ";
+    const label = t.opt_layout || t.badge_layout || "Layout";
+    badge.classList.add("is-icon");
+    badge.setAttribute("aria-label", label);
+    badge.setAttribute("title", label);
+    badge.innerHTML = getIcon("keyboard", { size: 14 });
   } else {
+    badge.classList.remove("is-icon");
+    badge.removeAttribute("aria-label");
+    badge.removeAttribute("title");
     const found = SUPPORTED_LANGS.find(l => l.code === code);
     badge.textContent = found ? found.badge : (code ? code.toUpperCase() : "RU");
   }
@@ -247,12 +267,20 @@ function renderLanguageList() {
     itemEl.setAttribute("tabindex", "0");
 
     const labelText = langItem.isSpecial ? (t[langItem.isSpecial] || langItem.name) : langItem.name;
+    let codeBadge = "";
+    if (langItem.code === "auto") {
+      codeBadge = `<span class="lang-code lang-code-icon" aria-hidden="true">${getIcon("globe", { size: 14 })}</span>`;
+    } else if (langItem.code === "layout") {
+      codeBadge = `<span class="lang-code lang-code-icon" aria-hidden="true">${getIcon("keyboard", { size: 14 })}</span>`;
+    } else {
+      const langCode = langItem.isSpecial ? "" : String(langItem.code || "").toUpperCase();
+      codeBadge = `<span class="lang-code" aria-hidden="true">${langCode}</span>`;
+    }
 
     itemEl.innerHTML = `
+      ${codeBadge}
       <span class="menu-text">${labelText}</span>
-      <svg class="check-mark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-        <polyline points="20 6 9 17 4 12"/>
-      </svg>
+      ${getIcon("check", { size: 13, className: "check-mark" })}
     `;
 
     itemEl.addEventListener("click", async (e) => {

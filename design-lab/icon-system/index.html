@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="dark" data-view="glyph">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Aura — Icon System / Monochrome</title>
+  <link rel="stylesheet" href="demo.css" />
+</head>
+<body>
+  <div class="page">
+
+    <header class="hero">
+      <div class="eyebrow">Aura · Desktop Icon System</div>
+      <h1>Один штрих.<br />Один цвет.</h1>
+      <p class="lede">
+        Монохромный набор для рабочего интерфейса Aura. Простые силуэты, единая
+        сетка и один вес линии. Исключение — официальные знаки облачных
+        провайдеров: они остаются в оригинальных цветах, чтобы бренд узнавался.
+      </p>
+      <div class="meta-row">
+        <span class="meta-chip">65 глифов</span>
+        <span class="meta-chip">Сетка 24 × 24</span>
+        <span class="meta-chip">Штрих 2 px</span>
+        <span class="meta-chip">currentColor + бренды</span>
+      </div>
+    </header>
+
+    <section class="principles" aria-label="Принципы набора">
+      <article class="principle">
+        <div class="principle-visual">
+          <span class="grid-demo"></span>
+        </div>
+        <h2>Сетка 24</h2>
+        <p>Ключевые линии 18 и 20 px, поля 3 px. Одинаковая оптическая плотность на всех глифах.</p>
+      </article>
+      <article class="principle">
+        <div class="principle-visual">
+          <span class="stroke-demo"></span>
+        </div>
+        <h2>Один вес</h2>
+        <p>Штрих 2 px, круглые концы и стыки. Никаких тонких деталей, которые исчезают на 16 px.</p>
+      </article>
+      <article class="principle">
+        <div class="principle-visual icon-pair">
+          <span data-icon="mic" data-size="28"></span>
+          <span data-icon="mic" data-size="16"></span>
+        </div>
+        <h2>Читается мелко</h2>
+        <p>Силуэт узнаётся на 16 px в карточке модели и на 24 px в пустом состоянии.</p>
+      </article>
+      <article class="principle">
+        <div class="principle-visual icon-pair">
+          <span data-icon="chip" data-size="26"></span>
+          <span class="swatch swatch-orange"></span>
+          <span class="swatch swatch-gray"></span>
+        </div>
+        <h2>Почти без цвета</h2>
+        <p>Иконка наследует цвет текста. Оранжевый остаётся у активного пункта и статуса;
+          исключение — оригинальные знаки облачных провайдеров.</p>
+      </article>
+    </section>
+
+    <div class="toolbar" role="group" aria-label="Настройки просмотра">
+      <div class="tool-group">
+        <span class="tool-label">Размер</span>
+        <div class="segmented" data-control="size">
+          <button type="button" data-size-btn="16">16</button>
+          <button type="button" data-size-btn="20" class="active">20</button>
+          <button type="button" data-size-btn="24">24</button>
+          <button type="button" data-size-btn="32">32</button>
+        </div>
+      </div>
+      <div class="tool-group">
+        <span class="tool-label">Подача</span>
+        <div class="segmented" data-control="view">
+          <button type="button" data-view-btn="glyph" class="active">Глиф</button>
+          <button type="button" data-view-btn="chip">Плашка</button>
+        </div>
+      </div>
+      <div class="tool-group">
+        <span class="tool-label">Фон</span>
+        <div class="segmented" data-control="theme">
+          <button type="button" data-theme-btn="dark" class="active">Тёмный</button>
+          <button type="button" data-theme-btn="light">Светлый</button>
+        </div>
+      </div>
+      <div class="tool-spacer"></div>
+      <div class="tool-hint" id="visible-count">57 / 57</div>
+    </div>
+
+    <section class="block" id="surfaces">
+      <div class="block-head">
+        <h2>В интерфейсе</h2>
+        <p>Реальные пропорции Aura: 18 px в навигации, 16 px в списках, 15 px в трее.</p>
+      </div>
+
+      <!-- Window shell -->
+      <article class="panel panel-wide">
+        <div class="panel-caption">Окно настроек · навигация, движок и строки-аккордеоны</div>
+        <div class="window">
+          <div class="window-bar">
+            <span class="window-mark"></span>
+            <span class="window-title">AURA</span>
+            <span class="window-actions">
+              <span class="win-btn" data-icon="minimize" data-size="14"></span>
+              <span class="win-btn" data-icon="close" data-size="14"></span>
+            </span>
+          </div>
+          <div class="window-body">
+            <aside class="app-nav">
+              <div class="app-nav-title">Настройки</div>
+              <div class="app-nav-item active"><span data-icon="nav-general" data-size="18"></span><span>Основные</span></div>
+              <div class="app-nav-item"><span data-icon="nav-speech" data-size="18"></span><span>Голос</span></div>
+              <div class="app-nav-item"><span data-icon="nav-text" data-size="18"></span><span>Текст</span></div>
+              <div class="app-nav-item"><span data-icon="nav-hotkeys" data-size="18"></span><span>Управление</span></div>
+              <div class="app-nav-item"><span data-icon="nav-history" data-size="18"></span><span>История</span></div>
+              <div class="app-nav-item"><span data-icon="nav-about" data-size="18"></span><span>О программе</span></div>
+            </aside>
+            <div class="app-content">
+              <div class="app-card">
+                <div class="app-card-title">Распознавание</div>
+                <div class="engine-track">
+                  <div class="engine-seg"><span data-icon="engine-cloud" data-size="18"></span><span>В облаке</span></div>
+                  <div class="engine-seg selected"><span data-icon="engine-local" data-size="18"></span><span>Локально</span></div>
+                </div>
+                <div class="engine-caption">Полная приватность, работает автономно на ПК</div>
+              </div>
+              <div class="app-accordion">
+                <span class="row-icon-chip"><span data-icon="section-local-model" data-size="17"></span></span>
+                <span class="acc-text"><b>Локальная модель</b><small>Движок, ускорение и размер модели</small></span>
+                <span class="acc-spec">Whisper Base · CPU</span>
+                <span class="chev" data-icon="chevron-down" data-size="16"></span>
+              </div>
+              <div class="app-accordion">
+                <span class="row-icon-chip"><span data-icon="section-performance" data-size="17"></span></span>
+                <span class="acc-text"><b>Производительность</b><small>Освобождение VRAM и игровой режим</small></span>
+                <span class="acc-spec">30 мин · выкл</span>
+                <span class="chev" data-icon="chevron-down" data-size="16"></span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <div class="surface-grid">
+        <!-- Accordions -->
+        <article class="panel">
+          <div class="panel-caption">Строки-аккордеоны</div>
+          <div class="stack">
+            <div class="acc-row"><span class="row-icon-chip"><span data-icon="section-local-model" data-size="17"></span></span><span class="acc-text"><b>Локальная модель</b><small>Движок и веса</small></span><span class="chev" data-icon="chevron-down" data-size="15"></span></div>
+            <div class="acc-row"><span class="row-icon-chip"><span data-icon="section-performance" data-size="17"></span></span><span class="acc-text"><b>Производительность</b><small>VRAM и игровой режим</small></span><span class="chev" data-icon="chevron-down" data-size="15"></span></div>
+            <div class="acc-row"><span class="row-icon-chip"><span data-icon="section-commands" data-size="17"></span></span><span class="acc-text"><b>Голосовые команды</b><small>Справка и примеры</small></span><span class="chev" data-icon="chevron-down" data-size="15"></span></div>
+            <div class="acc-row"><span class="row-icon-chip"><span data-icon="section-edit-engine" data-size="17"></span></span><span class="acc-text"><b>Движок редактирования</b><small>Модель для правок текста</small></span><span class="chev" data-icon="chevron-down" data-size="15"></span></div>
+          </div>
+        </article>
+
+        <!-- Models -->
+        <article class="panel">
+          <div class="panel-caption">Карточки моделей</div>
+          <div class="stack">
+            <div class="model-row"><span class="model-ico" data-icon="model-tiny" data-size="16"></span><span class="model-name">Tiny</span><span class="model-meta">75 МБ</span><span class="model-state" data-icon="download" data-size="14"></span></div>
+            <div class="model-row selected"><span class="model-ico" data-icon="model-base" data-size="16"></span><span class="model-name">Base</span><span class="model-badge">рекомендуем</span><span class="model-meta">145 МБ</span><span class="model-state ok" data-icon="check" data-size="14"></span></div>
+            <div class="model-row"><span class="model-ico" data-icon="model-small" data-size="16"></span><span class="model-name">Small</span><span class="model-meta">465 МБ</span><span class="model-state" data-icon="download" data-size="14"></span></div>
+            <div class="model-row"><span class="model-ico" data-icon="model-medium" data-size="16"></span><span class="model-name">Medium</span><span class="model-meta">1.5 ГБ</span><span class="model-state" data-icon="download" data-size="14"></span></div>
+            <div class="model-row"><span class="model-ico" data-icon="model-large" data-size="16"></span><span class="model-name">Large v3</span><span class="model-meta">3.1 ГБ</span><span class="model-state" data-icon="download" data-size="14"></span></div>
+            <div class="model-row"><span class="model-ico" data-icon="model-turbo" data-size="16"></span><span class="model-name">Large v3 Turbo</span><span class="model-meta">550 МБ</span><span class="model-state" data-icon="download" data-size="14"></span></div>
+            <div class="model-row"><span class="model-ico" data-icon="model-qwen" data-size="16"></span><span class="model-name">Qwen3 1.7B</span><span class="model-meta">1.2 ГБ</span><span class="model-state" data-icon="trash" data-size="14"></span></div>
+          </div>
+        </article>
+
+        <!-- History -->
+        <article class="panel">
+          <div class="panel-caption">История · поиск и фильтры</div>
+          <div class="history-mock">
+            <div class="search-mock"><span data-icon="search" data-size="15"></span><span class="search-placeholder">Поиск по истории…</span></div>
+            <div class="pills">
+              <span class="pill active"><span data-icon="filter-all" data-size="13"></span>Все</span>
+              <span class="pill"><span data-icon="filter-cloud" data-size="13"></span>Облако</span>
+              <span class="pill"><span data-icon="filter-local" data-size="13"></span>Локально</span>
+            </div>
+            <div class="history-item">
+              <div class="history-text">Aura мгновенно расшифрует речь и напечатает текст прямо под курсором.</div>
+              <div class="history-tools"><span data-icon="copy" data-size="15"></span><span data-icon="trash" data-size="15"></span></div>
+            </div>
+            <div class="history-item">
+              <div class="history-text">Локальные модели работают полностью офлайн, без сети и телеметрии.</div>
+              <div class="history-tools"><span data-icon="copy" data-size="15"></span><span data-icon="trash" data-size="15"></span></div>
+            </div>
+          </div>
+        </article>
+
+        <!-- Tray -->
+        <article class="panel panel-dark">
+          <div class="panel-caption">Трей-меню</div>
+          <div class="tray-mock">
+            <div class="tray-row"><span class="tray-ico" data-icon="tray-settings" data-size="15"></span><span class="tray-text">Открыть настройки</span></div>
+            <div class="tray-sep"></div>
+            <div class="tray-row"><span class="tray-ico" data-icon="tray-recognition" data-size="15"></span><span class="tray-text">Способ распознавания</span><span class="tray-status" data-icon="cloud" data-size="13"></span><span class="tray-chev" data-icon="chevron-right" data-size="13"></span></div>
+            <div class="tray-row"><span class="tray-ico" data-icon="tray-language" data-size="15"></span><span class="tray-text">Язык распознавания</span><span class="tray-badge">RU</span><span class="tray-chev" data-icon="chevron-right" data-size="13"></span></div>
+            <div class="tray-row"><span class="tray-ico" data-icon="tray-gaming" data-size="15"></span><span class="tray-text">Игровой режим</span><span class="tray-toggle"><span></span></span></div>
+            <div class="tray-sep"></div>
+            <div class="tray-row"><span class="tray-ico" data-icon="tray-power" data-size="15"></span><span class="tray-text">Выход</span></div>
+          </div>
+        </article>
+
+        <!-- About -->
+        <article class="panel">
+          <div class="panel-caption">О программе · действия</div>
+          <div class="stack">
+            <div class="about-row"><span class="about-tile"><span data-icon="action-play" data-size="18"></span></span><span class="about-text"><b>Вводный экскурс</b><small>Интерактивный тур по функциям</small></span><span class="chev" data-icon="chevron-right" data-size="15"></span></div>
+            <div class="about-row"><span class="about-tile"><span data-icon="external" data-size="18"></span></span><span class="about-text"><b>Что нового</b><small>Список изменений и релизы</small></span><span class="chev" data-icon="chevron-right" data-size="15"></span></div>
+            <div class="about-row"><span class="about-tile"><span data-icon="action-alert" data-size="18"></span></span><span class="about-text"><b>Сообщить об ошибке</b><small>Написать разработчикам на GitHub</small></span><span class="chev" data-icon="chevron-right" data-size="15"></span></div>
+            <div class="about-row"><span class="about-tile"><span data-icon="action-star" data-size="18"></span></span><span class="about-text"><b>Поставить звезду</b><small>Поддержать проект на GitHub</small></span><span class="chev" data-icon="chevron-right" data-size="15"></span></div>
+          </div>
+          <div class="note-inline">Звезда в приложении остаётся жёлтой — это существующее исключение, не часть набора.</div>
+        </article>
+
+        <!-- Buttons -->
+        <article class="panel">
+          <div class="panel-caption">Кнопки и действия</div>
+          <div class="btn-row">
+            <span class="btn btn-primary"><span data-icon="download" data-size="14"></span>Скачать</span>
+            <span class="btn"><span data-icon="upload" data-size="14"></span>Импорт</span>
+            <span class="btn"><span data-icon="reset" data-size="14"></span>Сбросить</span>
+          </div>
+          <div class="btn-row">
+            <span class="icon-btn" data-icon="copy" data-size="16"></span>
+            <span class="icon-btn" data-icon="check" data-size="16"></span>
+            <span class="icon-btn" data-icon="trash" data-size="16"></span>
+            <span class="icon-btn" data-icon="eye" data-size="16"></span>
+            <span class="icon-btn" data-icon="eye-off" data-size="16"></span>
+            <span class="icon-btn" data-icon="plus" data-size="16"></span>
+            <span class="icon-btn" data-icon="search" data-size="16"></span>
+            <span class="icon-btn" data-icon="sparkles" data-size="16"></span>
+          </div>
+          <div class="icon-strip">
+            <span data-icon="key" data-size="18"></span>
+            <span data-icon="terminal" data-size="18"></span>
+            <span data-icon="database" data-size="18"></span>
+            <span data-icon="volume" data-size="18"></span>
+            <span data-icon="globe" data-size="18"></span>
+            <span data-icon="gamepad" data-size="18"></span>
+            <span data-icon="power" data-size="18"></span>
+            <span data-icon="arrow-right" data-size="18"></span>
+          </div>
+        </article>
+
+        <!-- Engines -->
+        <article class="panel panel-wide" id="engine-panel">
+          <div class="panel-caption">Ускорение и движки</div>
+          <div class="engine-grid">
+            <div class="engine-tile"><span data-icon="cpu" data-size="22"></span><span>CPU</span></div>
+            <div class="engine-tile"><span data-icon="cuda" data-size="22"></span><span>NVIDIA CUDA</span></div>
+            <div class="engine-tile"><span data-icon="engine-whisper" data-size="22"></span><span>Whisper.cpp</span></div>
+            <div class="engine-tile"><span data-icon="engine-parakeet" data-size="22"></span><span>Parakeet</span></div>
+          </div>
+        </article>
+
+        <!-- Providers -->
+        <article class="panel panel-wide" id="provider-panel">
+          <div class="panel-caption">Облачные провайдеры · оригинальные цвета</div>
+          <div class="engine-grid">
+            <div class="engine-tile"><span data-icon="provider-gemini" data-size="26"></span><span>Gemini</span></div>
+            <div class="engine-tile"><span data-icon="provider-groq" data-size="26"></span><span>Groq</span></div>
+            <div class="engine-tile"><span data-icon="provider-openai" data-size="26"></span><span>OpenAI</span></div>
+            <div class="engine-tile"><span data-icon="provider-huggingface" data-size="26"></span><span>Hugging Face</span></div>
+          </div>
+        </article>
+
+        <!-- Volume states -->
+        <article class="panel panel-wide" id="volume-panel">
+          <div class="panel-caption">Громкость · четыре состояния</div>
+          <div class="volume-demo">
+            <div class="volume-stage" id="volume-stage" data-level="2">
+              <span class="volume-state" data-vol="0" data-icon="volume-0" data-size="30"></span>
+              <span class="volume-state" data-vol="1" data-icon="volume-1" data-size="30"></span>
+              <span class="volume-state" data-vol="2" data-icon="volume-2" data-size="30"></span>
+              <span class="volume-state" data-vol="3" data-icon="volume-3" data-size="30"></span>
+            </div>
+            <div class="volume-control">
+              <input type="range" id="volume-range" class="volume-range" min="0" max="100" value="62" aria-label="Громкость" />
+              <div class="volume-labels"><span>Выкл</span><span>Тихо</span><span>Средне</span><span>Громко</span></div>
+            </div>
+            <p class="volume-note">Иконка переключается по порогам 0 / 1–33 / 34–66 / 67–100. Переход — crossfade, без скачка.</p>
+          </div>
+        </article>
+
+        <!-- Sound -->
+        <article class="panel panel-wide">
+          <div class="panel-caption">Звуковые темы · выбор</div>
+          <div class="sound-grid">
+            <div class="sound-row"><span class="sound-ico" data-icon="sound-zen" data-size="16"></span><span>Zen</span><span class="sound-check" data-icon="check" data-size="14"></span></div>
+            <div class="sound-row"><span class="sound-ico" data-icon="sound-rhodes" data-size="16"></span><span>Rhodes</span></div>
+            <div class="sound-row"><span class="sound-ico" data-icon="sound-scifi" data-size="16"></span><span>Sci-Fi</span></div>
+            <div class="sound-row"><span class="sound-ico" data-icon="sound-classic" data-size="16"></span><span>Classic Bell</span></div>
+            <div class="sound-row"><span class="sound-ico" data-icon="sound-water" data-size="16"></span><span>Water Drop</span></div>
+            <div class="sound-row"><span class="sound-ico" data-icon="sound-haptic" data-size="16"></span><span>Haptic</span></div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="block" id="set">
+      <div class="block-head">
+        <h2>Полный набор</h2>
+        <p>65 канонических глифов. Алиасы поверхностей — отдельно, в коде.</p>
+      </div>
+      <div class="cat-filter" id="cat-filter" role="group" aria-label="Категории"></div>
+      <div id="glyph-grid"></div>
+    </section>
+
+    <section class="block" id="before-after">
+      <div class="block-head">
+        <h2>Было → стало</h2>
+        <p>Только навигация. В приложении сейчас — стоковые Lucide.</p>
+      </div>
+      <div class="compare-grid" id="compare-grid"></div>
+    </section>
+
+    <section class="block" id="rules">
+      <div class="block-head">
+        <h2>Правила, по которым это собрано</h2>
+      </div>
+      <div class="rules-grid">
+        <div class="rule"><span class="rule-num">01</span><p><b>24-сетка, 18-ключ.</b> Все основные формы вписаны в квадрат 18 × 18 с полями 3 px. Круглые формы — радиус 9.</p></div>
+        <div class="rule"><span class="rule-num">02</span><p><b>Штрих 2 px.</b> Один вес для навигации, списков и трея. На 16 px это 1.3 физических пикселя, на 24 px — 2.</p></div>
+        <div class="rule"><span class="rule-num">03</span><p><b>Не больше двух деталей.</b> Внутри контура — максимум две короткие линии. Всё, что мельче, убирается.</p></div>
+        <div class="rule"><span class="rule-num">04</span><p><b>Заливка только смысловая.</b> Точки, треугольник Play и шкала моделей — единственные заливки. Градиентов нет.</p></div>
+        <div class="rule"><span class="rule-num">05</span><p><b>Цвет — не часть иконки.</b> Глиф всегда рисуется в currentColor. Оранжевый назначается контейнером, а не путём.</p></div>
+        <div class="rule"><span class="rule-num">06</span><p><b>Бренды — только официальные.</b> Провайдеры используют настоящие знаки в оригинальных цветах; языки остаются текстом. Остальные иконки — `currentColor`.</p></div>
+      </div>
+    </section>
+
+    <footer class="foot">
+      <span>Aura · Icon System · 2026-11-07</span>
+      <span>Демонстрация. В приложение не встроено.</span>
+    </footer>
+  </div>
+
+  <script src="icons.js"></script>
+  <script src="demo.js"></script>
+</body>
+</html>

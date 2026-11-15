@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <title>Aura Icon System — Inspection</title>
+  <style>
+    @font-face {
+      font-family: "Onest";
+      font-style: normal;
+      font-weight: 100 900;
+      font-display: swap;
+      src: url("../../src/assets/fonts/onest-cyrillic.woff2") format("woff2");
+      unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+    }
+    @font-face {
+      font-family: "Onest";
+      font-style: normal;
+      font-weight: 100 900;
+      font-display: swap;
+      src: url("../../src/assets/fonts/onest-latin.woff2") format("woff2");
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 28px;
+      background: #0b0b0b;
+      color: #f5f7fa;
+      font-family: "Onest", system-ui, sans-serif;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: 10px;
+    }
+    .cell {
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 12px;
+      padding: 16px 10px 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      background: #101010;
+    }
+    .big { color: #e8edf4; height: 72px; display: flex; align-items: center; }
+    .sizes { display: flex; align-items: flex-end; gap: 10px; color: #9ba6b3; height: 30px; }
+    .name { font-size: 10px; color: #737f91; letter-spacing: .02em; }
+    .title { font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: #737f91; margin: 0 0 14px; }
+  </style>
+</head>
+<body>
+  <div class="title">Inspection · 64 / 24 / 20 / 16 px</div>
+  <div class="grid" id="grid"></div>
+  <script src="icons.js"></script>
+  <script>
+    var host = document.getElementById("grid");
+    function render(name, size) {
+      if (name.indexOf("provider-") === 0 && window.AuraIcons.brandSvg) {
+        return window.AuraIcons.brandSvg(name, { size: size });
+      }
+      return window.AuraIcons.svg(name, { size: size });
+    }
+    window.AuraIcons.names.forEach(function (name) {
+      var cell = document.createElement("div");
+      cell.className = "cell";
+      cell.innerHTML =
+        '<div class="big">' + render(name, 64) + "</div>" +
+        '<div class="sizes">' +
+        render(name, 24) +
+        render(name, 20) +
+        render(name, 16) +
+        "</div>" +
+        '<div class="name">' + name + "</div>";
+      host.appendChild(cell);
+    });
+  </script>
+</body>
+</html>

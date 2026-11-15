@@ -6,8 +6,9 @@
   <meta name="description" content="Настройка параметров голосового ввода Aura" />
   <title>Aura</title>
 
-  <link rel="stylesheet" href="style.css?v=2.0.20" />
-  <script type="module" src="main.js?v=2.0.20" defer></script>
+  <link rel="stylesheet" href="style.css?v=2.0.25" />
+  <script src="icon-system.js?v=2.0.25"></script>
+  <script type="module" src="main.js?v=2.0.25" defer></script>
 </head>
 <body>
   <div class="glass-container">
@@ -24,11 +25,11 @@
 
       <div class="header-right">
         <div class="window-controls">
-          <button type="button" class="window-control-btn" id="btn-window-minimize" title="Свернуть">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="control-icon"><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+          <button type="button" class="window-control-btn" id="btn-window-minimize" title="Свернуть" aria-label="Свернуть">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="control-icon" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"></line></svg>
           </button>
-          <button type="button" class="window-control-btn btn-close" id="btn-window-close" title="Закрыть">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="control-icon"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          <button type="button" class="window-control-btn btn-close" id="btn-window-close" title="Закрыть" aria-label="Закрыть">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="control-icon" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg>
           </button>
         </div>
       </div>
@@ -37,29 +38,30 @@
     <div class="main-layout">
       <!-- Навигационная панель -->
       <nav class="settings-nav" role="tablist" aria-label="Категории настроек">
+        <div class="nav-indicator" id="nav-indicator" aria-hidden="true"></div>
         <div class="nav-title" data-i18n="title_settings">Настройки</div>
         <button type="button" class="nav-tab active" id="tab-btn-general" data-tab="general" role="tab" aria-selected="true" aria-controls="panel-general">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="nav-icon"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="nav-icon" aria-hidden="true"><circle cx="12" cy="12" r="3"></circle><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.64 5.64l2.12 2.12M16.24 16.24l2.12 2.12M5.64 18.36l2.12-2.12M16.24 7.76l2.12-2.12"></path><circle cx="12" cy="12" r="6" stroke-dasharray="1.5 3"></circle></svg>
           <span data-i18n="tab_general">Основные</span>
         </button>
         <button type="button" class="nav-tab" id="tab-btn-speech" data-tab="speech" role="tab" aria-selected="false" aria-controls="panel-speech">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="nav-icon"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="nav-icon" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M6 10v1a6 6 0 0012 0v-1M12 17v4M9 21h6"></path><line x1="12" y1="6" x2="12" y2="8"></line></svg>
           <span data-i18n="tab_speech">Голос</span>
         </button>
         <button type="button" class="nav-tab" id="tab-btn-text" data-tab="text" role="tab" aria-selected="false" aria-controls="panel-text">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="nav-icon"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="nav-icon" aria-hidden="true"><path d="M5 3h10l4 4v14H5z"></path><path d="M15 3v4h4"></path><path d="M9 11h6M9 15h4"></path></svg>
           <span data-i18n="tab_text">Текст</span>
         </button>
         <button type="button" class="nav-tab" id="tab-btn-hotkeys" data-tab="hotkeys" role="tab" aria-selected="false" aria-controls="panel-hotkeys">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="nav-icon"><rect x="2" y="4" width="20" height="16" rx="2" ry="2"></rect><line x1="6" y1="8" x2="6" y2="8"></line><line x1="10" y1="8" x2="10" y2="8"></line><line x1="14" y1="8" x2="14" y2="8"></line><line x1="18" y1="8" x2="18" y2="8"></line><line x1="6" y1="12" x2="6" y2="12"></line><line x1="18" y1="12" x2="18" y2="12"></line><line x1="7" y1="16" x2="17" y2="16"></line></svg>
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="nav-icon" aria-hidden="true"><rect x="3" y="6" width="18" height="12" rx="3"></rect><circle cx="7" cy="10" r="0.75" fill="currentColor"></circle><circle cx="12" cy="10" r="0.75" fill="currentColor"></circle><circle cx="17" cy="10" r="0.75" fill="currentColor"></circle><path d="M7 14h10"></path></svg>
           <span data-i18n="tab_hotkeys">Управление</span>
         </button>
         <button type="button" class="nav-tab" id="tab-btn-history" data-tab="history" role="tab" aria-selected="false" aria-controls="panel-history">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="nav-icon"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="nav-icon" aria-hidden="true"><path d="M3 12a9 9 0 109-9 9.75 9.75 0 00-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path><path d="M12 7v5l3 3"></path></svg>
           <span data-i18n="tab_history">История</span>
         </button>
         <button type="button" class="nav-tab" id="tab-btn-about" data-tab="about" role="tab" aria-selected="false" aria-controls="panel-about">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="nav-icon"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="nav-icon" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><circle cx="12" cy="8" r="0.75" fill="currentColor"></circle><path d="M12 11v5M11 11h1"></path></svg>
           <span data-i18n="tab_about">О программе</span>
           <span id="update-dot" class="nav-update-dot" style="display: none;"></span>
         </button>
@@ -83,7 +85,7 @@
             <p class="field-hint" data-i18n="first_run_hint">Модель скачивается один раз и работает без интернета.</p>
           </div>
 
-          <div class="card">
+          <div class="card" id="card-autostart">
             <h2 class="card-title" data-i18n="general_autostart_title">Автозапуск Aura</h2>
             <p class="card-desc" data-i18n="general_autostart_desc">Запускать приложение автоматически при входе в операционную систему Windows.</p>
             <label class="toggle-switch">
@@ -95,11 +97,11 @@
             </label>
           </div>
 
-          <div class="card">
+          <div class="card" id="card-ui-language">
             <h2 class="card-title" data-i18n="general_ui_lang_title">Язык интерфейса</h2>
             <p class="card-desc" data-i18n="general_ui_lang_desc">Выберите язык для отображения настроек и уведомлений приложения.</p>
             <div class="form-group">
-              <label for="select-ui-lang" class="field-label" data-i18n="general_ui_lang_title">Язык интерфейса</label>
+              <label for="select-ui-lang" class="field-label sr-only" data-i18n="general_ui_lang_title">Язык интерфейса</label>
               <div class="select-wrap">
                 <select id="select-ui-lang" class="custom-select" aria-haspopup="listbox" aria-expanded="false">
                   <option value="ru">Русский</option>
@@ -120,45 +122,63 @@
 
         <!-- 2. SPEECH PANEL -->
         <section class="tab-panel" id="panel-speech" role="tabpanel" tabindex="0" aria-labelledby="tab-btn-speech" style="display: none;">
-          <div class="card" id="card-mic-meter">
-            <div class="mic-meter-header">
-              <div class="mic-meter-title-wrap">
+          <div class="card card-mic-row" id="card-mic-meter">
+            <div class="mic-card-row">
+              <div class="mic-card-main">
                 <h2 class="card-title" data-i18n="mic_meter_title">Микрофон</h2>
+                <p class="card-desc" data-i18n="mic_meter_desc">Устройство ввода и проверка сигнала</p>
               </div>
-              <button type="button" class="btn btn-secondary btn-mic-test" id="btn-toggle-mic-meter" data-i18n="mic_meter_test_btn_start">Проверить</button>
-            </div>
-            <div class="form-group" style="margin-top: 12px; margin-bottom: 0;">
-              <label for="select-audio-device" class="field-label sr-only" data-i18n="audio_device_label">Микрофон (устройство ввода)</label>
-              <div class="select-wrap">
-                <select id="select-audio-device" class="custom-select" aria-haspopup="listbox" aria-expanded="false">
-                  <option value="default" data-i18n="audio_device_default">По умолчанию (системное)</option>
-                </select>
-                <div class="select-panel" id="panel-select-audio-device" role="listbox"></div>
+              <div class="mic-card-controls">
+                <div class="form-group mic-device-group">
+                  <label for="select-audio-device" class="field-label sr-only" data-i18n="audio_device_label">Микрофон (устройство ввода)</label>
+                  <div class="select-wrap">
+                    <select id="select-audio-device" class="custom-select" aria-haspopup="listbox" aria-expanded="false">
+                      <option value="default" data-i18n="audio_device_default">По умолчанию (системное)</option>
+                    </select>
+                    <div class="select-panel" id="panel-select-audio-device" role="listbox"></div>
+                  </div>
+                </div>
+                <button type="button" class="btn btn-secondary btn-mic-test" id="btn-toggle-mic-meter" data-i18n="mic_meter_test_btn_start">Проверить</button>
               </div>
             </div>
-            <div class="mic-meter-display" id="mic-meter-display" hidden>
-              <div class="mic-meter-bar-track">
-                <div class="mic-meter-bar-fill" id="mic-meter-fill"></div>
-                <div class="mic-meter-peak" id="mic-meter-peak"></div>
+            <div class="mic-meter-collapsible" id="mic-meter-collapsible">
+              <div class="mic-meter-content">
+                <div class="mic-meter-display" id="mic-meter-display">
+                  <div class="mic-meter-bar-track">
+                    <div class="mic-meter-bar-fill" id="mic-meter-fill"></div>
+                    <div class="mic-meter-peak" id="mic-meter-peak"></div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
 
-          <div class="card" id="card-engine">
-            <h2 class="card-title" data-i18n="engine_title">Распознавание</h2>
-            <div class="engine-toggle-group">
-              <label class="engine-option" id="label-cloud">
+          <div class="card card-engine-row" id="card-engine">
+            <div class="engine-card-main">
+              <h2 class="card-title" id="card-engine-title" data-i18n="engine_title">Распознавание</h2>
+              <p class="card-desc" id="engine-caption-desc" data-i18n="engine_local_desc">Полная приватность, работает автономно на ПК</p>
+            </div>
+            <div class="engine-segmented-track" id="engine-segmented-track" role="radiogroup" aria-labelledby="card-engine-title">
+              <div class="engine-indicator" id="engine-indicator" aria-hidden="true"></div>
+              <label class="engine-segment" id="label-cloud">
                 <input type="radio" name="transcription_mode" value="cloud" id="radio-cloud" />
-                <span class="engine-card">
-                  <span class="engine-name" data-i18n="engine_cloud">В облаке</span>
-                  <span class="engine-meta" data-i18n="engine_cloud_meta">Gemini, OpenAI, Groq</span>
+                <span class="engine-segment-content">
+                  <svg class="engine-segment-icon" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M18 10h-1.26A6 6 0 107.5 15.5h10.5a4 4 0 000-8z"/>
+                    <circle cx="12" cy="13" r="1.5" fill="currentColor" stroke="none"/>
+                  </svg>
+                  <span class="engine-segment-title" data-i18n="engine_cloud">В облаке</span>
                 </span>
               </label>
-              <label class="engine-option" id="label-local">
+              <label class="engine-segment" id="label-local">
                 <input type="radio" name="transcription_mode" value="local" checked id="radio-local" />
-                <span class="engine-card">
-                  <span class="engine-name" data-i18n="engine_local">Локально</span>
-                  <span class="engine-meta" data-i18n="engine_local_meta">Приватно, офлайн</span>
+                <span class="engine-segment-content">
+                  <svg class="engine-segment-icon" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <rect x="5" y="5" width="14" height="14" rx="2"/>
+                    <rect x="9" y="9" width="6" height="6"/>
+                    <path d="M9 2v3M15 2v3M9 19v3M15 19v3M2 9h3M2 15h3M19 9h3M19 15h3"/>
+                  </svg>
+                  <span class="engine-segment-title" data-i18n="engine_local">Локально</span>
                 </span>
               </label>
             </div>
@@ -218,7 +238,10 @@
             <div class="summary-block" id="card-local-model">
               <button type="button" class="summary-row" id="btn-local-model-summary" aria-expanded="false" aria-controls="local-model-body">
                 <span class="summary-left">
-                  <span class="summary-title" data-i18n="local_model_title">Локальная модель</span>
+                  <span class="summary-title-wrap">
+                    <svg class="summary-category-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><ellipse cx="12" cy="6" rx="8" ry="3"></ellipse><path d="M4 6v6c0 1.66 3.58 3 8 3s8-1.34 8-3V6"></path><path d="M4 12v6c0 1.66 3.58 3 8 3s8-1.34 8-3v-6"></path></svg>
+                    <span class="summary-title" data-i18n="local_model_title">Локальная модель</span>
+                  </span>
                   <span class="summary-hint" data-i18n="local_model_hint">Движок, ускорение и размер модели.</span>
                 </span>
                 <span class="summary-spec">
@@ -226,12 +249,13 @@
                   <span class="spec-row"><span class="spec-label" data-i18n="gpu_accel_label">Ускорение</span><span class="spec-value" id="local-accel-spec-value">CPU</span></span>
                 </span>
                 <span class="summary-action summary-action-icon">
-                  <svg class="summary-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                  <svg class="summary-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6" stroke-width="2"></path></svg>
                 </span>
               </button>
               <div class="collapsible-wrapper" id="local-model-body">
-                <div class="collapsible-content summary-body">
-                  <div class="form-group">
+                <div class="collapsible-content">
+                  <div class="summary-body">
+                    <div class="form-group">
                     <label for="select-local-engine" class="field-label" data-i18n="local_engine_label">Движок</label>
                     <div class="select-wrap">
                       <select id="select-local-engine" class="custom-select" aria-haspopup="listbox" aria-expanded="false">
@@ -248,19 +272,25 @@
                     <div class="model-cards-group" id="gpu-modes-container" role="radiogroup" aria-label="Выберите режим GPU">
                       <div class="model-card" data-gpu="cpu" role="radio" aria-checked="true" tabindex="0">
                         <div class="model-card-main">
+                          <div class="model-card-lead-icon" aria-hidden="true">
+                            <svg class="model-glyph" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="5" width="14" height="14" rx="2"></rect><rect x="9" y="9" width="6" height="6"></rect><path d="M9 2v3M15 2v3M9 19v3M15 19v3M2 9h3M2 15h3M19 9h3M19 15h3"></path></svg>
+                          </div>
                           <div class="model-card-info">
                             <span class="model-name" data-i18n="gpu_accel_cpu_title">CPU</span>
                             <span class="model-meta" data-i18n="gpu_accel_cpu_desc">Универсально</span>
                           </div>
                           <div class="model-card-action" id="action-gpu-cpu">
                             <span class="status-ready-badge" data-i18n-title="model_status_ready" title="Установлено" aria-label="Установлено">
-                              <svg class="status-ready-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                              <svg class="status-ready-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L19 7"></path></svg>
                             </span>
                           </div>
                         </div>
                       </div>
                       <div class="model-card" data-gpu="cuda" role="radio" aria-checked="false" tabindex="0">
                         <div class="model-card-main">
+                          <div class="model-card-lead-icon" aria-hidden="true">
+                            <svg class="model-glyph" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3C7.03 3 3 7.03 3 12s4.03 9 9 9c3.2 0 6.02-1.68 7.62-4.22" stroke-width="2"></path><path d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5c1.8 0 3.37-.96 4.24-2.4" stroke-width="1.5"></path><circle cx="12" cy="12" r="2" fill="#10b981" stroke="none"></circle></svg>
+                          </div>
                           <div class="model-card-info">
                             <span class="model-name" data-i18n="gpu_accel_cuda_title">NVIDIA CUDA</span>
                             <span class="model-meta" data-i18n="gpu_accel_cuda_desc">GeForce RTX/GTX</span>
@@ -280,6 +310,9 @@
                     <div class="model-cards-group" id="model-cards-container" role="radiogroup" aria-label="Выберите модель">
                       <div class="model-card" data-model="tiny" role="radio" aria-checked="false" tabindex="0">
                         <div class="model-card-main">
+                          <div class="model-card-lead-icon" aria-hidden="true">
+                            <svg class="model-glyph" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0d9488" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h2M7 9v6M11 5v14M15 7v10M19 10v4M21 12h1" stroke-width="2"></path></svg>
+                          </div>
                           <div class="model-card-info">
                             <span class="model-name">Tiny</span>
                             <span class="model-meta" data-i18n="model_meta_tiny">75 МБ</span>
@@ -293,6 +326,9 @@
                       </div>
                       <div class="model-card" data-model="base" role="radio" aria-checked="false" tabindex="0">
                         <div class="model-card-main">
+                          <div class="model-card-lead-icon" aria-hidden="true">
+                            <svg class="model-glyph" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0d9488" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h2M7 9v6M11 5v14M15 7v10M19 10v4M21 12h1" stroke-width="2"></path></svg>
+                          </div>
                           <div class="model-card-info">
                             <span class="model-name">Base</span>
                             <span class="model-meta" data-i18n="model_meta_base">145 МБ · рекомендуем</span>
@@ -306,6 +342,9 @@
                       </div>
                       <div class="model-card" data-model="small" role="radio" aria-checked="false" tabindex="0">
                         <div class="model-card-main">
+                          <div class="model-card-lead-icon" aria-hidden="true">
+                            <svg class="model-glyph" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0d9488" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h2M7 9v6M11 5v14M15 7v10M19 10v4M21 12h1" stroke-width="2"></path></svg>
+                          </div>
                           <div class="model-card-info">
                             <span class="model-name">Small</span>
                             <span class="model-meta" data-i18n="model_meta_small">465 МБ</span>
@@ -319,6 +358,9 @@
                       </div>
                       <div class="model-card" data-model="medium" role="radio" aria-checked="false" tabindex="0">
                         <div class="model-card-main">
+                          <div class="model-card-lead-icon" aria-hidden="true">
+                            <svg class="model-glyph" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0d9488" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h2M7 9v6M11 5v14M15 7v10M19 10v4M21 12h1" stroke-width="2"></path></svg>
+                          </div>
                           <div class="model-card-info">
                             <span class="model-name">Medium</span>
                             <span class="model-meta" data-i18n="model_meta_medium">1.5 ГБ</span>
@@ -332,6 +374,9 @@
                       </div>
                       <div class="model-card" data-model="large-v3-turbo-q5_0" role="radio" aria-checked="false" tabindex="0">
                         <div class="model-card-main">
+                          <div class="model-card-lead-icon" aria-hidden="true">
+                            <svg class="model-glyph" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ff4200" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="18" rx="8" ry="3"></ellipse><ellipse cx="12" cy="14" rx="8" ry="3"></ellipse><path d="M13 2L7 9h5l-2 5 7-7h-5l2-5z" fill="#ff4200" stroke="none"></path></svg>
+                          </div>
                           <div class="model-card-info">
                             <span class="model-name">Large v3 Turbo (Q5)</span>
                             <span class="model-meta" data-i18n="model_meta_turbo_q5">550 МБ</span>
@@ -345,6 +390,9 @@
                       </div>
                       <div class="model-card" data-model="large-v3-turbo" role="radio" aria-checked="false" tabindex="0">
                         <div class="model-card-main">
+                          <div class="model-card-lead-icon" aria-hidden="true">
+                            <svg class="model-glyph" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ff4200" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="18" rx="8" ry="3"></ellipse><ellipse cx="12" cy="14" rx="8" ry="3"></ellipse><path d="M13 2L7 9h5l-2 5 7-7h-5l2-5z" fill="#ff4200" stroke="none"></path></svg>
+                          </div>
                           <div class="model-card-info">
                             <span class="model-name">Large v3 Turbo</span>
                             <span class="model-meta" data-i18n="model_meta_turbo">1.6 ГБ</span>
@@ -364,6 +412,9 @@
                     <div class="model-cards-group" id="parakeet-model-cards-container" role="radiogroup" aria-label="Выберите модель Parakeet">
                       <div class="model-card" data-model="parakeet-v3" role="radio" aria-checked="false" tabindex="0">
                         <div class="model-card-main">
+                          <div class="model-card-lead-icon" aria-hidden="true">
+                            <svg class="model-glyph" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 15c4 0 7-3 9-7 2 4 5 7 9 7M12 8v11" stroke-width="2"></path><path d="M8 12c2 1 3 3 4 5M16 12c-2 1-3 3-4 5" stroke-width="1.5"></path></svg>
+                          </div>
                           <div class="model-card-info">
                             <span class="model-name">Parakeet TDT 0.6b v3 (int8)</span>
                             <span class="model-meta" data-i18n="model_meta_parakeet">670 МБ</span>
@@ -380,11 +431,15 @@
                 </div>
               </div>
             </div>
+          </div>
 
-            <div class="summary-block" id="performance-block">
+          <div class="summary-block" id="performance-block">
               <button type="button" class="summary-row" id="btn-performance-summary" aria-expanded="false" aria-controls="performance-body">
                 <span class="summary-left">
-                  <span class="summary-title" data-i18n="performance_title">Производительность</span>
+                  <span class="summary-title-wrap">
+                    <svg class="summary-category-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.93 19.07A10 10 0 1119.07 19.07"></path><path d="M12 12l4-4" stroke-width="2"></path><circle cx="12" cy="12" r="2" fill="currentColor" stroke="none"></circle></svg>
+                    <span class="summary-title" data-i18n="performance_title">Производительность</span>
+                  </span>
                   <span class="summary-hint" data-i18n="performance_hint">Освобождение VRAM и игровой режим.</span>
                 </span>
                 <span class="summary-spec">
@@ -392,12 +447,13 @@
                   <span class="spec-row"><span class="spec-label" data-i18n="gaming_title">Игровой режим</span><span class="spec-value" id="performance-gaming-spec-value">выкл.</span></span>
                 </span>
                 <span class="summary-action summary-action-icon">
-                  <svg class="summary-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                  <svg class="summary-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6" stroke-width="2"></path></svg>
                 </span>
               </button>
               <div class="collapsible-wrapper" id="performance-body">
-                <div class="collapsible-content summary-body">
-                  <div class="card-section" id="card-vram-standby">
+                <div class="collapsible-content">
+                  <div class="summary-body">
+                    <div class="card-section" id="card-vram-standby">
                     <div class="form-group">
                       <label for="select-vram-standby" class="field-label" data-i18n="standby_timeout_label">Выгружать модель через</label>
                       <div class="select-wrap">
@@ -433,12 +489,14 @@
               </div>
             </div>
           </div>
-        </section>
+        </div>
+      </section>
 
         <!-- 3. TEXT PANEL -->
         <section class="tab-panel" id="panel-text" role="tabpanel" tabindex="0" aria-labelledby="tab-btn-text" style="display: none;">
           <div class="card" id="card-language">
             <h2 class="card-title" data-i18n="lang_bias_title">Язык распознавания</h2>
+            <p class="card-desc" data-i18n="lang_bias_desc">Выберите принудительный язык ввода или включите автоопределение.</p>
             <div class="form-group">
               <label for="select-language" class="field-label sr-only" data-i18n="lang_bias_label">Выберите язык</label>
               <div class="select-wrap">
@@ -538,19 +596,23 @@
                 <div class="summary-block">
                   <button type="button" class="summary-row" id="btn-commands-summary" aria-expanded="false" aria-controls="commands-body">
                     <span class="summary-left">
-                      <span class="summary-title" data-i18n="commands_guide_label">Голосовые команды</span>
+                      <span class="summary-title-wrap">
+                        <svg class="summary-category-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a4 4 0 01-4 4H7l-4 4V7a4 4 0 014-4h10a4 4 0 014 4v8z"></path><path d="M11 9l1 2 2 1-2 1-1 2-1-2-2-1 2-1 1-2z" fill="#db2777" stroke="none"></path></svg>
+                        <span class="summary-title" data-i18n="commands_guide_label">Голосовые команды</span>
+                      </span>
                       <span class="summary-hint" data-i18n="commands_hint">Что можно сказать над выделенным текстом.</span>
                     </span>
                     <span class="summary-spec">
                       <span class="spec-row"><span class="spec-label" data-i18n="summary_label_commands">Команды</span><span class="spec-value" id="commands-spec-value">2</span></span>
                     </span>
                     <span class="summary-action summary-action-icon">
-                      <svg class="summary-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                      <svg class="summary-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6" stroke-width="2"></path></svg>
                     </span>
                   </button>
                   <div class="collapsible-wrapper" id="commands-body">
-                    <div class="collapsible-content summary-body">
-                      <div class="form-group" id="group-supported-commands">
+                    <div class="collapsible-content">
+                      <div class="summary-body">
+                        <div class="form-group" id="group-supported-commands">
                         <div class="commands-info-guide" id="commands-info-guide"></div>
                       </div>
                       <div class="form-group" id="group-translate-target">
@@ -574,11 +636,15 @@
                     </div>
                   </div>
                 </div>
+              </div>
 
-                <div class="summary-block">
+              <div class="summary-block">
                   <button type="button" class="summary-row" id="btn-edit-engine-summary" aria-expanded="false" aria-controls="edit-engine-body">
                     <span class="summary-left">
-                      <span class="summary-title" data-i18n="edit_engine_title">Движок редактирования</span>
+                      <span class="summary-title-wrap">
+                        <svg class="summary-category-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4l6 6L7 23H1v-6L14 4z"></path><path d="M17 2l2 2-2 2-2-2 2-2z" fill="#db2777" stroke="none"></path><circle cx="5" cy="19" r="1" fill="#db2777" stroke="none"></circle></svg>
+                        <span class="summary-title" data-i18n="edit_engine_title">Движок редактирования</span>
+                      </span>
                       <span class="summary-hint" data-i18n="edit_engine_hint">Чем выполняется перевод и правка.</span>
                     </span>
                     <span class="summary-spec">
@@ -586,13 +652,14 @@
                       <span class="spec-row"><span class="spec-label" data-i18n="local_model_label">Модель</span><span class="spec-value" id="edit-engine-model-spec-value">Qwen3 1.7B</span></span>
                     </span>
                     <span class="summary-action summary-action-icon">
-                      <svg class="summary-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                      <svg class="summary-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6" stroke-width="2"></path></svg>
                     </span>
                   </button>
                   <div class="collapsible-wrapper" id="edit-engine-body">
-                    <div class="collapsible-content summary-body">
-                      <div class="form-group">
-                        <label for="select-ai-edit-mode" class="field-label" data-i18n="ai_edit_mode_label">Режим</label>
+                    <div class="collapsible-content">
+                      <div class="summary-body">
+                        <div class="form-group">
+                          <label for="select-ai-edit-mode" class="field-label" data-i18n="ai_edit_mode_label">Режим</label>
                         <div class="select-wrap">
                           <select id="select-ai-edit-mode" class="custom-select" aria-haspopup="listbox" aria-expanded="false">
                             <option value="auto" data-i18n="ai_edit_mode_auto">Авто</option>
@@ -608,6 +675,9 @@
                         <div class="model-cards-group" id="llm-model-cards-container" role="radiogroup" aria-label="Выберите локальную модель">
                           <div class="model-card" data-model="qwen3-0.6b" role="radio" aria-checked="false" tabindex="0">
                             <div class="model-card-main">
+                              <div class="model-card-lead-icon" aria-hidden="true">
+                                <svg class="model-glyph" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#db2777" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 3 21 12 12 21 3 12" stroke-width="2"></polygon><circle cx="12" cy="12" r="3" fill="#db2777" stroke="none"></circle></svg>
+                              </div>
                               <div class="model-card-info">
                                 <span class="model-name">Qwen3 0.6B</span>
                                 <span class="model-meta" data-i18n="model_meta_llm_0_6b">460 МБ</span>
@@ -621,6 +691,9 @@
                           </div>
                           <div class="model-card" data-model="qwen3-1.7b" role="radio" aria-checked="false" tabindex="0">
                             <div class="model-card-main">
+                              <div class="model-card-lead-icon" aria-hidden="true">
+                                <svg class="model-glyph" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#db2777" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 3 21 12 12 21 3 12" stroke-width="2"></polygon><circle cx="12" cy="12" r="3" fill="#db2777" stroke="none"></circle></svg>
+                              </div>
                               <div class="model-card-info">
                                 <span class="model-name">Qwen3 1.7B</span>
                                 <span class="model-meta" data-i18n="model_meta_llm_1_7b">1,2 ГБ · рекомендуем</span>
@@ -634,6 +707,9 @@
                           </div>
                           <div class="model-card" data-model="qwen3-4b" role="radio" aria-checked="false" tabindex="0">
                             <div class="model-card-main">
+                              <div class="model-card-lead-icon" aria-hidden="true">
+                                <svg class="model-glyph" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#db2777" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 3 21 12 12 21 3 12" stroke-width="2"></polygon><circle cx="12" cy="12" r="3" fill="#db2777" stroke="none"></circle></svg>
+                              </div>
                               <div class="model-card-info">
                                 <span class="model-name">Qwen3 4B</span>
                                 <span class="model-meta" data-i18n="model_meta_llm_4b">2,3 ГБ</span>
@@ -690,7 +766,8 @@
               </div>
             </div>
           </div>
-        </section>
+        </div>
+      </section>
 
         <!-- 4. HOTKEYS PANEL -->
         <section class="tab-panel" id="panel-hotkeys" role="tabpanel" tabindex="0" aria-labelledby="tab-btn-hotkeys" style="display: none;">
@@ -698,10 +775,10 @@
             <h2 class="card-title" data-i18n="hotkey_title">Глобальная горячая клавиша</h2>
             <p class="card-desc" data-i18n="hotkey_desc">Зажмите выбранную комбинацию для начала записи, отпустите для распознавания.</p>
             <div class="form-group">
-              <label for="input-hotkey" class="field-label" data-i18n="hotkey_label">Комбинация</label>
+              <label for="input-hotkey" class="field-label sr-only" data-i18n="hotkey_label">Комбинация</label>
               <div class="hotkey-field-wrapper">
                 <input type="text" id="input-hotkey" class="custom-input hotkey-input" readonly placeholder="Нажмите комбинацию клавиш..." />
-                <button type="button" id="btn-reset-hotkey" class="btn-reset-icon" title="Сбросить на Alt+V">
+                <button type="button" id="btn-reset-hotkey" class="btn-reset-icon" title="Сбросить на Alt+V" aria-label="Сбросить на Alt+V">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><polyline points="3 3 3 8 8 8"></polyline></svg>
                 </button>
               </div>
@@ -781,18 +858,27 @@
             <!-- History Search and Filter Controls -->
             <div class="history-controls">
               <div class="history-search-wrap">
-                <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                <svg class="search-icon" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.5" y2="16.5" stroke-width="2"></line>
                 </svg>
                 <input type="text" id="input-history-search" class="history-search-input" placeholder="Поиск по истории..." data-i18n="history_search_placeholder" autocomplete="off" />
-                <button type="button" id="btn-clear-history-search" class="btn-clear-search" style="display: none;" title="Очистить поиск">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                <button type="button" id="btn-clear-history-search" class="btn-clear-search" style="display: none;" title="Очистить поиск" aria-label="Очистить поиск">
+                  <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg>
                 </button>
               </div>
               <div class="history-filters" role="group" aria-label="Фильтры истории">
-                <button type="button" class="history-filter-btn active" data-filter="all" id="btn-history-filter-all" data-i18n="history_filter_all">Все</button>
-                <button type="button" class="history-filter-btn" data-filter="cloud" id="btn-history-filter-cloud" data-i18n="history_filter_cloud">Облако</button>
-                <button type="button" class="history-filter-btn" data-filter="local" id="btn-history-filter-local" data-i18n="history_filter_local">Локально</button>
+                <button type="button" class="history-filter-btn active" data-filter="all" id="btn-history-filter-all">
+                  <svg class="history-filter-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16" stroke-width="2"></path></svg>
+                  <span data-i18n="history_filter_all">Все</span>
+                </button>
+                <button type="button" class="history-filter-btn" data-filter="cloud" id="btn-history-filter-cloud">
+                  <svg class="history-filter-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 10h-1.26A6 6 0 107.5 15.5h10.5a4 4 0 000-8z" stroke-width="2"></path></svg>
+                  <span data-i18n="history_filter_cloud">Облако</span>
+                </button>
+                <button type="button" class="history-filter-btn" data-filter="local" id="btn-history-filter-local">
+                  <svg class="history-filter-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="5" width="14" height="14" rx="2" stroke-width="2"></rect><circle cx="12" cy="12" r="2" fill="currentColor" stroke="none"></circle></svg>
+                  <span data-i18n="history_filter_local">Локально</span>
+                </button>
               </div>
             </div>
 
@@ -816,7 +902,7 @@
             <h2 class="about-app-title">AURA</h2>
             <p class="about-version" data-i18n="about_version">v1.2.0</p>
             <button type="button" id="update-badge" class="update-badge" style="display: none;">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"></path></svg>
               <span id="update-badge-text" data-i18n="update_available">Доступно обновление</span>
             </button>
             <p class="about-description" data-i18n="about_description">
@@ -828,9 +914,9 @@
               <button type="button" class="about-fluent-row" id="btn-replay-onboarding">
                 <div class="about-fluent-left">
                   <div class="about-fluent-icon">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <circle cx="12" cy="12" r="10"></circle>
-                      <polygon points="10 8 16 12 10 16 10 8"></polygon>
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <circle cx="12" cy="12" r="9"></circle>
+                      <polygon points="10 8 16 12 10 16 10 8" fill="currentColor" stroke="none"></polygon>
                     </svg>
                   </div>
                   <div class="about-fluent-texts">
@@ -838,18 +924,17 @@
                     <span class="about-fluent-desc" data-i18n="about_row_tour_desc">Интерактивный тур с подсказками по основным функциям</span>
                   </div>
                 </div>
-                <svg class="about-fluent-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                <svg class="about-fluent-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"></path></svg>
               </button>
 
               <!-- Item 2: Changelog -->
               <a href="https://github.com/malashkadev/aura/releases" target="_blank" rel="noopener noreferrer" class="about-fluent-row" id="btn-changelog">
                 <div class="about-fluent-left">
                   <div class="about-fluent-icon">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                      <polyline points="14 2 14 8 20 8"></polyline>
-                      <line x1="16" y1="13" x2="8" y2="13"></line>
-                      <line x1="16" y1="17" x2="8" y2="17"></line>
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <path d="M5 3h10l4 4v14H5z"></path>
+                      <path d="M15 3v4h4"></path>
+                      <path d="M9 11h6M9 15h4"></path>
                     </svg>
                   </div>
                   <div class="about-fluent-texts">
@@ -857,17 +942,17 @@
                     <span class="about-fluent-desc" data-i18n="about_row_changelog_desc">Список изменений, улучшения производительности и релизы</span>
                   </div>
                 </div>
-                <svg class="about-fluent-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg>
+                <svg class="about-fluent-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17L17 7M7 7h10v10"></path></svg>
               </a>
 
               <!-- Item 3: Report Issue -->
               <a href="https://github.com/malashkadev/aura/issues/new" target="_blank" rel="noopener noreferrer" class="about-fluent-row" id="btn-report-issue">
                 <div class="about-fluent-left">
                   <div class="about-fluent-icon issue-always-red">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <circle cx="12" cy="12" r="10"></circle>
-                      <line x1="12" y1="8" x2="12" y2="12"></line>
-                      <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <circle cx="12" cy="12" r="9"></circle>
+                      <line x1="12" y1="8" x2="12" y2="12" stroke-width="2"></line>
+                      <circle cx="12" cy="16" r="0.75" fill="currentColor"></circle>
                     </svg>
                   </div>
                   <div class="about-fluent-texts">
@@ -875,14 +960,14 @@
                     <span class="about-fluent-desc" data-i18n="about_row_report_issue_desc">Написать о проблеме разработчикам на GitHub</span>
                   </div>
                 </div>
-                <svg class="about-fluent-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg>
+                <svg class="about-fluent-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17L17 7M7 7h10v10"></path></svg>
               </a>
 
               <!-- Item 4: Star on GitHub (Last item, star always yellow) -->
               <a href="https://github.com/malashkadev/aura" target="_blank" rel="noopener noreferrer" class="about-fluent-row" id="btn-github-star">
                 <div class="about-fluent-left">
                   <div class="about-fluent-icon star-always-yellow">
-                    <svg viewBox="0 0 24 24" fill="#ffb800" stroke="#ffb800" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="#ffb800" stroke="#ffb800" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                       <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
                     </svg>
                   </div>
@@ -891,16 +976,16 @@
                     <span class="about-fluent-desc" data-i18n="about_row_star_desc">Поддержите проект в открытом репозитории</span>
                   </div>
                 </div>
-                <svg class="about-fluent-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg>
+                <svg class="about-fluent-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17L17 7M7 7h10v10"></path></svg>
               </a>
             </div>
 
             <!-- Footer Exit Button -->
             <div class="about-divider"></div>
             <button type="button" class="btn btn-secondary btn-exit-app" id="btn-exit-app">
-              <svg class="btn-tour-icon icon-exit" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
-                <line x1="12" y1="2" x2="12" y2="12"></line>
+              <svg class="btn-tour-icon icon-exit" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M18.36 6.64A9 9 0 115.64 6.64"></path>
+                <line x1="12" y1="3" x2="12" y2="11" stroke-width="2"></line>
               </svg>
               <span data-i18n="about_btn_exit_app">Выйти из Aura</span>
             </button>
@@ -917,7 +1002,7 @@
             <button type="button" class="btn btn-secondary" id="btn-check-updates" data-i18n="update_check_now">Проверить обновления</button>
           </div>
 
-          <div class="card">
+          <div class="card" id="card-diagnostics">
             <h2 class="card-title" data-i18n="diag_title">Диагностика</h2>
             <p class="card-desc" data-i18n="diag_speech_text_desc">Сохранять точный текст распознанной речи в диагностические логи. По умолчанию выключено для приватности.</p>
             <label class="toggle-switch">

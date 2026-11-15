@@ -472,7 +472,7 @@ function setBarColor(color) {
 let transitionState = {
   active: false,
   startTime: 0,
-  duration: 550,
+  duration: 350,
   startBeam: 0.0,
   targetBeam: 0.0,
   currentBeam: 0.0,
@@ -1012,7 +1012,7 @@ listen("recording-state", (event) => {
     transitionState = {
       active: true,
       startTime: performance.now(),
-      duration: 550,
+      duration: 350,
       startBeam: transitionState.currentBeam,
       targetBeam: 0.0,
       currentBeam: transitionState.currentBeam,
@@ -1040,7 +1040,7 @@ listen("recording-state", (event) => {
     transitionState = {
       active: true,
       startTime: performance.now(),
-      duration: 550,
+      duration: 350,
       startBeam: transitionState.currentBeam,
       targetBeam: 0.75,
       currentBeam: transitionState.currentBeam,

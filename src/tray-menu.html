@@ -4,8 +4,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Aura Menu</title>
-  <link rel="stylesheet" href="tray-menu.css" />
-  <script type="module" src="tray-menu.js" defer></script>
+  <link rel="stylesheet" href="tray-menu.css?v=2.0.21" />
+  <script src="icon-system.js?v=2.0.24"></script>
+  <script type="module" src="tray-menu.js?v=2.0.24" defer></script>
 </head>
 <body>
   <div class="aura-tray-menu" id="tray-menu">
@@ -14,9 +15,9 @@
     <div class="menu-view active" id="view-main">
       <!-- 1. Open Settings -->
       <div class="aura-menu-item" id="item-open-settings" role="button" tabindex="0">
-        <svg class="menu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
+        <svg class="menu-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <circle cx="12" cy="12" r="3"/>
+          <path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.64 5.64l2.12 2.12M16.24 16.24l2.12 2.12M5.64 18.36l2.12-2.12M16.24 7.76l2.12-2.12"/>
         </svg>
         <span class="menu-text" id="label-settings">Открыть настройки</span>
       </div>
@@ -25,38 +26,44 @@
 
       <!-- 2. Recognition Mode Trigger -->
       <div class="aura-menu-item" id="item-recog-trigger" role="button" tabindex="0">
-        <svg class="menu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M4 10v4"/><path d="M8 7v10"/><path d="M12 4v16"/><path d="M16 7v10"/><path d="M20 10v4"/>
+        <svg class="menu-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <line x1="4" y1="10" x2="4" y2="14"/>
+          <line x1="8" y1="6" x2="8" y2="18"/>
+          <line x1="12" y1="3" x2="12" y2="21"/>
+          <line x1="16" y1="6" x2="16" y2="18"/>
+          <line x1="20" y1="10" x2="20" y2="14"/>
         </svg>
         <span class="menu-text" id="label-recog">Способ распознавания</span>
-        <svg class="recog-status-icon" id="recog-status-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/>
+        <svg class="recog-status-icon" id="recog-status-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M18 10h-1.26A6 6 0 107.5 15.5h10.5a4 4 0 000-8z"/>
+          <circle cx="12" cy="13" r="1.5" fill="currentColor" stroke="none"/>
         </svg>
-        <svg class="menu-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <polyline points="9 18 15 12 9 6"/>
+        <svg class="menu-arrow" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M9 6l6 6-6 6"/>
         </svg>
       </div>
 
       <!-- 2b. Language Trigger (with globe icon) -->
       <div class="aura-menu-item" id="item-lang-trigger" role="button" tabindex="0">
-        <svg class="menu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="12" r="10"/>
-          <line x1="2" y1="12" x2="22" y2="12"/>
-          <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+        <svg class="menu-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="9"/>
+          <line x1="3" y1="12" x2="21" y2="12"/>
+          <path d="M12 3a13.5 13.5 0 010 18M12 3a13.5 13.5 0 000 18"/>
         </svg>
         <span class="menu-text" id="label-lang">Язык распознавания</span>
         <span class="lang-status-badge" id="lang-status-badge">RU</span>
-        <svg class="menu-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <polyline points="9 18 15 12 9 6"/>
+        <svg class="menu-arrow" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M9 6l6 6-6 6"/>
         </svg>
       </div>
 
       <!-- 3. Gaming Mode (clean toggle without redundant text badge) -->
       <div class="aura-menu-item" id="item-gaming" role="button" tabindex="0">
-        <svg class="menu-icon gaming-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <line x1="6" x2="10" y1="12" y2="12"/><line x1="8" x2="8" y1="10" y2="14"/>
-          <line x1="15" x2="15.01" y1="13" y2="13"/><line x1="18" x2="18.01" y1="11" y2="11"/>
-          <rect width="20" height="12" x="2" y="6" rx="6"/>
+        <svg class="menu-icon gaming-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M6 11h12a4 4 0 014 4v2a2 2 0 01-3.4 1.4L16 16H8l-2.6 2.4A2 2 0 012 17v-2a4 4 0 014-4z"/>
+          <path d="M6 13v2M5 14h2"/>
+          <circle cx="16.5" cy="13.5" r="0.75" fill="currentColor"/>
+          <circle cx="18.5" cy="15" r="0.75" fill="currentColor"/>
         </svg>
         <span class="menu-text" id="label-gaming">Игровой режим</span>
         <div class="menu-toggle" id="toggle-gaming" aria-label="Игровой режим">
@@ -68,9 +75,9 @@
 
       <!-- 4. Exit -->
       <div class="aura-menu-item" id="item-exit" role="button" tabindex="0">
-        <svg class="menu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M18.36 6.64a9 9 0 1 1-12.73 0"/>
-          <line x1="12" x2="12" y1="2" y2="12"/>
+        <svg class="menu-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M18.36 6.64A9 9 0 115.64 6.64"/>
+          <line x1="12" y1="3" x2="12" y2="11"/>
         </svg>
         <span class="menu-text" id="label-exit">Выход</span>
       </div>
@@ -79,8 +86,8 @@
     <!-- View 2: Recognition Submenu -->
     <div class="menu-view" id="view-recog">
       <div class="drilldown-header" id="btn-back-header" role="button" tabindex="0">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-          <polyline points="15 18 9 12 15 6"/>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M15 6l-6 6 6 6"/>
         </svg>
         <span id="label-recog-sub">Способ распознавания</span>
       </div>
@@ -88,24 +95,25 @@
       <div class="menu-separator"></div>
 
       <div class="submenu-item" id="sub-cloud" role="button" tabindex="0">
-        <svg class="menu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/>
+        <svg class="menu-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M18 10h-1.26A6 6 0 107.5 15.5h10.5a4 4 0 000-8z"/>
+          <circle cx="12" cy="13" r="1.5" fill="currentColor" stroke="none"/>
         </svg>
         <span class="menu-text" id="label-cloud">Облачный ИИ</span>
-        <svg class="check-mark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-          <polyline points="20 6 9 17 4 12"/>
+        <svg class="check-mark" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M5 12l5 5L19 7" stroke-width="2.2"/>
         </svg>
       </div>
 
       <div class="submenu-item" id="sub-local" role="button" tabindex="0">
-        <svg class="menu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <rect width="20" height="14" x="2" y="3" rx="2"/>
-          <line x1="8" x2="16" y1="21" y2="21"/>
-          <line x1="12" x2="12" y1="17" y2="21"/>
+        <svg class="menu-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <rect x="3" y="4" width="18" height="12" rx="2"/>
+          <line x1="12" y1="16" x2="12" y2="20"/>
+          <line x1="8" y1="20" x2="16" y2="20"/>
         </svg>
         <span class="menu-text" id="label-local">Локальный ИИ</span>
-        <svg class="check-mark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-          <polyline points="20 6 9 17 4 12"/>
+        <svg class="check-mark" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M5 12l5 5L19 7" stroke-width="2.2"/>
         </svg>
       </div>
     </div>
@@ -113,8 +121,8 @@
     <!-- View 3: Language Submenu -->
     <div class="menu-view" id="view-lang">
       <div class="drilldown-header" id="btn-back-lang-header" role="button" tabindex="0">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-          <polyline points="15 18 9 12 15 6"/>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M15 6l-6 6 6 6"/>
         </svg>
         <span id="label-lang-sub">Язык распознавания</span>
       </div>

@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Aura — варианты тумблера</title>
+<style>
+@font-face {
+  font-family: 'Onest'; font-weight: 100 900; font-display: swap;
+  src: url('../src/assets/fonts/onest-cyrillic.woff2') format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+@font-face {
+  font-family: 'Onest'; font-weight: 100 900; font-display: swap;
+  src: url('../src/assets/fonts/onest-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+2000-206F, U+20AC, U+2122;
+}
+
+:root {
+  --bg: #090909;
+  --card: rgba(18, 18, 18, 0.7);
+  --border: rgba(255, 255, 255, 0.08);
+  --text: #f5f7fa;
+  --dim: #9ba6b3;
+  --muted: #64748b;
+  --accent: #ff4200;
+  --ease: cubic-bezier(0.23, 1, 0.32, 1);
+  --font: 'Onest', 'Segoe UI Variable Text', 'Segoe UI', system-ui, sans-serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  padding: 36px 32px 64px;
+  -webkit-font-smoothing: antialiased;
+}
+
+.lab-head { max-width: 900px; }
+.lab-head h1 { font-size: 28px; font-weight: 700; letter-spacing: -0.025em; }
+.lab-head p { margin-top: 8px; color: var(--dim); font-size: 13.5px; line-height: 1.6; }
+
+.grid {
+  max-width: 900px;
+  margin-top: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.variant {
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background: var(--card);
+  padding: 22px 24px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07);
+}
+
+.vhead { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.vhead .id { font-size: 10.5px; letter-spacing: 0.14em; color: var(--accent); font-weight: 600; }
+.vhead .name { font-size: 16px; font-weight: 600; letter-spacing: -0.012em; }
+.vhead .note { font-size: 12.5px; color: var(--muted); }
+
+.states {
+  margin-top: 18px;
+  display: flex;
+  align-items: center;
+  gap: 40px;
+  flex-wrap: wrap;
+}
+.state { display: flex; align-items: center; gap: 12px; }
+.state .cap { font-size: 12px; color: var(--muted); }
+.zoom { display: flex; gap: 32px; margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--border); }
+.zoom .state { transform: scale(2); transform-origin: left center; margin-right: 130px; }
+
+/* ---------- shared switch shell (mirrors .toggle-switch) ---------- */
+.sw { display: inline-flex; align-items: center; gap: 12px; cursor: pointer; }
+.sw input { position: absolute; opacity: 0; width: 0; height: 0; pointer-events: none; }
+.sw .lbl { font-size: 13.5px; color: var(--text); }
+.track { position: relative; flex: none; transition: background-color 0.22s var(--ease), border-color 0.22s var(--ease); }
+.knob {
+  position: absolute;
+  transition: transform 0.22s var(--ease), width 0.16s var(--ease), background-color 0.22s var(--ease);
+}
+
+/* ---------- A. Tint — акцентная подложка ---------- */
+.a .track { width: 40px; height: 22px; border-radius: 999px; background: rgba(255,255,255,.05); border: 1px solid var(--border); }
+.a .knob { top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: var(--dim); }
+.a input:checked + .track { background: rgba(255,66,0,.18); border-color: rgba(255,66,0,.45); }
+.a input:checked + .track .knob { transform: translateX(18px); background: var(--accent); }
+
+/* ---------- B. Solid — залитый акцент ---------- */
+.b .track { width: 40px; height: 22px; border-radius: 999px; background: rgba(255,255,255,.05); border: 1px solid var(--border); }
+.b .knob { top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: var(--dim); }
+.b input:checked + .track { background: var(--accent); border-color: var(--accent); }
+.b input:checked + .track .knob { transform: translateX(18px); background: #ffffff; }
+
+/* ---------- C. Mono — без акцента ---------- */
+.c .track { width: 38px; height: 20px; border-radius: 999px; background: transparent; border: 1px solid rgba(255,255,255,.14); }
+.c .knob { top: 2px; left: 2px; width: 14px; height: 14px; border-radius: 50%; background: rgba(255,255,255,.45); }
+.c input:checked + .track { background: rgba(255,255,255,.92); border-color: rgba(255,255,255,.92); }
+.c input:checked + .track .knob { transform: translateX(18px); background: #0a0a0c; }
+
+/* ---------- D. Square — индустриальный ---------- */
+.d .track { width: 40px; height: 24px; border-radius: 6px; background: rgba(255,255,255,.04); border: 1px solid var(--border); }
+.d .knob { top: 3px; left: 3px; width: 16px; height: 16px; border-radius: 4px; background: var(--dim); }
+.d input:checked + .track { background: rgba(255,66,0,.9); border-color: rgba(255,66,0,.9); }
+.d input:checked + .track .knob { transform: translateX(16px); background: #ffffff; }
+
+/* ---------- E. Segmented — с подписями ---------- */
+.e .track {
+  width: 84px; height: 26px; border-radius: 999px;
+  background: rgba(255,255,255,.04); border: 1px solid var(--border);
+  display: flex; align-items: center;
+}
+.e .word {
+  position: relative; z-index: 2; width: 50%; text-align: center;
+  font-size: 10px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--muted); transition: color 0.22s var(--ease);
+}
+.e .knob { top: 2px; left: 2px; width: 40px; height: 20px; border-radius: 999px; background: rgba(255,255,255,.1); }
+.e input:checked + .track .knob { transform: translateX(38px); background: var(--accent); }
+.e input:checked + .track .word.on { color: #ffffff; }
+.e input:not(:checked) + .track .word.off { color: var(--text); }
+</style>
+</head>
+<body>
+
+<div class="lab-head">
+  <h1>Тумблер — пять вариантов</h1>
+  <p>Все на реальной логике <code>.toggle-switch</code>: скрытый <code>input</code>, трек и кнопка. Сверху — боевой размер, снизу — увеличение ×2, чтобы видеть грани, радиусы и цвет.</p>
+</div>
+
+<div class="grid">
+
+  <div class="variant a">
+    <div class="vhead"><span class="id">A</span><span class="name">Tint</span><span class="note">— сейчас в приложении: акцентная подложка, акцентная кнопка</span></div>
+    <div class="states">
+      <div class="state"><span class="cap">выкл</span><label class="sw"><input type="checkbox" /><span class="track"><span class="knob"></span></span><span class="lbl">Автозапуск</span></label></div>
+      <div class="state"><span class="cap">вкл</span><label class="sw"><input type="checkbox" checked /><span class="track"><span class="knob"></span></span><span class="lbl">Автозапуск</span></label></div>
+    </div>
+    <div class="zoom">
+      <div class="state"><label class="sw"><input type="checkbox" /><span class="track"><span class="knob"></span></span></label></div>
+      <div class="state"><label class="sw"><input type="checkbox" checked /><span class="track"><span class="knob"></span></span></label></div>
+    </div>
+  </div>
+
+  <div class="variant b">
+    <div class="vhead"><span class="id">B</span><span class="name">Solid</span><span class="note">— залитый акцент, белая кнопка: классика iOS на цветах Aura</span></div>
+    <div class="states">
+      <div class="state"><span class="cap">выкл</span><label class="sw"><input type="checkbox" /><span class="track"><span class="knob"></span></span><span class="lbl">Автозапуск</span></label></div>
+      <div class="state"><span class="cap">вкл</span><label class="sw"><input type="checkbox" checked /><span class="track"><span class="knob"></span></span><span class="lbl">Автозапуск</span></label></div>
+    </div>
+    <div class="zoom">
+      <div class="state"><label class="sw"><input type="checkbox" /><span class="track"><span class="knob"></span></span></label></div>
+      <div class="state"><label class="sw"><input type="checkbox" checked /><span class="track"><span class="knob"></span></span></label></div>
+    </div>
+  </div>
+
+  <div class="variant c">
+    <div class="vhead"><span class="id">C</span><span class="name">Mono</span><span class="note">— без акцента вообще: белый трек, тёмная кнопка</span></div>
+    <div class="states">
+      <div class="state"><span class="cap">выкл</span><label class="sw"><input type="checkbox" /><span class="track"><span class="knob"></span></span><span class="lbl">Автозапуск</span></label></div>
+      <div class="state"><span class="cap">вкл</span><label class="sw"><input type="checkbox" checked /><span class="track"><span class="knob"></span></span><span class="lbl">Автозапуск</span></label></div>
+    </div>
+    <div class="zoom">
+      <div class="state"><label class="sw"><input type="checkbox" /><span class="track"><span class="knob"></span></span></label></div>
+      <div class="state"><label class="sw"><input type="checkbox" checked /><span class="track"><span class="knob"></span></span></label></div>
+    </div>
+  </div>
+
+  <div class="variant d">
+    <div class="vhead"><span class="id">D</span><span class="name">Square</span><span class="note">— квадратные радиусы 6 и 4 px, техничный характер</span></div>
+    <div class="states">
+      <div class="state"><span class="cap">выкл</span><label class="sw"><input type="checkbox" /><span class="track"><span class="knob"></span></span><span class="lbl">Автозапуск</span></label></div>
+      <div class="state"><span class="cap">вкл</span><label class="sw"><input type="checkbox" checked /><span class="track"><span class="knob"></span></span><span class="lbl">Автозапуск</span></label></div>
+    </div>
+    <div class="zoom">
+      <div class="state"><label class="sw"><input type="checkbox" /><span class="track"><span class="knob"></span></span></label></div>
+      <div class="state"><label class="sw"><input type="checkbox" checked /><span class="track"><span class="knob"></span></span></label></div>
+    </div>
+  </div>
+
+  <div class="variant e">
+    <div class="vhead"><span class="id">E</span><span class="name">Segmented</span><span class="note">— с подписями «выкл / вкл», без двусмысленности</span></div>
+    <div class="states">
+      <div class="state"><span class="cap">выкл</span><label class="sw"><input type="checkbox" /><span class="track"><span class="knob"></span><span class="word off">Выкл</span><span class="word on">Вкл</span></span></label></div>
+      <div class="state"><span class="cap">вкл</span><label class="sw"><input type="checkbox" checked /><span class="track"><span class="knob"></span><span class="word off">Выкл</span><span class="word on">Вкл</span></span></label></div>
+    </div>
+    <div class="zoom">
+      <div class="state"><label class="sw"><input type="checkbox" /><span class="track"><span class="knob"></span><span class="word off">Выкл</span><span class="word on">Вкл</span></span></label></div>
+      <div class="state"><label class="sw"><input type="checkbox" checked /><span class="track"><span class="knob"></span><span class="word off">Выкл</span><span class="word on">Вкл</span></span></label></div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

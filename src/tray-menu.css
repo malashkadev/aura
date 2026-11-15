@@ -1,28 +1,47 @@
 /* Aura Desktop Tray Menu Styles */
+@font-face {
+  font-family: 'Onest';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('assets/fonts/onest-cyrillic.woff2') format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+@font-face {
+  font-family: 'Onest';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('assets/fonts/onest-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+2000-206F, U+20AC, U+2122;
+}
+
 :root {
-  --font-display: "Segoe UI Variable Display", "Segoe UI", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
-  --font-sans: "Segoe UI Variable Text", "Segoe UI", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --font-display: 'Onest', "Segoe UI Variable Display", "Segoe UI", system-ui, sans-serif;
+  --font-sans: 'Onest', "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
 
-  /* Desktop App Native Dark Graphite Palette */
-  --bg-menu: #0a0a0a;
-  --surface-card: #121212;
-  --surface-hover: rgba(255, 255, 255, 0.06);
-  --border-color: rgba(255, 255, 255, 0.09);
-  --border-subtle: rgba(255, 255, 255, 0.05);
+  /* Shared Aura palette — same tokens as the settings window */
+  --bg-menu: #090909;
+  --surface-card: rgba(18, 18, 18, 0.7);
+  --surface-hover: rgba(255, 255, 255, 0.05);
+  --border-color: rgba(255, 255, 255, 0.08);
+  --border-subtle: rgba(255, 255, 255, 0.06);
 
-  --text-primary: #f1f5f9;
-  --text-secondary: #94a3b8;
-  --text-muted: #64748b;
+  --text-primary: #f5f5f5;
+  --text-secondary: #a3a3a3;
+  --text-muted: #808080;
 
   --accent-color: #ff4200;
   --accent-color-rgb: 255, 66, 0;
 
-  --radius-menu: 10px;
+  --radius-menu: 12px;
   --radius-item: 6px;
   --radius-full: 9999px;
 
   --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
-  --transition: all 0.15s var(--ease-out);
+  --transition: background-color 0.16s var(--ease-out), color 0.16s var(--ease-out),
+                border-color 0.16s var(--ease-out), opacity 0.16s var(--ease-out),
+                transform 0.16s var(--ease-out);
 }
 
 * {
@@ -129,7 +148,7 @@ html, body {
 .menu-icon {
   width: 15px;
   height: 15px;
-  color: #838896;
+  color: var(--text-muted);
   flex-shrink: 0;
   transition: color 0.12s ease;
 }
@@ -187,12 +206,12 @@ html, body {
   gap: 10px;
   padding: 7px 10px;
   border-radius: var(--radius-item);
-  font-size: 12.5px;
+  font-size: 13px;
   font-family: var(--font-sans);
   font-weight: 500;
   color: var(--text-secondary);
   cursor: pointer;
-  transition: all 0.12s ease;
+  transition: var(--transition);
   outline: none;
 }
 
@@ -205,7 +224,7 @@ html, body {
 .submenu-item .menu-icon {
   width: 15px;
   height: 15px;
-  color: #838896;
+  color: var(--text-muted);
   flex-shrink: 0;
   transition: color 0.12s ease;
 }
@@ -242,7 +261,7 @@ html, body {
 .recog-status-icon {
   width: 14px;
   height: 14px;
-  color: #717684;
+  color: var(--text-muted);
   flex-shrink: 0;
   margin-left: auto;
   margin-right: 6px;
@@ -258,15 +277,15 @@ html, body {
 
 /* Gaming Mode Status Badge (legacy fallback if present) */
 .gaming-status-badge {
-  font-size: 10.5px;
+  font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.02em;
   padding: 2px 7px;
-  border-radius: 4px;
+  border-radius: 6px;
   background: rgba(255, 255, 255, 0.04);
-  color: #717684;
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  transition: all 0.15s ease;
+  color: var(--text-muted);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  transition: var(--transition);
   line-height: 1.2;
   margin-left: auto;
   margin-right: 6px;
@@ -275,17 +294,17 @@ html, body {
 
 .aura-menu-item.gaming-active .gaming-status-badge {
   background: rgba(var(--accent-color-rgb), 0.12);
-  color: #ff5722;
+  color: var(--accent-color);
   border-color: rgba(var(--accent-color-rgb), 0.35);
 }
 
-/* Toggle Switch (Identical to Desktop Settings) */
+/* Toggle Switch (identical to the settings window's square switch) */
 .menu-toggle {
-  width: 28px;
-  height: 16px;
-  background-color: hsl(0, 0%, 15%);
+  width: 30px;
+  height: 18px;
+  background-color: rgba(255, 255, 255, 0.04);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-full);
+  border-radius: 6px;
   position: relative;
   flex-shrink: 0;
   margin-left: auto;
@@ -293,13 +312,13 @@ html, body {
 }
 
 .aura-menu-item:hover .menu-toggle {
-  border-color: rgba(var(--accent-color-rgb), 0.45);
+  border-color: rgba(255, 255, 255, 0.18);
 }
 
 .menu-toggle-thumb {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
+  width: 12px;
+  height: 12px;
+  border-radius: 4px;
   background-color: var(--text-secondary);
   position: absolute;
   top: 2px;
@@ -307,15 +326,15 @@ html, body {
   transition: transform 0.2s cubic-bezier(0.25, 0.8, 0.25, 1), background-color 0.2s ease-out;
 }
 
-/* Gaming Mode Active Switch (Identical to Settings Checked State) */
+/* Gaming Mode Active Switch (identical to the settings checked state) */
 .aura-menu-item.gaming-active .menu-toggle {
-  background-color: rgba(var(--accent-color-rgb), 0.1);
-  border-color: var(--accent-color);
+  background-color: rgba(var(--accent-color-rgb), 0.9);
+  border-color: rgba(var(--accent-color-rgb), 0.9);
 }
 
 .aura-menu-item.gaming-active .menu-toggle-thumb {
   transform: translateX(12px);
-  background-color: var(--accent-color);
+  background-color: #ffffff;
 }
 
 .aura-menu-item.gaming-active .menu-icon.gaming-icon {
@@ -331,20 +350,51 @@ html, body {
 
 /* Language Status Badge */
 .lang-status-badge {
-  font-size: 10.5px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 19px;
+  box-sizing: border-box;
+  font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.02em;
   padding: 2px 6px;
-  border-radius: 4px;
+  border-radius: 6px;
   background: rgba(255, 255, 255, 0.04);
-  color: #94a3b8;
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  transition: all 0.15s ease;
+  color: var(--text-secondary);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  transition: var(--transition);
   line-height: 1.2;
   margin-left: auto;
   margin-right: 6px;
   flex-shrink: 0;
   text-transform: uppercase;
+}
+
+.lang-status-badge.is-icon {
+  width: 14px;
+  height: 14px;
+  min-width: 0;
+  min-height: 0;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  color: var(--text-muted);
+  opacity: 0.85;
+  transition: color 0.12s ease, opacity 0.12s ease;
+}
+
+.aura-menu-item:hover .lang-status-badge.is-icon,
+.aura-menu-item:focus-visible .lang-status-badge.is-icon {
+  color: #ffffff;
+  opacity: 1;
+}
+
+.lang-status-badge svg {
+  display: block;
+  width: 14px;
+  height: 14px;
 }
 
 /* Language List Container */
@@ -380,15 +430,70 @@ html, body {
 .lang-item {
   display: flex;
   align-items: center;
-  padding: 6px 10px;
+  gap: 8px;
+  padding: 5px 10px;
   border-radius: var(--radius-item);
-  font-size: 12.5px;
+  font-size: 13px;
   font-family: var(--font-sans);
   font-weight: 500;
   color: var(--text-secondary);
   cursor: pointer;
-  transition: all 0.12s ease;
+  transition: var(--transition);
   outline: none;
+}
+
+.lang-item .lang-code {
+  width: 20px;
+  flex-shrink: 0;
+  text-align: center;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  transition: color 0.12s ease;
+}
+
+.lang-item .lang-code.lang-code-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 15px;
+}
+
+.lang-item .lang-code.lang-code-icon svg {
+  display: block;
+  width: 14px;
+  height: 14px;
+}
+
+.lang-item:hover .lang-code,
+.lang-item:focus-visible .lang-code {
+  color: var(--text-primary);
+}
+
+.lang-item.is-selected .lang-code {
+  color: var(--text-primary);
+}
+
+.lang-item.is-selected .lang-code.lang-code-icon {
+  color: var(--accent-color);
+}
+
+.lang-item .menu-icon {
+  width: 15px;
+  height: 15px;
+  color: var(--text-muted);
+  flex-shrink: 0;
+  transition: color 0.12s ease;
+}
+
+.lang-item:hover .menu-icon,
+.lang-item:focus-visible .menu-icon {
+  color: #ffffff;
+}
+
+.lang-item.is-selected .menu-icon {
+  color: var(--accent-color);
 }
 
 .lang-item:hover,

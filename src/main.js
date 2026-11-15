@@ -4,6 +4,14 @@ import {
   parseSettingsBackup,
   settingsBackupFileName,
 } from "./settings-backup.js";
+import { getIcon, getBrandIcon } from "./icon-system-api.js";
+import { hydrateAppIcons } from "./icon-system-integration.js";
+
+try {
+  hydrateAppIcons();
+} catch (err) {
+  console.error("Icon hydration failed", err);
+}
 
 // Retrieve Tauri APIs from window.__TAURI__
 const { invoke } = window.__TAURI__.core;
@@ -31,8 +39,10 @@ const i18nDict = {
     "engine_desc": "Выберите между облачной обработкой высокого качества или полностью автономным локальным распознаванием речи.",
     "engine_cloud": "В облаке",
     "engine_cloud_meta": "Gemini, OpenAI, Groq",
+    "engine_cloud_desc": "Высокая скорость и точность через облачный AI",
     "engine_local": "Локально",
     "engine_local_meta": "Приватно, офлайн",
+    "engine_local_desc": "Полная приватность, работает автономно на ПК",
     "lang_bias_title": "Язык распознавания",
     "lang_bias_desc": "Выберите принудительный язык ввода или включите автоопределение.",
     "lang_bias_label": "Выберите язык",
@@ -93,6 +103,7 @@ const i18nDict = {
     "history_clear": "Очистить историю",
     "history_desc": "Последние надиктованные фразы хранятся локально.",
     "history_empty": "История пуста. Ваши надиктованные тексты будут отображаться здесь.",
+    "history_search_empty": "По вашему запросу ничего не найдено.",
     "history_badge_cloud": "Облако",
     "history_badge_local": "Локально",
     "history_engine_whisper": "Whisper",
@@ -243,7 +254,7 @@ const i18nDict = {
     "overlay_timer_desc": "Счётчик времени под индикатором. Ошибки отображаются всегда.",
     "overlay_timer_checkbox": "Показывать таймер в оверлее",
     "mic_meter_title": "Микрофон",
-    "mic_meter_desc": "Проверьте уровень входящего сигнала в реальном времени.",
+    "mic_meter_desc": "Устройство ввода и проверка сигнала",
     "audio_device_label": "Микрофон (устройство ввода)",
     "audio_device_default": "По умолчанию (системное)",
     "mic_meter_test_btn_start": "Проверить",
@@ -323,8 +334,10 @@ const i18nDict = {
     "engine_desc": "Choose between high-quality cloud transcription or fully local speech recognition.",
     "engine_cloud": "Cloud",
     "engine_cloud_meta": "Gemini, OpenAI, Groq",
+    "engine_cloud_desc": "High accuracy and speed via cloud models",
     "engine_local": "Local",
     "engine_local_meta": "Private, offline",
+    "engine_local_desc": "Complete privacy, runs offline on your PC",
     "lang_bias_title": "Speech Language",
     "lang_bias_desc": "Forcibly set transcription language or use automatic detection.",
     "lang_bias_label": "Select Language",
@@ -385,6 +398,7 @@ const i18nDict = {
     "history_clear": "Clear History",
     "history_desc": "Your latest transcribed phrases are cached locally.",
     "history_empty": "History is empty. Dictated text fragments will appear here.",
+    "history_search_empty": "No results found for your search.",
     "history_badge_cloud": "Cloud",
     "history_badge_local": "Local",
     "history_engine_whisper": "Whisper",
@@ -535,7 +549,7 @@ const i18nDict = {
     "overlay_timer_desc": "Time counter below the indicator. Errors are always shown.",
     "overlay_timer_checkbox": "Show timer on overlay",
     "mic_meter_title": "Microphone",
-    "mic_meter_desc": "Check the incoming signal level in real time.",
+    "mic_meter_desc": "Input device and signal check",
     "audio_device_label": "Microphone (input device)",
     "audio_device_default": "Default (system)",
     "mic_meter_test_btn_start": "Check",
@@ -626,8 +640,10 @@ const i18nDict = {
     "engine_desc": "Wählen Sie zwischen Cloud-Transkription oder vollständig lokaler Spracherkennung.",
     "engine_cloud": "Cloud",
     "engine_cloud_meta": "Gemini, OpenAI, Groq",
+    "engine_cloud_desc": "Hohe Genauigkeit und Geschwindigkeit über Cloud-Modelle",
     "engine_local": "Lokal",
     "engine_local_meta": "Privat, offline",
+    "engine_local_desc": "Vollständige Privatsphäre, läuft offline auf Ihrem PC",
     "lang_bias_title": "Sprache",
     "lang_bias_desc": "Wählen Sie eine feste Sprache für das Diktat oder aktivieren Sie die Auto-Erkennung.",
     "lang_bias_label": "Sprache auswählen",
@@ -685,6 +701,7 @@ const i18nDict = {
     "history_clear": "Verlauf löschen",
     "history_desc": "Die letzten aufgezeichneten Sätze werden lokal gespeichert.",
     "history_empty": "Der Verlauf ist leer. Transkribierte Texte werden hier angezeigt.",
+    "history_search_empty": "Keine Ergebnisse für Ihre Suche gefunden.",
     "history_badge_cloud": "Cloud",
     "history_badge_local": "Lokal",
     "history_engine_whisper": "Whisper",
@@ -827,7 +844,7 @@ const i18nDict = {
     "overlay_timer_desc": "Zeitzähler unter der Anzeige. Fehler werden immer angezeigt.",
     "overlay_timer_checkbox": "Timer im Overlay anzeigen",
     "mic_meter_title": "Mikrofon",
-    "mic_meter_desc": "Prüfen Sie den Pegel des Eingangssignals in Echtzeit.",
+    "mic_meter_desc": "Eingabegerät und Signalprüfung",
     "audio_device_label": "Mikrofon (Eingabegerät)",
     "audio_device_default": "Standard (System)",
     "mic_meter_test_btn_start": "Prüfen",
@@ -907,8 +924,10 @@ const i18nDict = {
     "engine_desc": "Seleccione entre el procesamiento en la nube de alta calidad o el reconocimiento local totalmente autónomo.",
     "engine_cloud": "En la nube",
     "engine_cloud_meta": "Gemini, OpenAI, Groq",
+    "engine_cloud_desc": "Alta precisión y velocidad mediante modelos en la nube",
     "engine_local": "Local",
     "engine_local_meta": "Privado, offline",
+    "engine_local_desc": "Privacidad total, funciona sin conexión en su PC",
     "lang_bias_title": "Idioma de dictado",
     "lang_bias_desc": "Forzar un idioma específico para la transcripción o usar detección automática.",
     "lang_bias_label": "Seleccionar idioma",
@@ -966,6 +985,7 @@ const i18nDict = {
     "history_clear": "Limpiar historial",
     "history_desc": "Las últimas frases dictadas se guardan de forma local.",
     "history_empty": "El historial está vacío. Los textos dictados se mostrarán aquí.",
+    "history_search_empty": "No se encontraron resultados para su búsqueda.",
     "history_badge_cloud": "Nube",
     "history_badge_local": "Local",
     "history_engine_whisper": "Whisper",
@@ -1119,7 +1139,7 @@ const i18nDict = {
     "overlay_timer_desc": "Contador de tiempo bajo el indicador. Los errores siempre se muestran.",
     "overlay_timer_checkbox": "Mostrar temporizador en el overlay",
     "mic_meter_title": "Micrófono",
-    "mic_meter_desc": "Compruebe el nivel de la señal de entrada en tiempo real.",
+    "mic_meter_desc": "Dispositivo de entrada y prueba de señal",
     "audio_device_label": "Micrófono (dispositivo de entrada)",
     "audio_device_default": "Predeterminado (sistema)",
     "mic_meter_test_btn_start": "Comprobar",
@@ -1199,8 +1219,10 @@ const i18nDict = {
     "engine_desc": "Choisissez entre un traitement cloud de haute qualité ou une reconnaissance locale 100% hors ligne.",
     "engine_cloud": "Cloud",
     "engine_cloud_meta": "Gemini, OpenAI, Groq",
+    "engine_cloud_desc": "Haute précision et rapidité via les modèles cloud",
     "engine_local": "Local",
     "engine_local_meta": "Privé, hors ligne",
+    "engine_local_desc": "Confidentialité totale, fonctionne hors ligne sur votre PC",
     "lang_bias_title": "Langue de dictée",
     "lang_bias_desc": "Forcer une langue spécifique pour la dictée ou utiliser la détection automatique.",
     "lang_bias_label": "Sélectionner la langue",
@@ -1258,6 +1280,7 @@ const i18nDict = {
     "history_clear": "Effacer l'historique",
     "history_desc": "Les dernières phrases dictées sont enregistrées localement.",
     "history_empty": "Historique vide. Vos textes transcrits s'afficheront ici.",
+    "history_search_empty": "Aucun résultat trouvé pour votre recherche.",
     "history_badge_cloud": "Cloud",
     "history_badge_local": "Local",
     "history_engine_whisper": "Whisper",
@@ -1411,7 +1434,7 @@ const i18nDict = {
     "overlay_timer_desc": "Compteur de temps sous l'indicateur. Les erreurs sont toujours affichées.",
     "overlay_timer_checkbox": "Afficher le minuteur sur l'overlay",
     "mic_meter_title": "Microphone",
-    "mic_meter_desc": "Vérifiez le niveau du signal d'entrée en temps réel.",
+    "mic_meter_desc": "Périphérique d'entrée et test du signal",
     "audio_device_label": "Microphone (périphérique d'entrée)",
     "audio_device_default": "Par défaut (système)",
     "mic_meter_test_btn_start": "Vérifier",
@@ -1491,8 +1514,10 @@ const i18nDict = {
     "engine_desc": "Scegli tra l'elaborazione cloud di alta qualità o il riconoscimento locale offline.",
     "engine_cloud": "Cloud",
     "engine_cloud_meta": "Gemini, OpenAI, Groq",
+    "engine_cloud_desc": "Elevata precisione e velocità tramite modelli cloud",
     "engine_local": "Locale",
     "engine_local_meta": "Privato, offline",
+    "engine_local_desc": "Massima privacy, funziona offline sul tuo PC",
     "lang_bias_title": "Lingua dettatura",
     "lang_bias_desc": "Imposta una lingua fissa per la transrizione o usa il rilevamento automatico.",
     "lang_bias_label": "Seleziona lingua",
@@ -1550,6 +1575,7 @@ const i18nDict = {
     "history_clear": "Cancella cronologia",
     "history_desc": "Le ultime frasi dettate vengono salvate in locale.",
     "history_empty": "La cronologia è vuota. I testi dettati appariranno qui.",
+    "history_search_empty": "Nessun risultato trovato per la tua ricerca.",
     "history_badge_cloud": "Cloud",
     "history_badge_local": "Locale",
     "history_engine_whisper": "Whisper",
@@ -1703,7 +1729,7 @@ const i18nDict = {
     "overlay_timer_desc": "Contatore del tempo sotto l'indicatore. Gli errori sono sempre visibili.",
     "overlay_timer_checkbox": "Mostra timer nell'overlay",
     "mic_meter_title": "Microfono",
-    "mic_meter_desc": "Controlla il livello del segnale in ingresso in tempo reale.",
+    "mic_meter_desc": "Dispositivo di ingresso e test del segnale",
     "audio_device_label": "Microfono (dispositivo di input)",
     "audio_device_default": "Predefinito (sistema)",
     "mic_meter_test_btn_start": "Verifica",
@@ -1783,8 +1809,10 @@ const i18nDict = {
     "engine_desc": "选择高品质云端识别，或完全离线的本地语音识别。",
     "engine_cloud": "云端",
     "engine_cloud_meta": "Gemini, OpenAI, Groq",
+    "engine_cloud_desc": "通过云端模型提供高精度和快速识别",
     "engine_local": "本地",
     "engine_local_meta": "私密、离线",
+    "engine_local_desc": "完全隐私保护，在电脑上离线运行",
     "lang_bias_title": "识别语言",
     "lang_bias_desc": "强制设定特定的听写语言，或使用自动检测。",
     "lang_bias_label": "选择语言",
@@ -1842,6 +1870,7 @@ const i18nDict = {
     "history_clear": "清空历史",
     "history_desc": "您最近转换出的文字将缓存在本地。",
     "history_empty": "历史记录为空。您听写的文字会显示在这里。",
+    "history_search_empty": "未找到与您的搜索匹配的结果。",
     "history_badge_cloud": "云端",
     "history_badge_local": "本地",
     "history_engine_whisper": "Whisper",
@@ -1995,7 +2024,7 @@ const i18nDict = {
     "overlay_timer_desc": "指示器下方的计时器。错误始终显示。",
     "overlay_timer_checkbox": "在悬浮窗上显示计时器",
     "mic_meter_title": "麦克风",
-    "mic_meter_desc": "实时检查输入信号电平。",
+    "mic_meter_desc": "输入设备与信号检测",
     "audio_device_label": "麦克风（输入设备）",
     "audio_device_default": "默认（系统）",
     "mic_meter_test_btn_start": "检测",
@@ -2075,8 +2104,10 @@ const i18nDict = {
     "engine_desc": "Escolha entre processamento na nuvem de alta qualidade ou reconhecimento de voz local 100% offline.",
     "engine_cloud": "Na nuvem",
     "engine_cloud_meta": "Gemini, OpenAI, Groq",
+    "engine_cloud_desc": "Alta precisão e velocidade via modelos na nuvem",
     "engine_local": "Local",
     "engine_local_meta": "Privado, offline",
+    "engine_local_desc": "Privacidade total, funciona offline no seu PC",
     "lang_bias_title": "Idioma de ditado",
     "lang_bias_desc": "Forçar um idioma específico para a transcrição ou usar detecção automática.",
     "lang_bias_label": "Selecionar idioma",
@@ -2134,6 +2165,7 @@ const i18nDict = {
     "history_clear": "Limpar histórico",
     "history_desc": "As últimas frases ditadas são armazenadas localmente.",
     "history_empty": "O histórico está vazio. Seus textos ditados aparecerão aqui.",
+    "history_search_empty": "Nenhum resultado encontrado para sua pesquisa.",
     "history_badge_cloud": "Nuvem",
     "history_badge_local": "Local",
     "history_engine_whisper": "Whisper",
@@ -2287,7 +2319,7 @@ const i18nDict = {
     "overlay_timer_desc": "Contador de tempo abaixo do indicador. Erros são sempre exibidos.",
     "overlay_timer_checkbox": "Exibir temporizador no overlay",
     "mic_meter_title": "Microfone",
-    "mic_meter_desc": "Verifique o nível do sinal de entrada em tempo real.",
+    "mic_meter_desc": "Dispositivo de entrada e teste de sinal",
     "audio_device_label": "Microfone (dispositivo de entrada)",
     "audio_device_default": "Padrão (sistema)",
     "mic_meter_test_btn_start": "Verificar",
@@ -2367,8 +2399,10 @@ const i18nDict = {
     "engine_desc": "Yüksek kaliteli bulut işleme veya tamamen çevrimdışı yerel konuşma tanıma arasında seçim yapın.",
     "engine_cloud": "Bulut",
     "engine_cloud_meta": "Gemini, OpenAI, Groq",
+    "engine_cloud_desc": "Bulut modelleri ile yüksek doğruluk ve hız",
     "engine_local": "Yerel",
     "engine_local_meta": "Gizli, çevrimdışı",
+    "engine_local_desc": "Tam gizlilik, bilgisayarınızda çevrimdışı çalışır",
     "lang_bias_title": "Yazım Dili",
     "lang_bias_desc": "Transkripsiyon için belirli bir dili zorlayın veya otomatik algılamayı kullanın.",
     "lang_bias_label": "Dil Seçin",
@@ -2426,6 +2460,7 @@ const i18nDict = {
     "history_clear": "Geçmişi Temizle",
     "history_desc": "Son sesli yazımlarınız yerel olarak saklanır.",
     "history_empty": "Geçmiş boş. Yazdığınız metinler burada görünecektir.",
+    "history_search_empty": "Aramanız için sonuç bulunamadı.",
     "history_badge_cloud": "Bulut",
     "history_badge_local": "Yerel",
     "history_engine_whisper": "Whisper",
@@ -2579,7 +2614,7 @@ const i18nDict = {
     "overlay_timer_desc": "Gösterge altında süre sayacı. Hatalar her zaman görünür.",
     "overlay_timer_checkbox": "Arayüzde zamanlayıcıyı göster",
     "mic_meter_title": "Mikrofon",
-    "mic_meter_desc": "Gelen sinyal seviyesini gerçek zamanlı olarak kontrol edin.",
+    "mic_meter_desc": "Giriş aygıtı ve sinyal kontrolü",
     "audio_device_label": "Mikrofon (giriş cihazı)",
     "audio_device_default": "Varsayılan (sistem)",
     "mic_meter_test_btn_start": "Kontrol et",
@@ -2653,6 +2688,7 @@ function syncPanelSelection(select) {
   const panel = wrap && wrap.querySelector(".select-panel");
   if (!panel) return;
   const value = select.value;
+  wrap._syncSelectValue?.();
   panel.querySelectorAll(".select-panel-item").forEach((item) => {
     const isSelected = item.dataset.value === value;
     item.classList.toggle("is-selected", isSelected);
@@ -2660,11 +2696,68 @@ function syncPanelSelection(select) {
   });
 }
 
+function getSelectOptionIconKey(selectId, optionValue) {
+  if (!selectId || !optionValue) return null;
+  const id = selectId.toLowerCase();
+  const val = String(optionValue).toLowerCase();
+
+  if (id.includes("provider")) {
+    return `provider-${val}`;
+  }
+  if (id.includes("local-engine")) {
+    return `engine-${val}`;
+  }
+  if (id.includes("edit-mode")) {
+    if (val === "auto") return "sparkles";
+    if (val === "local") return "cpu";
+    if (val === "cloud") return "cloud";
+    return null;
+  }
+  if (id.includes("sound-theme") || id.includes("sound")) {
+    return `sound-${val}`;
+  }
+  if (id.includes("lang") || id.includes("language") || id.includes("translate-target")) {
+    return `lang-${val}`;
+  }
+  return null;
+}
+
 function buildSelectPanel(select) {
   const wrap = select.closest(".select-wrap");
   const panel = wrap && wrap.querySelector(".select-panel");
   if (!panel) return;
   panel.textContent = "";
+
+  // The header sits at y=0 inside the unified card as a click target to close the dropdown
+  const head = document.createElement("div");
+  head.className = "select-panel-head";
+  head.setAttribute("aria-hidden", "true");
+  head.addEventListener("mousedown", (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    closeSelectPanels();
+    select.blur();
+  });
+  panel.appendChild(head);
+
+  // Animated body container keeps items and scrollbar strictly inside
+  // the grid collapse track so everything retracts together.
+  const body = document.createElement("div");
+  body.className = "select-panel-body";
+  panel.appendChild(body);
+
+  const track = document.createElement("div");
+  track.className = "select-panel-track";
+  body.appendChild(track);
+
+  const divider = document.createElement("div");
+  divider.className = "select-panel-divider";
+  track.appendChild(divider);
+
+  const list = document.createElement("div");
+  list.className = "select-panel-list";
+  track.appendChild(list);
+
   let optionIndex = 0;
   for (const option of select.options) {
     if (option.disabled) continue;
@@ -2675,6 +2768,36 @@ function buildSelectPanel(select) {
     item.dataset.value = option.value;
     item.setAttribute("role", "option");
     item.setAttribute("aria-selected", option.value === select.value ? "true" : "false");
+
+    const iconKey = getSelectOptionIconKey(select.id, option.value);
+    // Languages stay text: a two-letter code badge mirrors the tray submenu.
+    // The two special rows (auto / keyboard layout) use a glyph instead.
+    const langCode = iconKey && iconKey.startsWith("lang-") ? iconKey.slice("lang-".length) : null;
+    let iconSvg = null;
+    if (langCode === "auto") {
+      iconSvg = getIcon("globe", { size: 16, className: "select-panel-item-icon" });
+    } else if (langCode === "layout") {
+      iconSvg = getIcon("keyboard", { size: 16, className: "select-panel-item-icon" });
+    } else if (iconKey && !langCode) {
+      iconSvg = iconKey.startsWith("provider-")
+        ? (getBrandIcon(iconKey, { size: 16, className: "select-panel-item-icon" }) || getIcon(iconKey, { size: 16, className: "select-panel-item-icon" }))
+        : getIcon(iconKey, { size: 16, className: "select-panel-item-icon" });
+    }
+
+    if (iconSvg) {
+      item.classList.add("has-icon");
+      const iconWrap = document.createElement("span");
+      iconWrap.className = "select-panel-item-icon";
+      iconWrap.setAttribute("aria-hidden", "true");
+      iconWrap.innerHTML = iconSvg;
+      item.appendChild(iconWrap);
+    } else if (langCode) {
+      const codeBadge = document.createElement("span");
+      codeBadge.className = "select-panel-item-code";
+      codeBadge.setAttribute("aria-hidden", "true");
+      codeBadge.textContent = langCode.toUpperCase();
+      item.appendChild(codeBadge);
+    }
 
     const main = document.createElement("div");
     main.className = "select-panel-item-main";
@@ -2687,15 +2810,14 @@ function buildSelectPanel(select) {
     const check = document.createElement("span");
     check.className = "select-panel-item-check";
     check.setAttribute("aria-hidden", "true");
-    check.innerHTML =
-      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+    check.innerHTML = getIcon("check", { size: 16, strokeWidth: 2.2 });
 
     item.appendChild(main);
     item.appendChild(check);
     item.addEventListener("click", () => {
       pickSelectValue(select, option.value);
     });
-    panel.appendChild(item);
+    list.appendChild(item);
   }
   syncPanelSelection(select);
 }
@@ -2704,15 +2826,37 @@ function rebuildSelectPanels() {
   document.querySelectorAll("select.custom-select").forEach(buildSelectPanel);
 }
 
-function closeSelectPanels() {
-  document.querySelectorAll(".select-panel.open").forEach((panel) => {
+function closeSelectPanels(immediate = false) {
+  document.querySelectorAll(".select-panel.open, .select-panel.closing").forEach((panel) => {
+    const wrap = panel.closest(".select-wrap");
+    // Immediately remove select-active so chevron animates back in sync
+    wrap?.classList.remove("select-active");
+    if (panel._closeTimer) {
+      clearTimeout(panel._closeTimer);
+      panel._closeTimer = null;
+    }
+
+    if (immediate) {
+      wrap?.classList.remove("select-closing");
+      panel.classList.remove("open", "closing");
+      panel.style.display = "none";
+      return;
+    }
+
+    wrap?.classList.add("select-closing");
     panel.classList.remove("open");
     panel.classList.add("closing");
-    if (panel._closeTimer) clearTimeout(panel._closeTimer);
-    panel._closeTimer = setTimeout(() => {
-      panel.classList.remove("closing");
+
+    const finish = () => {
+      if (panel._closeTimer) clearTimeout(panel._closeTimer);
       panel._closeTimer = null;
-    }, 120);
+      wrap?.classList.remove("select-closing");
+      if (panel.classList.contains("closing")) {
+        panel.classList.remove("closing");
+        panel.style.display = "none";
+      }
+    };
+    panel._closeTimer = setTimeout(finish, 150);
   });
   document.querySelectorAll("select.custom-select[aria-expanded]").forEach((el) => {
     el.setAttribute("aria-expanded", "false");
@@ -2731,12 +2875,18 @@ function toggleSelectPanel(select) {
       clearTimeout(panel._closeTimer);
       panel._closeTimer = null;
     }
+    wrap?.classList.remove("select-closing");
     panel.classList.remove("closing");
     // Values can change programmatically (loadSettings, engine switching)
     // after the panel was built, so the accent mark must be re-synced
     // against the current value every time the panel opens.
     syncPanelSelection(select);
+
+    panel.style.display = "block";
+    void panel.offsetHeight;
+
     panel.classList.add("open");
+    wrap.classList.add("select-active");
     select.setAttribute("aria-expanded", "true");
     const selectedItem = panel.querySelector(".select-panel-item.is-selected");
     if (selectedItem?.id) {
@@ -2747,13 +2897,15 @@ function toggleSelectPanel(select) {
 
 function pickSelectValue(select, value) {
   if (select.value === value) {
-    closeSelectPanels();
+    closeSelectPanels(true);
+    select.blur();
     return;
   }
   select.value = value;
   select.dispatchEvent(new Event("change", { bubbles: true }));
   syncPanelSelection(select);
-  closeSelectPanels();
+  closeSelectPanels(true);
+  select.blur();
 }
 
 function movePanelFocus(select, direction) {
@@ -2831,6 +2983,30 @@ function initSelectPanels() {
     catcher.setAttribute("aria-hidden", "true");
     wrap.insertBefore(catcher, select);
     catcher.addEventListener("mousedown", handleSelectMousedown);
+
+    // One chevron for the whole control: it sits above both the field and the
+    // open panel, so it can rotate without being clipped by the panel.
+    const chevron = document.createElement("span");
+    chevron.className = "select-chevron";
+    chevron.setAttribute("aria-hidden", "true");
+    chevron.innerHTML = getIcon("chevron-down", { size: 14, strokeWidth: 2 });
+    wrap.appendChild(chevron);
+
+    // Native <select> paints its text with the system font, which would not
+    // match the panel's rows. The visible label is a real element instead; the
+    // select itself stays focusable underneath with transparent text.
+    const value = document.createElement("span");
+    value.className = "select-value";
+    value.setAttribute("aria-hidden", "true");
+    const syncValue = () => {
+      const option = select.selectedOptions[0];
+      value.textContent = option ? option.textContent.trim() : "";
+    };
+    syncValue();
+    select.addEventListener("change", syncValue);
+    wrap._syncSelectValue = syncValue;
+    wrap.appendChild(value);
+
     select.addEventListener("keydown", handleSelectKeydown);
 
     // Clicking the associated <label for="…"> activates the native select
@@ -2952,17 +3128,261 @@ document.addEventListener("DOMContentLoaded", () => {
   // Navigation tabs follow the WAI-ARIA tab pattern and remain native buttons.
   const tabs = document.querySelectorAll(".nav-tab");
   const panels = document.querySelectorAll(".tab-panel");
+  const navContainer = document.querySelector(".settings-nav");
+  const navIndicator = document.getElementById("nav-indicator");
 
-  function activateTab(tab) {
+  /**
+   * @param {HTMLElement | null} indicator
+   * @param {number} left
+   * @param {number} top
+   * @param {number} width
+   * @param {number} height
+   * @param {boolean} [immediate]
+   */
+  function positionSlidingIndicator(indicator, left, top, width, height, immediate = false) {
+    if (!indicator || width <= 0 || height <= 0) return;
+    if (immediate) {
+      indicator.style.transition = "none";
+    }
+    indicator.style.transform = `translate3d(${left}px, ${top}px, 0)`;
+    indicator.style.width = `${width}px`;
+    indicator.style.height = `${height}px`;
+    indicator.style.opacity = "1";
+    if (immediate) {
+      indicator.offsetHeight;
+      indicator.style.transition = "";
+    }
+  }
+
+  function updateNavIndicator(tab, immediate = false) {
+    if (!navIndicator || !navContainer || !tab) return;
+    const navRect = navContainer.getBoundingClientRect();
+    const tabRect = tab.getBoundingClientRect();
+    positionSlidingIndicator(
+      navIndicator,
+      tabRect.left - navRect.left,
+      tabRect.top - navRect.top,
+      tabRect.width,
+      tabRect.height,
+      immediate
+    );
+  }
+
+  const engineTrack = document.getElementById("engine-segmented-track");
+  const engineIndicator = document.getElementById("engine-indicator");
+  let lastEngineTrackWidth = 0;
+
+  /** @param {boolean} [immediate] */
+  function updateEngineIndicator(immediate = false) {
+    if (!engineTrack || !engineIndicator) return;
+    const checked = engineTrack.querySelector('input[type="radio"]:checked');
+    const activeSegment = checked?.closest(".engine-segment");
+    if (!(activeSegment instanceof HTMLElement)) return;
+    if (activeSegment.offsetWidth <= 0 || activeSegment.offsetHeight <= 0) return;
+
+    lastEngineTrackWidth = engineTrack.offsetWidth;
+    positionSlidingIndicator(
+      engineIndicator,
+      activeSegment.offsetLeft,
+      activeSegment.offsetTop,
+      activeSegment.offsetWidth,
+      activeSegment.offsetHeight,
+      immediate
+    );
+  }
+
+  const STAGGER_STEP_MS = 75;
+  const STAGGER_DURATION_MS = 300;
+  const STAGGER_TARGET_SELECTOR = ":scope > .card, :scope > #local-engine-section > .summary-block";
+  const tabList = Array.from(tabs);
+  /** @type {Element | null} */
+  let activeTab = tabList.find((item) => item.classList.contains("active")) || tabList[0] || null;
+  /** @type {number | null} */
+  let staggerCleanupTimer = null;
+  /** @type {number | null} */
+  let engineStaggerCleanupTimer = null;
+
+  /** @param {Element | null} el */
+  function replayEngineSwitchFade(el) {
+    if (!(el instanceof HTMLElement)) return;
+    el.classList.remove("engine-switch-fade");
+    void el.offsetWidth;
+    el.classList.add("engine-switch-fade");
+  }
+
+  /**
+   * @param {Element} panel
+   * @param {string} enteringClass
+   * @param {string} dirProp
+   * @param {string} [targetClass]
+   */
+  function clearStaggerState(panel, enteringClass, dirProp, targetClass = "") {
+    if (!(panel instanceof HTMLElement)) return;
+    panel.classList.remove(enteringClass);
+    panel.style.removeProperty(dirProp);
+    panel.querySelectorAll(STAGGER_TARGET_SELECTOR).forEach((el) => {
+      if (el instanceof HTMLElement) {
+        if (targetClass) el.classList.remove(targetClass);
+        el.style.removeProperty("--stagger-i");
+      }
+    });
+  }
+
+  /** @param {Element} panel */
+  function clearPanelStagger(panel) {
+    clearStaggerState(panel, "is-tab-entering", "--nav-dir");
+    clearStaggerState(panel, "is-engine-entering", "--engine-dir", "is-engine-target");
+  }
+
+  /**
+   * @param {Element} el
+   * @param {HTMLElement} panel
+   */
+  function isStaggerTargetVisible(el, panel) {
+    if (!(el instanceof HTMLElement) || el.hidden) return false;
+    /** @type {HTMLElement | null} */
+    let cur = el;
+    while (cur && cur !== panel) {
+      if (cur.hidden || cur.style.display === "none") return false;
+      if (getComputedStyle(cur).display === "none") return false;
+      cur = cur.parentElement;
+    }
+    return true;
+  }
+
+  /**
+   * @param {HTMLElement} panel
+   * @param {number} direction
+   * @param {Element[]} targets
+   * @param {{ enteringClass: string, dirProp: string, targetClass?: string, timerKey: "tab" | "engine" }} cfg
+   */
+  function runStaggerEntrance(panel, direction, targets, cfg) {
+    clearPanelStagger(panel);
+    if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) {
+      return;
+    }
+    let visibleIndex = 0;
+    targets.forEach((el) => {
+      if (!isStaggerTargetVisible(el, panel)) return;
+      if (el instanceof HTMLElement) {
+        if (cfg.targetClass) el.classList.add(cfg.targetClass);
+        el.style.setProperty("--stagger-i", String(visibleIndex));
+        visibleIndex += 1;
+      }
+    });
+    if (visibleIndex === 0) return;
+
+    panel.style.setProperty(cfg.dirProp, String(direction));
+    // Flush layout before re-adding the class so rapid switching restarts keyframes cleanly.
+    void panel.offsetWidth;
+    panel.classList.add(cfg.enteringClass);
+
+    if (cfg.timerKey === "tab" && staggerCleanupTimer !== null) {
+      window.clearTimeout(staggerCleanupTimer);
+      staggerCleanupTimer = null;
+    }
+    if (cfg.timerKey === "engine" && engineStaggerCleanupTimer !== null) {
+      window.clearTimeout(engineStaggerCleanupTimer);
+      engineStaggerCleanupTimer = null;
+    }
+
+    const totalDurationMs = (visibleIndex - 1) * STAGGER_STEP_MS + STAGGER_DURATION_MS + 40;
+    const handle = window.setTimeout(() => {
+      if (cfg.timerKey === "tab") staggerCleanupTimer = null;
+      else engineStaggerCleanupTimer = null;
+      clearStaggerState(panel, cfg.enteringClass, cfg.dirProp, cfg.targetClass || "");
+    }, totalDurationMs);
+
+    if (cfg.timerKey === "tab") staggerCleanupTimer = handle;
+    else engineStaggerCleanupTimer = handle;
+  }
+
+  /**
+   * @param {HTMLElement} panel
+   * @param {number} direction
+   */
+  function playPanelCardStagger(panel, direction) {
+    if (engineStaggerCleanupTimer !== null) {
+      window.clearTimeout(engineStaggerCleanupTimer);
+      engineStaggerCleanupTimer = null;
+    }
+    runStaggerEntrance(
+      panel,
+      direction,
+      Array.from(panel.querySelectorAll(STAGGER_TARGET_SELECTOR)),
+      { enteringClass: "is-tab-entering", dirProp: "--nav-dir", timerKey: "tab" }
+    );
+  }
+
+  /** @param {"local" | "cloud"} mode */
+  function playEngineModeStagger(mode) {
+    const speechPanel = document.getElementById("panel-speech");
+    if (!(speechPanel instanceof HTMLElement)) return;
+    if (staggerCleanupTimer !== null) {
+      window.clearTimeout(staggerCleanupTimer);
+      staggerCleanupTimer = null;
+    }
+    /** @type {Element[]} */
+    const targets = mode === "local"
+      ? Array.from(speechPanel.querySelectorAll(":scope > #local-engine-section > .summary-block"))
+      : [
+          document.getElementById("card-api-keys"),
+          document.getElementById("card-cloud-fallback"),
+        ].filter((el) => el !== null);
+    const direction = mode === "local" ? 1 : -1;
+    runStaggerEntrance(speechPanel, direction, targets, {
+      enteringClass: "is-engine-entering",
+      dirProp: "--engine-dir",
+      targetClass: "is-engine-target",
+      timerKey: "engine",
+    });
+  }
+
+  function activateTab(tab, immediateIndicator = false) {
+    const prevTab = activeTab;
+    const isSameTab = tab === prevTab;
+    const prevIndex = prevTab ? tabList.indexOf(prevTab) : -1;
+    const nextIndex = tabList.indexOf(tab);
+    const direction = prevIndex >= 0 && nextIndex >= 0 && nextIndex < prevIndex ? -1 : 1;
+    activeTab = tab;
+
     tabs.forEach((item) => {
       const selected = item === tab;
       item.classList.toggle("active", selected);
       item.setAttribute("aria-selected", String(selected));
       item.tabIndex = selected ? 0 : -1;
     });
+    updateNavIndicator(tab, immediateIndicator);
+
+    if (staggerCleanupTimer !== null && (!isSameTab || immediateIndicator)) {
+      window.clearTimeout(staggerCleanupTimer);
+      staggerCleanupTimer = null;
+    }
+    if (engineStaggerCleanupTimer !== null && (!isSameTab || immediateIndicator)) {
+      window.clearTimeout(engineStaggerCleanupTimer);
+      engineStaggerCleanupTimer = null;
+    }
+
+    /** @type {HTMLElement | null} */
+    let nextPanel = null;
     panels.forEach((panel) => {
-      panel.style.display = panel.id === "panel-" + tab.dataset.tab ? "flex" : "none";
+      const isMatch = panel.id === "panel-" + tab.dataset.tab;
+      panel.style.display = isMatch ? "flex" : "none";
+      if (!isMatch || immediateIndicator) {
+        clearPanelStagger(panel);
+      }
+      if (isMatch && panel instanceof HTMLElement) {
+        nextPanel = panel;
+      }
     });
+
+    if (nextPanel && !isSameTab && !immediateIndicator) {
+      playPanelCardStagger(nextPanel, direction);
+    }
+
+    if (tab.dataset.tab === "speech") {
+      updateEngineIndicator(true);
+    }
     if (tab.dataset.tab === "history") loadHistoryList();
     if (tab.dataset.tab !== "speech" && isMicTesting) {
       stopMicTesting();
@@ -2974,10 +3394,40 @@ document.addEventListener("DOMContentLoaded", () => {
   });
   bindTabKeyboardNavigation(tabs, activateTab);
 
+  if (navContainer && navIndicator) {
+    navContainer.classList.add("has-indicator");
+    const activeTab = document.querySelector(".nav-tab.active");
+    if (activeTab) {
+      requestAnimationFrame(() => updateNavIndicator(activeTab, true));
+    }
+    window.addEventListener("resize", () => {
+      const curTab = document.querySelector(".nav-tab.active");
+      if (curTab) updateNavIndicator(curTab, true);
+    });
+  }
+
+  if (engineTrack && engineIndicator) {
+    engineTrack.classList.add("has-indicator");
+    updateEngineIndicator(true);
+    requestAnimationFrame(() => updateEngineIndicator(true));
+    window.addEventListener("resize", () => updateEngineIndicator(true));
+    if (typeof ResizeObserver === "function") {
+      const engineTrackObserver = new ResizeObserver(() => {
+        if (engineTrack.offsetWidth !== lastEngineTrackWidth) {
+          updateEngineIndicator(true);
+        }
+      });
+      engineTrackObserver.observe(engineTrack);
+    }
+    if (document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(() => updateEngineIndicator(true));
+    }
+  }
+
   const initialTabMatch = (location.hash || "").replace("#", "") || new URLSearchParams(location.search).get("tab");
   if (initialTabMatch) {
     const targetTab = Array.from(tabs).find((t) => t.dataset.tab === initialTabMatch);
-    if (targetTab) activateTab(targetTab);
+    if (targetTab) activateTab(targetTab, true);
   }
 
   // Toggle API Key visibility
@@ -2999,44 +3449,54 @@ const radioCloud = document.getElementById("radio-cloud");
   const selectLocalEngine = document.getElementById("select-local-engine");
   const groupWhisperModels = document.getElementById("group-whisper-models");
   const groupParakeetModels = document.getElementById("group-parakeet-models");
+  /** @type {"local" | "cloud" | null} */
+  let lastRenderedEngineMode = null;
 
-  function updateEngineUI() {
+  /** @param {boolean} [immediate] */
+  function updateEngineUI(immediate = false) {
     const vocabCard = document.getElementById("card-vocabulary");
     const fallbackCard = document.getElementById("card-cloud-fallback");
     const streamingCard = document.getElementById("card-streaming");
     const langCard = document.getElementById("card-language");
     const localEngineSection = document.getElementById("local-engine-section");
     const apiKeysCard = document.getElementById("card-api-keys");
+    const captionDesc = document.getElementById("engine-caption-desc");
+    /** @type {"local" | "cloud"} */
+    const nextMode = radioLocal.checked ? "local" : "cloud";
+    const shouldAnimateMode = !immediate && lastRenderedEngineMode !== null && lastRenderedEngineMode !== nextMode;
 
-    const animateIn = (el) => {
-      if (!el) return;
-      el.classList.remove("engine-switch-fade");
-      void el.offsetWidth;
-      el.classList.add("engine-switch-fade");
-    };
-
-    if (radioLocal.checked) {
+    if (nextMode === "local") {
+      if (captionDesc) {
+        captionDesc.setAttribute("data-i18n", "engine_local_desc");
+        captionDesc.textContent = getTranslation("engine_local_desc");
+      }
       if (localEngineSection) {
         localEngineSection.style.display = "flex";
-        animateIn(localEngineSection);
       }
       updateLocalEngineUI();
       if (fallbackCard) fallbackCard.style.display = "none";
       if (apiKeysCard) apiKeysCard.style.display = "none";
     } else {
+      if (captionDesc) {
+        captionDesc.setAttribute("data-i18n", "engine_cloud_desc");
+        captionDesc.textContent = getTranslation("engine_cloud_desc");
+      }
       if (localEngineSection) localEngineSection.style.display = "none";
       if (apiKeysCard) {
         apiKeysCard.style.display = "flex";
-        animateIn(apiKeysCard);
       }
       if (fallbackCard) {
         fallbackCard.style.display = "flex";
-        animateIn(fallbackCard);
       }
       if (langCard) langCard.style.display = "none";
       if (vocabCard) vocabCard.style.display = "none";
       if (streamingCard) streamingCard.style.display = "none";
     }
+    if (shouldAnimateMode) {
+      playEngineModeStagger(nextMode);
+    }
+    lastRenderedEngineMode = nextMode;
+    updateEngineIndicator(immediate === true);
     updateFirstRunCard();
   }
 
@@ -3056,37 +3516,29 @@ const radioCloud = document.getElementById("radio-cloud");
     const streamingCard = document.getElementById("card-streaming");
     const gpuSettings = document.getElementById("gpu-acceleration-settings");
 
-    const animateIn = (el) => {
-      if (!el) return;
-      el.classList.remove("engine-switch-fade");
-      void el.offsetWidth;
-      el.classList.add("engine-switch-fade");
-    };
-
     if (vocabCard) {
       vocabCard.style.display = isParakeet ? "none" : "flex";
-      if (!isParakeet) animateIn(vocabCard);
     }
     if (langCard) {
       langCard.style.display = isParakeet ? "none" : "flex";
-      if (!isParakeet) animateIn(langCard);
     }
     if (streamingCard) {
       streamingCard.style.display = isParakeet ? "flex" : "none";
-      if (isParakeet) animateIn(streamingCard);
     }
     if (gpuSettings) {
       gpuSettings.style.display = "block";
     }
     if (isParakeet) {
+      const wasHidden = groupParakeetModels.style.display === "none";
       groupWhisperModels.style.display = "none";
       groupParakeetModels.style.display = "block";
-      animateIn(groupParakeetModels);
+      if (wasHidden) replayEngineSwitchFade(groupParakeetModels);
       selectModelCard("parakeet-v3");
     } else {
+      const wasHidden = groupWhisperModels.style.display === "none";
       groupWhisperModels.style.display = "block";
       groupParakeetModels.style.display = "none";
-      animateIn(groupWhisperModels);
+      if (wasHidden) replayEngineSwitchFade(groupWhisperModels);
       if (selectedModelName === "parakeet-v3") {
         selectModelCard(lastSelectedWhisperModel || "large-v3-turbo-q5_0");
       }
@@ -3171,8 +3623,8 @@ async function refreshEngineHealth() {
     });
   }
 
-  radioCloud.addEventListener("change", updateEngineUI);
-  radioLocal.addEventListener("change", updateEngineUI);
+  radioCloud.addEventListener("change", () => updateEngineUI(false));
+  radioLocal.addEventListener("change", () => updateEngineUI(false));
 
   // Dynamic API Key Links
   const linkGetKey = document.getElementById("link-get-key");
@@ -3204,18 +3656,12 @@ async function refreshEngineHealth() {
     const modelGroup = document.getElementById("custom-provider-model-group");
     const editUrlGroup = document.getElementById("edit-custom-provider-url-group");
     const editModelGroup = document.getElementById("edit-custom-provider-model-group");
-    const animateIn = (el) => {
-      if (!el) return;
-      el.classList.remove("engine-switch-fade");
-      void el.offsetWidth;
-      el.classList.add("engine-switch-fade");
-    };
     [urlGroup, modelGroup, editUrlGroup, editModelGroup].forEach((group) => {
       if (group) {
         const wasHidden = group.style.display === "none";
         group.style.display = isCustom ? "flex" : "none";
         if (isCustom && wasHidden) {
-          animateIn(group);
+          replayEngineSwitchFade(group);
         }
       }
     });
@@ -3795,7 +4241,7 @@ const btnSaveSettings = document.getElementById("btn-save-settings");
     renderProviderKeyInput();
     updateApiKeyLink();
     updateCustomProviderUI();
-    updateEngineUI();
+    updateEngineUI(true);
     markSettingsModified(true);
   }
 
@@ -3928,7 +4374,7 @@ const btnSaveSettings = document.getElementById("btn-save-settings");
       const arrow = document.createElement("span");
       arrow.className = "replacement-arrow";
       arrow.setAttribute("aria-hidden", "true");
-      arrow.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>';
+      arrow.innerHTML = getIcon("arrow-right", { size: 14 });
 
       const val = document.createElement("span");
       val.className = "replacement-value";
@@ -3944,11 +4390,15 @@ const btnSaveSettings = document.getElementById("btn-save-settings");
       const delLabel = getTranslation("replacements_delete_aria") || "Delete replacement";
       btnDel.setAttribute("aria-label", delLabel);
       btnDel.setAttribute("title", delLabel);
-      btnDel.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>';
+      btnDel.innerHTML = getIcon("close", { size: 14 });
       btnDel.addEventListener("click", () => {
-        currentReplacements.splice(index, 1);
-        renderReplacementsList(currentReplacements);
-        markSettingsModified(true);
+        if (item.classList.contains("is-deleting")) return;
+        item.classList.add("is-deleting");
+        setTimeout(() => {
+          currentReplacements.splice(index, 1);
+          renderReplacementsList(currentReplacements);
+          markSettingsModified(true);
+        }, 180);
       });
 
       item.appendChild(info);
@@ -4013,10 +4463,21 @@ const btnSaveSettings = document.getElementById("btn-save-settings");
       const item = document.createElement("div");
       item.className = "guide-item";
 
+      const header = document.createElement("div");
+      header.className = "guide-item-header";
+
+      const iconWrap = document.createElement("span");
+      iconWrap.className = "guide-item-icon";
+      iconWrap.setAttribute("aria-hidden", "true");
+      iconWrap.innerHTML = getIcon(cmd.id, { size: 16 });
+
       const title = document.createElement("span");
       title.className = "guide-item-title";
       title.textContent = (cmd.names && (cmd.names[lang] || cmd.names.ru)) || cmd.id;
-      item.appendChild(title);
+
+      header.appendChild(iconWrap);
+      header.appendChild(title);
+      item.appendChild(header);
 
       const chipsContainer = document.createElement("div");
       chipsContainer.className = "command-chips";
@@ -4071,12 +4532,6 @@ const btnSaveSettings = document.getElementById("btn-save-settings");
 
     const syncLlmGroupVisibility = () => {
       const groupCloud = document.getElementById("group-edit-cloud-provider");
-      const animateIn = (el) => {
-        if (!el) return;
-        el.classList.remove("engine-switch-fade");
-        void el.offsetWidth;
-        el.classList.add("engine-switch-fade");
-      };
       if (selectAiEditMode) {
         const mode = selectAiEditMode.value;
         const needsLocal = mode === "auto" || mode === "local";
@@ -4084,12 +4539,12 @@ const btnSaveSettings = document.getElementById("btn-save-settings");
         if (groupLlmModels) {
           const wasHidden = groupLlmModels.style.display === "none";
           groupLlmModels.style.display = needsLocal ? "" : "none";
-          if (needsLocal && wasHidden) animateIn(groupLlmModels);
+          if (needsLocal && wasHidden) replayEngineSwitchFade(groupLlmModels);
         }
         if (groupCloud) {
           const wasHidden = groupCloud.style.display === "none";
           groupCloud.style.display = needsCloud ? "" : "none";
-          if (needsCloud && wasHidden) animateIn(groupCloud);
+          if (needsCloud && wasHidden) replayEngineSwitchFade(groupCloud);
         }
       }
     };
@@ -4365,6 +4820,7 @@ const btnSaveSettings = document.getElementById("btn-save-settings");
 
         selectProvider.value = settings.api_provider || "gemini";
         previousSelProvider = selectProvider.value;
+        syncPanelSelection(selectProvider);
         if (selectEditCloudProvider) {
           selectEditCloudProvider.value = selectProvider.value;
           syncPanelSelection(selectEditCloudProvider);
@@ -4393,11 +4849,13 @@ const btnSaveSettings = document.getElementById("btn-save-settings");
         }
         if (selectLanguage) {
           selectLanguage.value = settings.language || "auto";
+          syncPanelSelection(selectLanguage);
         }
         if (selectLocalEngine) {
           selectLocalEngine.value = settings.local_engine || "whisper";
+          syncPanelSelection(selectLocalEngine);
         }
-        updateEngineUI();
+        updateEngineUI(true);
         if (textareaDictionary) {
           textareaDictionary.value = settings.dictionary || "";
         }
@@ -4475,7 +4933,7 @@ const btnSaveSettings = document.getElementById("btn-save-settings");
         }
         updateSoundUI();
  
-        updateEngineUI();
+        updateEngineUI(true);
         await loadAudioDevices(settings.audio_input_device || "default");
         await refreshDownloadedModels();
 
@@ -4546,12 +5004,10 @@ modelCards.forEach(card => {
         if (isDownloaded) {
           actionEl.innerHTML = `
             <span class="status-ready-badge" title="${dict.model_status_ready || "Установлено"}" aria-label="${dict.model_status_ready || "Установлено"}" data-i18n-title="model_status_ready">
-              <svg class="status-ready-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="20 6 9 17 4 12"></polyline>
-              </svg>
+              ${getIcon("check", { size: 12, className: "status-ready-icon", strokeWidth: 2.2 })}
             </span>
             <button type="button" class="btn-delete-card-model" title="${deleteLabel}" aria-label="${deleteLabel}"${isActiveModel ? " disabled aria-disabled=\"true\"" : ""} data-model="${model}">
-              <svg class="btn-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+              ${getIcon("trash", { size: 14, className: "btn-icon" })}
             </button>
           `;
           // Bind click to the delete button
@@ -4562,7 +5018,7 @@ modelCards.forEach(card => {
         } else {
           actionEl.innerHTML = `
             <button type="button" class="btn-download-card-model" data-model="${model}">
-              <svg class="btn-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+              ${getIcon("download", { size: 14, className: "btn-icon" })}
               ${dict.model_action_download || "Скачать"}
             </button>
           `;
@@ -4901,7 +5357,7 @@ await invoke("set_settings", { settings });
         const cancelLabel = getTranslation("model_cancel_download") || "Отменить загрузку";
         cancelBtn.title = cancelLabel;
         cancelBtn.setAttribute("aria-label", cancelLabel);
-        cancelBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>';
+        cancelBtn.innerHTML = getIcon("close", { size: 16 });
         cancelBtn.addEventListener("click", (e) => {
           e.stopPropagation();
           cancelBtn.disabled = true;
@@ -4981,6 +5437,7 @@ await invoke("set_settings", { settings });
       showStatus(getTranslation("model_deleted_success"), "neutral");
       if (model === "parakeet-v3" && selectLocalEngine?.value === "parakeet") {
         selectLocalEngine.value = "whisper";
+        syncPanelSelection(selectLocalEngine);
         updateLocalEngineUI();
         markSettingsModified();
       }
@@ -5124,10 +5581,10 @@ await invoke("set_settings", { settings });
       if (isDownloaded) {
         actionEl.innerHTML = `
           <span class="status-ready-badge" title="${dict.model_status_ready || "Установлено"}" aria-label="${dict.model_status_ready || "Установлено"}" data-i18n-title="model_status_ready">
-            <svg class="status-ready-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            ${getIcon("check", { size: 12, className: "status-ready-icon", strokeWidth: 2.2 })}
           </span>
           <button type="button" class="btn-delete-card-model" title="${dict.model_action_delete || "Удалить"}" aria-label="${dict.model_action_delete || "Удалить"}" data-gpu="${provider}">
-            <svg class="btn-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+            ${getIcon("trash", { size: 14, className: "btn-icon" })}
           </button>
         `;
         actionEl.querySelector(".btn-delete-card-model").addEventListener("click", (e) => {
@@ -5137,7 +5594,7 @@ await invoke("set_settings", { settings });
       } else {
         actionEl.innerHTML = `
           <button type="button" class="btn-download-card-model" data-gpu="${provider}">
-            <svg class="btn-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+            ${getIcon("download", { size: 14, className: "btn-icon" })}
             ${dict.model_action_download || "Скачать"}
           </button>
         `;
@@ -5201,7 +5658,7 @@ await invoke("set_settings", { settings });
       const cancelLabel = getTranslation("model_cancel_download") || "Отменить загрузку";
       cancelBtn.title = cancelLabel;
       cancelBtn.setAttribute("aria-label", cancelLabel);
-      cancelBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>';
+      cancelBtn.innerHTML = getIcon("close", { size: 16 });
 cancelBtn.addEventListener("click", (e) => {
         e.stopPropagation();
         cancelBtn.disabled = true;
@@ -5387,7 +5844,7 @@ card.addEventListener("keydown", async (e) => {
           const button = document.createElement("button");
           button.type = "button";
           button.className = "modal-link-button";
-          button.innerHTML = `<span>${label}</span><svg class="link-icon" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>`;
+          button.innerHTML = `<span>${label}</span>${getIcon("external", { size: 11, className: "link-icon" })}`;
           button.addEventListener("click", () => {
             invoke("open_url", { url }).catch(console.error);
           });
@@ -5411,7 +5868,7 @@ card.addEventListener("keydown", async (e) => {
         setTimeout(() => {
           if (modal.open) modal.close();
           resolve(result);
-        }, 200);
+        }, 160);
       }
       function onOk() { cleanUp(true); }
       function onCancel() { cleanUp(false); }
@@ -5426,8 +5883,13 @@ card.addEventListener("keydown", async (e) => {
   }
   let toastTimer = null;
   let toastHideTimer = null;
+  let isToastHovered = false;
 
-  function hideToast() {
+  function hideToast(e) {
+    if (e && (e.type === "click" || e === true)) {
+      isToastHovered = false;
+    }
+    if (isToastHovered) return;
     const toastEl = document.getElementById("app-toast");
     if (!toastEl || toastEl.hidden) return;
     if (toastTimer) {
@@ -5443,7 +5905,7 @@ card.addEventListener("keydown", async (e) => {
       toastEl.hidden = true;
       toastEl.classList.remove("toast-hiding");
       toastHideTimer = null;
-    }, 180);
+    }, 140);
   }
 
   function showToast(msg, type = "info", duration = 3000) {
@@ -5467,23 +5929,23 @@ card.addEventListener("keydown", async (e) => {
     if (toastIcon) {
       if (type === "error") {
         toastEl.classList.add("toast-error");
-        toastIcon.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>`;
+        toastIcon.innerHTML = getIcon("alert", { size: 16 });
       } else if (type === "success") {
         toastEl.classList.add("toast-success");
-        toastIcon.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+        toastIcon.innerHTML = getIcon("check", { size: 16 });
       } else if (type === "neutral") {
         toastEl.classList.add("toast-neutral");
-        toastIcon.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>`;
+        toastIcon.innerHTML = getIcon("trash", { size: 16 });
       } else {
         toastEl.classList.add("toast-info");
-        toastIcon.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>`;
+        toastIcon.innerHTML = getIcon("info", { size: 16 });
       }
     }
 
     toastEl.hidden = false;
     void toastEl.offsetWidth;
 
-    if (duration > 0) {
+    if (duration > 0 && !isToastHovered) {
       toastTimer = setTimeout(hideToast, duration);
     }
   }
@@ -5543,6 +6005,28 @@ card.addEventListener("keydown", async (e) => {
   const toastClose = document.getElementById("toast-close");
   if (toastClose) {
     toastClose.addEventListener("click", hideToast);
+  }
+  const appToast = document.getElementById("app-toast");
+  if (appToast) {
+    appToast.addEventListener("mouseenter", () => {
+      isToastHovered = true;
+      if (toastTimer) {
+        clearTimeout(toastTimer);
+        toastTimer = null;
+      }
+      if (toastHideTimer) {
+        clearTimeout(toastHideTimer);
+        toastHideTimer = null;
+        appToast.classList.remove("toast-hiding");
+      }
+    });
+    appToast.addEventListener("mouseleave", () => {
+      isToastHovered = false;
+      if (!appToast.hidden) {
+        if (toastTimer) clearTimeout(toastTimer);
+        toastTimer = setTimeout(hideToast, 2000);
+      }
+    });
   }
   if (btnSaveSettings) {
     btnSaveSettings.addEventListener("click", saveSettings);
@@ -5646,6 +6130,12 @@ if (e.button === 0 && !e.target.closest(".window-control-btn") && !e.target.clos
       btnClearSearch.setAttribute("aria-label", clearSearchText);
     }
 
+    if (toastClose) {
+      const toastCloseText = dict.toast_close || (lang === "ru" ? "Закрыть" : "Close");
+      toastClose.setAttribute("title", toastCloseText);
+      toastClose.setAttribute("aria-label", toastCloseText);
+    }
+
     const btnToggleKey = document.getElementById("btn-toggle-key");
     if (btnToggleKey) {
       const toggleKeyText = dict.api_key_toggle_visibility || "Show/hide key";
@@ -5746,12 +6236,20 @@ if (e.button === 0 && !e.target.closest(".window-control-btn") && !e.target.clos
     if (btnToggleMicMeter && isMicTesting) {
       btnToggleMicMeter.textContent = getTranslation("mic_meter_test_btn_stop");
     }
+    const curActiveTab = document.querySelector(".nav-tab.active");
+    if (curActiveTab && typeof updateNavIndicator === "function") {
+      updateNavIndicator(curActiveTab, true);
+    }
+    if (typeof updateEngineIndicator === "function") {
+      updateEngineIndicator(true);
+    }
   }
 
 
   // Microphone Meter Test
   const btnToggleMicMeter = document.getElementById("btn-toggle-mic-meter");
   const micMeterDisplay = document.getElementById("mic-meter-display");
+  const micMeterCollapsible = document.getElementById("mic-meter-collapsible");
   const micMeterFill = document.getElementById("mic-meter-fill");
   const micMeterPeak = document.getElementById("mic-meter-peak");
   let rawVolumeTarget = 0;
@@ -5785,7 +6283,8 @@ if (e.button === 0 && !e.target.closest(".window-control-btn") && !e.target.clos
       micMeterFill.style.width = `${smoothedVolume.toFixed(1)}%`;
     }
     if (micMeterPeak) {
-      micMeterPeak.style.left = `${peakVolume.toFixed(1)}%`;
+      const clampedPeak = Math.min(100, Math.max(0, peakVolume));
+      micMeterPeak.style.left = `calc(${clampedPeak.toFixed(1)}% - ${clampedPeak >= 99 ? "2px" : "0px"})`;
       micMeterPeak.style.opacity = peakVolume > 1.0 ? "1" : "0";
     }
 
@@ -5818,7 +6317,7 @@ if (e.button === 0 && !e.target.closest(".window-control-btn") && !e.target.clos
       micMeterPeak.style.left = "0%";
       micMeterPeak.style.opacity = "0";
     }
-    if (micMeterDisplay) micMeterDisplay.hidden = true;
+    if (micMeterCollapsible) micMeterCollapsible.classList.remove("is-active");
   }
 
   if (btnToggleMicMeter) {
@@ -5831,7 +6330,7 @@ if (e.button === 0 && !e.target.closest(".window-control-btn") && !e.target.clos
         smoothedVolume = 0;
         peakVolume = 0;
         peakHoldFrames = 0;
-        if (micMeterDisplay) micMeterDisplay.hidden = false;
+        if (micMeterCollapsible) micMeterCollapsible.classList.add("is-active");
 
         try {
           await invoke("start_mic_meter");
@@ -5913,7 +6412,9 @@ if (e.button === 0 && !e.target.closest(".window-control-btn") && !e.target.clos
     });
 
     if (filtered.length === 0) {
-      historyContainer.innerHTML = `<div class="history-empty-state" id="history-empty-text" data-i18n="history_empty">${dict.history_empty}</div>`;
+      const isFiltered = Boolean(q || (historyActiveFilter && historyActiveFilter !== "all"));
+      const emptyMsg = isFiltered ? (dict.history_search_empty || dict.history_empty) : dict.history_empty;
+      historyContainer.innerHTML = `<div class="history-empty-state" id="history-empty-text">${escapeHtml(emptyMsg)}</div>`;
       return;
     }
 
@@ -5993,13 +6494,8 @@ if (e.button === 0 && !e.target.closest(".window-control-btn") && !e.target.clos
           <div class="history-item-text">${escapeHtml(entry.text)}</div>
         </div>
         <button type="button" class="btn-copy-history" title="${escapeHtml(dict.history_copy_title || "Copy to clipboard")}" aria-label="${escapeHtml(dict.history_copy_title || "Copy to clipboard")}">
-          <svg class="copy-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-          </svg>
-          <svg class="check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="20 6 9 17 4 12"></polyline>
-          </svg>
+          ${getIcon("copy", { size: 16, className: "copy-icon" })}
+          ${getIcon("check", { size: 16, className: "check-icon" })}
         </button>
       `;
 
@@ -6458,7 +6954,7 @@ if (e.button === 0 && !e.target.closest(".window-control-btn") && !e.target.clos
 
         const tabBtn = document.getElementById(`tab-btn-${step.tab}`);
         if (tabBtn) {
-          activateTab(tabBtn);
+          activateTab(tabBtn, true);
         }
 
         const total = TOUR_STEPS.length;

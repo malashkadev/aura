@@ -560,9 +560,10 @@ test("model card actions render visible download icons and delete buttons with d
   assert.match(css, /\.btn-delete-card-model\s*\{[^}]*width:\s*28px;[^}]*height:\s*28px;/);
   assert.match(css, /\.btn-download-card-model\s*\{[^}]*display:\s*inline-flex;/);
 
-  // main.js must include explicit SVG dimensions and aria-labels for download and delete buttons
+  // main.js must render the action icons through the icon registry at explicit sizes
   assert.match(main, /class="btn-delete-card-model"[^>]*title="[^"]+"[^>]*aria-label="[^"]+"/);
-  assert.match(main, /<svg class="btn-icon" width="14" height="14"/);
+  assert.match(main, /getIcon\("download",\s*\{\s*size:\s*14,\s*className:\s*"btn-icon"\s*\}\)/);
+  assert.match(main, /getIcon\("trash",\s*\{\s*size:\s*14,\s*className:\s*"btn-icon"\s*\}\)/);
   assert.match(main, /actionEl\.querySelector\("\.btn-delete-card-model"\)\.addEventListener\("click",\s*\(e\)\s*=>/);
 
   // The active model cannot be deleted: the button is disabled and the guard
@@ -716,5 +717,128 @@ test("desktop app maintains strict design-system isolation from website palette 
     commandsGuideIdx < aiEditModeIdx,
     "Voice commands guide entry must appear above AI edit mode selector for immediate discoverability",
   );
+});
+
+test("monochrome icon set is wired into settings and tray", () => {
+  const html = read("src/index.html");
+  const tray = read("src/tray-menu.html");
+  const main = read("src/main.js");
+  const trayJs = read("src/tray-menu.js");
+
+  assert.match(html, /<script src="icon-system\.js\?v=[^"]+"><\/script>/);
+  assert.match(tray, /<script src="icon-system\.js\?v=[^"]+"><\/script>/);
+  assert.match(main, /from "\.\/icon-system-api\.js"/);
+  assert.match(trayJs, /from "\.\/icon-system-api\.js"/);
+  assert.match(main, /hydrateAppIcons\(\)/);
+  assert.match(trayJs, /hydrateAppIcons\(\)/);
+  // The toast close button is the only icon that is not part of a card header.
+  assert.match(read("src/icon-system-integration.js"), /\["#toast-close svg", "close"\]/);
+});
+
+test("settings card headings and language rows carry their own icon slot", () => {
+  const integration = read("src/icon-system-integration.js");
+  const html = read("src/index.html");
+  const main = read("src/main.js");
+  const css = read("src/style.css");
+
+  assert.match(integration, /const CARD_TITLES = \[/);
+  assert.match(integration, /applyCardTitleIcon/);
+  assert.match(css, /\.card-title-row \{/);
+  assert.match(css, /\.card-title-icon svg \{/);
+
+  const cardBlock = integration.slice(
+    integration.indexOf("const CARD_TITLES = ["),
+    integration.indexOf("];", integration.indexOf("const CARD_TITLES = ["))
+  );
+  const mapped = [...cardBlock.matchAll(/\["(#[^"]+)", "[^"]+"\]/g)].map((m) => m[1]);
+  assert.ok(mapped.length >= 19, `expected the full card set, got ${mapped.length}`);
+  for (const id of mapped) {
+    assert.ok(html.includes(`id="${id.slice(1)}"`), `card mapping points at a missing id: ${id}`);
+  }
+  assert.match(integration, /\["\.card-history", "clock"\]/);
+
+  assert.match(css, /\.select-panel-item-code \{/);
+  assert.match(main, /select-panel-item-code/);
+  assert.match(main, /langCode === "auto"/);
+  assert.match(main, /langCode === "layout"/);
+});
+
+test("accordion glyphs use solid speech dots and pencil while preserved icons stay intact", () => {
+  const sandbox = { window: {} };
+  vm.runInNewContext(read("src/icon-system.js"), sandbox);
+  const icons = sandbox.window.AuraIcons;
+
+  assert.equal(icons.resolve("section-voice-commands"), "command-bubble");
+  const bubble = icons.body("section-voice-commands");
+  assert.match(bubble, /fill="currentColor"/, "solid voice bubble uses currentColor fill");
+  assert.match(bubble, /fill-rule="evenodd"/, "solid voice bubble punches three speech dots");
+  assert.doesNotMatch(bubble, /3 3-3 3/, "the old chevron inside the bubble is gone");
+
+  assert.equal(icons.resolve("section-edit-engine"), "pencil");
+  const pencil = icons.body("section-edit-engine");
+  assert.match(pencil, /fill="currentColor"/, "solid pencil uses currentColor fill");
+  assert.match(pencil, /rotate\(45 8 8\)/, "solid pencil preserves angled geometry");
+
+  // Explicit exceptions preserved / adapted for Aura icon set
+  assert.equal(icons.resolve("action-search"), "search");
+  assert.match(icons.body("search"), /<circle cx="11" cy="11" r="6\.5"/);
+  assert.equal(icons.resolve("action-reset"), "reset");
+  assert.match(icons.body("reset"), /<path d="M3\.5 12a8\.5 8\.5 0 1 0/);
+  assert.equal(icons.resolve("engine-parakeet"), "cuda");
+  assert.equal(icons.resolve("engine-whisper"), "provider-openai");
+  assert.equal(icons.resolve("model-tiny"), "bars-1");
+  assert.equal(icons.resolve("model-large"), "bars-5");
+  assert.equal(icons.resolve("model-turbo"), "bolt");
+  assert.equal(icons.resolve("model-qwen"), "qwen");
+  assert.match(icons.body("model-qwen"), /fill="currentColor"\s+stroke="none"/);
+  assert.equal(icons.resolve("engine-cloud"), "cloud");
+  assert.equal(icons.resolve("provider-custom"), "server");
+  assert.equal(icons.resolve("filter-all"), "filter");
+  assert.equal(icons.resolve("tray-settings"), "settings");
+
+  // Tray language selector shows globe/keyboard icons in both list and trigger badge
+  const trayMenuJs = read("src/tray-menu.js");
+  assert.match(trayMenuJs, /code === "auto"[\s\S]*?getIcon\("globe"/);
+  assert.match(trayMenuJs, /code === "layout"[\s\S]*?getIcon\("keyboard"/);
+  assert.match(trayMenuJs, /langItem\.code === "auto"[\s\S]*?getIcon\("globe"/);
+  assert.match(trayMenuJs, /langItem\.code === "layout"[\s\S]*?getIcon\("keyboard"/);
+
+  // Trigger status icon matches recognition status icon style without pill chrome
+  const trayMenuCss = read("src/tray-menu.css");
+  assert.match(
+    trayMenuCss,
+    /\.lang-status-badge\.is-icon\s*\{[^}]*border:\s*none;[^}]*background:\s*transparent;/
+  );
+});
+
+test("official provider marks render with their brand colours", () => {
+  const sandbox = { window: {} };
+  vm.runInNewContext(read("src/icon-system.js"), sandbox);
+  const icons = sandbox.window.AuraIcons;
+  assert.ok(icons, "icon registry must expose window.AuraIcons");
+
+  const gemini = icons.brandSvg("provider-gemini", { size: 16 });
+  assert.match(gemini, /<svg/);
+  assert.match(gemini, /linearGradient/);
+  // The rainbow comes from the masked, blurred blobs of the official artwork.
+  assert.match(gemini, /<mask[\s\S]*mask-type:alpha/);
+  assert.match(gemini, /<feGaussianBlur/);
+  for (const colour of ["#FFE432", "#FC413D", "#00B95C", "#3186FF", "#FBBC04"]) {
+    assert.ok(gemini.includes(colour), `Gemini mark must keep ${colour}`);
+  }
+  assert.doesNotMatch(gemini, /__ID__/, "mask and filter ids must be resolved per render");
+
+  assert.match(icons.brandSvg("provider-groq", { size: 16 }), /#F43E01/);
+  assert.match(icons.brandSvg("provider-huggingface", { size: 16 }), /#FFD21E/);
+
+  // The OpenAI mark is white by brand in the cloud provider list, so hovering
+  // the row must not repaint it orange. Local recognition keeps the quiet
+  // monochrome glyph and inherits the row colour.
+  const openAi = icons.brandSvg("provider-openai", { size: 16 });
+  assert.match(openAi, /#FFFFFF/);
+  assert.doesNotMatch(openAi, /currentColor/);
+  const whisperEngine = icons.body("engine-whisper");
+  assert.match(whisperEngine, /currentColor/);
+  assert.doesNotMatch(whisperEngine, /#FFFFFF/);
 });
 

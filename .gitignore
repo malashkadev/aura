@@ -57,6 +57,14 @@ src-tauri/binaries/ggml-cuda.dll
 src-tauri/binaries/llm-cpu/
 src-tauri/binaries/llm-vulkan/
 
+# Local design labs and visual QA artifacts
+/landing-lab/
+/design-lab/1wt-inspired/
+/tests/screenshots/
+/test-*.png
+/docs/design/1WT_LANDING_ANALYSIS.md
+/docs/design/AURA_1WT_DESIGN_SYSTEM.md
+
 # Website temporary preview profiles, test scripts, and test screenshots
 website/.temp_edge_profile*/
 website/.temp_edge_verify*/

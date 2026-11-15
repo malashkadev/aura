@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aura — Icon System Catalog</title>
+  <style>
+    :root {
+      --bg-app: #0d0d0e;
+      --bg-surface: #141416;
+      --bg-hover: rgba(255, 255, 255, 0.05);
+      --bg-active: rgba(255, 66, 0, 0.12);
+      --border-color: rgba(255, 255, 255, 0.08);
+      --border-focus: rgba(255, 66, 0, 0.5);
+      --text-primary: #f5f7fa;
+      --text-secondary: #9ba6b3;
+      --text-muted: #64748b;
+      --accent-color: #ff4200;
+      --cell-bg: #101012;
+      --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    [data-theme="light"] {
+      --bg-app: #f8fafc;
+      --bg-surface: #ffffff;
+      --bg-hover: rgba(0, 0, 0, 0.04);
+      --bg-active: rgba(234, 88, 12, 0.1);
+      --border-color: rgba(0, 0, 0, 0.08);
+      --border-focus: rgba(234, 88, 12, 0.5);
+      --text-primary: #0f172a;
+      --text-secondary: #475569;
+      --text-muted: #94a3b8;
+      --accent-color: #ea580c;
+      --cell-bg: #f1f5f9;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: var(--bg-app);
+      color: var(--text-primary);
+      font-family: var(--font-sans);
+      font-size: 13px;
+      line-height: 1.4;
+      padding: 16px;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* CONTROL BAR (User Rule 10: Pure Functional Controls) */
+    .catalog-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 10px 14px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      margin-bottom: 16px;
+      position: sticky;
+      top: 16px;
+      z-index: 100;
+    }
+
+    .catalog-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .filter-input {
+      background: var(--bg-app);
+      border: 1px solid var(--border-color);
+      color: var(--text-primary);
+      padding: 6px 10px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-family: inherit;
+      width: 220px;
+      outline: none;
+    }
+    .filter-input:focus {
+      border-color: var(--border-focus);
+    }
+
+    .btn-group {
+      display: inline-flex;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      overflow: hidden;
+    }
+
+    .btn-ctrl {
+      background: var(--bg-surface);
+      color: var(--text-secondary);
+      border: none;
+      border-right: 1px solid var(--border-color);
+      padding: 6px 12px;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      font-family: inherit;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-ctrl:last-child {
+      border-right: none;
+    }
+    .btn-ctrl:hover {
+      background: var(--bg-hover);
+      color: var(--text-primary);
+    }
+    .btn-ctrl.active {
+      background: var(--bg-active);
+      color: var(--accent-color);
+      font-weight: 600;
+    }
+
+    .stat-badge {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    /* DATA TABLE */
+    .catalog-table-wrap {
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      overflow: hidden;
+      background: var(--bg-surface);
+    }
+
+    table.catalog-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+    }
+
+    table.catalog-table th {
+      background: var(--bg-surface);
+      color: var(--text-secondary);
+      font-weight: 600;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border-color);
+      border-right: 1px solid var(--border-color);
+    }
+    table.catalog-table th:last-child {
+      border-right: none;
+    }
+
+    table.catalog-table td {
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--border-color);
+      border-right: 1px solid var(--border-color);
+      vertical-align: middle;
+    }
+    table.catalog-table td:last-child {
+      border-right: none;
+    }
+
+    table.catalog-table tr:hover td {
+      background: var(--bg-hover);
+    }
+
+    /* SPECIFIC CELLS */
+    .cell-id {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-primary);
+      white-space: nowrap;
+    }
+    .cell-title {
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    .cell-category {
+      font-size: 11px;
+      font-family: var(--font-mono);
+      color: var(--text-muted);
+      text-transform: uppercase;
+    }
+
+    .cell-icon-preview {
+      text-align: center;
+      background: var(--cell-bg);
+      padding: 8px;
+      width: 44px;
+    }
+
+    .icon-box {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 0;
+    }
+
+    .empty-indicator {
+      font-size: 10px;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+      background: var(--bg-hover);
+      padding: 2px 6px;
+      border-radius: 4px;
+      border: 1px dashed var(--border-color);
+      white-space: nowrap;
+    }
+
+    /* REAL UI PAIRING EXAMPLES (1:1 with Aura desktop code) */
+    .cell-pairing {
+      min-width: 220px;
+    }
+
+    /* 1:1 Navigation Tab (.nav-tab) */
+    .aura-demo-nav-tab {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 8px 12px;
+      background: transparent;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      border: 1px solid transparent;
+      cursor: default;
+    }
+    .aura-demo-nav-tab:hover {
+      background: var(--bg-hover);
+      color: var(--text-primary);
+    }
+    .aura-demo-nav-tab.active {
+      background: var(--bg-active);
+      color: var(--accent-color);
+      border-color: rgba(255, 66, 0, 0.2);
+    }
+    .aura-demo-nav-tab.active svg {
+      color: var(--accent-color);
+    }
+
+    /* 1:1 System Tray Item (.aura-menu-item) */
+    .aura-demo-tray-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 6px 10px;
+      border-radius: 6px;
+      font-size: 13px;
+      color: var(--text-secondary);
+      background: transparent;
+      cursor: default;
+      max-width: 240px;
+    }
+    .aura-demo-tray-item:hover {
+      background: var(--bg-hover);
+      color: var(--text-primary);
+    }
+    .aura-demo-tray-item svg {
+      flex-shrink: 0;
+    }
+    .aura-demo-tray-item .menu-text {
+      flex: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .aura-demo-tray-item .menu-arrow {
+      margin-left: auto;
+      opacity: 0.5;
+    }
+
+    /* 1:1 Model Card (.model-card) */
+    .aura-demo-model-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 8px 10px;
+      border-radius: 8px;
+      background: var(--bg-app);
+      border: 1px solid var(--border-color);
+      max-width: 280px;
+    }
+    .aura-demo-model-card-info {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+    }
+    .aura-demo-model-card-name {
+      font-weight: 600;
+      font-size: 12px;
+      white-space: nowrap;
+    }
+    .aura-demo-model-card-meta {
+      font-size: 11px;
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+    .aura-demo-btn-icon {
+      width: 26px;
+      height: 26px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 6px;
+      background: transparent;
+      border: 1px solid var(--border-color);
+      color: var(--text-secondary);
+    }
+
+    /* 1:1 Custom Select Item (.select-panel-item) */
+    .aura-demo-select-item {
+      display: grid;
+      grid-template-columns: 16px 1fr auto;
+      column-gap: 8px;
+      align-items: center;
+      padding: 6px 8px;
+      border-radius: 6px;
+      font-size: 12px;
+      color: var(--text-primary);
+      background: var(--bg-app);
+      border: 1px solid var(--border-color);
+      max-width: 240px;
+    }
+    .aura-demo-select-item .check {
+      color: var(--accent-color);
+    }
+
+    /* 1:1 Accordion Summary (.summary-block) */
+    .aura-demo-summary-block {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 8px 12px;
+      border-radius: 8px;
+      background: var(--bg-app);
+      border: 1px solid var(--border-color);
+      max-width: 260px;
+    }
+    .aura-demo-summary-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .aura-demo-summary-title {
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    /* 1:1 History Filter Segment (.history-filter-btn) */
+    .aura-demo-history-filter {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 8px;
+      border-radius: 6px;
+      background: var(--bg-hover);
+      border: 1px solid var(--border-color);
+      font-size: 12px;
+      color: var(--text-primary);
+    }
+
+    /* 1:1 About Fluent Action Row (.about-fluent-icon) */
+    .aura-demo-about-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 6px 10px;
+      border-radius: 8px;
+      background: var(--bg-app);
+      border: 1px solid var(--border-color);
+      max-width: 260px;
+    }
+    .aura-demo-fluent-tile {
+      width: 30px;
+      height: 30px;
+      border-radius: 6px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .aura-demo-about-text {
+      font-size: 12px;
+      font-weight: 500;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- PURE FUNCTIONAL CONTROL BAR -->
+  <header class="catalog-bar">
+    <div class="catalog-actions">
+      <input type="text" id="filter-input" class="filter-input" placeholder="Search icon by ID, label, category..." />
+      <div class="btn-group" id="category-filters">
+        <button type="button" class="btn-ctrl active" data-cat="all">All</button>
+        <button type="button" class="btn-ctrl" data-cat="navigation">Navigation</button>
+        <button type="button" class="btn-ctrl" data-cat="tray">Tray</button>
+        <button type="button" class="btn-ctrl" data-cat="language">Languages</button>
+        <button type="button" class="btn-ctrl" data-cat="provider">Cloud AI</button>
+        <button type="button" class="btn-ctrl" data-cat="hardware">Hardware</button>
+        <button type="button" class="btn-ctrl" data-cat="model">Models</button>
+        <button type="button" class="btn-ctrl" data-cat="accordion">Accordions</button>
+        <button type="button" class="btn-ctrl" data-cat="sound">Sound</button>
+        <button type="button" class="btn-ctrl" data-cat="reference">Reference Badges</button>
+      </div>
+    </div>
+    <div class="catalog-actions">
+      <div class="btn-group" id="theme-toggle">
+        <button type="button" class="btn-ctrl active" data-theme="dark">Dark</button>
+        <button type="button" class="btn-ctrl" data-theme="light">Light</button>
+      </div>
+      <span class="stat-badge" id="stats-counter">0 / 0</span>
+    </div>
+  </header>
+
+  <!-- COMPARISON MATRIX & REAL UI PAIRING TABLE -->
+  <div class="catalog-table-wrap">
+    <table class="catalog-table">
+      <thead>
+        <tr>
+          <th>Glyph Identifier</th>
+          <th>Category</th>
+          <th style="width: 50px; text-align: center;">Old (20px)</th>
+          <th style="width: 50px; text-align: center;">New (16px)</th>
+          <th style="width: 50px; text-align: center;">New (20px)</th>
+          <th style="width: 50px; text-align: center;">New (24px)</th>
+          <th>1:1 Real Application Markup Pairing</th>
+        </tr>
+      </thead>
+      <tbody id="catalog-body">
+        <!-- Dynamically populated from the legacy icon registry -->
+      </tbody>
+    </table>
+  </div>
+
+  <script type="module">
+    import { ICON_DEFS, getIcon } from './icon-system/legacy/icons.js';
+
+    // Baseline Feather / Lucide paths from Aura 2.0 codebase
+    const OLD_BASELINE_SVGS = {
+      "nav-general": `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>`,
+      "nav-speech": `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>`,
+      "nav-text": `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>`,
+      "nav-hotkeys": `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"></rect><line x1="6" y1="8" x2="6" y2="8"></line><line x1="10" y1="8" x2="10" y2="8"></line><line x1="14" y1="8" x2="14" y2="8"></line><line x1="18" y1="8" x2="18" y2="8"></line><line x1="7" y1="16" x2="17" y2="16"></line></svg>`,
+      "nav-history": `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>`,
+      "nav-about": `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>`,
+      "window-minimize": `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"></line></svg>`,
+      "window-close": `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`,
+      "tray-settings": `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>`,
+      "audio-lines": `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 10v3M6 6v11M10 3v18M14 8v7M18 5v13M22 10v3"></path></svg>`,
+      "globe": `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>`,
+      "gamepad-2": `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"></rect><line x1="6" y1="12" x2="10" y2="12"></line><line x1="8" y1="10" x2="8" y2="14"></line><line x1="15" y1="13" x2="15.01" y2="13"></line><line x1="18" y1="11" x2="18.01" y2="11"></line></svg>`,
+      "power": `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path><line x1="12" y1="2" x2="12" y2="12"></line></svg>`,
+      "cloud": `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"></path></svg>`,
+      "cpu": `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"></rect><rect x="9" y="9" width="6" height="6"></rect><line x1="9" y1="1" x2="9" y2="4"></line><line x1="15" y1="1" x2="15" y2="4"></line><line x1="9" y1="20" x2="9" y2="23"></line><line x1="15" y1="20" x2="15" y2="23"></line><line x1="20" y1="9" x2="23" y2="9"></line><line x1="20" y1="14" x2="23" y2="14"></line><line x1="1" y1="9" x2="4" y2="9"></line><line x1="1" y1="14" x2="4" y2="14"></line></svg>`,
+      "monitor": `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>`,
+      "chevron-down": `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>`,
+      "chevron-right": `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>`,
+      "chevron-left": `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg>`,
+      "check": `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>`,
+      "eye": `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>`,
+      "rotate-ccw": `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path></svg>`,
+      "search": `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>`,
+      "download": `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>`,
+      "upload": `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>`,
+      "trash-2": `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>`,
+      "copy": `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>`,
+      "play-circle": `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polygon points="10 8 16 12 10 16 10 8"></polygon></svg>`,
+      "alert-circle": `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>`,
+      "star": `<svg width="20" height="20" viewBox="0 0 24 24" fill="#ffb800" stroke="#ffb800" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>`,
+      "arrow-up-right": `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg>`
+    };
+
+    // Real Menu & UI Pairing Configurations matching Aura 2.0 components
+    function renderRealUIPairing(key, def) {
+      // 1. Navigation Tabs
+      if (key.startsWith('nav-')) {
+        const labels = {
+          'nav-general': 'Основные',
+          'nav-speech': 'Голос',
+          'nav-text': 'Текст',
+          'nav-hotkeys': 'Управление',
+          'nav-history': 'История',
+          'nav-about': 'О программе'
+        };
+        const isActive = key === 'nav-speech';
+        return `
+          <div class="aura-demo-nav-tab${isActive ? ' active' : ''}">
+            ${getIcon(key, { size: 18, color: 'currentColor' })}
+            <span>${labels[key] || def.title}</span>
+          </div>
+        `;
+      }
+
+      // 2. Tray Menu Items
+      if (key.startsWith('tray-') || key === 'audio-lines' || key === 'globe' || key === 'gamepad-2' || key === 'power') {
+        const labels = {
+          'tray-settings': 'Открыть настройки',
+          'audio-lines': 'Способ распознавания',
+          'globe': 'Язык распознавания',
+          'gamepad-2': 'Игровой режим',
+          'power': 'Выход'
+        };
+        return `
+          <div class="aura-demo-tray-item">
+            ${getIcon(key, { size: 15 })}
+            <span class="menu-text">${labels[key] || def.title}</span>
+            <span class="menu-arrow">${getIcon('chevron-right', { size: 12 })}</span>
+          </div>
+        `;
+      }
+
+      // 3. Language Submenu Items
+      if (key.startsWith('lang-')) {
+        const langLabels = {
+          'lang-auto': 'Автоопределение',
+          'lang-layout': 'По раскладке клавиатуры',
+          'lang-ru': 'Русский',
+          'lang-en': 'English',
+          'lang-de': 'Deutsch',
+          'lang-fr': 'Français',
+          'lang-es': 'Español',
+          'lang-it': 'Italiano',
+          'lang-zh': '中文',
+          'lang-ja': '日本語',
+          'lang-ko': '한국어',
+          'lang-pt': 'Português',
+          'lang-ar': 'العربية',
+          'lang-tr': 'Türkçe',
+          'lang-nl': 'Nederlands'
+        };
+        const isSelected = key === 'lang-ru';
+        return `
+          <div class="aura-demo-tray-item" style="height: 28px;">
+            ${getIcon(key, { size: 15 })}
+            <span class="menu-text">${langLabels[key] || def.title}</span>
+            ${isSelected ? `<span style="color: var(--accent-color);">${getIcon('check', { size: 13, strokeWidth: 2.2 })}</span>` : ''}
+          </div>
+        `;
+      }
+
+      // 4. Cloud Providers
+      if (key.startsWith('provider-')) {
+        const providerNames = {
+          'provider-groq': 'Groq (LPU)',
+          'provider-cerebras': 'Cerebras',
+          'provider-mistral': 'Mistral AI',
+          'provider-deepseek': 'DeepSeek',
+          'provider-openrouter': 'OpenRouter',
+          'provider-gemini': 'Google Gemini',
+          'provider-openai': 'OpenAI Whisper',
+          'provider-huggingface': 'Hugging Face',
+          'provider-custom': 'Custom Endpoint'
+        };
+        return `
+          <div class="aura-demo-select-item">
+            ${getIcon(key, { size: 16 })}
+            <span>${providerNames[key] || def.title}</span>
+            <span class="check">${getIcon('check', { size: 14, strokeWidth: 2.5 })}</span>
+          </div>
+        `;
+      }
+
+      // 5. Model Cards
+      if (key.startsWith('model-') || key.startsWith('engine-')) {
+        const modelNames = {
+          'model-tiny': ['Tiny', '75 МБ'],
+          'model-base': ['Base', '145 МБ · реком.'],
+          'model-small': ['Small', '465 МБ'],
+          'model-medium': ['Medium', '1.5 ГБ'],
+          'model-large': ['Large v3', '3.1 ГБ'],
+          'model-turbo': ['Large Turbo', '550 МБ'],
+          'model-qwen': ['Qwen3 1.7B', '1.2 ГБ'],
+          'engine-whisper': ['Whisper.cpp', 'CPU / CUDA'],
+          'engine-parakeet': ['NVIDIA Parakeet', 'TDT 0.6B'],
+          'engine-cuda': ['NVIDIA CUDA', 'GPU Ready'],
+          'engine-cpu': ['CPU Universal', 'Ready']
+        };
+        const [name, meta] = modelNames[key] || [def.title, 'Active'];
+        return `
+          <div class="aura-demo-model-card">
+            <div class="aura-demo-model-card-info">
+              ${getIcon(key, { size: 16 })}
+              <div>
+                <div class="aura-demo-model-card-name">${name}</div>
+                <div class="aura-demo-model-card-meta">${meta}</div>
+              </div>
+            </div>
+            <div style="display: flex; gap: 4px;">
+              <span class="aura-demo-btn-icon">${getIcon('trash-2', { size: 13 })}</span>
+              <span class="aura-demo-btn-icon" style="color: var(--accent-color);">${getIcon('check', { size: 13, strokeWidth: 2.2 })}</span>
+            </div>
+          </div>
+        `;
+      }
+
+      // 6. Accordions
+      if (key.startsWith('summary-')) {
+        const summaryTitles = {
+          'summary-local-model': 'Локальная модель',
+          'summary-performance': 'Производительность',
+          'summary-commands': 'Голосовые команды',
+          'summary-edit-engine': 'Движок редактирования'
+        };
+        return `
+          <div class="aura-demo-summary-block">
+            <div class="aura-demo-summary-left">
+              ${getIcon(key, { size: 16 })}
+              <span class="aura-demo-summary-title">${summaryTitles[key] || def.title}</span>
+            </div>
+            <span>${getIcon('chevron-down', { size: 14 })}</span>
+          </div>
+        `;
+      }
+
+      // 7. Voice Commands & Filters
+      if (key.startsWith('cmd-') || key.startsWith('filter-')) {
+        return `
+          <div class="aura-demo-history-filter">
+            ${getIcon(key, { size: 12 })}
+            <span>${def.title}</span>
+          </div>
+        `;
+      }
+
+      // 8. Sound Themes
+      if (key.startsWith('sound-')) {
+        return `
+          <div class="aura-demo-select-item">
+            ${getIcon(key, { size: 16 })}
+            <span>${def.title}</span>
+            <span class="check">${getIcon('check', { size: 14, strokeWidth: 2.5 })}</span>
+          </div>
+        `;
+      }
+
+      // 9. Reference Badges (Linear/Tessera Style)
+      if (key.startsWith('badge-')) {
+        return `
+          <div style="display: flex; align-items: center; gap: 8px; font-size: 13px;">
+            ${getIcon(key, { size: 18 })}
+            <span style="font-weight: 500;">${def.title}</span>
+          </div>
+        `;
+      }
+
+      // 10. Default / About Row
+      return `
+        <div class="aura-demo-about-row">
+          <div class="aura-demo-fluent-tile">
+            ${getIcon(key, { size: 16 })}
+          </div>
+          <span class="aura-demo-about-text">${def.title}</span>
+        </div>
+      `;
+    }
+
+    // Populate the Catalog Table
+    const tbody = document.getElementById('catalog-body');
+    const statsCounter = document.getElementById('stats-counter');
+    const filterInput = document.getElementById('filter-input');
+    const categoryFilters = document.getElementById('category-filters');
+    const themeToggle = document.getElementById('theme-toggle');
+
+    let currentCategory = 'all';
+    let searchQuery = '';
+
+    function renderTable() {
+      tbody.innerHTML = '';
+      let visibleCount = 0;
+      const entries = Object.entries(ICON_DEFS);
+
+      for (const [key, def] of entries) {
+        const matchesCategory = currentCategory === 'all' || def.category === currentCategory;
+        const matchesSearch = !searchQuery ||
+          key.toLowerCase().includes(searchQuery) ||
+          def.title.toLowerCase().includes(searchQuery) ||
+          def.category.toLowerCase().includes(searchQuery);
+
+        if (!matchesCategory || !matchesSearch) continue;
+        visibleCount++;
+
+        const tr = document.createElement('tr');
+        const oldBaseline = OLD_BASELINE_SVGS[key] || '<span class="empty-indicator">none (text-only)</span>';
+
+        tr.innerHTML = `
+          <td>
+            <div class="cell-id">${key}</div>
+            <div class="cell-title">${def.title}</div>
+          </td>
+          <td><span class="cell-category">${def.category}</span></td>
+          <td class="cell-icon-preview">
+            <span class="icon-box">${oldBaseline}</span>
+          </td>
+          <td class="cell-icon-preview">
+            <span class="icon-box">${getIcon(key, { size: 16 })}</span>
+          </td>
+          <td class="cell-icon-preview">
+            <span class="icon-box">${getIcon(key, { size: 20 })}</span>
+          </td>
+          <td class="cell-icon-preview">
+            <span class="icon-box">${getIcon(key, { size: 24 })}</span>
+          </td>
+          <td class="cell-pairing">
+            ${renderRealUIPairing(key, def)}
+          </td>
+        `;
+
+        tbody.appendChild(tr);
+      }
+
+      statsCounter.textContent = `${visibleCount} / ${entries.length}`;
+    }
+
+    // Event Listeners
+    filterInput.addEventListener('input', (e) => {
+      searchQuery = e.target.value.trim().toLowerCase();
+      renderTable();
+    });
+
+    categoryFilters.addEventListener('click', (e) => {
+      const btn = e.target.closest('button[data-cat]');
+      if (!btn) return;
+      categoryFilters.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentCategory = btn.dataset.cat;
+      renderTable();
+    });
+
+    themeToggle.addEventListener('click', (e) => {
+      const btn = e.target.closest('button[data-theme]');
+      if (!btn) return;
+      themeToggle.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      document.documentElement.dataset.theme = btn.dataset.theme;
+    });
+
+    // URL parameter parsing for visual QA & deep links
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has('cat')) {
+      currentCategory = urlParams.get('cat');
+      categoryFilters.querySelectorAll('button').forEach(b => {
+        b.classList.toggle('active', b.dataset.cat === currentCategory);
+      });
+    }
+    if (urlParams.get('theme') === 'light') {
+      document.documentElement.dataset.theme = 'light';
+      themeToggle.querySelectorAll('button').forEach(b => {
+        b.classList.toggle('active', b.dataset.theme === 'light');
+      });
+    }
+
+    // Initial render
+    renderTable();
+  </script>
+</body>
+</html>
