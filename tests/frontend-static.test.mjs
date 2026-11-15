@@ -842,3 +842,30 @@ test("official provider marks render with their brand colours", () => {
   assert.doesNotMatch(whisperEngine, /#FFFFFF/);
 });
 
+test("custom selects keep a readable native fallback until the custom label exists", () => {
+  const css = read("src/style.css");
+  const main = read("src/main.js");
+  const html = read("src/index.html");
+
+  const baseRule = css.match(/\.custom-select\s*\{[^}]*\}/s)?.[0] || "";
+  assert.ok(baseRule, ".custom-select base rule must exist");
+  assert.doesNotMatch(
+    baseRule,
+    /color:\s*transparent/,
+    "native select text must stay readable before initSelectPanels runs"
+  );
+  assert.match(
+    css,
+    /\.select-wrap\.is-enhanced\s+\.custom-select\s*\{[^}]*color:\s*transparent/s,
+    "native text is hidden only after the custom label is ready"
+  );
+  assert.match(main, /classList\.toggle\("is-enhanced", Boolean\(text\)\)/);
+  assert.match(main, /value\.textContent = text;/);
+
+  const selectBlocks = html.match(/<select\b[^>]*class="[^"]*custom-select[^"]*"[\s\S]*?<\/select>/g) || [];
+  assert.ok(selectBlocks.length >= 6, `expected at least 6 custom selects, got ${selectBlocks.length}`);
+  for (const block of selectBlocks) {
+    assert.match(block, /<option\b/, "every custom select needs option text for the pre-JS fallback");
+  }
+});
+

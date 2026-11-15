@@ -978,9 +978,9 @@ body {
   background-color: hsl(0, 0%, 8%);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
-  /* The visible label is .select-value: native select text would fall back to
-     the system font and break the match with the panel rows. */
-  color: transparent;
+  /* Native text stays visible until initSelectPanels has created the
+     .select-value label. If the script never runs, the field still reads. */
+  color: var(--text-primary);
   font-family: var(--font-sans);
   font-size: 14px;
   height: 40px;
@@ -1018,6 +1018,12 @@ body {
   border-color: var(--border-color);
   background-color: hsl(0, 0%, 8%);
   transition: border-color 0.2s var(--ease-out);
+}
+
+/* The custom label is the single source of truth once it exists; the native
+   select underneath keeps its transparent text for accessibility and focus. */
+.select-wrap.is-enhanced .custom-select {
+  color: transparent;
 }
 
 /* Visible field label, rendered as HTML so it uses the same font as the panel */

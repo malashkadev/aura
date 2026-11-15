@@ -3000,7 +3000,9 @@ function initSelectPanels() {
     value.setAttribute("aria-hidden", "true");
     const syncValue = () => {
       const option = select.selectedOptions[0];
-      value.textContent = option ? option.textContent.trim() : "";
+      const text = option ? option.textContent.trim() : "";
+      value.textContent = text;
+      wrap.classList.toggle("is-enhanced", Boolean(text));
     };
     syncValue();
     select.addEventListener("change", syncValue);
