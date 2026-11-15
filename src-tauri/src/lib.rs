@@ -180,12 +180,12 @@ async fn set_provider_key(
 async fn set_settings(
     app_handle: tauri::AppHandle,
     settings: settings::Settings,
-) -> Result<(), String> {
+) -> Result<Option<String>, String> {
     keyboard_hook::validate_hotkey(&settings.hotkey)?;
     let save_handle = app_handle.clone();
     let mut saved_settings = settings.clone();
-    tauri::async_runtime::spawn_blocking(move || {
-        let result: Result<(), String> = (|| {
+    let autostart_warning = tauri::async_runtime::spawn_blocking(move || {
+        let result: Result<Option<String>, String> = (|| {
             // Critical invariant: set_settings must never accidentally reset completed onboarding status
             if !saved_settings.has_completed_onboarding {
                 if let Ok(current) = settings::load_settings(&save_handle) {
@@ -207,8 +207,9 @@ async fn set_settings(
                 whisper_runner::validate_local_model_selection(&save_handle, &saved_settings)?;
             }
             settings::save_settings(&save_handle, &saved_settings)?;
-            sync_autostart(&save_handle, saved_settings.autostart);
-            Ok(())
+            let autostart_warning =
+                sync_autostart(&save_handle, saved_settings.autostart).err();
+            Ok(autostart_warning)
         })();
         // The moved-in copy may carry secrets from the request; scrub it.
         zeroize::Zeroize::zeroize(&mut saved_settings.api_key);
@@ -238,7 +239,7 @@ async fn set_settings(
         llm_runner::ensure_llm_server_state(&sidecar_handle, &sidecar_settings);
     });
     let _ = app_handle.emit("settings-changed", ());
-    Ok(())
+    Ok(autostart_warning)
 }
 
 #[tauri::command]
@@ -865,7 +866,7 @@ async fn log_frontend_event(
     Ok(())
 }
 
-fn sync_autostart(app_handle: &tauri::AppHandle, enabled: bool) {
+fn sync_autostart(app_handle: &tauri::AppHandle, enabled: bool) -> Result<(), String> {
     let manager = app_handle.autolaunch();
     let result = if enabled {
         manager.enable()
@@ -881,15 +882,17 @@ fn sync_autostart(app_handle: &tauri::AppHandle, enabled: bool) {
 
         if !enabled && is_not_found {
             crate::logger::log("INFO", "Autostart", None, "Autostart was already disabled.");
-        } else {
-            crate::logger::log(
-                "ERROR",
-                "Autostart",
-                None,
-                &format!("Failed to update autostart ({}): {}", enabled, e),
-            );
+            return Ok(());
         }
+        crate::logger::log(
+            "ERROR",
+            "Autostart",
+            None,
+            &format!("Failed to update autostart ({}): {}", enabled, err_str),
+        );
+        return Err(err_str);
     }
+    Ok(())
 }
 
 fn recording_wav_path(gen: u64) -> std::path::PathBuf {
@@ -4755,7 +4758,7 @@ pub fn run() {
                     &format!("Configured hotkey is invalid; keeping the default: {error}"),
                 );
             }
-            sync_autostart(&app_handle, startup_settings.autostart);
+            let _ = sync_autostart(&app_handle, startup_settings.autostart);
 
             let is_autostart = std::env::args().any(|arg| {
                 arg == "--autostart" || arg == "--minimized" || arg == "--silent"

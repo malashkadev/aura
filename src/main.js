@@ -35,6 +35,7 @@ const i18nDict = {
     "general_autostart_title": "Автозапуск Aura",
     "general_autostart_desc": "Запускать приложение автоматически при входе в операционную систему Windows.",
     "general_autostart_checkbox": "Запускать Aura при старте системы",
+    "autostart_error": "Настройки сохранены, но автозапуск Windows не удалось изменить. Проверьте разрешения.",
     "engine_title": "Распознавание",
     "engine_desc": "Выберите между облачной обработкой высокого качества или полностью автономным локальным распознаванием речи.",
     "engine_cloud": "В облаке",
@@ -331,6 +332,7 @@ const i18nDict = {
     "general_autostart_title": "Aura Autostart",
     "general_autostart_desc": "Launch the app automatically when starting Windows.",
     "general_autostart_checkbox": "Start Aura at system boot",
+    "autostart_error": "Settings were saved, but Windows autostart could not be updated. Check permissions.",
     "engine_title": "Recognition",
     "engine_desc": "Choose between high-quality cloud transcription or fully local speech recognition.",
     "engine_cloud": "Cloud",
@@ -638,6 +640,7 @@ const i18nDict = {
     "general_autostart_title": "Aura Autostart",
     "general_autostart_desc": "Startet die App automatisch beim Anmelden in Windows.",
     "general_autostart_checkbox": "Aura beim Systemstart starten",
+    "autostart_error": "Einstellungen gespeichert, aber der Windows-Autostart konnte nicht geändert werden. Prüfen Sie die Berechtigungen.",
     "engine_title": "Erkennung",
     "engine_desc": "Wählen Sie zwischen Cloud-Transkription oder vollständig lokaler Spracherkennung.",
     "engine_cloud": "Cloud",
@@ -923,6 +926,7 @@ const i18nDict = {
     "general_autostart_title": "Inicio automático",
     "general_autostart_desc": "Iniciar la aplicación de forma automática al arrancar Windows.",
     "general_autostart_checkbox": "Iniciar Aura con el sistema",
+    "autostart_error": "Los ajustes se guardaron, pero no se pudo cambiar el inicio automático de Windows. Comprueba los permisos.",
     "engine_title": "Reconocimiento",
     "engine_desc": "Seleccione entre el procesamiento en la nube de alta calidad o el reconocimiento local totalmente autónomo.",
     "engine_cloud": "En la nube",
@@ -1219,6 +1223,7 @@ const i18nDict = {
     "general_autostart_title": "Lancement automatique",
     "general_autostart_desc": "Lancer l'application automatiquement au démarrage de Windows.",
     "general_autostart_checkbox": "Démarrer Aura avec Windows",
+    "autostart_error": "Les paramètres sont enregistrés, mais le démarrage automatique Windows n'a pas pu être modifié. Vérifiez les autorisations.",
     "engine_title": "Reconnaissance",
     "engine_desc": "Choisissez entre un traitement cloud de haute qualité ou une reconnaissance locale 100% hors ligne.",
     "engine_cloud": "Cloud",
@@ -1515,6 +1520,7 @@ const i18nDict = {
     "general_autostart_title": "Avvio automatico",
     "general_autostart_desc": "Avvia l'app automaticamente all'accesso di Windows.",
     "general_autostart_checkbox": "Avvia Aura con il sistema",
+    "autostart_error": "Impostazioni salvate, ma non è stato possibile modificare l'avvio automatico di Windows. Controlla i permessi.",
     "engine_title": "Riconoscimento",
     "engine_desc": "Scegli tra l'elaborazione cloud di alta qualità o il riconoscimento locale offline.",
     "engine_cloud": "Cloud",
@@ -1811,6 +1817,7 @@ const i18nDict = {
     "general_autostart_title": "自启动设置",
     "general_autostart_desc": "在Windows启动时自动运行此应用程序。",
     "general_autostart_checkbox": "系统启动时运行 Aura",
+    "autostart_error": "设置已保存，但无法更新 Windows 自动启动。请检查权限。",
     "engine_title": "识别",
     "engine_desc": "选择高品质云端识别，或完全离线的本地语音识别。",
     "engine_cloud": "云端",
@@ -2107,6 +2114,7 @@ const i18nDict = {
     "general_autostart_title": "Inicialização",
     "general_autostart_desc": "Iniciar o aplicativo automaticamente com o Windows.",
     "general_autostart_checkbox": "Iniciar o Aura com o Windows",
+    "autostart_error": "As configurações foram salvas, mas não foi possível alterar a inicialização automática do Windows. Verifique as permissões.",
     "engine_title": "Reconhecimento",
     "engine_desc": "Escolha entre processamento na nuvem de alta qualidade ou reconhecimento de voz local 100% offline.",
     "engine_cloud": "Na nuvem",
@@ -2403,6 +2411,7 @@ const i18nDict = {
     "general_autostart_title": "Başlangıçta Çalıştır",
     "general_autostart_desc": "Windows açıldığında uygulamayı otomatik olarak başlat.",
     "general_autostart_checkbox": "Aura'yı sistem açılışında başlat",
+    "autostart_error": "Ayarlar kaydedildi, ancak Windows otomatik başlatma güncellenemedi. İzinleri kontrol edin.",
     "engine_title": "Tanıma",
     "engine_desc": "Yüksek kaliteli bulut işleme veya tamamen çevrimdışı yerel konuşma tanıma arasında seçim yapın.",
     "engine_cloud": "Bulut",
@@ -5163,7 +5172,7 @@ modelCards.forEach(card => {
     })()
   };
 
-await invoke("set_settings", { settings });
+const autostartWarning = await invoke("set_settings", { settings });
       const failedProviders = [];
       for (const provider of ["gemini", "openai", "groq", "huggingface", "custom"]) {
         if (apiKeyDirty[provider]) {
@@ -5197,6 +5206,9 @@ await invoke("set_settings", { settings });
           `${getTranslation("status_save_error")} (${failedProviders.join(", ")})`,
           true
         );
+      } else if (autostartWarning) {
+        console.warn("[Aura] autostart detail:", autostartWarning);
+        showStatus(getTranslation("autostart_error"), true);
       } else {
         const currentDict = i18nDict[currentLanguage] || i18nDict.ru;
         showStatus(currentDict.status_ready || "Готово");

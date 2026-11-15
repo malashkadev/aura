@@ -912,3 +912,19 @@ test("backend errors are translated instead of leaking raw Rust text", () => {
   );
 });
 
+test("autostart failures are surfaced instead of silently succeeding", () => {
+  const main = read("src/main.js");
+  const dicts = parseI18nDictionaries();
+
+  for (const [locale, dict] of Object.entries(dicts)) {
+    assert.ok(
+      typeof dict.autostart_error === "string" && dict.autostart_error.trim().length > 0,
+      `${locale} needs a translated autostart_error`
+    );
+  }
+
+  assert.match(main, /const autostartWarning = await invoke\("set_settings"/);
+  assert.match(main, /if \(autostartWarning\)/);
+  assert.match(main, /getTranslation\("autostart_error"\)/);
+});
+
