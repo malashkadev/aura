@@ -1,7 +1,7 @@
 # Session Handoff — Aura 2.0
 
 **Date:** 2026-11-15
-**Baseline:** `main` at `31a82ae` (Phase 5 started)
+**Baseline:** `main` at `2e05c6e` (Phase 5 in progress)
 **Scope:** desktop program only; `website/` is out of scope.
 
 ## What changed
@@ -13,7 +13,7 @@
 - Phase 2: select fallback (`1d0f204`), localized backend errors (`f04c0c2`), honest autostart (`1fd16fc`), health without DPAPI (`404363d`).
 - Phase 3: HTTPS custom-endpoint guard (`8e842ab`), stale-audio sweep and ACL (`7978a47`), yanked dependency updates (`8580b3e`).
 - Phase 4: punctuation pipeline removed (`19eb873`), production icon tests (`ff6e1ac`), history docs moved (`cac731f`).
-- Phase 5: history view extracted from `main.js` into `src/history-view.js` (`31a82ae`).
+- Phase 5: history view extracted from `main.js` into `src/history-view.js` (`31a82ae`); model cards extracted into `src/model-cards.js` (`2e05c6e`).
 
 ## Verification
 
@@ -30,11 +30,11 @@ Run `./init.sh` (Git Bash) or `.\init.ps1` (PowerShell). Last recorded result:
 
 `feat-009` — next `main.js` module:
 
-1. Extract model-card rendering, download/delete progress, and display-name mapping.
+1. Extract settings form assembly/application and autosave wiring into `src/settings-form.js`.
 2. Keep `main.js` as the orchestrator; no behavior changes.
 3. Run `npm test`, `npm run audit`, `cargo test` after the extraction.
 
-Then `settings-form`, `i18n`; then `lib.rs` commands by domain (`feat-010`); finish with `feat-011` polish and `feat-012` verification.
+Then `i18n`; then `lib.rs` commands by domain (`feat-010`); finish with `feat-011` polish and `feat-012` verification.
 
 ## Constraints
 

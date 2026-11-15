@@ -1,7 +1,7 @@
 # Aura 2.0 — Progress
 
 **Updated:** 2026-11-15
-**Baseline:** `main` at `31a82ae` (Phase 5 started)
+**Baseline:** `main` at `2e05c6e` (Phase 5 in progress)
 **Status:** green — working tree clean, every local gate passes.
 
 ## Current state
@@ -24,6 +24,7 @@ Completed in this cycle:
 - `ff6e1ac` — production icon-registry tests added; the legacy catalog suite keeps its own file.
 - `cac731f` — 2026 audits, handoffs, and E2E checklist moved to `docs/history/`; New Design assets moved under `docs/design/`.
 - `31a82ae` — history rendering, search, filters, and clear confirmation extracted from `main.js` into `src/history-view.js`.
+- `2e05c6e` — model cards, download/delete progress, and display names extracted into `src/model-cards.js`; card clicks use the refreshed cache.
 
 ## Quality gates (last run)
 
@@ -53,11 +54,11 @@ Completed in this cycle:
 
 Continue `feat-009` with the next `main.js` module:
 
-1. Extract model-card rendering, download/delete progress, and display-name mapping.
+1. Extract the settings form assembly/application and autosave wiring into `src/settings-form.js`.
 2. Keep `main.js` as the orchestrator; no behavior changes.
 3. Run `npm test`, `npm run audit`, `cargo test` after the extraction.
 
-Then `settings-form`, `i18n`; then `lib.rs` commands by domain (`feat-010`); finish with `feat-011` polish and `feat-012` verification.
+Then `i18n`; then `lib.rs` commands by domain (`feat-010`); finish with `feat-011` polish and `feat-012` verification.
 
 ## How to resume
 
