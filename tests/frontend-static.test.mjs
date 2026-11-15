@@ -148,7 +148,7 @@ test("frontend uses redacted key metadata and write-only provider-key IPC", () =
 
 test("every non-secret native setting is round-tripped by the settings form", () => {
   const rust = read("src-tauri/src/settings_secure.rs");
-  const main = read("src/main.js");
+  const form = read("src/settings-form.js");
 
   const structBlock = rust.match(/pub struct Settings \{([\s\S]*?)\n\}/)?.[1] ?? "";
   assert.ok(structBlock, "Settings struct must be parseable");
@@ -157,8 +157,8 @@ test("every non-secret native setting is round-tripped by the settings form", ()
     .filter((name) => !name.startsWith("api_key"));
   assert.ok(backendFields.length > 20, "Settings struct must expose its fields");
 
-  const settingsLiteral = main.match(/const settings = \{([\s\S]*?)\n\s*\};/u)?.[1] ?? "";
-  assert.ok(settingsLiteral, "saveSettings payload must be parseable");
+  const settingsLiteral = form.match(/return \{([\s\S]*?)\n  \};/)?.[1] ?? "";
+  assert.ok(settingsLiteral, "settings form payload must be parseable");
   const frontendFields = [...settingsLiteral.matchAll(/^\s*([a-z][a-z0-9_]*):/gm)]
     .map((match) => match[1]);
 
@@ -669,9 +669,10 @@ test("typography reset and button font consistency across application UI", () =>
   assert.match(overlayHtml, /#overlay-status\s*\{[^}]*font-family:\s*"Segoe UI Variable Text"/);
 });
 
-test("smart context insertion settings controls are declared and wired in main.js and index.html", () => {
+test("smart context insertion settings controls are declared and wired in the settings form and index.html", () => {
   const html = read("src/index.html");
   const main = read("src/main.js");
+  const form = read("src/settings-form.js");
 
   assert.match(html, /id="card-smart-context"/);
   assert.match(html, /id="checkbox-smart-context-enabled"/);
@@ -680,8 +681,8 @@ test("smart context insertion settings controls are declared and wired in main.j
 
   assert.match(main, /checkboxSmartContext\.checked\s*=\s*settings\.smart_context_enabled !== false/);
   assert.match(main, /checkboxSmartContextTrailingPeriod\.checked\s*=\s*settings\.smart_context_trailing_period !== false/);
-  assert.match(main, /smart_context_enabled:\s*\(\(\)\s*=>/);
-  assert.match(main, /smart_context_trailing_period:\s*\(\(\)\s*=>/);
+  assert.match(form, /smart_context_enabled:\s*checkedOf\("checkbox-smart-context-enabled", true\)/);
+  assert.match(form, /smart_context_trailing_period:\s*checkedOf\("checkbox-smart-context-trailing-period", true\)/);
 });
 
 test("desktop app maintains strict design-system isolation from website palette and enforces user-select rules", () => {

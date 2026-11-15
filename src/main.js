@@ -9,6 +9,7 @@ import { hydrateAppIcons } from "./icon-system-integration.js";
 import { createHistoryView } from "./history-view.js";
 import { createModelCards } from "./model-cards.js";
 import { createSettingsAutosave } from "./settings-autosave.js";
+import { collectFormSettings } from "./settings-form.js";
 
 try {
   hydrateAppIcons();
@@ -4998,82 +4999,21 @@ const btnSaveSettings = document.getElementById("btn-save-settings");
       btnSaveSettings.disabled = true;
     }
     try {
-      const dict = i18nDict[currentLanguage] || i18nDict.ru;
-      const checkboxStreaming = document.getElementById("checkbox-streaming");
-      
       // Update apiKeys cache from active input first:
       apiKeys[selectProvider.value] = apiKeyInput.value.trim();
 
-      const soundVolFloat = rangeVolume ? parseFloat(rangeVolume.value) / 100 : 0.8;
-
-      const settings = {
-        transcription_mode: radioLocal.checked ? "local" : "cloud",
-        ui_language: currentLanguage,
-        api_provider: selectProvider.value,
-        custom_api_url: (() => {
-          const el = document.getElementById("input-custom-url");
-          return el ? el.value.trim() : "https://api.deepinfra.com/v1/openai";
-        })(),
-        custom_model_name: (() => {
-          const el = document.getElementById("input-custom-model");
-          return el ? el.value.trim() : "openai/whisper-large-v3-turbo";
-        })(),
-
-        model_name: selectedModelName,
-        hotkey: selectHotkey ? selectHotkey.value : "Alt+V",
-        streaming_enabled: checkboxStreaming ? checkboxStreaming.checked : false,
-        toggle_enabled: checkboxToggle ? checkboxToggle.checked : false,
-        language: selectLanguage ? selectLanguage.value : "auto",
-        dictionary: textareaDictionary ? textareaDictionary.value : "",
-        cloud_fallback_enabled: checkboxCloudFallback ? checkboxCloudFallback.checked : true,
-        autostart: checkboxAutostart ? checkboxAutostart.checked : false,
-        automatic_update_checks: checkboxAutomaticUpdateChecks ? checkboxAutomaticUpdateChecks.checked : false,
-        local_engine: selectLocalEngine ? selectLocalEngine.value : "whisper",
-        local_acceleration: activeLocalAcceleration,
-        overlay_sounds: checkboxSounds ? checkboxSounds.checked : true,
-    overlay_sound_theme: selectSoundTheme ? selectSoundTheme.value : "zen",
-    overlay_sound_volume: soundVolFloat,
-    copy_context_on_start: checkboxCopyContext ? checkboxCopyContext.checked : false,
-    audio_input_device: selectAudioDevice ? selectAudioDevice.value : "default",
-    log_speech_text: (() => {
-      const el = document.getElementById("setting-log-speech-text");
-      return el ? el.checked : false;
-    })(),
-    overlay_show_timer: (() => {
-      const el = document.getElementById("checkbox-overlay-show-timer");
-      return el ? el.checked : true;
-    })(),
-    gaming_mode_enabled: (() => {
-      const el = document.getElementById("checkbox-gaming-mode");
-      return el ? el.checked : false;
-    })(),
-    gaming_mode_auto_detect: (() => {
-      const el = document.getElementById("checkbox-gaming-mode-auto-detect");
-      return el ? el.checked : false;
-    })(),
-    vram_standby_timeout_mins: (() => {
-      const el = document.getElementById("select-vram-standby");
-      return el ? (parseInt(el.value, 10) || 0) : 30;
-    })(),
-    text_replacements: currentReplacements,
-    ai_edit_mode: (() => {
-      const el = document.getElementById("select-ai-edit-mode");
-      if (!checkboxCopyContext || !checkboxCopyContext.checked) return "off";
-      return el ? el.value : "auto";
-    })(),
-    translate_default_target: selectTranslateTarget ? selectTranslateTarget.value : "en",
-    llm_model: selectedLlmModel,
-    has_completed_onboarding: hasCompletedOnboarding || localStorage.getItem("aura_onboarding_completed") === "true",
-    disabled_edit_commands: disabledEditCommands,
-    smart_context_enabled: (() => {
-      const el = document.getElementById("checkbox-smart-context-enabled");
-      return el ? el.checked : true;
-    })(),
-    smart_context_trailing_period: (() => {
-      const el = document.getElementById("checkbox-smart-context-trailing-period");
-      return el ? el.checked : true;
-    })()
-  };
+      const settings = collectFormSettings({
+        modelName: selectedModelName,
+        llmModel: selectedLlmModel,
+        uiLanguage: currentLanguage,
+        transcriptionMode: radioLocal.checked ? "local" : "cloud",
+        apiProvider: selectProvider.value,
+        localAcceleration: activeLocalAcceleration,
+        textReplacements: currentReplacements,
+        completedOnboarding:
+          hasCompletedOnboarding || localStorage.getItem("aura_onboarding_completed") === "true",
+        disabledEditCommands,
+      });
 
 const autostartWarning = await invoke("set_settings", { settings });
       const failedProviders = [];
