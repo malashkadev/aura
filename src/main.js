@@ -8,6 +8,7 @@ import { getIcon, getBrandIcon } from "./icon-system-api.js";
 import { hydrateAppIcons } from "./icon-system-integration.js";
 import { createHistoryView } from "./history-view.js";
 import { createModelCards } from "./model-cards.js";
+import { createSettingsAutosave } from "./settings-autosave.js";
 
 try {
   hydrateAppIcons();
@@ -42,19 +43,24 @@ const modelCardsView = createModelCards({
   setSelectedLlm: (model) => {
     selectedLlmModel = model;
   },
-  notifySelectionChanged: () => markSettingsModified(true),
+  notifySelectionChanged: () => autosave.mark(true),
   onModelDeleted: (model) => {
     if (model === "parakeet-v3" && selectLocalEngine?.value === "parakeet") {
       selectLocalEngine.value = "whisper";
       syncPanelSelection(selectLocalEngine);
       updateLocalEngineUI();
-      markSettingsModified();
+      autosave.mark();
     }
   },
   onRefreshComplete: () => {
     updateFirstRunCard();
     refreshEngineHealth();
   },
+});
+
+const autosave = createSettingsAutosave({
+  save: (context) => saveSettings(context),
+  isEnabled: () => isSettingsLoaded,
 });
 
 window.logEvent = function(level, tag, message) {
@@ -3686,7 +3692,7 @@ async function refreshEngineHealth() {
     selectLocalEngine.addEventListener("change", () => {
       updateLocalEngineUI();
       updateLocalModelSummary();
-      markSettingsModified(true);
+      autosave.mark(true);
       refreshEngineHealth();
       kickEngineStatusPolling();
     });
@@ -4051,7 +4057,7 @@ const btnSaveSettings = document.getElementById("btn-save-settings");
 
   if (selectAudioDevice) {
     selectAudioDevice.addEventListener("change", () => {
-      markSettingsModified(true);
+      autosave.mark(true);
     });
   }
 
@@ -4311,7 +4317,7 @@ const btnSaveSettings = document.getElementById("btn-save-settings");
     updateApiKeyLink();
     updateCustomProviderUI();
     updateEngineUI(true);
-    markSettingsModified(true);
+    autosave.mark(true);
   }
 
   if (apiKeyInput) {
@@ -4347,7 +4353,7 @@ const btnSaveSettings = document.getElementById("btn-save-settings");
   if (inputEditCustomUrl && inputCustomUrl) {
     inputEditCustomUrl.addEventListener("input", () => {
       inputCustomUrl.value = inputEditCustomUrl.value;
-      markSettingsModified(false);
+      autosave.mark(false);
     });
     inputCustomUrl.addEventListener("input", () => {
       inputEditCustomUrl.value = inputCustomUrl.value;
@@ -4357,7 +4363,7 @@ const btnSaveSettings = document.getElementById("btn-save-settings");
   if (inputEditCustomModel && inputCustomModel) {
     inputEditCustomModel.addEventListener("input", () => {
       inputCustomModel.value = inputEditCustomModel.value;
-      markSettingsModified(false);
+      autosave.mark(false);
     });
     inputCustomModel.addEventListener("input", () => {
       inputEditCustomModel.value = inputCustomModel.value;
@@ -4383,34 +4389,12 @@ const btnSaveSettings = document.getElementById("btn-save-settings");
   let disabledEditCommands = [];
   let activeLocalAcceleration = "cpu";
 
-  let settingsModified = false;
   let isSettingsLoaded = false;
   let hasCompletedOnboarding = false;
-  let autoSaveTimeout = null;
-  let settingsRevision = 0;
   let engineHealthTimer = null;
   let engineFastPollTimer = null;
   let lastHealthState = null;
   let updateGamingModeUi = () => {};
-
-  function markSettingsModified(immediate = false) {
-    if (!isSettingsLoaded) return;
-    settingsModified = true;
-    settingsRevision += 1;
-
-    if (autoSaveTimeout) {
-      clearTimeout(autoSaveTimeout);
-      autoSaveTimeout = null;
-    }
-
-    const delay = immediate ? 150 : 700;
-    autoSaveTimeout = setTimeout(() => {
-      autoSaveTimeout = null;
-      if (settingsModified) {
-        saveSettings();
-      }
-    }, delay);
-  }
 
   let currentReplacements = [];
 
@@ -4465,7 +4449,7 @@ const btnSaveSettings = document.getElementById("btn-save-settings");
         setTimeout(() => {
           currentReplacements.splice(index, 1);
           renderReplacementsList(currentReplacements);
-          markSettingsModified(true);
+          autosave.mark(true);
         }, 180);
       });
 
@@ -4495,7 +4479,7 @@ const btnSaveSettings = document.getElementById("btn-save-settings");
       if (inputTrigger) inputTrigger.value = "";
       if (inputValue) inputValue.value = "";
       renderReplacementsList(currentReplacements);
-      markSettingsModified(true);
+      autosave.mark(true);
     }
 
     if (btnAdd) {
@@ -4588,9 +4572,9 @@ const btnSaveSettings = document.getElementById("btn-save-settings");
     inputs.forEach(input => {
       if (input) {
         const isImmediate = input.tagName === "SELECT" || input.type === "checkbox" || input.type === "radio";
-        input.addEventListener("change", () => markSettingsModified(isImmediate));
+        input.addEventListener("change", () => autosave.mark(isImmediate));
         if (input.tagName === "INPUT" || input.tagName === "TEXTAREA") {
-          input.addEventListener("input", () => markSettingsModified(false));
+          input.addEventListener("input", () => autosave.mark(false));
         }
       }
     });
@@ -4753,7 +4737,7 @@ const btnSaveSettings = document.getElementById("btn-save-settings");
       if (selectedLlmModel !== model) {
         selectedLlmModel = model;
         if (markModified) {
-          markSettingsModified(true);
+          autosave.mark(true);
         }
       }
       modelCards.forEach(c => {
@@ -4774,7 +4758,7 @@ const btnSaveSettings = document.getElementById("btn-save-settings");
     if (selectedModelName !== model) {
       selectedModelName = model;
       if (markModified) {
-        markSettingsModified(true);
+        autosave.mark(true);
       }
     }
     modelCards.forEach(c => {
@@ -4982,7 +4966,7 @@ const btnSaveSettings = document.getElementById("btn-save-settings");
         updateAllSummaries();
         
         isSettingsLoaded = true;
-        settingsModified = false;
+        autosave.markClean();
         
         refreshEngineHealth().then(() => {
           if (lastHealthState && lastHealthState.starting) {
@@ -5008,19 +4992,7 @@ const btnSaveSettings = document.getElementById("btn-save-settings");
   }
 
   // Save Settings to Backend
-  let saveInFlight = false;
-  let savePending = false;
-
   async function saveSettings() {
-    // Guard against re-entrancy: rapid clicks or duplicate bindings must not
-    // start a second save while one is already running. A change arriving
-    // mid-flight re-schedules itself instead of being dropped.
-    if (saveInFlight) {
-      savePending = true;
-      return;
-    }
-    saveInFlight = true;
-    const revisionAtStart = settingsRevision;
     let permanentFailure = false;
     if (btnSaveSettings) {
       btnSaveSettings.disabled = true;
@@ -5129,9 +5101,6 @@ const autostartWarning = await invoke("set_settings", { settings });
           }
         });
       }
-      if (settingsRevision === revisionAtStart) {
-        settingsModified = false;
-      }
       if (failedProviders.length > 0) {
         showStatus(
           `${getTranslation("status_save_error")} (${failedProviders.join(", ")})`,
@@ -5149,17 +5118,11 @@ const autostartWarning = await invoke("set_settings", { settings });
       permanentFailure = isPermanentSaveError(err);
       showStatus(`${getTranslation("status_save_error")}${localizedBackendError(err)}`, true);
     } finally {
-      saveInFlight = false;
       if (btnSaveSettings) {
         btnSaveSettings.disabled = false;
       }
-      if (!permanentFailure && (savePending || settingsModified) && isSettingsLoaded) {
-        savePending = false;
-        markSettingsModified(true);
-      } else {
-        savePending = false;
-      }
     }
+    return { permanentFailure };
   }
   // Backend errors carry a stable machine-readable prefix so the UI can show a
   // short, translated sentence instead of Rust diagnostics and file names.
@@ -5267,7 +5230,7 @@ const autostartWarning = await invoke("set_settings", { settings });
   // Cross-window sync: tray-driven changes, live history updates and
   // streaming degradation notices emitted by the Rust side.
   listen("settings-changed", () => {
-    if (!isSettingsLoaded || saveInFlight || settingsModified) return;
+    if (!isSettingsLoaded || autosave.isSaving() || autosave.isDirty()) return;
     loadSettings();
   });
 
@@ -5299,7 +5262,7 @@ const autostartWarning = await invoke("set_settings", { settings });
   function selectGpuProvider(provider) {
     if (activeLocalAcceleration !== provider) {
       activeLocalAcceleration = provider;
-      markSettingsModified();
+      autosave.mark();
     }
     document.querySelectorAll("[data-gpu]").forEach(card => {
       const isSelected = card.getAttribute("data-gpu") === provider;

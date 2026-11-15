@@ -603,6 +603,7 @@ test("model delete state follows the active selection without a full refresh", (
 test("status toast can be dismissed and backend model errors stay human-readable", () => {
   const html = read("src/index.html");
   const main = read("src/main.js");
+  const autosave = read("src/settings-autosave.js");
 
   assert.match(html, /id="toast-close"/);
   assert.match(main, /toastClose\.addEventListener\("click", hideToast\)/);
@@ -621,7 +622,7 @@ test("status toast can be dismissed and backend model errors stay human-readable
   // A permanent validation failure must not be auto-retried: that recreates
   // the toast every time the user closes it.
   assert.match(main, /isPermanentSaveError/);
-  assert.match(main, /!permanentFailure && \(savePending \|\| settingsModified\)/);
+  assert.match(autosave, /!permanentFailure && \(pending \|\| dirty\)/);
 });
 
 test("history re-renders only when data changes and never replays the entry animation", () => {
