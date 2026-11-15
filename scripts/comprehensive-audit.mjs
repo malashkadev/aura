@@ -1,10 +1,15 @@
-import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import vm from "node:vm";
 
 console.log("=== RUNNING FULL PROGRAM INTEGRITY AUDIT ===");
 
 const read = (p) => readFileSync(p, "utf8");
+
+let errorCount = 0;
+function reportError(...args) {
+  errorCount += 1;
+  console.error(...args);
+}
 
 // 1. Check DOM IDs in index.html vs main.js
 const html = read("src/index.html");
@@ -51,7 +56,7 @@ for (const loc of locales) {
 }
 for (const loc of locales) {
   if (missingKeysPerLocale[loc].length > 0) {
-    console.error(`Locale ${loc} is missing ${missingKeysPerLocale[loc].length} keys:`, missingKeysPerLocale[loc]);
+    reportError(`Locale ${loc} is missing ${missingKeysPerLocale[loc].length} keys:`, missingKeysPerLocale[loc]);
   } else {
     console.log(`Locale ${loc} has all ${allKeys.size} keys!`);
   }
@@ -69,7 +74,7 @@ for (const loc of locales) {
     }
   }
   if (missingDataI18n[loc].length > 0) {
-    console.error(`Locale ${loc} missing data-i18n keys:`, missingDataI18n[loc]);
+    reportError(`Locale ${loc} missing data-i18n keys:`, missingDataI18n[loc]);
   }
 }
 
@@ -85,7 +90,7 @@ for (const loc of locales) {
     }
   }
   if (missingGetTrans[loc].length > 0) {
-    console.error(`Locale ${loc} missing getTranslation keys:`, missingGetTrans[loc]);
+    reportError(`Locale ${loc} missing getTranslation keys:`, missingGetTrans[loc]);
   }
 }
 
@@ -165,14 +170,18 @@ const capPermissions = {
 
 for (const inv of invokedCommands) {
   if (!registeredCommands.has(inv.cmd)) {
-    console.error(`[ERROR] JS file ${inv.file} invokes unregistered command: '${inv.cmd}'`);
+    reportError(`[ERROR] JS file ${inv.file} invokes unregistered command: '${inv.cmd}'`);
   }
   // Check permission in capability
   const expectedPerm = `allow-${inv.cmd.replaceAll("_", "-")}`;
   const perms = capPermissions[inv.file];
   if (perms && !perms.has(expectedPerm)) {
-    console.error(`[ERROR] Capability for ${inv.file} is missing permission: '${expectedPerm}' for command '${inv.cmd}'`);
+    reportError(`[ERROR] Capability for ${inv.file} is missing permission: '${expectedPerm}' for command '${inv.cmd}'`);
   }
 }
 
+console.log(`\nComprehensive audit result: ${errorCount === 0 ? "PASS" : "FAIL"} (${errorCount} issue(s))`);
+if (errorCount > 0) {
+  process.exitCode = 1;
+}
 console.log("=== AUDIT SCRIPT FINISHED ===");

@@ -43,6 +43,16 @@ function toSnakeCase(str) {
 
 const jsFiles = ["src/main.js", "src/overlay.js", "src/tray-menu.js"];
 
+let issueCount = 0;
+function reportIssue(kind, message) {
+  issueCount += 1;
+  if (kind === "warn") {
+    console.warn(message);
+  } else {
+    console.error(message);
+  }
+}
+
 for (const file of jsFiles) {
   const content = read(file);
   // Match invoke calls: invoke("cmd_name", { ... }) or invoke('cmd_name')
@@ -54,17 +64,17 @@ for (const file of jsFiles) {
     const rawArgs = inv[2];
     const rustParams = rustCommands.get(cmd);
     if (!rustParams) {
-      console.warn(`[WARN] ${file}: Command '${cmd}' not found in lib.rs #[tauri::command] map.`);
+      reportIssue("warn", `[WARN] ${file}: Command '${cmd}' not found in lib.rs #[tauri::command] map.`);
       continue;
     }
 
     if (rustParams.length === 0) {
       if (rawArgs && rawArgs.trim() !== "{}") {
-        console.warn(`[MISMATCH] ${file}: '${cmd}' expects no params, but passed: ${rawArgs}`);
+        reportIssue("warn", `[MISMATCH] ${file}: '${cmd}' expects no params, but passed: ${rawArgs}`);
       }
     } else {
       if (!rawArgs || rawArgs.trim() === "{}") {
-        console.error(`[MISMATCH] ${file}: '${cmd}' expects params [${rustParams.join(", ")}], but no args passed!`);
+        reportIssue("error", `[MISMATCH] ${file}: '${cmd}' expects params [${rustParams.join(", ")}], but no args passed!`);
       } else {
         // Parse keys from rawArgs
         // e.g. { provider, acceptedNvidiaTerms } or { key: val, ... }
@@ -99,11 +109,15 @@ for (const file of jsFiles) {
           const camel = toCamelCase(rp);
           const found = passedKeyNames.some(k => k === rp || k === camel);
           if (!found) {
-            console.error(`[PARAM ERROR] ${file}: invoke('${cmd}') missing expected param '${rp}' (or '${camel}'). Passed keys: [${passedKeyNames.join(", ")}]`);
+            reportIssue("error", `[PARAM ERROR] ${file}: invoke('${cmd}') missing expected param '${rp}' (or '${camel}'). Passed keys: [${passedKeyNames.join(", ")}]`);
           }
         }
       }
     }
   }
+}
+console.log(`\nIPC signature result: ${issueCount === 0 ? "PASS" : "FAIL"} (${issueCount} issue(s))`);
+if (issueCount > 0) {
+  process.exitCode = 1;
 }
 console.log("=== IPC SIGNATURE CHECK COMPLETE ===");

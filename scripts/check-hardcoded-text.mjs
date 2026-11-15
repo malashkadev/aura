@@ -3,42 +3,63 @@ import { readFileSync } from "node:fs";
 const read = (p) => readFileSync(p, "utf8");
 const html = read("src/index.html");
 
-console.log("=== CHECKING HARDCODED TEXT IN INDEX.HTML ===");
+console.log("=== CHECKING HARDCODED TEXT IN INTERACTIVE ELEMENTS AND HEADINGS ===");
 
-// Regex to find tags that have text content but no data-i18n
-// e.g. <span ...>Some Text</span>
-// We want to skip <script>, <style>, SVG elements (<svg>, <path>, <circle>, <line>, <polyline>, <polygon>, <rect>), comments, and whitespace-only.
-
-// Let's parse tags
-const tagRegex = /<([a-zA-Z0-9_-]+)([^>]*)>([^<]+)<\/\1>/g;
-let m;
-const unlocalized = [];
-
-const allowedTagsWithoutI18n = new Set([
-  "title", "style", "script", "code", "kbd",
-  // SVG tags:
-  "path", "polyline", "line", "circle", "rect", "polygon"
+// Options and bare spans are intentionally excluded: language names, provider
+// names and model names are proper nouns, while spec values are populated by
+// main.js at runtime. The gate focuses on controls and headings a user reads
+// as interface copy.
+const auditedTags = new Set(["button", "a", "label", "h1", "h2", "h3", "summary"]);
+const allowedExact = new Set([
+  "AURA",
+  "Aura",
+  "GitHub",
+  "Windows",
+  "Whisper",
+  "Parakeet",
+  "CUDA",
+  "NVIDIA",
+  "Onest",
+  "Gemini",
+  "OpenAI",
+  "Groq",
+  "Hugging Face",
+  "Qwen3",
+  "Qwen3 0.6B",
+  "Qwen3 1.7B",
+  "Qwen3 4B",
+  "Tiny",
+  "Base",
+  "Small",
+  "Medium",
+  "Large v3 Turbo",
+  "Large v3 Turbo (Q5)",
+  "Parakeet TDT 0.6b v3 (int8)",
 ]);
 
-while ((m = tagRegex.exec(html)) !== null) {
-  const tagName = m[1].toLowerCase();
-  const attrs = m[2];
-  const text = m[3].trim();
+const tagRegex = /<([a-zA-Z0-9-]+)([^>]*)>([^<]+)<\/\1>/g;
+const unlocalized = [];
+let match;
 
-  if (allowedTagsWithoutI18n.has(tagName)) continue;
-  if (!text) continue;
-  // If it has data-i18n attribute, it's localized!
+while ((match = tagRegex.exec(html)) !== null) {
+  const tagName = match[1].toLowerCase();
+  const attrs = match[2];
+  const text = match[3].trim();
+
+  if (!auditedTags.has(tagName) || !text) continue;
   if (attrs.includes("data-i18n=")) continue;
-  // If text is purely punctuation, numbers, or symbols like +, -, /, •, etc.
-  if (/^[0-9\s.,/\\+–—:;!?()#%*•→‹›✓🎮]+$/.test(text)) continue;
-
-  // Let's filter out known dynamic placeholders like "v1.1.0" or "0%" or "0:00" or option values that are self-describing
-  if (text.startsWith("v1.") || text.startsWith("{") || text === "Aura" || text === "Gemini" || text === "OpenAI" || text === "Groq" || text === "HuggingFace" || text === "Whisper" || text === "Parakeet" || text === "CUDA") continue;
+  if (allowedExact.has(text)) continue;
+  if (/^[0-9\s.,/\\+\u2013\u2014:;!?()#%*\u2022\u2192\u2039\u203A\u2713]+$/.test(text)) continue;
 
   unlocalized.push({ tag: tagName, attrs: attrs.trim(), text });
 }
 
-console.log(`Found ${unlocalized.length} elements with text and without data-i18n:`);
+console.log(`Found ${unlocalized.length} interactive/heading element(s) without data-i18n:`);
 for (const item of unlocalized) {
   console.log(`  <${item.tag} ${item.attrs}> -> "${item.text}"`);
+}
+
+console.log(`\nHardcoded-text result: ${unlocalized.length === 0 ? "PASS" : "FAIL"}`);
+if (unlocalized.length > 0) {
+  process.exitCode = 1;
 }

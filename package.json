@@ -11,7 +11,7 @@
     "lint": "node --check src/main.js && node --check src/overlay.js && node --check src/tray-menu.js && node --check src/ui-accessibility.js && node --check src/settings-backup.js && node --check src/icon-system.js && node --check src/icon-system-api.js && node --check src/icon-system-integration.js",
     "typecheck": "tsc -p tsconfig.json",
     "check": "npm run lint && npm run typecheck",
-    "test": "node --test tests/frontend-static.test.mjs",
+    "test": "node --test \"tests/*.test.mjs\"",
     "verify:manifest": "node scripts/verify-release-manifest.mjs",
     "audit": "node scripts/audit-all-elements.mjs && node scripts/check-aria.mjs && node scripts/check-css-invariants.mjs && node scripts/check-dynamic-strings.mjs && node scripts/check-hardcoded-text.mjs && node scripts/check-ipc.mjs && node scripts/check-overlay-i18n.mjs && node scripts/check-titles.mjs && node scripts/comprehensive-audit.mjs && node scripts/deep-audit.mjs",
     "build": "tauri build"

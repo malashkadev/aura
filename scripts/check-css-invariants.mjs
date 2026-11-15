@@ -1,48 +1,75 @@
-import { readFileSync, existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 
 const read = (p) => readFileSync(p, "utf8");
 
-const cssFiles = ["src/style.css", "src/tray-menu.css"];
+const cssFiles = ["src/style.css", "src/tray-menu.css", "src/overlay.html"];
 if (existsSync("src/overlay.css")) {
   cssFiles.push("src/overlay.css");
 }
 
 console.log("=== CHECKING CSS INVARIANTS & ZERO SHADOWS/GLOWS ===");
 
+const issues = [];
+
+// The design system allows only white top-edge specular facets, the two
+// canonical facet tokens, the spotlight cutout, and explicit `none` values.
+const allowedShadowPatterns = [
+  /^box-shadow:\s*none(\s*!important)?;?$/,
+  /^box-shadow:\s*var\(--facet-(?:card|elevated)\);?$/,
+  /^box-shadow:\s*inset\s+0\s+1px\s+(?:0|1px)\s+0?\s*rgba\(\s*255,\s*255,\s*255,\s*0?\.(?:0\d|1[0-5]|\d)\s*\)(\s*!important)?;?$/,
+  /^box-shadow:\s*0\s+0\s+0\s+9999px\s+rgba\(\s*0,\s*0,\s*0,\s*0?\.5\d?\s*\);?$/,
+];
+
+function isAllowedShadow(trimmed) {
+  return allowedShadowPatterns.some((pattern) => pattern.test(trimmed));
+}
+
 for (const file of cssFiles) {
   console.log(`\n--- Inspecting ${file} ---`);
-  const css = read(file);
-  const lines = css.split("\n");
+  const lines = read(file).split("\n");
 
   lines.forEach((line, idx) => {
     const lineNum = idx + 1;
     const trimmed = line.trim();
 
-    // Check box-shadow
     if (trimmed.includes("box-shadow:")) {
-      // Check if it's an allowed inset facet highlight: e.g. inset 0 1px 0 rgba(255, 255, 255, 0.08 / 0.12) or spotlight tour cutout
-      const isAllowedInset = /box-shadow:\s*inset\s+0\s+1px\s+0\s+rgba\(255,\s*255,\s*255,\s*0\.(?:0[0-9]+|1[0-2])\);?/.test(trimmed)
-        || trimmed === "box-shadow: none;"
-        || trimmed === "box-shadow: none !important;"
-        || trimmed.includes("9999px");
-      if (!isAllowedInset) {
-        console.log(`[BOX-SHADOW] ${file}:${lineNum}: ${trimmed}`);
+      if (!isAllowedShadow(trimmed)) {
+        const message = `${file}:${lineNum}: non-canonical box-shadow: ${trimmed}`;
+        issues.push(message);
+        console.log(`[BOX-SHADOW] ${message}`);
       }
     }
 
-    // Check text-shadow
     if (trimmed.includes("text-shadow:") && trimmed !== "text-shadow: none;") {
-      console.log(`[TEXT-SHADOW] ${file}:${lineNum}: ${trimmed}`);
+      const message = `${file}:${lineNum}: text-shadow is forbidden: ${trimmed}`;
+      issues.push(message);
+      console.log(`[TEXT-SHADOW] ${message}`);
     }
 
-    // Check filter drop-shadow
     if (trimmed.includes("drop-shadow") && !trimmed.includes("drop-shadow(none)")) {
-      console.log(`[DROP-SHADOW] ${file}:${lineNum}: ${trimmed}`);
+      const message = `${file}:${lineNum}: drop-shadow is forbidden: ${trimmed}`;
+      issues.push(message);
+      console.log(`[DROP-SHADOW] ${message}`);
     }
 
-    // Check for solid orange fills on buttons hover
-    if ((trimmed.includes("background: var(--accent-color)") || trimmed.includes("background-color: var(--accent-color)") || trimmed.includes("background: #fe4200") || trimmed.includes("background: #ff4200")) && (line.includes(":hover") || lines[idx-1]?.includes(":hover") || lines[idx-2]?.includes(":hover"))) {
-      console.log(`[SOLID ORANGE HOVER] ${file}:${lineNum}: ${trimmed}`);
+    const solidOrangeFill =
+      trimmed.includes("background: var(--accent-color)") ||
+      trimmed.includes("background-color: var(--accent-color)") ||
+      trimmed.includes("background: #fe4200") ||
+      trimmed.includes("background: #ff4200");
+    const nearHover =
+      line.includes(":hover") ||
+      lines[idx - 1]?.includes(":hover") ||
+      lines[idx - 2]?.includes(":hover");
+    if (solidOrangeFill && nearHover) {
+      const message = `${file}:${lineNum}: solid orange hover fill: ${trimmed}`;
+      issues.push(message);
+      console.log(`[SOLID ORANGE HOVER] ${message}`);
     }
   });
+}
+
+console.log(`\nCSS invariant result: ${issues.length === 0 ? "PASS" : "FAIL"} (${issues.length} issue(s))`);
+if (issues.length > 0) {
+  process.exitCode = 1;
 }

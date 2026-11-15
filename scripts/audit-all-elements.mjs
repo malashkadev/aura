@@ -139,3 +139,8 @@ for (const ii of inputIssues) {
 }
 
 console.log("\n=========================================================");
+const elementIssueCount = buttonIssues.length + inputIssues.length;
+console.log(` Element audit result: ${elementIssueCount === 0 ? "PASS" : "FAIL"} (${elementIssueCount} issue(s))`);
+if (elementIssueCount > 0) {
+  process.exitCode = 1;
+}

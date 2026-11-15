@@ -20,8 +20,10 @@ const settingsRs = read("src-tauri/src/settings_secure.rs");
 const normalizerRs = read("src-tauri/src/text_normalizer.rs");
 
 let totalIssues = 0;
+let errorCount = 0;
 function reportIssue(severity, category, message) {
   totalIssues++;
+  if (severity === "ERROR") errorCount++;
   console.log(`[${severity}] [${category}] ${message}`);
 }
 
@@ -238,4 +240,8 @@ for (const model of rustWhisperModels) {
 
 console.log("\n=================================================");
 console.log(` AUDIT FINISHED: Total issues found = ${totalIssues}`);
+console.log(` Deep audit result: ${errorCount === 0 ? "PASS" : "FAIL"} (${errorCount} error(s))`);
 console.log("=================================================");
+if (errorCount > 0) {
+  process.exitCode = 1;
+}
