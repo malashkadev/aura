@@ -928,3 +928,19 @@ test("autostart failures are surfaced instead of silently succeeding", () => {
   assert.match(main, /getTranslation\("autostart_error"\)/);
 });
 
+test("engine health polling avoids decrypting provider secrets", () => {
+  const lib = read("src-tauri/src/lib.rs");
+  const start = lib.indexOf("fn get_engine_health");
+  const end = lib.indexOf("#[tauri::command]", start + 1);
+  const block = lib.slice(start, end > start ? end : start + 2000);
+
+  assert.match(block, /load_settings_without_secrets/);
+  assert.doesNotMatch(block, /settings::load_settings\(/);
+
+  const settingsRs = read("src-tauri/src/settings_secure.rs");
+  const fnStart = settingsRs.indexOf("pub fn load_settings_without_secrets");
+  assert.ok(fnStart >= 0, "settings_secure must expose load_settings_without_secrets");
+  const fnBlock = settingsRs.slice(fnStart, fnStart + 500);
+  assert.doesNotMatch(fnBlock, /load_secrets/);
+});
+

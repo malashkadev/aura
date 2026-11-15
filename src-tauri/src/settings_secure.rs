@@ -621,6 +621,22 @@ pub fn load_settings<R: tauri::Runtime>(
     load_settings_unlocked(app_handle)
 }
 
+/// Loads the non-secret settings without touching the DPAPI-protected provider
+/// key store. Engine-health polling runs every few seconds and only needs the
+/// selected engine, so decrypting secrets there is wasted work.
+pub fn load_settings_without_secrets<R: tauri::Runtime>(
+    app_handle: &tauri::AppHandle<R>,
+) -> Result<Settings, String> {
+    let _guard = lock_settings();
+    let config_path = get_settings_path(app_handle)?;
+    let mut settings = load_config(&config_path)?;
+    if settings.local_acceleration == "directml" {
+        settings.local_acceleration = "cpu".to_string();
+    }
+    settings.validate()?;
+    Ok(settings)
+}
+
 pub fn save_settings<R: tauri::Runtime>(
     app_handle: &tauri::AppHandle<R>,
     settings: &Settings,

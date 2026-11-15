@@ -207,8 +207,7 @@ async fn set_settings(
                 whisper_runner::validate_local_model_selection(&save_handle, &saved_settings)?;
             }
             settings::save_settings(&save_handle, &saved_settings)?;
-            let autostart_warning =
-                sync_autostart(&save_handle, saved_settings.autostart).err();
+            let autostart_warning = sync_autostart(&save_handle, saved_settings.autostart).err();
             Ok(autostart_warning)
         })();
         // The moved-in copy may carry secrets from the request; scrub it.
@@ -793,7 +792,7 @@ struct EngineHealth {
 
 #[tauri::command]
 fn get_engine_health(app_handle: tauri::AppHandle) -> EngineHealth {
-    let settings = settings::load_settings(&app_handle).unwrap_or_default();
+    let settings = settings::load_settings_without_secrets(&app_handle).unwrap_or_default();
     let (gaming_mode, whisper_starting, parakeet_starting) = app_handle
         .try_state::<AppState>()
         .map(|s| {
