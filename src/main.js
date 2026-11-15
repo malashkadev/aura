@@ -21,49 +21,6 @@ try {
 const { invoke } = window.__TAURI__.core;
 const { listen } = window.__TAURI__.event;
 
-const historyView = createHistoryView({
-  invoke,
-  showConfirm,
-  getDict: () => i18nDict[currentLanguage] || i18nDict.ru,
-  getLanguage: () => currentLanguage,
-});
-const loadHistoryList = historyView.loadHistoryList;
-
-const modelCardsView = createModelCards({
-  invoke,
-  listen,
-  showConfirm,
-  showStatus,
-  getDict: () => i18nDict[currentLanguage] || i18nDict.ru,
-  getTranslation,
-  localizedBackendError,
-  isModelActive: (model) => isModelActive(model),
-  selectModelCard: (model, markModified = true) => selectModelCard(model, markModified),
-  getSelectedModel: () => selectedModelName,
-  getSelectedLlm: () => selectedLlmModel,
-  setSelectedLlm: (model) => {
-    selectedLlmModel = model;
-  },
-  notifySelectionChanged: () => autosave.mark(true),
-  onModelDeleted: (model) => {
-    if (model === "parakeet-v3" && selectLocalEngine?.value === "parakeet") {
-      selectLocalEngine.value = "whisper";
-      syncPanelSelection(selectLocalEngine);
-      updateLocalEngineUI();
-      autosave.mark();
-    }
-  },
-  onRefreshComplete: () => {
-    updateFirstRunCard();
-    refreshEngineHealth();
-  },
-});
-
-const autosave = createSettingsAutosave({
-  save: (context) => saveSettings(context),
-  isEnabled: () => isSettingsLoaded,
-});
-
 window.logEvent = function(level, tag, message) {
   invoke("log_frontend_event", { level, tag, session: null, message }).catch(err => {
     console.error("Failed to log frontend event", err);
@@ -3201,6 +3158,52 @@ function getTranslation(key, params = {}) {
 
 document.addEventListener("DOMContentLoaded", () => {
   let isMicTesting = false;
+
+  // View modules are created here, not at module scope: their dependencies
+  // (showConfirm, showStatus, isModelActive, selectModelCard, saveSettings)
+  // are function declarations inside this callback.
+  const autosave = createSettingsAutosave({
+    save: (context) => saveSettings(context),
+    isEnabled: () => isSettingsLoaded,
+  });
+
+  const historyView = createHistoryView({
+    invoke,
+    showConfirm,
+    getDict: () => i18nDict[currentLanguage] || i18nDict.ru,
+    getLanguage: () => currentLanguage,
+  });
+  const loadHistoryList = historyView.loadHistoryList;
+
+  const modelCardsView = createModelCards({
+    invoke,
+    listen,
+    showConfirm,
+    showStatus,
+    getDict: () => i18nDict[currentLanguage] || i18nDict.ru,
+    getTranslation,
+    localizedBackendError,
+    isModelActive: (model) => isModelActive(model),
+    selectModelCard: (model, markModified = true) => selectModelCard(model, markModified),
+    getSelectedModel: () => selectedModelName,
+    getSelectedLlm: () => selectedLlmModel,
+    setSelectedLlm: (model) => {
+      selectedLlmModel = model;
+    },
+    notifySelectionChanged: () => autosave.mark(true),
+    onModelDeleted: (model) => {
+      if (model === "parakeet-v3" && selectLocalEngine?.value === "parakeet") {
+        selectLocalEngine.value = "whisper";
+        syncPanelSelection(selectLocalEngine);
+        updateLocalEngineUI();
+        autosave.mark();
+      }
+    },
+    onRefreshComplete: () => {
+      updateFirstRunCard();
+      refreshEngineHealth();
+    },
+  });
   // Navigation tabs follow the WAI-ARIA tab pattern and remain native buttons.
   const tabs = document.querySelectorAll(".nav-tab");
   const panels = document.querySelectorAll(".tab-panel");

@@ -552,6 +552,21 @@ test("tab keyboard navigation advances through tabs on arrow keys and wraps corr
   assert.equal(activatedTab, tab3);
 });
 
+test("view modules initialize inside the DOMContentLoaded callback", () => {
+  const main = read("src/main.js");
+  const domReady = main.indexOf('document.addEventListener("DOMContentLoaded"');
+  assert.ok(domReady > 0, "main.js must register DOMContentLoaded");
+
+  for (const factory of ["createHistoryView", "createModelCards", "createSettingsAutosave"]) {
+    const call = main.indexOf(`= ${factory}(`);
+    assert.ok(call > 0, `${factory} must be instantiated`);
+    assert.ok(
+      call > domReady,
+      `${factory} must be created after DOMContentLoaded, where its dependencies are declared`
+    );
+  }
+});
+
 test("model card actions render visible download icons and delete buttons with defined dimensions", () => {
   const main = read("src/main.js");
   const models = read("src/model-cards.js");
@@ -665,8 +680,8 @@ test("typography reset and button font consistency across application UI", () =>
     /\.btn-github-star\s*\{[^}]*font-family:\s*var\(--font-display\);[^}]*font-weight:\s*600;/
   );
 
-  // Overlay status must use Segoe UI Variable font stack
-  assert.match(overlayHtml, /#overlay-status\s*\{[^}]*font-family:\s*"Segoe UI Variable Text"/);
+  // Overlay status must use Onest with Segoe UI Variable font stack fallback
+  assert.match(overlayHtml, /#overlay-status\s*\{[^}]*font-family:\s*'Onest',\s*"Segoe UI Variable Text"/);
 });
 
 test("smart context insertion settings controls are declared and wired in the settings form and index.html", () => {
