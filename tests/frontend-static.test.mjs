@@ -869,3 +869,46 @@ test("custom selects keep a readable native fallback until the custom label exis
   }
 });
 
+test("backend errors are translated instead of leaking raw Rust text", () => {
+  const main = read("src/main.js");
+  const dicts = parseI18nDictionaries();
+
+  for (const [locale, dict] of Object.entries(dicts)) {
+    assert.ok(
+      typeof dict.status_error_generic === "string" && dict.status_error_generic.trim().length > 0,
+      `${locale} needs a translated status_error_generic`
+    );
+  }
+
+  assert.match(main, /return getTranslation\("status_error_generic"\)/);
+  assert.match(main, /console\.warn\("\[Aura\] backend detail:", text\)/);
+
+  const rawToastPatterns = [
+    /showStatus\(`\$\{getTranslation\("status_error"\)\}\$\{err\}`/,
+    /showStatus\(`\$\{getTranslation\("status_load_error"\)\}\$\{err\}`/,
+    /showStatus\(`\$\{getTranslation\("mic_start_error"\)\}\$\{err\}`/
+  ];
+  for (const pattern of rawToastPatterns) {
+    assert.doesNotMatch(
+      main,
+      pattern,
+      `raw backend detail must not be interpolated into a user-facing toast: ${pattern}`
+    );
+  }
+
+  assert.match(
+    main,
+    /: localizedBackendError\(err\)/,
+    "the settings-import fallback must localize the backend error"
+  );
+
+  assert.doesNotMatch(main, /model_download_error_pattern", \{ err \}/);
+  assert.doesNotMatch(main, /model_delete_error_pattern", \{ err: String\(err\) \}/);
+  assert.doesNotMatch(main, /update_check_error_pattern", \{ error: String\(error\) \}/);
+
+  assert.ok(
+    (main.match(/localizedBackendError\(/g) || []).length >= 7,
+    "every raw error toast must go through localizedBackendError"
+  );
+});
+

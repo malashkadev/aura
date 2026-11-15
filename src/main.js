@@ -133,6 +133,7 @@ const i18nDict = {
     "status_saving": "Сохранение настроек...",
     "status_saved": "Настройки успешно сохранены!",
     "status_error": "Ошибка: ",
+    "status_error_generic": "Не удалось выполнить операцию. Подробности в журнале.",
     "model_status_ready": "Установлено",
     "model_action_download": "Скачать",
     "model_action_delete": "Удалить",
@@ -428,6 +429,7 @@ const i18nDict = {
     "status_saving": "Saving settings...",
     "status_saved": "Settings saved successfully!",
     "status_error": "Error: ",
+    "status_error_generic": "The operation failed. Details are in the log.",
     "model_status_ready": "Installed",
     "model_action_download": "Download",
     "model_action_delete": "Delete",
@@ -731,6 +733,7 @@ const i18nDict = {
     "status_saving": "Einstellungen werden gespeichert...",
     "status_saved": "Einstellungen erfolgreich gespeichert!",
     "status_error": "Fehler: ",
+    "status_error_generic": "Der Vorgang ist fehlgeschlagen. Details stehen im Protokoll.",
     "model_status_ready": "Installiert",
     "model_action_download": "Herunterladen",
     "model_action_delete": "Löschen",
@@ -1015,6 +1018,7 @@ const i18nDict = {
     "status_saving": "Guardando ajustes...",
     "status_saved": "¡Ajustes guardados correctamente!",
     "status_error": "Error: ",
+    "status_error_generic": "La operación falló. Los detalles están en el registro.",
     "model_status_ready": "Instalado",
     "model_action_download": "Descargar",
     "model_action_delete": "Eliminar",
@@ -1310,6 +1314,7 @@ const i18nDict = {
     "status_saving": "Enregistrement...",
     "status_saved": "Paramètres enregistrés !",
     "status_error": "Erreur: ",
+    "status_error_generic": "L'opération a échoué. Les détails se trouvent dans le journal.",
     "model_status_ready": "Installé",
     "model_action_download": "Télécharger",
     "model_action_delete": "Supprimer",
@@ -1605,6 +1610,7 @@ const i18nDict = {
     "status_saving": "Salvataggio...",
     "status_saved": "Impostazioni salvate con successo!",
     "status_error": "Errore: ",
+    "status_error_generic": "Operazione non riuscita. I dettagli sono nel registro.",
     "model_status_ready": "Installato",
     "model_action_download": "Scarica",
     "model_action_delete": "Elimina",
@@ -1900,6 +1906,7 @@ const i18nDict = {
     "status_saving": "正在保存设置...",
     "status_saved": "设置保存成功！",
     "status_error": "发生错误: ",
+    "status_error_generic": "操作失败。详情见日志。",
     "model_status_ready": "已安装",
     "model_action_download": "下载",
     "model_action_delete": "删除",
@@ -2195,6 +2202,7 @@ const i18nDict = {
     "status_saving": "Salvando...",
     "status_saved": "Configurações salvas com sucesso!",
     "status_error": "Erro: ",
+    "status_error_generic": "A operação falhou. Os detalhes estão no registro.",
     "model_status_ready": "Instalado",
     "model_action_download": "Baixar",
     "model_action_delete": "Excluir",
@@ -2490,6 +2498,7 @@ const i18nDict = {
     "status_saving": "Ayarlar kaydediliyor...",
     "status_saved": "Ayarlar başarıyla kaydedildi!",
     "status_error": "Hata: ",
+    "status_error_generic": "İşlem başarısız oldu. Ayrıntılar günlükte.",
     "model_status_ready": "Yüklendi",
     "model_action_download": "İndir",
     "model_action_delete": "Sil",
@@ -4969,7 +4978,7 @@ const btnSaveSettings = document.getElementById("btn-save-settings");
       }
     } catch (err) {
       console.error(err);
-      showStatus(`${getTranslation("status_load_error")}${err}`, true);
+        showStatus(`${getTranslation("status_load_error")}${localizedBackendError(err)}`, true);
     }
   }
 
@@ -5223,7 +5232,11 @@ await invoke("set_settings", { settings });
   function localizedBackendError(error) {
     const text = String(error ?? "");
     const match = BACKEND_ERROR_KEYS.find(([prefix]) => text.startsWith(prefix));
-    return match ? getTranslation(match[1]) : text;
+    if (match) return getTranslation(match[1]);
+    if (text.trim()) {
+      console.warn("[Aura] backend detail:", text);
+    }
+    return getTranslation("status_error_generic");
   }
 
   function isPermanentSaveError(error) {
@@ -5395,7 +5408,7 @@ await invoke("set_settings", { settings });
       if (errStr.includes("cancel")) {
         showStatus(getTranslation("model_download_cancelled") || "Загрузка отменена", "neutral");
       } else {
-        showStatus(getTranslation("model_download_error_pattern", { err }), true);
+        showStatus(getTranslation("model_download_error_pattern", { err: localizedBackendError(err) }), true);
       }
     } finally {
       inFlightModelDownloads.delete(model);
@@ -5683,7 +5696,7 @@ cancelBtn.addEventListener("click", (e) => {
       if (errStr.includes("cancel")) {
         showStatus(getTranslation("model_download_cancelled") || "Загрузка отменена", "neutral");
       } else {
-        showStatus(`${getTranslation("status_error")}${err}`, true);
+        showStatus(getTranslation("status_error") + localizedBackendError(err), true);
       }
     } finally {
       activeGpuDownloads.delete(provider);
@@ -5708,7 +5721,7 @@ cancelBtn.addEventListener("click", (e) => {
         await updateGpuCardStates();
       } catch (err) {
         console.error(err);
-        showStatus(getTranslation("model_delete_error_pattern", { err: String(err) }), true);
+        showStatus(getTranslation("model_delete_error_pattern", { err: localizedBackendError(err) }), true);
       }
     }
   }
@@ -6342,7 +6355,7 @@ if (e.button === 0 && !e.target.closest(".window-control-btn") && !e.target.clos
         } catch (err) {
           console.error("Failed to start mic test:", err);
           await stopMicTesting();
-          showStatus(`${getTranslation("mic_start_error")}${err}`, true);
+          showStatus(`${getTranslation("mic_start_error")}${localizedBackendError(err)}`, true);
         }
       }
     });
@@ -6601,7 +6614,7 @@ if (e.button === 0 && !e.target.closest(".window-control-btn") && !e.target.clos
         showStatus(getTranslation("toast_diagnostics_copied"));
       } catch (err) {
         console.error("Failed to copy diagnostic report", err);
-        showStatus(`${getTranslation("status_error")}${err}`, true);
+        showStatus(getTranslation("status_error") + localizedBackendError(err), true);
       }
     });
   }
@@ -6621,7 +6634,7 @@ if (e.button === 0 && !e.target.closest(".window-control-btn") && !e.target.clos
         showStatus(getTranslation("backup_exported"), "success");
       } catch (err) {
         console.error("Failed to export settings", err);
-        showStatus(`${getTranslation("status_error")}${err}`, true);
+        showStatus(getTranslation("status_error") + localizedBackendError(err), true);
       }
     });
   }
@@ -6666,7 +6679,7 @@ if (e.button === 0 && !e.target.closest(".window-control-btn") && !e.target.clos
           const isInvalidBackup = err && err.code === "invalid-backup";
           const message = isInvalidBackup
             ? getTranslation("backup_import_invalid")
-            : (err instanceof Error ? err.message : String(err));
+            : localizedBackendError(err);
           showStatus(`${getTranslation("status_error")}${message}`, true);
         }
       }, { once: true });
@@ -6729,7 +6742,7 @@ if (e.button === 0 && !e.target.closest(".window-control-btn") && !e.target.clos
       if (announceNoUpdate) showStatus(getTranslation("update_available_pattern", { version: info.version }));
     } catch (error) {
       console.error("Update check failed", error);
-      if (announceNoUpdate) showStatus(getTranslation("update_check_error_pattern", { error: String(error) }), true);
+      if (announceNoUpdate) showStatus(getTranslation("update_check_error_pattern", { error: localizedBackendError(error) }), true);
     } finally {
       if (checkButton) checkButton.disabled = false;
     }
