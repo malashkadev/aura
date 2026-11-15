@@ -78,8 +78,8 @@
       "title": "Modularize main.js by responsibility",
       "status": "in_progress",
       "priority": "P1",
-      "commit": "31a82ae, 2e05c6e",
-      "evidence": "history rendering/search/filters/clear extracted to src/history-view.js; model cards/download/delete/progress extracted to src/model-cards.js; npm test 65/65; npm run audit 10/10; behavior unchanged",
+      "commit": "31a82ae, 2e05c6e, 2ede29f, 8dc69e0",
+      "evidence": "history -> src/history-view.js; model cards -> src/model-cards.js; autosave -> src/settings-autosave.js with unit tests; form collection -> src/settings-form.js; npm test 69/69; npm run audit 10/10; behavior unchanged",
       "depends_on": ["feat-005", "feat-007", "feat-008"]
     },
     {

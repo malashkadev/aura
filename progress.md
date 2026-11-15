@@ -1,7 +1,7 @@
 # Aura 2.0 — Progress
 
 **Updated:** 2026-11-15
-**Baseline:** `main` at `2e05c6e` (Phase 5 in progress)
+**Baseline:** `main` at `8dc69e0` (Phase 5 in progress)
 **Status:** green — working tree clean, every local gate passes.
 
 ## Current state
@@ -25,6 +25,8 @@ Completed in this cycle:
 - `cac731f` — 2026 audits, handoffs, and E2E checklist moved to `docs/history/`; New Design assets moved under `docs/design/`.
 - `31a82ae` — history rendering, search, filters, and clear confirmation extracted from `main.js` into `src/history-view.js`.
 - `2e05c6e` — model cards, download/delete progress, and display names extracted into `src/model-cards.js`; card clicks use the refreshed cache.
+- `2ede29f` — autosave timer, dirty/revision state and in-flight handshake extracted into `src/settings-autosave.js`, with unit tests.
+- `8dc69e0` — DOM-backed settings payload extracted into `src/settings-form.js`; `saveSettings` keeps the backend call, API keys and warnings.
 
 ## Quality gates (last run)
 
@@ -32,7 +34,7 @@ Completed in this cycle:
 |---|---|
 | `npm ci` | 0 vulnerabilities |
 | `npm run check` | pass |
-| `npm test` | 65/65 pass |
+| `npm test` | 69/69 pass |
 | `npm run audit` | 10/10 checks PASS |
 | `npm run verify:manifest` | 5/5 surfaces |
 | `npm audit --audit-level=high` | 0 vulnerabilities |
@@ -52,10 +54,10 @@ Completed in this cycle:
 
 ## Next
 
-Continue `feat-009` with the next `main.js` module:
+Continue `feat-009` with the form application:
 
-1. Extract the settings form assembly/application and autosave wiring into `src/settings-form.js`.
-2. Keep `main.js` as the orchestrator; no behavior changes.
+1. Extract the settings-to-controls application from `loadSettings` into `src/settings-form.js`.
+2. Keep engine/audio/model/GPU orchestration in `main.js`.
 3. Run `npm test`, `npm run audit`, `cargo test` after the extraction.
 
 Then `i18n`; then `lib.rs` commands by domain (`feat-010`); finish with `feat-011` polish and `feat-012` verification.

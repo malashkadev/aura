@@ -59,7 +59,7 @@ Program-only roadmap. The marketing website is tracked separately and is out of 
 
 ## Phase 5 — Structural refactor
 
-**Status:** in progress. History view (`src/history-view.js`) and model cards (`src/model-cards.js`) are extracted; the settings form is next.
+**Status:** in progress. History view, model cards, autosave and form collection are extracted; form application is next.
 
 `main.js` extraction order:
 
