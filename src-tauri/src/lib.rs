@@ -4736,6 +4736,16 @@ pub fn run() {
                 crate::logger::log("INFO", "App", None, "Aura diagnostics logging initialized");
             }
 
+            let stale_audio = crate::audio_recorder::sweep_stale_audio(&std::env::temp_dir());
+            if stale_audio > 0 {
+                crate::logger::log(
+                    "INFO",
+                    "Audio",
+                    None,
+                    &format!("Removed {stale_audio} stale recording file(s)"),
+                );
+            }
+
             // Load settings once, then reuse the validated snapshot throughout setup.
             let startup_settings = match settings::load_settings(&app_handle) {
                 Ok(settings) => settings,

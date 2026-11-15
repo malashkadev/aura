@@ -201,6 +201,14 @@ impl PendingWavFile {
         let partial_path = pending_wav_path(&final_path);
         let file = File::create(&partial_path)
             .map_err(|e| format!("Failed to create pending WAV file: {e}"))?;
+        if let Err(error) = crate::secure_storage::apply_restrictive_acl(&partial_path) {
+            crate::logger::log(
+                "WARN",
+                "Audio",
+                None,
+                &format!("Could not restrict ACL on pending recording: {error}"),
+            );
+        }
         let buffered = BufWriter::with_capacity(WAV_WRITE_BUFFER_BYTES, file);
         let writer = match hound::WavWriter::new(buffered, wav_spec()) {
             Ok(writer) => writer,
@@ -255,6 +263,14 @@ impl PendingWavFile {
         }
         std::fs::rename(&self.partial_path, &self.final_path)
             .map_err(|e| format!("Failed to publish finalized WAV file: {e}"))?;
+        if let Err(error) = crate::secure_storage::apply_restrictive_acl(&self.final_path) {
+            crate::logger::log(
+                "WARN",
+                "Audio",
+                None,
+                &format!("Could not restrict ACL on finalized recording: {error}"),
+            );
+        }
         self.committed = true;
         Ok(())
     }
@@ -274,6 +290,31 @@ fn pending_wav_path(final_path: &Path) -> PathBuf {
     let mut path = final_path.as_os_str().to_os_string();
     path.push(".partial");
     PathBuf::from(path)
+}
+
+/// Removes leftover Aura recording files from a previous crash or power loss.
+/// Only files created by `recording_wav_path` / `chunk_wav_path` are touched;
+/// unrelated WAVs and directories are left alone.
+pub(crate) fn sweep_stale_audio(dir: &Path) -> usize {
+    let Ok(entries) = std::fs::read_dir(dir) else {
+        return 0;
+    };
+    let mut removed = 0;
+    for entry in entries.flatten() {
+        let path = entry.path();
+        if !path.is_file() {
+            continue;
+        }
+        let Some(name) = path.file_name().and_then(|name| name.to_str()) else {
+            continue;
+        };
+        let is_aura_audio = (name.starts_with("aura-rec-") || name.starts_with("aura-chunk-"))
+            && (name.ends_with(".wav") || name.ends_with(".wav.partial"));
+        if is_aura_audio && std::fs::remove_file(&path).is_ok() {
+            removed += 1;
+        }
+    }
+    removed
 }
 
 fn wav_spec() -> hound::WavSpec {
@@ -1318,6 +1359,33 @@ mod tests {
     fn remove_test_wav(path: &Path) {
         let _ = std::fs::remove_file(path);
         let _ = std::fs::remove_file(pending_wav_path(path));
+    }
+
+    #[test]
+    fn sweep_stale_audio_removes_only_aura_temp_files() {
+        let dir = std::env::temp_dir().join(format!(
+            "aura-sweep-test-{}-{}",
+            std::process::id(),
+            TEST_FILE_COUNTER.fetch_add(1, Ordering::Relaxed)
+        ));
+        std::fs::create_dir_all(&dir).unwrap();
+        let keep = dir.join("other.wav");
+        let recording = dir.join("aura-rec-1-2.wav");
+        let chunk = dir.join("aura-chunk-3-4.wav.partial");
+        let subdir = dir.join("aura-rec-directory");
+        std::fs::write(&keep, b"keep").unwrap();
+        std::fs::write(&recording, b"recording").unwrap();
+        std::fs::write(&chunk, b"chunk").unwrap();
+        std::fs::create_dir_all(&subdir).unwrap();
+
+        let removed = sweep_stale_audio(&dir);
+
+        assert_eq!(removed, 2);
+        assert!(keep.exists(), "unrelated WAV files must survive");
+        assert!(!recording.exists());
+        assert!(!chunk.exists());
+        assert!(subdir.exists(), "directories must never be removed");
+        let _ = std::fs::remove_dir_all(&dir);
     }
 
     #[test]
