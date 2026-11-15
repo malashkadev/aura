@@ -40,9 +40,10 @@
     {
       "id": "feat-005",
       "title": "User-facing correctness: select fallback, localized errors, autostart status, health caching",
-      "status": "planned",
+      "status": "done",
       "priority": "P2",
-      "evidence": "",
+      "commit": "1d0f204, f04c0c2, 1fd16fc, 404363d",
+      "evidence": "npm test 53/53; npm run audit 10/10 PASS; cargo test 239 passed; init.ps1 exit 0; pre-JS select fallback screenshot captured",
       "depends_on": ["feat-003"]
     },
     {

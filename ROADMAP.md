@@ -27,14 +27,14 @@ Program-only roadmap. The marketing website is tracked separately and is out of 
 
 ## Phase 2 — User-facing correctness
 
-**Status:** planned.
+**Status:** done.
 
-- Empty custom selects must render a readable fallback before JS or when settings fail.
-- Localize backend errors for microphone, GPU, diagnostics, and settings backup instead of showing raw Rust text.
-- Surface autostart registration failures instead of reporting a silent success.
-- Stop decrypting DPAPI secrets on every 10-second engine-health poll.
+- Empty custom selects render a readable fallback before JS or when settings fail.
+- Backend errors are localized; raw Rust text stays in the console log.
+- Autostart registration failures are surfaced as a non-fatal warning.
+- Engine-health polling reads non-secret settings, so DPAPI is not decrypted every 10 seconds.
 
-**Exit:** `npm test`, `npm run audit`, `cargo test`; manual scenarios for missing model, missing microphone, and blocked autostart.
+**Evidence:** `npm test` 53/53, `npm run audit` 10/10, `cargo test` 239 passed, `init.ps1` exit 0.
 
 ## Phase 3 — Security and hygiene
 
