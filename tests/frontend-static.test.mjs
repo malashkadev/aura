@@ -329,6 +329,7 @@ test("safe clipboard handoff notice is translated in every overlay locale", () =
 test("settings UI exposes native accessible controls and responsive motion-safe behavior", () => {
   const html = read("src/index.html");
   const main = read("src/main.js");
+  const history = read("src/history-view.js");
   const css = read("src/style.css");
 
   assert.match(html, /role="tablist"/);
@@ -342,9 +343,9 @@ test("settings UI exposes native accessible controls and responsive motion-safe 
   assert.match(html, /id="input-history-search"/);
   assert.match(html, /id="btn-clear-history-search"/);
   assert.match(html, /class="history-filter-btn"/);
-  assert.match(main, /inputHistorySearch/);
-  assert.match(main, /btnClearHistorySearch/);
-  assert.match(main, /historyFilterButtons/);
+  assert.match(history, /inputHistorySearch/);
+  assert.match(history, /btnClearHistorySearch/);
+  assert.match(history, /historyFilterButtons/);
   assert.match(css, /\.select-panel-item\.is-focused/);
   assert.match(html, /class="first-run-heading"/);
   assert.match(css, /\.card-actions \.btn \{[\s\S]*?margin-top: 0/);
@@ -622,11 +623,13 @@ test("status toast can be dismissed and backend model errors stay human-readable
 
 test("history re-renders only when data changes and never replays the entry animation", () => {
   const main = read("src/main.js");
+  const history = read("src/history-view.js");
   const css = read("src/style.css");
 
-  assert.match(main, /historyContainer\.replaceChildren\(fragment\)/);
-  assert.match(main, /JSON\.stringify\(next\) !== JSON\.stringify\(cachedHistoryList\)/);
-  assert.match(main, /renderHistoryItems\(\{ animate: false \}\)/);
+  assert.match(main, /from "\.\/history-view\.js"/);
+  assert.match(history, /historyContainer\.replaceChildren\(fragment\)/);
+  assert.match(history, /JSON\.stringify\(next\) !== JSON\.stringify\(cachedHistoryList\)/);
+  assert.match(history, /renderHistoryItems\(\{ animate: false \}\)/);
   assert.match(css, /\.history-item-static\s*\{[^}]*animation:\s*none/);
 });
 

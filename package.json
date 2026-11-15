@@ -8,7 +8,7 @@
   "scripts": {
     "tauri": "tauri",
     "dev": "tauri dev",
-    "lint": "node --check src/main.js && node --check src/overlay.js && node --check src/tray-menu.js && node --check src/ui-accessibility.js && node --check src/settings-backup.js && node --check src/icon-system.js && node --check src/icon-system-api.js && node --check src/icon-system-integration.js",
+    "lint": "node --check src/main.js && node --check src/history-view.js && node --check src/overlay.js && node --check src/tray-menu.js && node --check src/ui-accessibility.js && node --check src/settings-backup.js && node --check src/icon-system.js && node --check src/icon-system-api.js && node --check src/icon-system-integration.js",
     "typecheck": "tsc -p tsconfig.json",
     "check": "npm run lint && npm run typecheck",
     "test": "node --test \"tests/*.test.mjs\"",
