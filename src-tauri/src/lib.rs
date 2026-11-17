@@ -41,6 +41,7 @@ struct ParakeetStreamingSession {
 struct AppState {
     audio_recorder: audio_recorder::AudioRecorder,
     selected_text: Mutex<String>,
+    selection_blocked_by_uipi: AtomicBool,
     caret_context: Mutex<Option<smart_insertion::CaretContext>>,
     press_time: Mutex<Option<std::time::Instant>>,
     is_recording: AtomicBool,
@@ -59,6 +60,13 @@ struct AppState {
     /// Serializes clipboard backup/paste/restore sequences so overlapping
     /// sessions cannot interleave and clobber each other's clipboard contents.
     clipboard_mutex: Mutex<()>,
+    /// Holds `(owner_gen, real_original_clipboard, temporary_transcript)` during
+    /// the 400ms post-paste settle window so an overlapping session inherits the
+    /// real user clipboard rather than backing up the previous session's transcript.
+    unrestored_clipboard: Mutex<Option<(u64, ClipboardBackup, String)>>,
+    /// Serializes runtime side-effects of settings mutations (`hotkey`,
+    /// `toggle_enabled`, `gaming_mode_active`, resident servers).
+    settings_apply_lock: tokio::sync::Mutex<()>,
     /// Toggle mode: a short tap latched the recording until the next tap / Esc.
     latched: AtomicBool,
     /// Set when a toggle-stopping tap already finalized; its key release is a no-op.
@@ -110,8 +118,19 @@ fn show_settings_window(app_handle: tauri::AppHandle) {
     }
 }
 
+fn stop_all_sidecars_and_watchdogs(app_handle: &tauri::AppHandle) {
+    whisper_runner::stop_whisper_server_and_watchdog(app_handle);
+    whisper_runner::stop_parakeet_server_and_watchdog(app_handle);
+    llm_runner::stop_llm_server(app_handle);
+}
+
 #[tauri::command]
-fn exit_app(app_handle: tauri::AppHandle) {
+async fn exit_app(app_handle: tauri::AppHandle) {
+    let stop_handle = app_handle.clone();
+    let _ = tauri::async_runtime::spawn_blocking(move || {
+        stop_all_sidecars_and_watchdogs(&stop_handle);
+    })
+    .await;
     app_handle.exit(0);
 }
 
@@ -179,76 +198,134 @@ async fn set_provider_key(
 #[tauri::command]
 async fn set_settings(
     app_handle: tauri::AppHandle,
-    settings: settings::Settings,
+    mut settings: settings::Settings,
 ) -> Result<Option<String>, String> {
     keyboard_hook::validate_hotkey(&settings.hotkey)?;
+    let _apply_guard = match app_handle.try_state::<AppState>() {
+        Some(ref state) => Some(state.inner().settings_apply_lock.lock().await),
+        None => None,
+    };
+
     let save_handle = app_handle.clone();
-    let mut saved_settings = settings.clone();
-    let autostart_warning = tauri::async_runtime::spawn_blocking(move || {
-        let result: Result<Option<String>, String> = (|| {
-            // Critical invariant: set_settings must never accidentally reset completed onboarding status
-            if !saved_settings.has_completed_onboarding {
-                if let Ok(current) = settings::load_settings(&save_handle) {
-                    if current.has_completed_onboarding {
-                        saved_settings.has_completed_onboarding = true;
-                    }
-                }
+    let (previous, updated, autostart_warning) = tauri::async_runtime::spawn_blocking(move || {
+        let mut incoming = std::mem::take(&mut settings);
+        let tx_result = settings::update_settings(&save_handle, |current| {
+            // Critical invariant: set_settings must never reset completed onboarding status
+            if current.has_completed_onboarding {
+                incoming.has_completed_onboarding = true;
             }
-            // A model/engine/mode change is accepted only when the files it
-            // needs are actually installed. Everything else (volume, hotkey,
-            // dictionary) saves exactly as before.
-            let previous = settings::load_settings(&save_handle).ok();
-            let selection_changed = previous.as_ref().is_some_and(|current| {
-                current.model_name != saved_settings.model_name
-                    || current.local_engine != saved_settings.local_engine
-                    || current.local_acceleration != saved_settings.local_acceleration
-            });
+            let selection_changed = current.model_name != incoming.model_name
+                || current.local_engine != incoming.local_engine
+                || current.local_acceleration != incoming.local_acceleration;
             if selection_changed {
-                whisper_runner::validate_local_model_selection(&save_handle, &saved_settings)?;
+                whisper_runner::validate_local_model_selection(&save_handle, &incoming)?;
             }
-            settings::save_settings(&save_handle, &saved_settings)?;
-            let autostart_warning = sync_autostart(&save_handle, saved_settings.autostart).err();
-            Ok(autostart_warning)
-        })();
-        // The moved-in copy may carry secrets from the request; scrub it.
-        zeroize::Zeroize::zeroize(&mut saved_settings.api_key);
-        zeroize::Zeroize::zeroize(&mut saved_settings.api_key_gemini);
-        zeroize::Zeroize::zeroize(&mut saved_settings.api_key_openai);
-        zeroize::Zeroize::zeroize(&mut saved_settings.api_key_groq);
-        zeroize::Zeroize::zeroize(&mut saved_settings.api_key_huggingface);
-        zeroize::Zeroize::zeroize(&mut saved_settings.api_key_custom);
-        result
+            *current = incoming.clone();
+            Ok(())
+        });
+        zeroize::Zeroize::zeroize(&mut incoming.api_key);
+        zeroize::Zeroize::zeroize(&mut incoming.api_key_gemini);
+        zeroize::Zeroize::zeroize(&mut incoming.api_key_openai);
+        zeroize::Zeroize::zeroize(&mut incoming.api_key_groq);
+        zeroize::Zeroize::zeroize(&mut incoming.api_key_huggingface);
+        zeroize::Zeroize::zeroize(&mut incoming.api_key_custom);
+        let (previous, updated) = tx_result?;
+        let autostart_warning = sync_autostart(&save_handle, updated.autostart).err();
+        Ok::<_, String>((previous, updated, autostart_warning))
     })
     .await
     .map_err(|error| format!("Settings storage worker failed: {error}"))??;
 
-    let _ = app_handle.emit("overlay-preferences", OverlayPreferences::from(&settings));
+    let _ = app_handle.emit("overlay-preferences", OverlayPreferences::from(&updated));
 
-    keyboard_hook::update_hotkey(&settings.hotkey)?;
+    keyboard_hook::update_hotkey(&updated.hotkey)?;
     if let Some(state) = app_handle.try_state::<AppState>() {
         state
             .toggle_enabled
-            .store(settings.toggle_enabled, Ordering::SeqCst);
+            .store(updated.toggle_enabled, Ordering::SeqCst);
     }
-    let sidecar_handle = app_handle.clone();
-    let sidecar_settings = settings.clone();
-    tauri::async_runtime::spawn_blocking(move || {
-        whisper_runner::ensure_parakeet_server_state(&sidecar_handle, &sidecar_settings);
-        whisper_runner::ensure_whisper_server_state(&sidecar_handle, &sidecar_settings);
-        llm_runner::ensure_llm_server_state(&sidecar_handle, &sidecar_settings);
-    });
+
+    if previous.gaming_mode_enabled != updated.gaming_mode_enabled {
+        apply_gaming_mode_state(&app_handle, updated.gaming_mode_enabled, false).await;
+    } else {
+        let sidecar_handle = app_handle.clone();
+        let sidecar_settings = updated;
+        tauri::async_runtime::spawn_blocking(move || {
+            whisper_runner::ensure_parakeet_server_state(&sidecar_handle, &sidecar_settings);
+            whisper_runner::ensure_whisper_server_state(&sidecar_handle, &sidecar_settings);
+            llm_runner::ensure_llm_server_state(&sidecar_handle, &sidecar_settings);
+        });
+    }
     let _ = app_handle.emit("settings-changed", ());
     Ok(autostart_warning)
 }
 
 #[tauri::command]
 async fn set_ui_language(app_handle: tauri::AppHandle, ui_language: String) -> Result<(), String> {
+    let _apply_guard = match app_handle.try_state::<AppState>() {
+        Some(ref state) => Some(state.inner().settings_apply_lock.lock().await),
+        None => None,
+    };
     let save_handle = app_handle.clone();
-    tauri::async_runtime::spawn_blocking(move || {
-        settings::set_ui_language(&save_handle, &ui_language)
+    let (_, updated) = tauri::async_runtime::spawn_blocking(move || {
+        settings::update_settings(&save_handle, |current| {
+            current.ui_language = ui_language;
+            Ok(())
+        })
     })
     .await
     .map_err(|error| format!("Interface language storage worker failed: {error}"))??;
+    let _ = app_handle.emit("overlay-preferences", OverlayPreferences::from(&updated));
+    let _ = app_handle.emit("settings-changed", ());
+    Ok(())
+}
+
+#[tauri::command]
+async fn set_transcription_mode(app_handle: tauri::AppHandle, mode: String) -> Result<(), String> {
+    let _apply_guard = match app_handle.try_state::<AppState>() {
+        Some(ref state) => Some(state.inner().settings_apply_lock.lock().await),
+        None => None,
+    };
+    let save_handle = app_handle.clone();
+    let (_, updated) = tauri::async_runtime::spawn_blocking(move || {
+        settings::update_settings(&save_handle, |current| {
+            current.transcription_mode = mode;
+            whisper_runner::validate_local_model_selection(&save_handle, current)?;
+            Ok(())
+        })
+    })
+    .await
+    .map_err(|error| format!("Transcription mode storage worker failed: {error}"))??;
+
+    let sidecar_handle = app_handle.clone();
+    tauri::async_runtime::spawn_blocking(move || {
+        whisper_runner::ensure_parakeet_server_state(&sidecar_handle, &updated);
+        whisper_runner::ensure_whisper_server_state(&sidecar_handle, &updated);
+        llm_runner::ensure_llm_server_state(&sidecar_handle, &updated);
+    });
+    let _ = app_handle.emit("settings-changed", ());
+    Ok(())
+}
+
+#[tauri::command]
+async fn set_recognition_language(
+    app_handle: tauri::AppHandle,
+    language: String,
+) -> Result<(), String> {
+    let _apply_guard = match app_handle.try_state::<AppState>() {
+        Some(ref state) => Some(state.inner().settings_apply_lock.lock().await),
+        None => None,
+    };
+    let save_handle = app_handle.clone();
+    tauri::async_runtime::spawn_blocking(move || {
+        settings::update_settings(&save_handle, |current| {
+            current.language = language;
+            Ok(())
+        })
+        .map(|_| ())
+    })
+    .await
+    .map_err(|error| format!("Recognition language storage worker failed: {error}"))??;
     let _ = app_handle.emit("settings-changed", ());
     Ok(())
 }
@@ -257,12 +334,11 @@ async fn set_ui_language(app_handle: tauri::AppHandle, ui_language: String) -> R
 async fn complete_onboarding(app_handle: tauri::AppHandle) -> Result<(), String> {
     let save_handle = app_handle.clone();
     tauri::async_runtime::spawn_blocking(move || {
-        let mut settings = settings::load_settings(&save_handle)?;
-        if !settings.has_completed_onboarding {
-            settings.has_completed_onboarding = true;
-            settings::save_settings(&save_handle, &settings)?;
-        }
-        Ok(())
+        settings::update_settings(&save_handle, |current| {
+            current.has_completed_onboarding = true;
+            Ok(())
+        })
+        .map(|_| ())
     })
     .await
     .map_err(|error| format!("Failed to complete onboarding: {error}"))?
@@ -377,9 +453,32 @@ async fn download_model_command(
 
 #[tauri::command]
 async fn cancel_model_download(model_name: String) -> Result<(), String> {
+    if matches!(
+        model_name.as_str(),
+        "llm-runtime-vulkan" | "llm-runtime-cpu"
+    ) {
+        whisper_runner::request_cancel_download(&model_name);
+        return Ok(());
+    }
     let model_name = canonical_model_name(&model_name)?;
     whisper_runner::request_cancel_download(&model_name);
     Ok(())
+}
+
+fn remove_matching_part_files(dir: &std::path::Path, filename: &str) {
+    let prefix = format!("{filename}.");
+    let Ok(entries) = std::fs::read_dir(dir) else {
+        return;
+    };
+    for entry in entries.flatten() {
+        let path = entry.path();
+        let Some(name) = path.file_name().and_then(|n| n.to_str()) else {
+            continue;
+        };
+        if name.starts_with(&prefix) && name.ends_with(".part") {
+            let _ = std::fs::remove_file(path);
+        }
+    }
 }
 
 #[tauri::command]
@@ -418,7 +517,7 @@ async fn delete_model_command(
         let folder = app_local_data.join("models").join("parakeet-v3");
         let worker_handle = app_handle.clone();
         tauri::async_runtime::spawn_blocking(move || {
-            whisper_runner::stop_parakeet_server(&worker_handle);
+            whisper_runner::stop_parakeet_server_and_watchdog(&worker_handle);
             match std::fs::remove_dir_all(&folder) {
                 Ok(()) => Ok(()),
                 Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(()),
@@ -436,6 +535,12 @@ async fn delete_model_command(
         let worker_handle = app_handle.clone();
         return tauri::async_runtime::spawn_blocking(move || {
             llm_runner::stop_llm_server(&worker_handle);
+            if let (Some(parent), Some(fname)) = (
+                model_path.parent(),
+                model_path.file_name().and_then(|n| n.to_str()),
+            ) {
+                remove_matching_part_files(parent, fname);
+            }
             match std::fs::remove_file(&model_path) {
                 Ok(()) => Ok(()),
                 Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(()),
@@ -447,12 +552,16 @@ async fn delete_model_command(
     }
 
     let filename = whisper_runner::whisper_model_filename(&model_name)?;
-    let model_path = app_local_data.join("models").join(&filename);
+    let models_dir = app_local_data.join("models");
+    let model_path = models_dir.join(&filename);
 
-    tauri::async_runtime::spawn_blocking(move || match std::fs::remove_file(&model_path) {
-        Ok(()) => Ok(()),
-        Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(()),
-        Err(error) => Err(format!("Failed to delete model file: {error}")),
+    tauri::async_runtime::spawn_blocking(move || {
+        remove_matching_part_files(&models_dir, &filename);
+        match std::fs::remove_file(&model_path) {
+            Ok(()) => Ok(()),
+            Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(()),
+            Err(error) => Err(format!("Failed to delete model file: {error}")),
+        }
     })
     .await
     .map_err(|error| format!("Whisper model deletion worker failed: {error}"))?
@@ -465,19 +574,20 @@ async fn delete_model_command(
 fn reset_engine_after_model_deletion<R: tauri::Runtime>(
     app_handle: &tauri::AppHandle<R>,
 ) -> Result<(), String> {
-    let mut settings = settings::load_settings(app_handle)?;
-    if settings.local_engine != "parakeet" {
-        return Ok(());
-    }
-    crate::logger::log(
-        "INFO",
-        "Models",
-        None,
-        "Deleted the active parakeet model; switching local engine to whisper/base",
-    );
-    settings.local_engine = "whisper".to_string();
-    settings.model_name = "base".to_string();
-    settings::save_settings(app_handle, &settings)
+    settings::update_settings(app_handle, |settings| {
+        if settings.local_engine == "parakeet" {
+            crate::logger::log(
+                "INFO",
+                "Models",
+                None,
+                "Deleted the active parakeet model; switching local engine to whisper/base",
+            );
+            settings.local_engine = "whisper".to_string();
+            settings.model_name = "base".to_string();
+        }
+        Ok(())
+    })
+    .map(|_| ())
 }
 
 #[tauri::command]
@@ -595,32 +705,6 @@ fn stop_mic_meter() {
     audio_recorder::stop_mic_meter();
 }
 
-#[tauri::command]
-async fn reprocess_history_text(
-    app_handle: tauri::AppHandle,
-    text: String,
-    language: String,
-) -> Result<String, String> {
-    let settings = load_settings_async(app_handle.clone()).await?;
-    let provider = provider_from(&settings);
-    let lang = if language.is_empty() || language == "auto" || language == "layout" {
-        "ru"
-    } else {
-        &language
-    };
-
-    let api_key = settings.active_api_key();
-    if settings.transcription_mode == "cloud" && !api_key.trim().is_empty() {
-        ai_client::clean_text_with_llm(provider, api_key, &text, lang, &settings.dictionary).await
-    } else {
-        let normalized = text_normalizer::normalize_transcription_text(&text, lang);
-        let replaced =
-            text_normalizer::apply_text_replacements(&normalized, &settings.text_replacements);
-        let (clean, _) = text_normalizer::extract_caret_marker(&replaced);
-        Ok(clean)
-    }
-}
-
 #[derive(serde::Serialize)]
 struct AppUpdateInfo {
     current_version: String,
@@ -639,26 +723,15 @@ async fn query_app_update(
         .map_err(|error| format!("Update check failed: {error}"))
 }
 
-pub fn notify_app_update_available(app: &tauri::AppHandle, new_version: &str) {
-    if let Some(state) = app.try_state::<AppState>() {
-        if state.gaming_mode_active.load(Ordering::Acquire) {
-            crate::logger::log(
-                "INFO",
-                "Updater",
-                None,
-                &format!("Suppressing update notification for v{new_version} because Gaming Mode is active"),
-            );
-            return;
-        }
+fn prepare_update_notification_payload(
+    gaming_mode_active: bool,
+    ui_language: &str,
+    new_version: &str,
+) -> Option<(String, String)> {
+    if gaming_mode_active {
+        return None;
     }
-
-    let settings = settings::load_settings(app).ok();
-    let lang = settings
-        .as_ref()
-        .map(|s| s.ui_language.as_str())
-        .unwrap_or("ru");
-
-    let (title, body) = match lang {
+    let copy = match ui_language {
         "en" => (
             "Aura Update Available".to_string(),
             format!("Version {new_version} is available. Click to open Settings and update."),
@@ -696,6 +769,32 @@ pub fn notify_app_update_available(app: &tauri::AppHandle, new_version: &str) {
             format!("Доступна версия {new_version}. Нажмите, чтобы открыть настройки и обновить."),
         ),
     };
+    Some(copy)
+}
+
+pub fn notify_app_update_available(app: &tauri::AppHandle, new_version: &str) {
+    let gaming_active = app
+        .try_state::<AppState>()
+        .map(|state| state.gaming_mode_active.load(Ordering::Acquire))
+        .unwrap_or(false);
+    let settings = settings::cached_or_load_settings_without_secrets(app).ok();
+    let lang = settings
+        .as_ref()
+        .map(|s| s.ui_language.as_str())
+        .unwrap_or("ru");
+
+    let Some((title, body)) = prepare_update_notification_payload(gaming_active, lang, new_version)
+    else {
+        crate::logger::log(
+            "INFO",
+            "Updater",
+            None,
+            &format!(
+                "Suppressing update notification for v{new_version} because Gaming Mode is active"
+            ),
+        );
+        return;
+    };
 
     if let Err(e) = app.notification().builder().title(title).body(body).show() {
         crate::logger::log(
@@ -721,11 +820,38 @@ async fn check_for_app_update(
     }))
 }
 
+static UPDATE_INSTALL_IN_PROGRESS: AtomicBool = AtomicBool::new(false);
+
+struct UpdateInstallGuard;
+
+impl Drop for UpdateInstallGuard {
+    fn drop(&mut self) {
+        UPDATE_INSTALL_IN_PROGRESS.store(false, Ordering::Release);
+    }
+}
+
 #[tauri::command]
 async fn install_app_update(app_handle: tauri::AppHandle) -> Result<(), String> {
+    if UPDATE_INSTALL_IN_PROGRESS
+        .compare_exchange(false, true, Ordering::AcqRel, Ordering::Acquire)
+        .is_err()
+    {
+        return Err("Update installation is already in progress".to_string());
+    }
+    let _install_guard = UpdateInstallGuard;
+
+    cancel_recording(app_handle.clone()).await;
+
     let update = query_app_update(&app_handle)
         .await?
         .ok_or_else(|| "No update is currently available".to_string())?;
+
+    let stop_handle = app_handle.clone();
+    let _ = tauri::async_runtime::spawn_blocking(move || {
+        stop_all_sidecars_and_watchdogs(&stop_handle);
+    })
+    .await;
+
     tokio::time::timeout(
         std::time::Duration::from_secs(15 * 60),
         update.download_and_install(
@@ -737,23 +863,58 @@ async fn install_app_update(app_handle: tauri::AppHandle) -> Result<(), String> 
     .map_err(|_| "Update download timed out after 15 minutes".to_string())?
     .map_err(|error| format!("Update installation failed: {error}"))
 }
+
+const ALLOWED_OPEN_URL_HOSTS: &[&str] = &[
+    "aistudio.google.com",
+    "platform.openai.com",
+    "console.groq.com",
+    "huggingface.co",
+    "deepinfra.com",
+    "docs.nvidia.com",
+    "github.com",
+    "malashkadev.github.io",
+    "sourceforge.net",
+];
+
+fn validate_allowed_external_url(raw: &str) -> Result<reqwest::Url, String> {
+    let parsed = reqwest::Url::parse(raw.trim()).map_err(|_| "URL is invalid".to_string())?;
+    if parsed.scheme() != "https" {
+        return Err("Only https URLs may be opened".to_string());
+    }
+    if !parsed.username().is_empty() || parsed.password().is_some() {
+        return Err("URL must not contain embedded credentials".to_string());
+    }
+    let host = parsed.host_str().unwrap_or("");
+    if !ALLOWED_OPEN_URL_HOSTS
+        .iter()
+        .any(|allowed| host.eq_ignore_ascii_case(allowed))
+    {
+        return Err(format!(
+            "Host '{host}' is not in the external URL allowlist"
+        ));
+    }
+    Ok(parsed)
+}
+
 /// Opens a URL in the user's default browser (API key portals, release notes, documentation).
 #[tauri::command]
 async fn open_url(app_handle: tauri::AppHandle, url: String) -> Result<(), String> {
-    let parsed = reqwest::Url::parse(&url).map_err(|_| "URL is invalid".to_string())?;
-    if parsed.scheme() != "https" && parsed.scheme() != "http" {
-        return Err("Only http/https URLs may be opened".to_string());
-    }
+    let parsed = validate_allowed_external_url(&url)?;
 
     use tauri_plugin_opener::OpenerExt;
     app_handle
         .opener()
-        .open_url(url, None::<&str>)
+        .open_url(parsed.as_str(), None::<&str>)
         .map_err(|e| e.to_string())
 }
 
 #[tauri::command]
-fn relaunch_app(app_handle: tauri::AppHandle) {
+async fn relaunch_app(app_handle: tauri::AppHandle) {
+    let stop_handle = app_handle.clone();
+    let _ = tauri::async_runtime::spawn_blocking(move || {
+        stop_all_sidecars_and_watchdogs(&stop_handle);
+    })
+    .await;
     app_handle.restart();
 }
 
@@ -775,23 +936,54 @@ struct EngineHealth {
 }
 
 #[tauri::command]
-fn get_engine_health(app_handle: tauri::AppHandle) -> EngineHealth {
-    let settings = settings::load_settings_without_secrets(&app_handle).unwrap_or_default();
-    let (gaming_mode, whisper_starting, parakeet_starting) = app_handle
-        .try_state::<AppState>()
-        .map(|s| {
-            (
-                s.gaming_mode_active.load(Ordering::Acquire),
-                s.whisper_starting.load(Ordering::Acquire),
-                s.parakeet_starting.load(Ordering::Acquire),
-            )
-        })
-        .unwrap_or((false, false, false));
+async fn get_engine_health(app_handle: tauri::AppHandle) -> EngineHealth {
+    tauri::async_runtime::spawn_blocking(move || {
+        let settings =
+            settings::cached_or_load_settings_without_secrets(&app_handle).unwrap_or_default();
+        let (gaming_mode, whisper_starting, parakeet_starting) = app_handle
+            .try_state::<AppState>()
+            .map(|s| {
+                (
+                    s.gaming_mode_active.load(Ordering::Acquire),
+                    s.whisper_starting.load(Ordering::Acquire),
+                    s.parakeet_starting.load(Ordering::Acquire),
+                )
+            })
+            .unwrap_or((false, false, false));
 
-    if settings.local_engine == "whisper" {
-        return match whisper_runner::whisper_server_status(&app_handle) {
+        if settings.local_engine == "whisper" {
+            return match whisper_runner::whisper_server_status(&app_handle) {
+                Some((provider, port)) => EngineHealth {
+                    engine: "whisper".to_string(),
+                    running: true,
+                    starting: false,
+                    provider: Some(provider),
+                    port: Some(port),
+                    gaming_mode,
+                },
+                None => EngineHealth {
+                    engine: "whisper".to_string(),
+                    running: false,
+                    starting: whisper_starting,
+                    provider: None,
+                    port: None,
+                    gaming_mode,
+                },
+            };
+        }
+        if settings.local_engine != "parakeet" {
+            return EngineHealth {
+                engine: settings.local_engine,
+                running: true,
+                starting: false,
+                provider: None,
+                port: None,
+                gaming_mode,
+            };
+        }
+        match whisper_runner::parakeet_server_status(&app_handle) {
             Some((provider, port)) => EngineHealth {
-                engine: "whisper".to_string(),
+                engine: "parakeet".to_string(),
                 running: true,
                 starting: false,
                 provider: Some(provider),
@@ -799,43 +991,45 @@ fn get_engine_health(app_handle: tauri::AppHandle) -> EngineHealth {
                 gaming_mode,
             },
             None => EngineHealth {
-                engine: "whisper".to_string(),
+                engine: "parakeet".to_string(),
                 running: false,
-                starting: whisper_starting,
+                starting: parakeet_starting,
                 provider: None,
                 port: None,
                 gaming_mode,
             },
-        };
-    }
-    if settings.local_engine != "parakeet" {
-        return EngineHealth {
-            engine: settings.local_engine,
-            running: true,
-            starting: false,
-            provider: None,
-            port: None,
-            gaming_mode,
-        };
-    }
-    match whisper_runner::parakeet_server_status(&app_handle) {
-        Some((provider, port)) => EngineHealth {
-            engine: "parakeet".to_string(),
-            running: true,
-            starting: false,
-            provider: Some(provider),
-            port: Some(port),
-            gaming_mode,
-        },
-        None => EngineHealth {
-            engine: "parakeet".to_string(),
-            running: false,
-            starting: parakeet_starting,
-            provider: None,
-            port: None,
-            gaming_mode,
-        },
-    }
+        }
+    })
+    .await
+    .unwrap_or_else(|_| EngineHealth {
+        engine: "whisper".to_string(),
+        running: false,
+        starting: false,
+        provider: None,
+        port: None,
+        gaming_mode: false,
+    })
+}
+
+fn sanitize_frontend_log_field(input: &str, max_chars: usize, strip_brackets: bool) -> String {
+    let cleaned: String = input
+        .chars()
+        .map(|ch| {
+            if ch.is_control() {
+                ' '
+            } else if strip_brackets && ch == '[' {
+                '('
+            } else if strip_brackets && ch == ']' {
+                ')'
+            } else {
+                ch
+            }
+        })
+        .collect::<String>()
+        .split_whitespace()
+        .collect::<Vec<_>>()
+        .join(" ");
+    cleaned.chars().take(max_chars).collect()
 }
 
 #[tauri::command]
@@ -845,7 +1039,31 @@ async fn log_frontend_event(
     session: Option<String>,
     message: String,
 ) -> Result<(), String> {
-    logger::log(&level, &tag, session.as_deref(), &message);
+    let safe_level = match level.trim().to_ascii_uppercase().as_str() {
+        "DEBUG" => "DEBUG",
+        "WARN" | "WARNING" => "WARN",
+        "ERROR" => "ERROR",
+        _ => "INFO",
+    };
+    let safe_tag_inner = sanitize_frontend_log_field(&tag, 32, true);
+    let safe_tag = if safe_tag_inner.is_empty() {
+        "Frontend".to_string()
+    } else {
+        format!("FE:{safe_tag_inner}")
+    };
+    let safe_session = session
+        .as_deref()
+        .map(|s| sanitize_frontend_log_field(s, 32, true))
+        .filter(|s| !s.is_empty());
+    let safe_message = sanitize_frontend_log_field(&message, 512, true);
+    if !safe_message.is_empty() {
+        logger::log(
+            safe_level,
+            &safe_tag,
+            safe_session.as_deref(),
+            &safe_message,
+        );
+    }
     Ok(())
 }
 
@@ -1339,6 +1557,16 @@ fn is_clipboard_empty_os() -> bool {
     false
 }
 
+#[cfg(target_os = "windows")]
+fn get_clipboard_sequence_number() -> u32 {
+    unsafe { windows_sys::Win32::System::DataExchange::GetClipboardSequenceNumber() }
+}
+
+#[cfg(not(target_os = "windows"))]
+fn get_clipboard_sequence_number() -> u32 {
+    0
+}
+
 /// Writes a transient transcript for the paste keystroke. On Windows the write
 /// is marked so the text does not reach Win+V or the cloud clipboard; if that
 /// fails we fall back to an ordinary write rather than losing the paste.
@@ -1500,33 +1728,52 @@ fn restore_clipboard_guarded(
     }
 }
 
-struct ClipboardGuard {
-    backup: ClipboardBackup,
-    expected_temporary_text: Option<String>,
-    /// When present, restore is gated on this session still being current,
-    /// so a stale (overlapped) session cannot clobber a newer one's clipboard.
-    session: Option<(tauri::AppHandle, u64)>,
+fn resolve_session_clipboard_backup(
+    unrestored_slot: &mut Option<(u64, ClipboardBackup, String)>,
+    current_clipboard_text: Option<&str>,
+    fresh_backup: impl FnOnce() -> ClipboardBackup,
+) -> ClipboardBackup {
+    if let Some((_, ref orig_backup, ref temp_text)) = unrestored_slot {
+        if current_clipboard_text == Some(temp_text.as_str()) {
+            return orig_backup.clone();
+        }
+        *unrestored_slot = None;
+    }
+    fresh_backup()
 }
 
-impl Drop for ClipboardGuard {
-    fn drop(&mut self) {
-        let backup = std::mem::replace(&mut self.backup, ClipboardBackup::Empty);
-        if let Some((app_handle, my_gen)) = &self.session {
-            if let Some(state) = app_handle.try_state::<AppState>() {
-                restore_clipboard_guarded(
-                    state.inner(),
-                    *my_gen,
-                    backup,
-                    self.expected_temporary_text.as_deref(),
-                );
-                return;
-            }
-        }
-        match &self.expected_temporary_text {
-            Some(expected) => restore_clipboard_if_unchanged(backup, expected),
-            None => restore_clipboard(backup),
-        }
+fn take_unrestored_clipboard_for_restore(
+    unrestored_slot: &mut Option<(u64, ClipboardBackup, String)>,
+    my_gen: u64,
+) -> Option<(ClipboardBackup, String)> {
+    let owned_by_me = unrestored_slot
+        .as_ref()
+        .map(|(owner_gen, _, _)| *owner_gen == my_gen)
+        .unwrap_or(false);
+    if owned_by_me {
+        unrestored_slot
+            .take()
+            .map(|(_, backup, expected)| (backup, expected))
+    } else {
+        None
     }
+}
+
+/// Reads or inherits the user's real pre-Aura clipboard while holding `clipboard_mutex`.
+fn peek_or_backup_clipboard(state: &AppState) -> ClipboardBackup {
+    let current_text = arboard::Clipboard::new()
+        .ok()
+        .and_then(|mut cb| cb.get_text().ok());
+    let mut guard = state
+        .unrestored_clipboard
+        .lock()
+        .unwrap_or_else(|p| p.into_inner());
+    resolve_session_clipboard_backup(&mut guard, current_text.as_deref(), backup_clipboard)
+}
+
+fn is_whisper_server_timeout_error(err: &str) -> bool {
+    let lower = err.to_ascii_lowercase();
+    lower.contains("timed out") || lower.contains("timeout")
 }
 
 /// Runs the blocking whisper.cpp sidecar off the async runtime.
@@ -1542,6 +1789,9 @@ async fn run_local_whisper_async(
     dictionary: String,
     generation: u64,
 ) -> Result<String, String> {
+    if session_stale_for_abort(&app_handle, generation) {
+        return Err("Session superseded".to_string());
+    }
     if model == "parakeet-v3" {
         tauri::async_runtime::spawn_blocking(move || {
             whisper_runner::run_parakeet(&app_handle, &wav, &language, &dictionary, || {
@@ -1570,6 +1820,9 @@ async fn run_local_whisper_async(
                 );
                 let wait_start = std::time::Instant::now();
                 while wait_start.elapsed() < std::time::Duration::from_secs(8) {
+                    if session_stale_for_abort(&app_handle, generation) {
+                        return Err("Session superseded".to_string());
+                    }
                     tokio::time::sleep(std::time::Duration::from_millis(150)).await;
                     whisper_port = app_handle
                         .try_state::<AppState>()
@@ -1587,6 +1840,10 @@ async fn run_local_whisper_async(
                     }
                 }
             }
+        }
+
+        if session_stale_for_abort(&app_handle, generation) {
+            return Err("Session superseded".to_string());
         }
 
         if whisper_port > 0 {
@@ -1607,6 +1864,19 @@ async fn run_local_whisper_async(
                     ))
                 }
                 Err(server_err) => {
+                    if is_whisper_server_timeout_error(&server_err)
+                        || session_stale_for_abort(&app_handle, generation)
+                    {
+                        crate::logger::log(
+                            "WARN",
+                            "ASR",
+                            None,
+                            &format!(
+                                "Resident Whisper server request timed out or session superseded ({server_err}); skipping CLI sidecar fallback"
+                            ),
+                        );
+                        return Err(server_err);
+                    }
                     crate::logger::log(
                         "WARN",
                         "ASR",
@@ -2534,6 +2804,7 @@ fn finish_live_target_monitoring(app_handle: &tauri::AppHandle, generation: u64)
     if let Some(state) = app_handle.try_state::<AppState>() {
         if state.session_gen.load(Ordering::Acquire) == generation {
             state.live_target_monitoring.store(false, Ordering::Release);
+            keyboard_hook::set_live_target_monitoring(false);
         }
     }
 }
@@ -2903,7 +3174,15 @@ fn ensure_overlay_topmost(window: &tauri::WebviewWindow) {
 
 /// Shows the error state in the overlay for a moment, then hides it
 /// (unless a newer session already owns the overlay).
-async fn show_overlay_error(app_handle: &tauri::AppHandle, _my_gen: u64, error_msg: &str) {
+async fn show_overlay_error(app_handle: &tauri::AppHandle, my_gen: u64, error_msg: &str) {
+    let still_current = app_handle
+        .try_state::<AppState>()
+        .map(|state| state.inner().session_gen.load(Ordering::SeqCst) == my_gen)
+        .unwrap_or(true);
+    if !still_current {
+        return;
+    }
+
     if let Some(overlay) = app_handle.get_webview_window("overlay") {
         if let Ok(Some(monitor)) = overlay.primary_monitor() {
             let size = monitor.size();
@@ -2924,12 +3203,28 @@ async fn show_overlay_error(app_handle: &tauri::AppHandle, _my_gen: u64, error_m
         }
         ensure_overlay_topmost(&overlay);
         let _ = overlay.show();
+
+        let app = app_handle.clone();
+        let overlay_clone = overlay.clone();
+        tokio::spawn(async move {
+            tokio::time::sleep(std::time::Duration::from_millis(3_000)).await;
+            let still_same_session = app
+                .try_state::<AppState>()
+                .map(|state| {
+                    let state = state.inner();
+                    !state.is_recording.load(Ordering::SeqCst)
+                        && state.session_gen.load(Ordering::SeqCst) == my_gen
+                })
+                .unwrap_or(false);
+            if still_same_session {
+                let _ = overlay_clone.hide();
+            }
+        });
     }
     let _ = app_handle.emit("recording-state", format!("error:{}", error_msg));
-    // JS handles playing error sound and animating the hide after a 2.5s display timeout
 }
 
-/// Emits hide-overlay-requested event and runs a 500ms backup safety timer to close the overlay window.
+/// Emits hide-overlay-requested event and runs an 880ms backup safety timer to close the overlay window.
 ///
 /// The backup hide is skipped when a new session has already claimed the
 /// overlay: the user can re-press the hotkey (e.g. re-press V while Alt is
@@ -2948,7 +3243,7 @@ fn request_animated_hide(app_handle: &tauri::AppHandle, status: &str) {
             .map(|state| state.inner().session_gen.load(Ordering::SeqCst))
             .unwrap_or(u64::MAX);
         tokio::spawn(async move {
-            tokio::time::sleep(std::time::Duration::from_millis(500)).await;
+            tokio::time::sleep(std::time::Duration::from_millis(880)).await;
             let still_same_session = app
                 .try_state::<AppState>()
                 .map(|state| {
@@ -3098,8 +3393,12 @@ async fn start_recording_session(app_handle: tauri::AppHandle) {
     }
     let gen = state.session_gen.fetch_add(1, Ordering::SeqCst) + 1;
     let session_tag = crate::logger::format_session_tag(gen);
+    state
+        .selection_blocked_by_uipi
+        .store(false, Ordering::Release);
     state.live_target_desynced.store(false, Ordering::Release);
     state.live_target_monitoring.store(false, Ordering::Release);
+    keyboard_hook::set_live_target_monitoring(false);
     match state.parakeet_streaming.lock() {
         Ok(mut slot) => {
             if let Some(previous) = slot.take() {
@@ -3197,6 +3496,7 @@ async fn start_recording_session(app_handle: tauri::AppHandle) {
     state
         .live_target_monitoring
         .store(session_settings.streaming_enabled, Ordering::Release);
+    keyboard_hook::set_live_target_monitoring(session_settings.streaming_enabled);
 
     // Selected-text context is captured whenever an edit route will actually
     // consume it: the cloud provider (cloud or cloud-after-local cleanup) or
@@ -3205,17 +3505,23 @@ async fn start_recording_session(app_handle: tauri::AppHandle) {
     let copy_context =
         session_settings.copy_context_on_start && edit_route != llm_runner::AiEditRoute::Off;
 
-    // Parallel background capture of caret context via Windows UI Automation
-    if session_settings.smart_context_enabled {
+    // Non-invasive capture of caret & selection context via fast Win32 / warm UIA worker
+    let (caret_tx, caret_rx) = mpsc::sync_channel::<smart_insertion::CaretContext>(1);
+    if session_settings.smart_context_enabled || copy_context {
         let app_handle_caret = app_handle.clone();
         let caret_gen = gen;
+        let save_caret = session_settings.smart_context_enabled;
         tauri::async_runtime::spawn_blocking(move || {
-            let ctx = caret_context::capture_caret_context(20);
+            let ctx = caret_context::capture_caret_context(
+                caret_context::DEFAULT_CARET_CAPTURE_TIMEOUT_MS,
+            );
             if let Some(state) = app_handle_caret.try_state::<AppState>() {
                 let state = state.inner();
                 if state.session_gen.load(Ordering::SeqCst) == caret_gen {
-                    if let Ok(mut guard) = state.caret_context.lock() {
-                        *guard = Some(ctx.clone());
+                    if save_caret {
+                        if let Ok(mut guard) = state.caret_context.lock() {
+                            *guard = Some(ctx.clone());
+                        }
                     }
                     if copy_context && !ctx.selected_text.trim().is_empty() {
                         if let Ok(mut sel_guard) = state.selected_text.lock() {
@@ -3227,7 +3533,10 @@ async fn start_recording_session(app_handle: tauri::AppHandle) {
                     }
                 }
             }
+            let _ = caret_tx.send(ctx);
         });
+    } else {
+        drop(caret_tx);
     }
 
     if copy_context {
@@ -3239,25 +3548,22 @@ async fn start_recording_session(app_handle: tauri::AppHandle) {
         let warm_route = edit_route;
         let warm_model = session_settings.llm_model.clone();
         // Blocking worker: the clipboard mutex guard cannot be held across an
-        // async yield (MutexGuard is not Send), and the whole backup -> clear
-        // -> copy -> read -> restore sequence must stay serialized (C7).
+        // async yield (MutexGuard is not Send), and the whole backup -> copy
+        // -> sequence check -> read -> restore sequence must stay serialized (C7).
         tauri::async_runtime::spawn_blocking(move || {
-            // Sleep 50ms to let the OS keyboard state settle after the physical hotkey down
-            // and allow the parallel UIA caret capture (20ms timeout) to complete.
-            std::thread::sleep(std::time::Duration::from_millis(50));
+            let caret_ctx = caret_rx.recv().unwrap_or_default();
 
-            // If UI Automation already captured a non-empty selection, skip synthetic Ctrl+C
-            // and clipboard clearing entirely (Zero Clipboard Pollution).
-            let already_captured = if let Some(state) = app_handle_copy.try_state::<AppState>() {
-                state
-                    .inner()
-                    .selected_text
-                    .lock()
-                    .map(|g| !g.trim().is_empty())
-                    .unwrap_or(false)
-            } else {
-                false
-            };
+            let already_captured = !caret_ctx.selected_text.trim().is_empty()
+                || app_handle_copy
+                    .try_state::<AppState>()
+                    .and_then(|s| {
+                        s.inner()
+                            .selected_text
+                            .lock()
+                            .ok()
+                            .map(|g| !g.trim().is_empty())
+                    })
+                    .unwrap_or(false);
 
             let mut captured_selection = already_captured;
             if already_captured {
@@ -3265,68 +3571,104 @@ async fn start_recording_session(app_handle: tauri::AppHandle) {
                     "INFO",
                     "Context",
                     Some(&session_tag_copy),
-                    "Selected text already captured non-invasively via UI Automation; skipping synthetic Ctrl+C clipboard copy",
+                    "Selected text already captured non-invasively via UIA/Win32; skipping synthetic Ctrl+C clipboard copy",
                 );
-            } else {
-                // Without the shared clipboard mutex, a session whose paste window
-                // overlaps this copy could capture this temporary text as its
-                // "original" and the user's real clipboard content would be lost.
-                let clipboard_mutex_guard =
-                    if let Some(state) = app_handle_copy.try_state::<AppState>() {
-                        match state.inner().clipboard_mutex.lock() {
-                            Ok(guard) => Some(guard),
-                            Err(poisoned) => Some(poisoned.into_inner()),
-                        }
-                    } else {
-                        None
+            } else if caret_ctx.has_authoritative_selection() {
+                crate::logger::log(
+                    "INFO",
+                    "Context",
+                    Some(&session_tag_copy),
+                    "Authoritative empty selection reported by UIA/Win32; skipping synthetic Ctrl+C clipboard copy",
+                );
+            } else if let Some(state_ref) = app_handle_copy.try_state::<AppState>() {
+                let state = state_ref.inner();
+                // Brief settle for physical hotkey chord before fallback synthetic Ctrl+C.
+                std::thread::sleep(std::time::Duration::from_millis(15));
+
+                let session_active = state.session_gen.load(Ordering::SeqCst) == gen
+                    && state.is_recording.load(Ordering::SeqCst);
+                let start_focus = state
+                    .start_focus
+                    .lock()
+                    .ok()
+                    .map(|g| *g)
+                    .unwrap_or_default();
+                let focus_ok =
+                    start_focus.is_compatible_with(&keyboard_simulator::get_focus_target());
+
+                if session_active && focus_ok {
+                    // Without the shared clipboard mutex, a session whose paste window
+                    // overlaps this copy could capture temporary text as its "original"
+                    // and the user's real clipboard content would be lost.
+                    let _clipboard_mutex_guard = match state.clipboard_mutex.lock() {
+                        Ok(guard) => guard,
+                        Err(poisoned) => poisoned.into_inner(),
                     };
 
-                let mut clipboard_guard = ClipboardGuard {
-                    backup: backup_clipboard(),
-                    expected_temporary_text: None,
-                    session: Some((app_handle_copy.clone(), gen)),
-                };
+                    // Never call `cb.clear()` here: clearing destroys non-text/non-image
+                    // clipboard formats (`ClipboardBackup::Preserve`: Explorer files, Excel, RTF).
+                    // Instead, check `GetClipboardSequenceNumber()` around `simulate_copy_checked()`.
+                    let backup = peek_or_backup_clipboard(state);
+                    let seq_before = get_clipboard_sequence_number();
+                    let copy_dispatched = keyboard_simulator::simulate_copy_checked();
 
-                if let Ok(mut cb) = arboard::Clipboard::new() {
-                    let _ = cb.clear();
-                }
-                keyboard_simulator::simulate_copy();
-                std::thread::sleep(std::time::Duration::from_millis(200));
-
-                let copied = arboard::Clipboard::new()
-                    .ok()
-                    .and_then(|mut cb| cb.get_text().ok())
-                    .unwrap_or_default();
-                clipboard_guard.expected_temporary_text = Some(copied.clone());
-
-                if let Some(state) = app_handle_copy.try_state::<AppState>() {
-                    let state = state.inner();
-                    let session_is_current = state.session_gen.load(Ordering::SeqCst) == gen
-                        && state.is_recording.load(Ordering::SeqCst);
-                    if session_is_current {
-                        if let Ok(mut guard) = state.selected_text.lock() {
-                            *guard = copied.clone();
-                            crate::logger::log(
-                                "INFO",
-                                "Context",
-                                Some(&session_tag_copy),
-                                &format!(
-                                    "Captured selected text ({} chars)",
-                                    copied.chars().count()
-                                ),
-                            );
-                            if !copied.trim().is_empty() {
-                                captured_selection = true;
-                                let _ = app_handle_copy.emit("selection-context-active", true);
+                    if !copy_dispatched {
+                        state
+                            .selection_blocked_by_uipi
+                            .store(true, Ordering::Release);
+                        crate::logger::log(
+                            "WARN",
+                            "Context",
+                            Some(&session_tag_copy),
+                            "Synthetic Ctrl+C was blocked by UIPI (elevated target window); armed edit-command guard",
+                        );
+                    } else {
+                        let mut seq_changed = false;
+                        for _ in 0..20 {
+                            std::thread::sleep(std::time::Duration::from_millis(10));
+                            if get_clipboard_sequence_number() != seq_before {
+                                seq_changed = true;
+                                break;
                             }
+                        }
+
+                        if seq_changed {
+                            let copied = arboard::Clipboard::new()
+                                .ok()
+                                .and_then(|mut cb| cb.get_text().ok())
+                                .unwrap_or_default();
+
+                            if let Ok(mut unrestored) = state.unrestored_clipboard.lock() {
+                                *unrestored = None;
+                            }
+
+                            let session_is_current = state.session_gen.load(Ordering::SeqCst)
+                                == gen
+                                && state.is_recording.load(Ordering::SeqCst);
+                            if session_is_current {
+                                if let Ok(mut guard) = state.selected_text.lock() {
+                                    *guard = copied.clone();
+                                    crate::logger::log(
+                                        "INFO",
+                                        "Context",
+                                        Some(&session_tag_copy),
+                                        &format!(
+                                            "Captured selected text ({} chars)",
+                                            copied.chars().count()
+                                        ),
+                                    );
+                                    if !copied.trim().is_empty() {
+                                        captured_selection = true;
+                                        let _ =
+                                            app_handle_copy.emit("selection-context-active", true);
+                                    }
+                                }
+                            }
+
+                            restore_clipboard_guarded(state, gen, backup, Some(&copied));
                         }
                     }
                 }
-
-                // Restore first, then release the mutex: the Drop of the guard
-                // performs the clipboard restore while still serialized.
-                drop(clipboard_guard);
-                drop(clipboard_mutex_guard);
             }
 
             // Selection captured and the local route will use it: bring the
@@ -3379,6 +3721,38 @@ async fn start_recording_session(app_handle: tauri::AppHandle) {
         }
     }
 
+    // Show overlay immediately in parallel with WASAPI microphone open so HUD
+    // feedback feels instantaneous even on slower Bluetooth/USB audio drivers.
+    if state.session_gen.load(Ordering::SeqCst) == gen && state.is_recording.load(Ordering::SeqCst)
+    {
+        if let Some(overlay) = app_handle.get_webview_window("overlay") {
+            if let Ok(Some(monitor)) = overlay.primary_monitor() {
+                let size = monitor.size();
+                let scale_factor = monitor.scale_factor();
+
+                let monitor_width = size.width as f64 / scale_factor;
+                let monitor_height = size.height as f64 / scale_factor;
+
+                let overlay_width = 160.0;
+                let overlay_height = 80.0;
+                const TASKBAR_MARGIN: f64 = 95.0;
+
+                let x = (monitor_width - overlay_width) / 2.0;
+                let y = monitor_height - overlay_height - TASKBAR_MARGIN;
+
+                let _ = overlay
+                    .set_position(tauri::Position::Logical(tauri::LogicalPosition::new(x, y)));
+            }
+            ensure_overlay_topmost(&overlay);
+            let _ = overlay.emit(
+                "overlay-preferences",
+                OverlayPreferences::from(&session_settings),
+            );
+            let _ = overlay.show();
+        }
+        let _ = app_handle.emit("recording-state", "recording");
+    }
+
     // Start recording to a session-unique temporary WAV path
     let temp_path = recording_wav_path(gen);
     let temp_path_str = temp_path.to_string_lossy().to_string();
@@ -3407,18 +3781,26 @@ async fn start_recording_session(app_handle: tauri::AppHandle) {
         } else {
             Some(selected_audio_device.as_str())
         };
+        let meter_epoch = std::time::Instant::now();
+        let last_emit_ms = AtomicU64::new(0);
         recorder.audio_recorder.start_recording(
             &worker_path,
             enable_parakeet_sample_stream,
             retain_samples_for_batch_preview,
             dev,
             move |vol| {
-                // Decouple the overlay's volume IPC from the record worker: a
-                // slow/busy overlay webview must never stall audio processing
-                // and overflow the capture queue.
+                // Throttle volume updates to ~30 Hz (33 ms) and target only the
+                // overlay window so hidden/main webviews stay completely idle.
+                let elapsed_ms = meter_epoch.elapsed().as_millis() as u64;
+                let prev_ms = last_emit_ms.load(Ordering::Relaxed);
+                if prev_ms != 0 && elapsed_ms.saturating_sub(prev_ms) < 33 {
+                    return;
+                }
+                last_emit_ms.store(elapsed_ms.max(1), Ordering::Relaxed);
+
                 let app_handle_vol = app_handle_vol.clone();
                 tauri::async_runtime::spawn(async move {
-                    let _ = app_handle_vol.emit("volume-level", vol);
+                    let _ = app_handle_vol.emit_to("overlay", "volume-level", vol);
                 });
             },
         )
@@ -3449,45 +3831,13 @@ async fn start_recording_session(app_handle: tauri::AppHandle) {
     }
 
     if !state.is_recording.load(Ordering::SeqCst) {
-        // Recording was cancelled before overlay initialization completed.
+        // Recording was cancelled before WASAPI startup completed.
         finish_live_target_monitoring(&app_handle, gen);
         let _ = state.audio_recorder.cancel_recording();
         keyboard_hook::set_recording_active(false);
+        request_animated_hide(&app_handle, "cancel");
         return;
     }
-
-    // Show overlay window
-    if let Some(overlay) = app_handle.get_webview_window("overlay") {
-        // Position overlay in the bottom center of the primary monitor
-        if let Ok(Some(monitor)) = overlay.primary_monitor() {
-            let size = monitor.size();
-            let scale_factor = monitor.scale_factor();
-
-            // Convert physical coordinates to logical coordinates
-            let monitor_width = size.width as f64 / scale_factor;
-            let monitor_height = size.height as f64 / scale_factor;
-
-            // Match width and height from tauri.conf.json
-            let overlay_width = 160.0;
-            let overlay_height = 80.0;
-            const TASKBAR_MARGIN: f64 = 95.0; // Place cleanly above the taskbar
-
-            // Center horizontally
-            let x = (monitor_width - overlay_width) / 2.0;
-            let y = monitor_height - overlay_height - TASKBAR_MARGIN;
-
-            let _ =
-                overlay.set_position(tauri::Position::Logical(tauri::LogicalPosition::new(x, y)));
-        }
-        ensure_overlay_topmost(&overlay);
-        let _ = overlay.emit(
-            "overlay-preferences",
-            OverlayPreferences::from(&session_settings),
-        );
-        let _ = overlay.show();
-    }
-
-    let _ = app_handle.emit("recording-state", "recording");
 
     let streaming_enabled = session_settings.streaming_enabled;
     if streaming_enabled {
@@ -3765,8 +4115,89 @@ pub fn resolve_history_entry_meta(
     }
 }
 
+struct TempWavGuard(std::path::PathBuf);
+
+impl Drop for TempWavGuard {
+    fn drop(&mut self) {
+        let _ = std::fs::remove_file(&self.0);
+    }
+}
+
+fn should_abort_uipi_blocked_edit_command(
+    selection_blocked_by_uipi: bool,
+    has_selection: bool,
+    edit_route: llm_runner::AiEditRoute,
+    spoken_text: &str,
+    translate_default_target: &str,
+    ui_language: &str,
+    disabled_edit_commands: &[String],
+) -> bool {
+    if !selection_blocked_by_uipi
+        || has_selection
+        || edit_route == llm_runner::AiEditRoute::Off
+        || spoken_text.trim().is_empty()
+    {
+        return false;
+    }
+    let intent =
+        edit_intent::parse_edit_intent(spoken_text, translate_default_target, "", ui_language);
+    intent != edit_intent::EditIntent::NotACommand
+        && !edit_intent::is_command_disabled(&intent, disabled_edit_commands)
+}
+
+fn postprocess_session_text(
+    raw_text: &str,
+    language: &str,
+    text_replacements: &[settings::TextReplacement],
+    smart_context_enabled: bool,
+    caret_ctx: Option<&smart_insertion::CaretContext>,
+    smart_context_trailing_period: bool,
+    executed_edit_target: Option<EditExecutionTarget>,
+) -> (String, usize, bool) {
+    if executed_edit_target.is_some() {
+        // AI edit outputs are finished documents/translations/code blocks:
+        // speech normalizers, custom dictation replacements, smart-caret
+        // lowercase/period rules, `[|]` caret markers, and ASR silence-hallucination
+        // filters must never mutate newlines (`\n`), identifiers (`std::io`),
+        // or polite sign-offs ("Спасибо." / "Thank you.").
+        let empty = raw_text.trim().is_empty();
+        return (raw_text.to_string(), 0, empty);
+    }
+
+    let normalized_text = text_normalizer::normalize_transcription_text(raw_text, language);
+    let replaced_text =
+        text_normalizer::apply_text_replacements(&normalized_text, text_replacements);
+
+    let (final_candidate, is_empty_speech) = if smart_context_enabled {
+        if let Some(ctx) = caret_ctx {
+            let adapted = smart_insertion::adapt_transcription_to_context(
+                &replaced_text,
+                ctx,
+                smart_context_trailing_period,
+            );
+            let empty = adapted.trim().is_empty();
+            (adapted, empty)
+        } else {
+            let trimmed = replaced_text.trim().to_string();
+            let empty = trimmed.is_empty();
+            (trimmed, empty)
+        }
+    } else {
+        let trimmed = replaced_text.trim().to_string();
+        let empty = trimmed.is_empty();
+        (trimmed, empty)
+    };
+
+    if is_empty_speech || is_silence_hallucination(final_candidate.trim()) {
+        return (final_candidate, 0, true);
+    }
+    let (final_text, caret_left) = text_normalizer::extract_caret_marker(&final_candidate);
+    let final_empty = final_text.trim().is_empty();
+    (final_text, caret_left, final_empty)
+}
+
 /// Stops the recording and runs the final transcription + paste/type pipeline.
-async fn finalize_recording(app_handle: tauri::AppHandle) {
+async fn finalize_recording(app_handle: tauri::AppHandle, is_toggle: bool) {
     let Some(state) = app_handle.try_state::<AppState>() else {
         return;
     };
@@ -3780,6 +4211,9 @@ async fn finalize_recording(app_handle: tauri::AppHandle) {
         return;
     }
 
+    let selection_blocked_by_uipi = state
+        .selection_blocked_by_uipi
+        .swap(false, Ordering::AcqRel);
     let active_layout_lang = state
         .selected_language
         .lock()
@@ -3826,13 +4260,16 @@ async fn finalize_recording(app_handle: tauri::AppHandle) {
 
     let _ = app_handle.emit("recording-state", "processing");
 
+    let temp_path = recording_wav_path(my_gen);
+    let temp_wav_guard = TempWavGuard(temp_path.clone());
+
     let stop_handle = app_handle.clone();
     let stop_res = tauri::async_runtime::spawn_blocking(move || {
-        stop_handle
+        let state = stop_handle
             .try_state::<AppState>()
-            .ok_or_else(|| "Application state is unavailable".to_string())?
-            .audio_recorder
-            .stop_recording()
+            .ok_or_else(|| "Application state is unavailable".to_string())?;
+        state.audio_recorder.stop_recording_adaptive(is_toggle)?;
+        Ok::<Option<bool>, String>(state.audio_recorder.take_last_vad_has_speech())
     })
     .await
     .map_err(|error| format!("Audio stop worker failed: {error}"))
@@ -3843,27 +4280,30 @@ async fn finalize_recording(app_handle: tauri::AppHandle) {
         Some(&session_tag),
         &format!("stop_recording result = {:?}", stop_res),
     );
-    if let Err(e) = stop_res {
-        if let Some(session) = &streaming_session {
-            session.cancel.store(true, Ordering::Release);
+    let vad_speech_opt = match stop_res {
+        Ok(vad_opt) => vad_opt,
+        Err(e) => {
+            if let Some(session) = &streaming_session {
+                session.cancel.store(true, Ordering::Release);
+            }
+            crate::logger::log(
+                "ERROR",
+                "Audio",
+                Some(&session_tag),
+                &format!("Failed to stop recording: {}", e),
+            );
+            finish_live_target_monitoring(&app_handle, my_gen);
+            show_overlay_error(&app_handle, my_gen, "Recording stop error").await;
+            return;
         }
-        crate::logger::log(
-            "ERROR",
-            "Audio",
-            Some(&session_tag),
-            &format!("Failed to stop recording: {}", e),
-        );
-        finish_live_target_monitoring(&app_handle, my_gen);
-        show_overlay_error(&app_handle, my_gen, "Recording stop error").await;
-        return;
-    }
+    };
 
     let app_handle_clone = app_handle.clone();
     let session_tag_clone = session_tag.clone();
     tauri::async_runtime::spawn(async move {
+        let _temp_wav_guard = temp_wav_guard;
         let start_time = std::time::Instant::now();
 
-        let temp_path = recording_wav_path(my_gen);
         let temp_path_str = temp_path.to_string_lossy().to_string();
 
         let settings = match load_settings_async(app_handle_clone.clone()).await {
@@ -3958,50 +4398,66 @@ async fn finalize_recording(app_handle: tauri::AppHandle) {
 
         let mut empty_session = false;
         if !used_streaming_result {
-            let gate_path = temp_path_str.clone();
-            let gate_tag = session_tag_clone.clone();
-            let has_speech = tauri::async_runtime::spawn_blocking(move || {
-                vad::gate_wav_file(&gate_path, Some(&gate_tag))
-            })
-            .await
-            .map_err(|error| format!("VAD gate worker failed: {error}"))
-            .and_then(|result| result)
-            // Fail-open: if the probe itself errors, transcribe anyway.
-            .unwrap_or(true);
-            if !has_speech {
-                crate::logger::log(
-                    "INFO",
-                    "VAD",
-                    Some(&session_tag_clone),
-                    "No speech detected in recording; skipping transcription (empty session)",
-                );
-                empty_session = true;
-            } else {
-                let trim_path = temp_path.clone();
-                let trim_tag = session_tag_clone.clone();
-                let _ = tauri::async_runtime::spawn_blocking(move || {
-                    match vad::trim_trailing_silence_wav(&trim_path, &trim_path) {
-                        Ok(trimmed) => {
-                            if trimmed {
-                                crate::logger::log(
-                                    "INFO",
-                                    "VAD",
-                                    Some(&trim_tag),
-                                    "Trimmed trailing silence from audio WAV (>600ms padding preserved)",
-                                );
+            match vad_speech_opt {
+                Some(false) => {
+                    crate::logger::log(
+                        "INFO",
+                        "VAD",
+                        Some(&session_tag_clone),
+                        "Streaming VAD reported silence; skipping transcription (empty session)",
+                    );
+                    empty_session = true;
+                }
+                Some(true) => {
+                    // Speech confirmed and >600ms trailing silence already trimmed before WAV commit.
+                }
+                None => {
+                    let gate_path = temp_path_str.clone();
+                    let gate_tag = session_tag_clone.clone();
+                    let has_speech = tauri::async_runtime::spawn_blocking(move || {
+                        vad::gate_wav_file(&gate_path, Some(&gate_tag))
+                    })
+                    .await
+                    .map_err(|error| format!("VAD gate worker failed: {error}"))
+                    .and_then(|result| result)
+                    // Fail-open: if the probe itself errors, transcribe anyway.
+                    .unwrap_or(true);
+                    if !has_speech {
+                        crate::logger::log(
+                            "INFO",
+                            "VAD",
+                            Some(&session_tag_clone),
+                            "No speech detected in recording; skipping transcription (empty session)",
+                        );
+                        empty_session = true;
+                    } else {
+                        let trim_path = temp_path.clone();
+                        let trim_tag = session_tag_clone.clone();
+                        let _ = tauri::async_runtime::spawn_blocking(move || {
+                            match vad::trim_trailing_silence_wav(&trim_path, &trim_path) {
+                                Ok(trimmed) => {
+                                    if trimmed {
+                                        crate::logger::log(
+                                            "INFO",
+                                            "VAD",
+                                            Some(&trim_tag),
+                                            "Trimmed trailing silence from audio WAV (>600ms padding preserved)",
+                                        );
+                                    }
+                                }
+                                Err(e) => {
+                                    crate::logger::log(
+                                        "WARN",
+                                        "VAD",
+                                        Some(&trim_tag),
+                                        &format!("Failed to trim trailing silence from WAV: {e}"),
+                                    );
+                                }
                             }
-                        }
-                        Err(e) => {
-                            crate::logger::log(
-                                "WARN",
-                                "VAD",
-                                Some(&trim_tag),
-                                &format!("Failed to trim trailing silence from WAV: {e}"),
-                            );
-                        }
+                        })
+                        .await;
                     }
-                })
-                .await;
+                }
             }
         }
 
@@ -4146,8 +4602,30 @@ async fn finalize_recording(app_handle: tauri::AppHandle) {
                 // Selected-text edit pass: runs whenever a selection and spoken text
                 // are present, for any transcription engine and edit route.
                 let has_selection = !selected_text.trim().is_empty();
-                let needs_edit_pass =
-                    llm_runner::needs_edit_pass(has_selection, !text.trim().is_empty(), edit_route);
+                if should_abort_uipi_blocked_edit_command(
+                    selection_blocked_by_uipi,
+                    has_selection,
+                    edit_route,
+                    &text,
+                    &settings.translate_default_target,
+                    &settings.ui_language,
+                    &settings.disabled_edit_commands,
+                ) {
+                    crate::logger::log(
+                        "WARN",
+                        "Context",
+                        Some(&session_tag_clone),
+                        "Edit command spoken into UIPI-protected window where selection could not be copied; aborting literal paste",
+                    );
+                    edit_failed = true;
+                    final_notice = Some("elevated-paste-blocked");
+                }
+                let needs_edit_pass = !edit_failed
+                    && llm_runner::needs_edit_pass(
+                        has_selection,
+                        !text.trim().is_empty(),
+                        edit_route,
+                    );
                 if needs_edit_pass {
                     let session_ok = app_handle_clone
                         .try_state::<AppState>()
@@ -4380,13 +4858,6 @@ async fn finalize_recording(app_handle: tauri::AppHandle) {
                         }
                     }
                 }
-                let normalized_text =
-                    text_normalizer::normalize_transcription_text(&text, &language);
-                let replaced_text = text_normalizer::apply_text_replacements(
-                    &normalized_text,
-                    &settings.text_replacements,
-                );
-
                 let session_caret_ctx = if settings.smart_context_enabled {
                     app_handle_clone
                         .try_state::<AppState>()
@@ -4395,25 +4866,15 @@ async fn finalize_recording(app_handle: tauri::AppHandle) {
                     None
                 };
 
-                let (final_candidate, is_empty_speech) = if settings.smart_context_enabled {
-                    if let Some(ref ctx) = session_caret_ctx {
-                        let adapted = smart_insertion::adapt_transcription_to_context(
-                            &replaced_text,
-                            ctx,
-                            settings.smart_context_trailing_period,
-                        );
-                        let empty = adapted.trim().is_empty();
-                        (adapted, empty)
-                    } else {
-                        let trimmed = replaced_text.trim().to_string();
-                        let empty = trimmed.is_empty();
-                        (trimmed, empty)
-                    }
-                } else {
-                    let trimmed = replaced_text.trim().to_string();
-                    let empty = trimmed.is_empty();
-                    (trimmed, empty)
-                };
+                let (final_text, caret_left, is_discarded_output) = postprocess_session_text(
+                    &text,
+                    &language,
+                    &settings.text_replacements,
+                    settings.smart_context_enabled,
+                    session_caret_ctx.as_ref(),
+                    settings.smart_context_trailing_period,
+                    executed_edit_target,
+                );
 
                 crate::logger::log(
                     "INFO",
@@ -4421,7 +4882,7 @@ async fn finalize_recording(app_handle: tauri::AppHandle) {
                     Some(&session_tag_clone),
                     &format!(
                         "Final result: {}",
-                        crate::logger::anonymize_speech(&final_candidate, settings.log_speech_text)
+                        crate::logger::anonymize_speech(&final_text, settings.log_speech_text)
                     ),
                 );
                 if edit_failed {
@@ -4431,10 +4892,7 @@ async fn finalize_recording(app_handle: tauri::AppHandle) {
                         Some(&session_tag_clone),
                         "Text editing failed; nothing was inserted and the selection was left unchanged",
                     );
-                } else if !is_empty_speech && !is_silence_hallucination(final_candidate.trim()) {
-                    let (final_text, caret_left) =
-                        text_normalizer::extract_caret_marker(&final_candidate);
-
+                } else if !is_discarded_output {
                     let (history_mode, history_engine, history_processing_ms) =
                         resolve_history_entry_meta(
                             &settings.transcription_mode,
@@ -4472,20 +4930,64 @@ async fn finalize_recording(app_handle: tauri::AppHandle) {
                                     "Final document reconciliation skipped ({typing_outcome:?}); preserving transcript in history and clipboard"
                                 ),
                             );
-                            match copy_to_clipboard(final_text.clone()).await {
-                                Ok(()) => final_notice = Some("final-copied-after-edit"),
-                                Err(error) => crate::logger::log(
+                            let handoff_handle = app_handle_clone.clone();
+                            let handoff_text = final_text.clone();
+                            let copied_privately =
+                                tauri::async_runtime::spawn_blocking(move || {
+                                    if let Some(state) = handoff_handle.try_state::<AppState>() {
+                                        let _guard = state
+                                            .clipboard_mutex
+                                            .lock()
+                                            .unwrap_or_else(|p| p.into_inner());
+                                        if let Ok(mut unrestored) =
+                                            state.unrestored_clipboard.lock()
+                                        {
+                                            *unrestored = None;
+                                        }
+                                        write_transcript_to_clipboard(&handoff_text)
+                                    } else {
+                                        write_transcript_to_clipboard(&handoff_text)
+                                    }
+                                })
+                                .await
+                                .unwrap_or(false);
+
+                            if copied_privately {
+                                final_notice = Some("final-copied-after-edit");
+                            } else {
+                                crate::logger::log(
                                     "ERROR",
                                     "Clipboard",
                                     Some(&session_tag_clone),
-                                    &format!(
-                                        "Could not copy the safely preserved final transcript: {error}"
-                                    ),
-                                ),
+                                    "Could not write the safely preserved final transcript to clipboard",
+                                );
                             }
                         } else {
                             if caret_left > 0 && typing_outcome == TypingUpdateOutcome::Applied {
-                                keyboard_simulator::send_left_arrows(caret_left);
+                                let arrow_handle = app_handle_clone.clone();
+                                let arrow_focus = app_handle_clone
+                                    .try_state::<AppState>()
+                                    .and_then(|s| s.start_focus.lock().ok().map(|g| *g))
+                                    .unwrap_or_default();
+                                let _ = tauri::async_runtime::spawn_blocking(move || {
+                                    let should_stop = || {
+                                        let gen_ok = arrow_handle
+                                            .try_state::<AppState>()
+                                            .map(|s| s.session_gen.load(Ordering::SeqCst) == my_gen)
+                                            .unwrap_or(false);
+                                        !gen_ok
+                                            || !arrow_focus.is_compatible_with(
+                                                &keyboard_simulator::get_focus_target(),
+                                            )
+                                    };
+                                    if !should_stop() {
+                                        keyboard_simulator::send_left_arrows_cancellable(
+                                            caret_left,
+                                            should_stop,
+                                        );
+                                    }
+                                })
+                                .await;
                             }
                             request_animated_hide(&app_handle_clone, "success");
                             overlay_hide_requested = true;
@@ -4509,33 +5011,44 @@ async fn finalize_recording(app_handle: tauri::AppHandle) {
                             // Serialize the clipboard mutation against other
                             // overlapping sessions before the paste lands.
                             if let Some(state) = app_handle_clone.try_state::<AppState>() {
-                                if let Ok(_guard) = state.clipboard_mutex.lock() {
-                                    original_clipboard = backup_clipboard();
-                                    if write_transcript_to_clipboard(&final_text) {
-                                        clipboard_written = true;
-                                    }
-                                    if clipboard_written {
-                                        paste_blocked = !keyboard_simulator::simulate_paste();
-                                        if paste_blocked {
-                                            // UIPI silently dropped the input (the
-                                            // foreground app likely runs elevated).
-                                            // Keep the transcript in the clipboard
-                                            // instead of restoring over it.
-                                            crate::logger::log(
-                                                "WARN",
-                                                "Paste",
-                                                Some(&session_tag_clone),
-                                                "Paste was blocked by the system; transcript kept in clipboard",
-                                            );
+                                let _guard = state
+                                    .clipboard_mutex
+                                    .lock()
+                                    .unwrap_or_else(|p| p.into_inner());
+                                original_clipboard = peek_or_backup_clipboard(state.inner());
+                                if write_transcript_to_clipboard(&final_text) {
+                                    clipboard_written = true;
+                                }
+                                if clipboard_written {
+                                    paste_blocked = !keyboard_simulator::simulate_paste();
+                                    if paste_blocked {
+                                        if let Ok(mut slot) = state.unrestored_clipboard.lock() {
+                                            *slot = None;
                                         }
-                                    } else {
+                                        // UIPI silently dropped the input (the
+                                        // foreground app likely runs elevated).
+                                        // Keep the transcript in the clipboard
+                                        // instead of restoring over it.
                                         crate::logger::log(
-                                            "ERROR",
+                                            "WARN",
                                             "Paste",
                                             Some(&session_tag_clone),
-                                            "Could not write transcript to clipboard; paste aborted to prevent leaking previous clipboard contents",
+                                            "Paste was blocked by the system; transcript kept in clipboard",
                                         );
+                                    } else if let Ok(mut slot) = state.unrestored_clipboard.lock() {
+                                        *slot = Some((
+                                            my_gen,
+                                            original_clipboard.clone(),
+                                            final_text.clone(),
+                                        ));
                                     }
+                                } else {
+                                    crate::logger::log(
+                                        "ERROR",
+                                        "Paste",
+                                        Some(&session_tag_clone),
+                                        "Could not write transcript to clipboard; paste aborted to prevent leaking previous clipboard contents",
+                                    );
                                 }
                             }
                             if !clipboard_written {
@@ -4543,32 +5056,71 @@ async fn finalize_recording(app_handle: tauri::AppHandle) {
                             } else if paste_blocked {
                                 final_notice = Some("elevated-paste-blocked");
                             } else {
+                                let post_paste_started = std::time::Instant::now();
                                 // Hide overlay and play success chime immediately upon paste dispatch
                                 request_animated_hide(&app_handle_clone, "success");
                                 overlay_hide_requested = true;
 
-                                tokio::time::sleep(std::time::Duration::from_millis(400)).await;
-                                // Guarded restore: only restores if this session is
-                                // still current, so an overlapped newer session's
-                                // clipboard is never overwritten.
-                                if let Some(state) = app_handle_clone.try_state::<AppState>() {
-                                    if let Ok(_guard) = state.clipboard_mutex.lock() {
-                                        restore_clipboard_guarded(
-                                            state.inner(),
-                                            my_gen,
-                                            original_clipboard.clone(),
-                                            Some(&final_text),
+                                if caret_left > 0 {
+                                    tokio::time::sleep(std::time::Duration::from_millis(20)).await;
+                                    let arrow_handle = app_handle_clone.clone();
+                                    let arrow_focus = start_focus;
+                                    let _ = tauri::async_runtime::spawn_blocking(move || {
+                                        let should_stop = || {
+                                            let gen_ok = arrow_handle
+                                                .try_state::<AppState>()
+                                                .map(|s| {
+                                                    s.session_gen.load(Ordering::SeqCst) == my_gen
+                                                })
+                                                .unwrap_or(false);
+                                            !gen_ok
+                                                || !arrow_focus.is_compatible_with(
+                                                    &keyboard_simulator::get_focus_target(),
+                                                )
+                                        };
+                                        if !should_stop() {
+                                            keyboard_simulator::send_left_arrows_cancellable(
+                                                caret_left,
+                                                should_stop,
+                                            );
+                                        }
+                                    })
+                                    .await;
+                                }
+
+                                let remaining_restore_wait = std::time::Duration::from_millis(400)
+                                    .saturating_sub(post_paste_started.elapsed());
+                                if !remaining_restore_wait.is_zero() {
+                                    tokio::time::sleep(remaining_restore_wait).await;
+                                }
+
+                                let restore_handle = app_handle_clone.clone();
+                                let fallback_backup = original_clipboard;
+                                let fallback_expected = final_text.clone();
+                                let _ = tauri::async_runtime::spawn_blocking(move || {
+                                    if let Some(state) = restore_handle.try_state::<AppState>() {
+                                        let _guard = state
+                                            .clipboard_mutex
+                                            .lock()
+                                            .unwrap_or_else(|p| p.into_inner());
+                                        let to_restore = {
+                                            let mut slot = state
+                                                .unrestored_clipboard
+                                                .lock()
+                                                .unwrap_or_else(|p| p.into_inner());
+                                            take_unrestored_clipboard_for_restore(&mut slot, my_gen)
+                                        };
+                                        if let Some((backup, expected)) = to_restore {
+                                            restore_clipboard_if_unchanged(backup, &expected);
+                                        }
+                                    } else {
+                                        restore_clipboard_if_unchanged(
+                                            fallback_backup,
+                                            &fallback_expected,
                                         );
                                     }
-                                } else {
-                                    restore_clipboard_if_unchanged(
-                                        original_clipboard.clone(),
-                                        &final_text,
-                                    );
-                                }
-                                if caret_left > 0 {
-                                    keyboard_simulator::send_left_arrows(caret_left);
-                                }
+                                })
+                                .await;
                             }
                         } else if session_ok {
                             crate::logger::log(
@@ -4581,9 +5133,14 @@ async fn finalize_recording(app_handle: tauri::AppHandle) {
                             // Same clipboard serialization as the paste path: a
                             // concurrent session must not interleave writes.
                             if let Some(state) = app_handle_clone.try_state::<AppState>() {
-                                if let Ok(_guard) = state.clipboard_mutex.lock() {
-                                    let _ = write_transcript_to_clipboard(&final_text);
+                                let _guard = state
+                                    .clipboard_mutex
+                                    .lock()
+                                    .unwrap_or_else(|p| p.into_inner());
+                                if let Ok(mut slot) = state.unrestored_clipboard.lock() {
+                                    *slot = None;
                                 }
+                                let _ = write_transcript_to_clipboard(&final_text);
                             } else {
                                 let _ = write_transcript_to_clipboard(&final_text);
                             }
@@ -4642,7 +5199,10 @@ async fn finalize_recording(app_handle: tauri::AppHandle) {
                     &format!("Final transcription failed: {}", e),
                 );
                 if let Ok(dir) = app_handle_clone.path().app_local_data_dir() {
-                    let _ = tokio::fs::write(dir.join("last_transcription_error.txt"), &e).await;
+                    let err_path = dir.join("last_transcription_error.txt");
+                    if tokio::fs::write(&err_path, &e).await.is_ok() {
+                        let _ = secure_storage::apply_restrictive_acl(&err_path);
+                    }
                 }
                 had_error = Some(categorize_error(&e));
             }
@@ -4720,15 +5280,17 @@ pub fn run() {
                 crate::logger::log("INFO", "App", None, "Aura diagnostics logging initialized");
             }
 
-            let stale_audio = crate::audio_recorder::sweep_stale_audio(&std::env::temp_dir());
-            if stale_audio > 0 {
-                crate::logger::log(
-                    "INFO",
-                    "Audio",
-                    None,
-                    &format!("Removed {stale_audio} stale recording file(s)"),
-                );
-            }
+            tauri::async_runtime::spawn_blocking(|| {
+                let stale_audio = crate::audio_recorder::sweep_stale_audio(&std::env::temp_dir());
+                if stale_audio > 0 {
+                    crate::logger::log(
+                        "INFO",
+                        "Audio",
+                        None,
+                        &format!("Removed {stale_audio} stale recording file(s)"),
+                    );
+                }
+            });
 
             // Load settings once, then reuse the validated snapshot throughout setup.
             let startup_settings = match settings::load_settings(&app_handle) {
@@ -4958,6 +5520,7 @@ pub fn run() {
             app.manage(AppState {
                 audio_recorder: audio_recorder::AudioRecorder::new(),
                 selected_text: Mutex::new(String::new()),
+                selection_blocked_by_uipi: AtomicBool::new(false),
                 caret_context: Mutex::new(None),
                 press_time: Mutex::new(None),
                 is_recording: AtomicBool::new(false),
@@ -4968,12 +5531,14 @@ pub fn run() {
                 selected_language: Mutex::new(String::new()),
                 session_gen: AtomicU64::new(0),
                 clipboard_mutex: Mutex::new(()),
+                unrestored_clipboard: Mutex::new(None),
+                settings_apply_lock: tokio::sync::Mutex::new(()),
                 latched: AtomicBool::new(false),
                 ignore_next_release: AtomicBool::new(false),
                 start_focus: Mutex::new(keyboard_simulator::FocusTarget::default()),
                 parakeet_lifecycle: Mutex::new(()),
                 parakeet_server: Mutex::new(None),
-                parakeet_port: std::sync::atomic::AtomicU16::new(3033),
+                parakeet_port: std::sync::atomic::AtomicU16::new(0),
                 parakeet_streaming: Mutex::new(None),
                 parakeet_watchdog: Mutex::new(None),
                 parakeet_starting: AtomicBool::new(false),
@@ -4987,7 +5552,7 @@ pub fn run() {
                 llm_port: std::sync::atomic::AtomicU16::new(0),
                 last_activity_time: Mutex::new(std::time::Instant::now()),
                 gaming_mode_active: AtomicBool::new(startup_settings.gaming_mode_enabled),
-                last_audio_devices: Mutex::new(audio_recorder::list_audio_input_devices()),
+                last_audio_devices: Mutex::new(Vec::new()),
             });
 
             if startup_settings.gaming_mode_enabled {
@@ -5049,16 +5614,18 @@ pub fn run() {
                 }
             }
 
-            // Standby Unloader, Gaming Mode & Audio Hotplug background monitor
+            // Standby Unloader & Gaming Mode background monitor
             let standby_handle = app_handle.clone();
             tauri::async_runtime::spawn(async move {
                 let mut interval = tokio::time::interval(std::time::Duration::from_secs(3));
                 loop {
                     interval.tick().await;
                     check_vram_standby_and_gaming(&standby_handle).await;
-                    check_audio_devices_hotplug(&standby_handle).await;
                 }
             });
+
+            // Event-driven Audio Hotplug monitor (IMMNotificationClient on Windows, polling fallback)
+            spawn_audio_hotplug_monitor(app_handle.clone());
 
             // Periodic background update checker (every 4 hours, starts after 30s)
             let update_checker_handle = app_handle.clone();
@@ -5067,10 +5634,16 @@ pub fn run() {
                 let mut interval = tokio::time::interval(std::time::Duration::from_secs(4 * 3600));
                 loop {
                     interval.tick().await;
-                    if let Ok(settings) = settings::load_settings(&update_checker_handle) {
+                    if let Ok(settings) =
+                        settings::cached_or_load_settings_without_secrets(&update_checker_handle)
+                    {
                         if settings.automatic_update_checks {
-                            if let Ok(Some(update)) = query_app_update(&update_checker_handle).await {
-                                notify_app_update_available(&update_checker_handle, &update.version);
+                            if let Ok(Some(update)) = query_app_update(&update_checker_handle).await
+                            {
+                                notify_app_update_available(
+                                    &update_checker_handle,
+                                    &update.version,
+                                );
                             }
                         }
                     }
@@ -5101,7 +5674,7 @@ pub fn run() {
                 if !state.live_target_desynced.swap(true, Ordering::AcqRel) {
                     let generation = state.session_gen.load(Ordering::Acquire);
                     let session_tag = crate::logger::format_session_tag(generation);
-                    crate::logger::log(
+                    crate::logger::log_from_hook(
                         "WARN",
                         "Typing",
                         Some(&session_tag),
@@ -5126,7 +5699,7 @@ pub fn run() {
                             // Second tap in toggle mode stops the recording
                             state.latched.store(false, Ordering::SeqCst);
                             state.ignore_next_release.store(true, Ordering::SeqCst);
-                            finalize_recording(app_handle.clone()).await;
+                            finalize_recording(app_handle.clone(), true).await;
                         } else if !recording && !state.ignore_next_release.load(Ordering::SeqCst) {
                             start_recording_session(app_handle.clone()).await;
                         }
@@ -5180,7 +5753,7 @@ pub fn run() {
                             }
                         }
 
-                        finalize_recording(app_handle.clone()).await;
+                        finalize_recording(app_handle.clone(), false).await;
                     }
                 });
             })
@@ -5192,6 +5765,8 @@ pub fn run() {
             set_provider_key,
             set_settings,
             set_ui_language,
+            set_transcription_mode,
+            set_recognition_language,
             complete_onboarding,
             download_model_command,
             cancel_model_download,
@@ -5219,7 +5794,6 @@ pub fn run() {
             get_audio_input_devices,
             start_mic_meter,
             stop_mic_meter,
-            reprocess_history_text,
             toggle_gaming_mode,
             get_gaming_mode_state,
             show_settings_window,
@@ -5237,9 +5811,7 @@ pub fn run() {
     };
     application.run(|app_handle, event| {
         if let tauri::RunEvent::Exit = event {
-            whisper_runner::stop_whisper_server(app_handle);
-            whisper_runner::stop_parakeet_server(app_handle);
-            llm_runner::stop_llm_server(app_handle);
+            stop_all_sidecars_and_watchdogs(app_handle);
         }
     });
 }
@@ -5720,7 +6292,7 @@ async fn apply_gaming_mode_state(app: &tauri::AppHandle, enabled: bool, auto_tri
 
         // Dynamic Tray Icon & Tooltip update
         if let Some(tray) = app.tray_by_id("main-tray") {
-            let settings = settings::load_settings(app).ok();
+            let settings = settings::cached_or_load_settings_without_secrets(app).ok();
             let lang = settings
                 .as_ref()
                 .map(|s| s.ui_language.as_str())
@@ -5732,10 +6304,8 @@ async fn apply_gaming_mode_state(app: &tauri::AppHandle, enabled: bool, auto_tri
                 if let Ok(img) = tauri::image::Image::from_bytes(icon_bytes) {
                     let _ = tray.set_icon(Some(img));
                 }
-            } else {
-                if let Some(default_icon) = app.default_window_icon().cloned() {
-                    let _ = tray.set_icon(Some(default_icon));
-                }
+            } else if let Some(default_icon) = app.default_window_icon().cloned() {
+                let _ = tray.set_icon(Some(default_icon));
             }
         }
 
@@ -5743,9 +6313,13 @@ async fn apply_gaming_mode_state(app: &tauri::AppHandle, enabled: bool, auto_tri
             // Cancel active recording immediately to prevent orphaned audio capture and hanging hooks (CONC-01)
             cancel_recording(app.clone()).await;
 
-            whisper_runner::stop_whisper_server(app);
-            whisper_runner::stop_parakeet_server(app);
-            llm_runner::stop_llm_server(app);
+            let stop_handle = app.clone();
+            let _ = tauri::async_runtime::spawn_blocking(move || {
+                whisper_runner::stop_whisper_server(&stop_handle);
+                whisper_runner::stop_parakeet_server(&stop_handle);
+                llm_runner::stop_llm_server(&stop_handle);
+            })
+            .await;
             crate::logger::log(
                 "INFO",
                 "GamingMode",
@@ -5757,15 +6331,24 @@ async fn apply_gaming_mode_state(app: &tauri::AppHandle, enabled: bool, auto_tri
                 },
             );
         } else {
-            if let Ok(settings) = settings::load_settings(app) {
-                if settings.transcription_mode == "local" {
-                    if settings.local_engine == "whisper" {
-                        whisper_runner::ensure_whisper_server_state(app, &settings);
-                    } else if settings.local_engine == "parakeet" {
-                        whisper_runner::ensure_parakeet_server_state(app, &settings);
+            let restore_handle = app.clone();
+            let _ = tauri::async_runtime::spawn_blocking(move || {
+                if let Ok(settings) =
+                    settings::cached_or_load_settings_without_secrets(&restore_handle)
+                {
+                    if settings.transcription_mode == "local" {
+                        if settings.local_engine == "whisper" {
+                            whisper_runner::ensure_whisper_server_state(&restore_handle, &settings);
+                        } else if settings.local_engine == "parakeet" {
+                            whisper_runner::ensure_parakeet_server_state(
+                                &restore_handle,
+                                &settings,
+                            );
+                        }
                     }
                 }
-            }
+            })
+            .await;
             crate::logger::log(
                 "INFO",
                 "GamingMode",
@@ -5854,7 +6437,7 @@ async fn check_vram_standby_and_gaming(app: &tauri::AppHandle) {
     let Some(state) = app.try_state::<AppState>() else {
         return;
     };
-    let Ok(settings) = settings::load_settings(app) else {
+    let Ok(settings) = settings::cached_or_load_settings_without_secrets(app) else {
         return;
     };
 
@@ -5913,9 +6496,13 @@ async fn check_vram_standby_and_gaming(app: &tauri::AppHandle) {
             let llm_running = state.llm_port.load(Ordering::SeqCst) > 0;
 
             if whisper_running || parakeet_running || llm_running {
-                whisper_runner::stop_whisper_server(app);
-                whisper_runner::stop_parakeet_server(app);
-                llm_runner::stop_llm_server(app);
+                let stop_handle = app.clone();
+                let _ = tauri::async_runtime::spawn_blocking(move || {
+                    whisper_runner::stop_whisper_server(&stop_handle);
+                    whisper_runner::stop_parakeet_server(&stop_handle);
+                    llm_runner::stop_llm_server(&stop_handle);
+                })
+                .await;
                 crate::logger::log(
                     "INFO",
                     "Standby",
@@ -5928,6 +6515,333 @@ async fn check_vram_standby_and_gaming(app: &tauri::AppHandle) {
             }
         }
     }
+}
+
+#[cfg(target_os = "windows")]
+mod audio_hotplug_watcher {
+    use std::ffi::c_void;
+    use std::sync::atomic::{AtomicU32, Ordering};
+    use std::sync::{mpsc, Arc, OnceLock};
+    use tokio::sync::Notify;
+    use windows::core::GUID;
+    use windows::Win32::System::Com::{CoInitializeEx, CoUninitialize, COINIT_MULTITHREADED};
+
+    const CLSCTX_ALL_RAW: u32 = 23;
+    const S_OK_RAW: i32 = 0;
+    const E_NOINTERFACE_RAW: i32 = -2_147_467_262;
+    const E_POINTER_RAW: i32 = -2_147_467_261;
+
+    const IID_IUNKNOWN: GUID = GUID::from_u128(0x00000000_0000_0000_c000_000000000046);
+    const CLSID_MM_DEVICE_ENUMERATOR: GUID =
+        GUID::from_u128(0xbcde0395_e52f_467c_8e3d_c4579291692e);
+    const IID_IMM_DEVICE_ENUMERATOR: GUID = GUID::from_u128(0xa95664d2_9614_4f35_a746_de8db63617e6);
+    const IID_IMM_NOTIFICATION_CLIENT: GUID =
+        GUID::from_u128(0x7991eec9_7e89_4d85_8390_6c703cec60c0);
+    const PKEY_DEVICE_FRIENDLY_NAME_FMTID: GUID =
+        GUID::from_u128(0xa45c254e_df1c_4efd_8020_67d146a850e0);
+
+    #[link(name = "ole32")]
+    extern "system" {
+        fn CoCreateInstance(
+            rclsid: *const GUID,
+            punk_outer: *mut c_void,
+            dw_cls_context: u32,
+            riid: *const GUID,
+            ppv: *mut *mut c_void,
+        ) -> i32;
+    }
+
+    #[repr(C)]
+    #[derive(Clone, Copy)]
+    struct PropertyKey {
+        fmtid: GUID,
+        pid: u32,
+    }
+
+    #[repr(C)]
+    #[allow(dead_code)]
+    struct IMMDeviceEnumeratorVtbl {
+        query_interface:
+            unsafe extern "system" fn(*mut c_void, *const GUID, *mut *mut c_void) -> i32,
+        add_ref: unsafe extern "system" fn(*mut c_void) -> u32,
+        release: unsafe extern "system" fn(*mut c_void) -> u32,
+        enum_audio_endpoints:
+            unsafe extern "system" fn(*mut c_void, i32, u32, *mut *mut c_void) -> i32,
+        get_default_audio_endpoint:
+            unsafe extern "system" fn(*mut c_void, i32, i32, *mut *mut c_void) -> i32,
+        get_device: unsafe extern "system" fn(*mut c_void, *const u16, *mut *mut c_void) -> i32,
+        register_endpoint_notification_callback:
+            unsafe extern "system" fn(*mut c_void, *mut c_void) -> i32,
+        unregister_endpoint_notification_callback:
+            unsafe extern "system" fn(*mut c_void, *mut c_void) -> i32,
+    }
+
+    #[repr(C)]
+    struct IMMDeviceEnumeratorRaw {
+        lp_vtbl: *const IMMDeviceEnumeratorVtbl,
+    }
+
+    #[repr(C)]
+    struct IMMNotificationClientVtbl {
+        query_interface:
+            unsafe extern "system" fn(*mut c_void, *const GUID, *mut *mut c_void) -> i32,
+        add_ref: unsafe extern "system" fn(*mut c_void) -> u32,
+        release: unsafe extern "system" fn(*mut c_void) -> u32,
+        on_device_state_changed: unsafe extern "system" fn(*mut c_void, *const u16, u32) -> i32,
+        on_device_added: unsafe extern "system" fn(*mut c_void, *const u16) -> i32,
+        on_device_removed: unsafe extern "system" fn(*mut c_void, *const u16) -> i32,
+        on_default_device_changed:
+            unsafe extern "system" fn(*mut c_void, i32, i32, *const u16) -> i32,
+        on_property_value_changed:
+            unsafe extern "system" fn(*mut c_void, *const u16, PropertyKey) -> i32,
+    }
+
+    #[repr(C)]
+    struct NotificationClientCom {
+        lp_vtbl: *const IMMNotificationClientVtbl,
+        ref_count: AtomicU32,
+        notify: Arc<Notify>,
+    }
+
+    static VTBL: IMMNotificationClientVtbl = IMMNotificationClientVtbl {
+        query_interface: client_query_interface,
+        add_ref: client_add_ref,
+        release: client_release,
+        on_device_state_changed: client_on_device_state_changed,
+        on_device_added: client_on_device_added,
+        on_device_removed: client_on_device_removed,
+        on_default_device_changed: client_on_default_device_changed,
+        on_property_value_changed: client_on_property_value_changed,
+    };
+
+    unsafe extern "system" fn client_query_interface(
+        this: *mut c_void,
+        riid: *const GUID,
+        ppv: *mut *mut c_void,
+    ) -> i32 {
+        if ppv.is_null() {
+            return E_POINTER_RAW;
+        }
+        if riid.is_null() {
+            *ppv = std::ptr::null_mut();
+            return E_NOINTERFACE_RAW;
+        }
+        let iid = *riid;
+        if iid == IID_IUNKNOWN || iid == IID_IMM_NOTIFICATION_CLIENT {
+            client_add_ref(this);
+            *ppv = this;
+            S_OK_RAW
+        } else {
+            *ppv = std::ptr::null_mut();
+            E_NOINTERFACE_RAW
+        }
+    }
+
+    unsafe extern "system" fn client_add_ref(this: *mut c_void) -> u32 {
+        let obj = &*(this as *const NotificationClientCom);
+        obj.ref_count.fetch_add(1, Ordering::Relaxed) + 1
+    }
+
+    unsafe extern "system" fn client_release(this: *mut c_void) -> u32 {
+        let obj = &*(this as *const NotificationClientCom);
+        let prev = obj.ref_count.fetch_sub(1, Ordering::AcqRel);
+        if prev == 1 {
+            drop(Box::from_raw(this as *mut NotificationClientCom));
+            0
+        } else {
+            prev - 1
+        }
+    }
+
+    unsafe extern "system" fn client_on_device_state_changed(
+        this: *mut c_void,
+        _pwstr_device_id: *const u16,
+        _dw_new_state: u32,
+    ) -> i32 {
+        (*(this as *const NotificationClientCom))
+            .notify
+            .notify_one();
+        S_OK_RAW
+    }
+
+    unsafe extern "system" fn client_on_device_added(
+        this: *mut c_void,
+        _pwstr_device_id: *const u16,
+    ) -> i32 {
+        (*(this as *const NotificationClientCom))
+            .notify
+            .notify_one();
+        S_OK_RAW
+    }
+
+    unsafe extern "system" fn client_on_device_removed(
+        this: *mut c_void,
+        _pwstr_device_id: *const u16,
+    ) -> i32 {
+        (*(this as *const NotificationClientCom))
+            .notify
+            .notify_one();
+        S_OK_RAW
+    }
+
+    unsafe extern "system" fn client_on_default_device_changed(
+        this: *mut c_void,
+        flow: i32,
+        _role: i32,
+        _pwstr_default_device_id: *const u16,
+    ) -> i32 {
+        // eCapture == 1, eAll == 2
+        if flow == 1 || flow == 2 {
+            (*(this as *const NotificationClientCom))
+                .notify
+                .notify_one();
+        }
+        S_OK_RAW
+    }
+
+    unsafe extern "system" fn client_on_property_value_changed(
+        this: *mut c_void,
+        _pwstr_device_id: *const u16,
+        key: PropertyKey,
+    ) -> i32 {
+        if key.fmtid == PKEY_DEVICE_FRIENDLY_NAME_FMTID && key.pid == 14 {
+            (*(this as *const NotificationClientCom))
+                .notify
+                .notify_one();
+        }
+        S_OK_RAW
+    }
+
+    static WATCHER_KEEPALIVE: OnceLock<mpsc::SyncSender<()>> = OnceLock::new();
+
+    pub fn start(notify: Arc<Notify>) -> bool {
+        let (ready_tx, ready_rx) = mpsc::sync_channel::<bool>(1);
+        let (shutdown_tx, shutdown_rx) = mpsc::sync_channel::<()>(1);
+
+        let spawned = std::thread::Builder::new()
+            .name("aura-audio-hotplug".into())
+            .spawn(move || unsafe {
+                let hr_init = CoInitializeEx(None, COINIT_MULTITHREADED);
+                let must_uninit = hr_init.is_ok();
+
+                let mut enum_void: *mut c_void = std::ptr::null_mut();
+                let hr_create = CoCreateInstance(
+                    &CLSID_MM_DEVICE_ENUMERATOR,
+                    std::ptr::null_mut(),
+                    CLSCTX_ALL_RAW,
+                    &IID_IMM_DEVICE_ENUMERATOR,
+                    &mut enum_void,
+                );
+                if hr_create < 0 || enum_void.is_null() {
+                    let _ = ready_tx.send(false);
+                    if must_uninit {
+                        CoUninitialize();
+                    }
+                    return;
+                }
+
+                let enumerator = &*(enum_void as *const IMMDeviceEnumeratorRaw);
+                let client_ptr = Box::into_raw(Box::new(NotificationClientCom {
+                    lp_vtbl: &VTBL,
+                    ref_count: AtomicU32::new(1),
+                    notify,
+                }));
+
+                let hr_reg = ((*enumerator.lp_vtbl).register_endpoint_notification_callback)(
+                    enum_void,
+                    client_ptr as *mut c_void,
+                );
+                if hr_reg < 0 {
+                    client_release(client_ptr as *mut c_void);
+                    ((*enumerator.lp_vtbl).release)(enum_void);
+                    let _ = ready_tx.send(false);
+                    if must_uninit {
+                        CoUninitialize();
+                    }
+                    return;
+                }
+
+                let _ = ready_tx.send(true);
+                let _ = shutdown_rx.recv();
+
+                let _ = ((*enumerator.lp_vtbl).unregister_endpoint_notification_callback)(
+                    enum_void,
+                    client_ptr as *mut c_void,
+                );
+                client_release(client_ptr as *mut c_void);
+                ((*enumerator.lp_vtbl).release)(enum_void);
+                if must_uninit {
+                    CoUninitialize();
+                }
+            });
+
+        if spawned.is_err() {
+            return false;
+        }
+        let registered = ready_rx
+            .recv_timeout(std::time::Duration::from_secs(2))
+            .unwrap_or(false);
+        if registered {
+            let _ = WATCHER_KEEPALIVE.set(shutdown_tx);
+        }
+        registered
+    }
+}
+
+#[cfg(target_os = "windows")]
+fn start_os_audio_endpoint_watcher(notify: Arc<tokio::sync::Notify>) -> bool {
+    audio_hotplug_watcher::start(notify)
+}
+
+#[cfg(not(target_os = "windows"))]
+fn start_os_audio_endpoint_watcher(_notify: Arc<tokio::sync::Notify>) -> bool {
+    false
+}
+
+fn spawn_audio_hotplug_monitor(app_handle: tauri::AppHandle) {
+    tauri::async_runtime::spawn(async move {
+        // Populate initial device baseline off the main startup thread.
+        if let Ok(initial_devices) =
+            tokio::task::spawn_blocking(audio_recorder::list_audio_input_devices).await
+        {
+            if let Some(state) = app_handle.try_state::<AppState>() {
+                let mut guard = state
+                    .last_audio_devices
+                    .lock()
+                    .unwrap_or_else(|p| p.into_inner());
+                *guard = initial_devices;
+            }
+        }
+
+        let notify = Arc::new(tokio::sync::Notify::new());
+        let notify_for_watcher = Arc::clone(&notify);
+        let registered = tokio::task::spawn_blocking(move || {
+            start_os_audio_endpoint_watcher(notify_for_watcher)
+        })
+        .await
+        .unwrap_or(false);
+
+        if registered {
+            loop {
+                notify.notified().await;
+                tokio::time::sleep(std::time::Duration::from_millis(250)).await;
+                check_audio_devices_hotplug(&app_handle).await;
+            }
+        } else {
+            crate::logger::log(
+                "WARN",
+                "Audio",
+                None,
+                "Event-driven audio endpoint watcher unavailable; falling back to 15s polling",
+            );
+            let mut fallback = tokio::time::interval(std::time::Duration::from_secs(15));
+            fallback.tick().await;
+            loop {
+                fallback.tick().await;
+                check_audio_devices_hotplug(&app_handle).await;
+            }
+        }
+    });
 }
 
 async fn check_audio_devices_hotplug(app: &tauri::AppHandle) {
@@ -5967,16 +6881,29 @@ async fn check_audio_devices_hotplug(app: &tauri::AppHandle) {
 
 #[tauri::command]
 async fn toggle_gaming_mode(app_handle: tauri::AppHandle) -> Result<bool, String> {
+    let _apply_guard = match app_handle.try_state::<AppState>() {
+        Some(ref state) => Some(state.inner().settings_apply_lock.lock().await),
+        None => None,
+    };
     let current_active = app_handle
         .try_state::<AppState>()
         .map(|s| s.gaming_mode_active.load(Ordering::Acquire))
         .unwrap_or(false);
     let new_state = !current_active;
-    if let Ok(mut settings) = settings::load_settings(&app_handle) {
-        settings.gaming_mode_enabled = new_state;
-        let _ = settings::save_settings(&app_handle, &settings);
-    }
+
+    let save_handle = app_handle.clone();
+    tauri::async_runtime::spawn_blocking(move || {
+        settings::update_settings(&save_handle, |current| {
+            current.gaming_mode_enabled = new_state;
+            Ok(())
+        })
+        .map(|_| ())
+    })
+    .await
+    .map_err(|error| format!("Gaming mode storage worker failed: {error}"))??;
+
     apply_gaming_mode_state(&app_handle, new_state, false).await;
+    let _ = app_handle.emit("settings-changed", ());
     Ok(new_state)
 }
 
@@ -6001,15 +6928,22 @@ async fn delete_gpu_binaries(app_handle: tauri::AppHandle, provider: String) -> 
         .path()
         .app_local_data_dir()
         .map_err(|e| format!("Failed to get app local data: {}", e))?;
-    let provider_dir = app_local_data.join("binaries").join(&provider);
+    let binaries_dir = app_local_data.join("binaries");
+    let provider_dir = binaries_dir.join(&provider);
+    let archives_dir = (provider == "cuda").then(|| binaries_dir.join("cuda-archives"));
     let worker_handle = app_handle.clone();
     tauri::async_runtime::spawn_blocking(move || {
         // Process termination and recursive deletion can block on Windows/antivirus.
-        whisper_runner::stop_parakeet_server(&worker_handle);
-        whisper_runner::stop_whisper_server(&worker_handle);
+        whisper_runner::stop_parakeet_server_and_watchdog(&worker_handle);
+        whisper_runner::stop_whisper_server_and_watchdog(&worker_handle);
         if provider_dir.exists() {
             std::fs::remove_dir_all(&provider_dir)
                 .map_err(|e| format!("Failed to delete binaries: {}", e))?;
+        }
+        if let Some(archives) = archives_dir {
+            if archives.exists() {
+                let _ = std::fs::remove_dir_all(&archives);
+            }
         }
         Ok::<(), String>(())
     })
@@ -6284,7 +7218,7 @@ async fn download_gpu_binaries_inner(
     let worker_path = path;
     tauri::async_runtime::spawn_blocking(move || {
         whisper_runner::stop_parakeet_server_and_watchdog(&worker_handle);
-        whisper_runner::stop_whisper_server(&worker_handle);
+        whisper_runner::stop_whisper_server_and_watchdog(&worker_handle);
         let install_result = install_cuda_archive(
             &worker_parakeet,
             &worker_whisper,
@@ -6297,7 +7231,7 @@ async fn download_gpu_binaries_inner(
             &extraction_dir,
             &worker_gpu_dir,
         );
-        if let Ok(settings) = settings::load_settings(&worker_handle) {
+        if let Ok(settings) = settings::cached_or_load_settings_without_secrets(&worker_handle) {
             whisper_runner::ensure_parakeet_server_state(&worker_handle, &settings);
             whisper_runner::ensure_whisper_server_state(&worker_handle, &settings);
         }
@@ -7204,6 +8138,7 @@ mod tests {
         crate::AppState {
             audio_recorder: audio_recorder::AudioRecorder::new(),
             selected_text: Mutex::new(String::new()),
+            selection_blocked_by_uipi: AtomicBool::new(false),
             caret_context: Mutex::new(None),
             press_time: Mutex::new(None),
             is_recording: AtomicBool::new(false),
@@ -7214,12 +8149,14 @@ mod tests {
             selected_language: Mutex::new(String::new()),
             session_gen: AtomicU64::new(gen),
             clipboard_mutex: Mutex::new(()),
+            unrestored_clipboard: Mutex::new(None),
+            settings_apply_lock: tokio::sync::Mutex::new(()),
             latched: AtomicBool::new(false),
             ignore_next_release: AtomicBool::new(false),
             start_focus: Mutex::new(keyboard_simulator::FocusTarget::default()),
             parakeet_lifecycle: Mutex::new(()),
             parakeet_server: Mutex::new(None),
-            parakeet_port: std::sync::atomic::AtomicU16::new(3033),
+            parakeet_port: std::sync::atomic::AtomicU16::new(0),
             parakeet_streaming: Mutex::new(None),
             parakeet_watchdog: Mutex::new(None),
             parakeet_starting: AtomicBool::new(false),
@@ -7355,23 +8292,228 @@ mod tests {
 
     #[test]
     fn test_update_notification_gaming_mode_suppression_logic() {
-        let gaming_active = AtomicBool::new(true);
-        assert!(
-            gaming_active.load(Ordering::Acquire),
-            "Gaming mode must be active"
+        assert_eq!(
+            prepare_update_notification_payload(true, "ru", "1.3.0"),
+            None,
+            "Active Gaming Mode must suppress update notifications"
+        );
+        assert_eq!(
+            prepare_update_notification_payload(true, "en", "1.3.0"),
+            None,
+            "Active Gaming Mode must suppress update notifications in all locales"
         );
 
-        let should_suppress = gaming_active.load(Ordering::Acquire);
+        let (en_title, en_body) = prepare_update_notification_payload(false, "en", "1.3.0")
+            .expect("Inactive Gaming Mode must produce localized notification payload");
+        assert_eq!(en_title, "Aura Update Available");
+        assert!(en_body.contains("1.3.0"));
+
+        let (ru_title, ru_body) = prepare_update_notification_payload(false, "ru", "1.3.0")
+            .expect("Russian fallback notification payload must exist");
+        assert_eq!(ru_title, "Доступно обновление Aura");
+        assert!(ru_body.contains("1.3.0"));
+    }
+
+    #[test]
+    fn ai_edit_outputs_bypass_speech_normalizer_replacements_caret_and_hallucination_filters() {
+        let rules = vec![settings::TextReplacement {
+            trigger: "Thank you".to_string(),
+            replacement: "REPLACED (|)".to_string(),
+        }];
+        let mid_sentence_ctx = smart_insertion::CaretContext {
+            text_before: "prefix ".to_string(),
+            text_after: " suffix".to_string(),
+            ..Default::default()
+        };
+
+        // 1. Multi-line code / email sign-off from AI edit must stay 1:1 untouched.
+        let edited_code = "use std::io;\n\nfn main() {\n    println!(\"(|)\");\n}";
+        let (out_code, caret_code, discarded_code) = postprocess_session_text(
+            edited_code,
+            "en",
+            &rules,
+            true,
+            Some(&mid_sentence_ctx),
+            true,
+            Some(EditExecutionTarget::Local),
+        );
+        assert_eq!(out_code, edited_code);
+        assert_eq!(caret_code, 0);
+        assert!(!discarded_code);
+
+        // 2. Polite sign-offs ("Thank you." / "Спасибо.") from AI translation/proofreading
+        // must NOT be discarded as Whisper silence hallucinations or rewritten by rules.
+        for sign_off in ["Thank you.", "Спасибо."] {
+            let (out, caret, discarded) = postprocess_session_text(
+                sign_off,
+                "en",
+                &rules,
+                true,
+                Some(&mid_sentence_ctx),
+                true,
+                Some(EditExecutionTarget::Cloud),
+            );
+            assert_eq!(out, sign_off);
+            assert_eq!(caret, 0);
+            assert!(!discarded, "{sign_off} from AI edit must not be discarded");
+        }
+
+        // 3. Ordinary dictation (no edit target) still applies replacements, caret marker,
+        // and filters standalone Whisper silence hallucinations.
+        let (_, _, hallucinated) =
+            postprocess_session_text("Thank you.", "en", &[], false, None, true, None);
         assert!(
-            should_suppress,
-            "When gaming mode is active, notification MUST be suppressed"
+            hallucinated,
+            "Standalone 'Thank you.' in raw ASR dictation must still be filtered"
         );
 
-        gaming_active.store(false, Ordering::Release);
-        let should_suppress_disabled = gaming_active.load(Ordering::Acquire);
-        assert!(
-            !should_suppress_disabled,
-            "When gaming mode is inactive, notification is allowed"
+        let rules_caret = vec![settings::TextReplacement {
+            trigger: "скобки".to_string(),
+            replacement: "(|)".to_string(),
+        }];
+        let (dictated, caret_left, discarded) =
+            postprocess_session_text("скобки", "ru", &rules_caret, false, None, true, None);
+        assert_eq!(dictated, "()");
+        assert_eq!(caret_left, 1);
+        assert!(!discarded);
+    }
+
+    #[test]
+    fn finalize_edit_privacy_and_uipi_command_guards_hold() {
+        // ADR-012: strict local edit mode never falls back to cloud even with an API key.
+        assert!(!llm_runner::can_cloud_edit_fallback("local", "sk-secret"));
+        assert!(!llm_runner::can_cloud_edit_fallback("off", "sk-secret"));
+        assert!(llm_runner::can_cloud_edit_fallback("auto", "sk-secret"));
+        assert!(!llm_runner::can_cloud_edit_fallback("auto", "   "));
+
+        // UIPI blocked selection copy + spoken edit command -> abort literal paste!
+        assert!(should_abort_uipi_blocked_edit_command(
+            true,
+            false,
+            llm_runner::AiEditRoute::Local,
+            "Исправь грамматику",
+            "en",
+            "ru",
+            &[],
+        ));
+        assert!(should_abort_uipi_blocked_edit_command(
+            true,
+            false,
+            llm_runner::AiEditRoute::Cloud,
+            "Переведи на английский",
+            "en",
+            "ru",
+            &[],
+        ));
+
+        // Disabled command or ordinary dictation in elevated window passes through as dictation.
+        assert!(!should_abort_uipi_blocked_edit_command(
+            true,
+            false,
+            llm_runner::AiEditRoute::Local,
+            "Исправь грамматику",
+            "en",
+            "ru",
+            &["fix_grammar".to_string()],
+        ));
+        assert!(!should_abort_uipi_blocked_edit_command(
+            true,
+            false,
+            llm_runner::AiEditRoute::Local,
+            "Привет коллеги отправляю отчет",
+            "en",
+            "ru",
+            &[],
+        ));
+        assert!(!should_abort_uipi_blocked_edit_command(
+            false,
+            false,
+            llm_runner::AiEditRoute::Local,
+            "Исправь грамматику",
+            "en",
+            "ru",
+            &[],
+        ));
+    }
+
+    #[test]
+    fn overlapping_sessions_inherit_original_clipboard_across_settle_window() {
+        let real_user_clip = ClipboardBackup::Text("real-user-clipboard".to_string());
+        let mut slot: Option<(u64, ClipboardBackup, String)> = Some((
+            1,
+            real_user_clip.clone(),
+            "session-1-transcript".to_string(),
+        ));
+
+        // Session 2 overlaps during the 400ms settle window while clipboard still holds session 1's transcript.
+        let inherited =
+            resolve_session_clipboard_backup(&mut slot, Some("session-1-transcript"), || {
+                ClipboardBackup::Text("wrong-stale-transcript".to_string())
+            });
+        assert_eq!(inherited, real_user_clip);
+
+        // Session 2 pastes its own transcript and takes ownership of the unrestored slot.
+        slot = Some((2, inherited, "session-2-transcript".to_string()));
+
+        // Session 1's 400ms timer fires first: must NOT steal or restore over Session 2.
+        assert_eq!(take_unrestored_clipboard_for_restore(&mut slot, 1), None);
+
+        // Session 2's 400ms timer fires: restores the real user clipboard!
+        assert_eq!(
+            take_unrestored_clipboard_for_restore(&mut slot, 2),
+            Some((real_user_clip, "session-2-transcript".to_string()))
         );
+        assert!(slot.is_none());
+
+        // If user externally copies new data during settle window, stale slot is discarded.
+        let mut slot_ext = Some((
+            3,
+            ClipboardBackup::Text("old".to_string()),
+            "session-3-transcript".to_string(),
+        ));
+        let fresh = resolve_session_clipboard_backup(&mut slot_ext, Some("user-new-copy"), || {
+            ClipboardBackup::Text("user-new-copy".to_string())
+        });
+        assert_eq!(fresh, ClipboardBackup::Text("user-new-copy".to_string()));
+        assert!(slot_ext.is_none());
+    }
+
+    #[test]
+    fn open_url_allowlist_enforces_https_and_trusted_hosts() {
+        assert!(
+            validate_allowed_external_url("https://github.com/malashkadev/aura/releases").is_ok()
+        );
+        assert!(validate_allowed_external_url("https://aistudio.google.com/app/apikey").is_ok());
+        assert!(
+            validate_allowed_external_url("https://docs.nvidia.com/cuda/eula/index.html").is_ok()
+        );
+
+        // Reject cleartext HTTP, local/file schemes, credentials, and untrusted hosts.
+        assert!(validate_allowed_external_url("http://github.com/malashkadev/aura").is_err());
+        assert!(validate_allowed_external_url("file:///C:/Windows/System32/calc.exe").is_err());
+        assert!(validate_allowed_external_url("https://user:pass@github.com/malashkadev").is_err());
+        assert!(validate_allowed_external_url("https://evil.example.com/phish").is_err());
+        assert!(validate_allowed_external_url("https://github.com.evil.example/").is_err());
+    }
+
+    #[test]
+    fn frontend_log_sanitizer_blocks_newline_injection_and_caps_length() {
+        let forged = "boom\r\n2026-11-18 [ERROR] [Panic] forged panic line";
+        let sanitized = sanitize_frontend_log_field(forged, 512, true);
+        assert!(!sanitized.contains('\r'));
+        assert!(!sanitized.contains('\n'));
+        assert!(!sanitized.contains("[Panic]"));
+        assert!(sanitized.contains("(ERROR) (Panic)"));
+
+        let oversized = "x".repeat(900);
+        let capped = sanitize_frontend_log_field(&oversized, 512, true);
+        assert_eq!(capped.chars().count(), 512);
+
+        assert!(is_whisper_server_timeout_error(
+            "Whisper server request failed: operation timed out"
+        ));
+        assert!(!is_whisper_server_timeout_error(
+            "Whisper server error (500 Internal Server Error): decode failed"
+        ));
     }
 }

@@ -1,8 +1,12 @@
-use crate::smart_insertion::{CaretContext, CaretContextSource};
+use crate::smart_insertion::CaretContext;
+
+/// Default timeout budget for caret/selection context capture via warm UIA.
+pub const DEFAULT_CARET_CAPTURE_TIMEOUT_MS: u64 = 35;
 
 #[cfg(target_os = "windows")]
 mod fast_win32 {
     use crate::smart_insertion::{CaretContext, CaretContextSource};
+    use std::borrow::Cow;
     use windows::Win32::Foundation::{HWND, LPARAM, WPARAM};
     use windows::Win32::UI::WindowsAndMessaging::{
         GetClassNameW, GetForegroundWindow, GetGUIThreadInfo, GetWindowThreadProcessId,
@@ -49,15 +53,86 @@ mod fast_win32 {
     }
 
     fn utf16_range_to_string(buf: &[u16], start: usize, end: usize) -> String {
-        let s = start.min(buf.len());
-        let e = end.min(buf.len()).max(s);
+        let mut s = start.min(buf.len());
+        let mut e = end.min(buf.len()).max(s);
+        if s < e && (0xDC00..=0xDFFF).contains(&buf[s]) {
+            s += 1;
+        }
+        if s < e && (0xD800..=0xDBFF).contains(&buf[e - 1]) {
+            e -= 1;
+        }
         String::from_utf16_lossy(&buf[s..e])
     }
 
     fn utf8_range_to_string(buf: &[u8], start: usize, end: usize) -> String {
-        let s = start.min(buf.len());
-        let e = end.min(buf.len()).max(s);
-        String::from_utf8_lossy(&buf[s..e]).into_owned()
+        let mut s = start.min(buf.len());
+        let mut e = end.min(buf.len()).max(s);
+        while s < e && (buf[s] & 0xC0) == 0x80 {
+            s += 1;
+        }
+        if e < buf.len() {
+            while e > s && (buf[e] & 0xC0) == 0x80 {
+                e -= 1;
+            }
+        }
+        match std::str::from_utf8(&buf[s..e]) {
+            Ok(valid) => valid.to_string(),
+            Err(err) if err.error_len().is_none() => {
+                String::from_utf8_lossy(&buf[s..s + err.valid_up_to()]).into_owned()
+            }
+            Err(_) => String::from_utf8_lossy(&buf[s..e]).into_owned(),
+        }
+    }
+
+    /// RichEdit 2.0+/4.1+/`RichEditD2DPT` stores line breaks internally as a
+    /// single `\r` (1 unit in `EM_GETSEL`), while `WM_GETTEXT` expands each to
+    /// `\r\n` (2 `u16` units). Collapsing `\r\n` to `\n` aligns `WM_GETTEXT`
+    /// offsets 1:1 with `EM_GETSEL` without cross-process pointers.
+    fn normalize_richedit_utf16(wide: &[u16]) -> Cow<'_, [u16]> {
+        if !wide.windows(2).any(|pair| pair == [0x000D, 0x000A]) {
+            return Cow::Borrowed(wide);
+        }
+        let mut normalized = Vec::with_capacity(wide.len());
+        let mut idx = 0;
+        while idx < wide.len() {
+            if idx + 1 < wide.len() && wide[idx] == 0x000D && wide[idx + 1] == 0x000A {
+                normalized.push(0x000A);
+                idx += 2;
+            } else {
+                normalized.push(wide[idx]);
+                idx += 1;
+            }
+        }
+        Cow::Owned(normalized)
+    }
+
+    fn build_edit_caret_context(
+        wide: &[u16],
+        start: usize,
+        end: usize,
+        is_richedit: bool,
+    ) -> Option<CaretContext> {
+        let aligned = if is_richedit {
+            normalize_richedit_utf16(wide)
+        } else {
+            Cow::Borrowed(wide)
+        };
+        let slice = aligned.as_ref();
+        if start > end || end > slice.len() {
+            return None;
+        }
+        Some(CaretContext {
+            text_before: take_last_chars(
+                utf16_range_to_string(slice, start.saturating_sub(CONTEXT_MARGIN), start),
+                CONTEXT_CHARS,
+            ),
+            selected_text: utf16_range_to_string(slice, start, end),
+            text_after: take_first_chars(
+                utf16_range_to_string(slice, end, (end + CONTEXT_MARGIN).min(slice.len())),
+                CONTEXT_CHARS,
+            ),
+            source: CaretContextSource::Win32Edit,
+        })
     }
 
     fn empty_context() -> CaretContext {
@@ -67,7 +142,7 @@ mod fast_win32 {
         }
     }
 
-    unsafe fn capture_edit(hwnd: HWND) -> Option<CaretContext> {
+    unsafe fn capture_edit(hwnd: HWND, is_richedit: bool) -> Option<CaretContext> {
         if send_msg(hwnd, EM_GETPASSWORDCHAR, WPARAM(0), LPARAM(0))? != 0 {
             return None;
         }
@@ -92,22 +167,7 @@ mod fast_win32 {
         if copied == 0 || copied > length {
             return None;
         }
-        let wide = &buf[..copied];
-        if start > end || end > wide.len() {
-            return None;
-        }
-        Some(CaretContext {
-            text_before: take_last_chars(
-                utf16_range_to_string(wide, start.saturating_sub(CONTEXT_MARGIN), start),
-                CONTEXT_CHARS,
-            ),
-            selected_text: utf16_range_to_string(wide, start, end),
-            text_after: take_first_chars(
-                utf16_range_to_string(wide, end, (end + CONTEXT_MARGIN).min(wide.len())),
-                CONTEXT_CHARS,
-            ),
-            source: CaretContextSource::Win32Edit,
-        })
+        build_edit_caret_context(&buf[..copied], start, end, is_richedit)
     }
 
     unsafe fn capture_scintilla(hwnd: HWND) -> Option<CaretContext> {
@@ -187,7 +247,7 @@ mod fast_win32 {
             let is_richedit =
                 lower.starts_with("richedit") && (lower.ends_with('w') || lower == "richeditd2dpt");
             if lower == "edit" || is_richedit {
-                capture_edit(focus)
+                capture_edit(focus, is_richedit)
             } else if lower == "scintilla" {
                 capture_scintilla(focus)
             } else {
@@ -223,11 +283,49 @@ mod fast_win32 {
         }
 
         #[test]
+        fn utf16_range_skips_split_surrogates_without_replacement_char() {
+            let s = "😀привет😀";
+            let wide: Vec<u16> = s.encode_utf16().collect();
+            // Slice starting on the low surrogate of the first emoji and ending on the high surrogate of the last emoji
+            let extracted = utf16_range_to_string(&wide, 1, wide.len() - 1);
+            assert_eq!(extracted, "привет");
+            assert!(!extracted.contains('\u{FFFD}'));
+        }
+
+        #[test]
         fn utf8_range_roundtrip() {
             let s = "привет мир";
             let bytes = s.as_bytes();
             assert_eq!(utf8_range_to_string(bytes, 0, bytes.len()), s);
             assert_eq!(utf8_range_to_string(bytes, 13, bytes.len()), "мир");
+        }
+
+        #[test]
+        fn utf8_range_snaps_to_char_boundaries_without_replacement_char() {
+            let s = "😀привет😀";
+            let bytes = s.as_bytes();
+            // Cut mid-emoji on both left (byte 2 of 4) and right (len - 2)
+            let extracted = utf8_range_to_string(bytes, 2, bytes.len() - 2);
+            assert_eq!(extracted, "привет");
+            assert!(!extracted.contains('\u{FFFD}'));
+        }
+
+        #[test]
+        fn richedit_crlf_normalizes_to_em_getsel_offsets() {
+            // WM_GETTEXT returns CRLF, while RichEdit EM_GETSEL counts each line break as 1 unit.
+            let wm_gettext: Vec<u16> = "Первая\r\nВторая\r\nТретья".encode_utf16().collect();
+            // Caret right after "Первая\rВторая\r" (6 + 1 + 6 + 1 = 14 in EM_GETSEL)
+            let ctx = build_edit_caret_context(&wm_gettext, 14, 20, true)
+                .expect("richedit context must align");
+            assert_eq!(ctx.text_before, "Первая\nВторая\n");
+            assert_eq!(ctx.selected_text, "Третья");
+            assert_eq!(ctx.text_after, "");
+
+            // Classic Win32 Edit counts CRLF as 2 units in EM_GETSEL (6 + 2 + 6 + 2 = 16).
+            let classic = build_edit_caret_context(&wm_gettext, 16, 22, false)
+                .expect("classic edit context must preserve CRLF offsets");
+            assert_eq!(classic.text_before, "Первая\r\nВторая\r\n");
+            assert_eq!(classic.selected_text, "Третья");
         }
 
         #[test]
@@ -238,10 +336,10 @@ mod fast_win32 {
 }
 
 #[cfg(target_os = "windows")]
-fn capture_caret_context_internal() -> CaretContext {
-    if let Some(ctx) = fast_win32::try_capture() {
-        return ctx;
-    }
+mod uia_worker {
+    use crate::smart_insertion::{CaretContext, CaretContextSource};
+    use std::sync::{mpsc, OnceLock};
+    use std::time::{Duration, Instant};
     use windows::Win32::System::Com::{
         CoCreateInstance, CoInitializeEx, CoUninitialize, CLSCTX_INPROC_SERVER,
         COINIT_MULTITHREADED,
@@ -252,26 +350,28 @@ fn capture_caret_context_internal() -> CaretContext {
         UIA_TextPatternId, UIA_ValuePatternId,
     };
 
-    unsafe {
-        let hr = CoInitializeEx(None, COINIT_MULTITHREADED);
-        let must_uninit = hr.is_ok();
+    struct UiaCaptureRequest {
+        deadline: Instant,
+        reply_tx: mpsc::SyncSender<CaretContext>,
+    }
 
-        let result = (|| -> windows::core::Result<CaretContext> {
-            let automation: IUIAutomation =
-                CoCreateInstance(&CUIAutomation, None, CLSCTX_INPROC_SERVER)?;
-            let focused = automation.GetFocusedElement()?;
+    static UIA_WORKER_TX: OnceLock<Option<mpsc::SyncSender<UiaCaptureRequest>>> = OnceLock::new();
 
-            // 1. Try IUIAutomationTextPattern (Word, Notepad, Browsers, RichEdit)
-            if let Ok(text_pattern) =
-                focused.GetCurrentPatternAs::<IUIAutomationTextPattern>(UIA_TextPatternId)
-            {
-                if let Ok(selection_array) = text_pattern.GetSelection() {
-                    if let Ok(count) = selection_array.Length() {
-                        if count > 0 {
-                            if let Ok(range) = selection_array.GetElement(0) {
-                                let selected_text =
-                                    range.GetText(-1).map(|b| b.to_string()).unwrap_or_default();
+    unsafe fn query_uia_context(automation: &IUIAutomation) -> windows::core::Result<CaretContext> {
+        let focused = automation.GetFocusedElement()?;
 
+        // 1. Try IUIAutomationTextPattern (Word, Notepad, Browsers, Electron, RichEdit).
+        // Only mark source as `UiaTextPattern` when selection retrieval and `GetText` both succeed,
+        // so callers can safely treat an empty `selected_text` as authoritative.
+        if let Ok(text_pattern) =
+            focused.GetCurrentPatternAs::<IUIAutomationTextPattern>(UIA_TextPatternId)
+        {
+            if let Ok(selection_array) = text_pattern.GetSelection() {
+                if let Ok(count) = selection_array.Length() {
+                    if count > 0 {
+                        if let Ok(range) = selection_array.GetElement(0) {
+                            if let Ok(selected_bstr) = range.GetText(-1) {
+                                let selected_text = selected_bstr.to_string();
                                 let doc_range = text_pattern.DocumentRange().ok();
 
                                 // Extract up to 100 characters before the cursor / selection
@@ -395,52 +495,97 @@ fn capture_caret_context_internal() -> CaretContext {
                     }
                 }
             }
-
-            // 2. Fallback to IUIAutomationValuePattern (Simple inputs, URL bars, search boxes)
-            if let Ok(value_pattern) =
-                focused.GetCurrentPatternAs::<IUIAutomationValuePattern>(UIA_ValuePatternId)
-            {
-                if let Ok(val) = value_pattern.CurrentValue() {
-                    let val_str = val.to_string();
-                    if val_str.trim().is_empty() {
-                        return Ok(CaretContext {
-                            text_before: String::new(),
-                            selected_text: String::new(),
-                            text_after: String::new(),
-                            source: CaretContextSource::UiaValuePattern,
-                        });
-                    }
-                }
-            }
-
-            Ok(CaretContext::default())
-        })();
-
-        if must_uninit {
-            CoUninitialize();
         }
 
-        result.unwrap_or_default()
+        // 2. Fallback to IUIAutomationValuePattern (Simple inputs, URL bars, search boxes)
+        if let Ok(value_pattern) =
+            focused.GetCurrentPatternAs::<IUIAutomationValuePattern>(UIA_ValuePatternId)
+        {
+            if let Ok(val) = value_pattern.CurrentValue() {
+                let val_str = val.to_string();
+                if val_str.trim().is_empty() {
+                    return Ok(CaretContext {
+                        text_before: String::new(),
+                        selected_text: String::new(),
+                        text_after: String::new(),
+                        source: CaretContextSource::UiaValuePattern,
+                    });
+                }
+            }
+        }
+
+        Ok(CaretContext::default())
+    }
+
+    fn worker_sender() -> Option<&'static mpsc::SyncSender<UiaCaptureRequest>> {
+        UIA_WORKER_TX
+            .get_or_init(|| {
+                let (tx, rx) = mpsc::sync_channel::<UiaCaptureRequest>(4);
+                let spawned = std::thread::Builder::new()
+                    .name("aura-uia-caret-worker".into())
+                    .spawn(move || unsafe {
+                        let hr = CoInitializeEx(None, COINIT_MULTITHREADED);
+                        let must_uninit = hr.is_ok();
+                        let mut automation: Option<IUIAutomation> =
+                            CoCreateInstance(&CUIAutomation, None, CLSCTX_INPROC_SERVER).ok();
+
+                        while let Ok(req) = rx.recv() {
+                            if Instant::now() >= req.deadline {
+                                continue;
+                            }
+                            if automation.is_none() {
+                                automation =
+                                    CoCreateInstance(&CUIAutomation, None, CLSCTX_INPROC_SERVER)
+                                        .ok();
+                            }
+                            let ctx = match automation.as_ref() {
+                                Some(uia) => query_uia_context(uia).unwrap_or_default(),
+                                None => CaretContext::default(),
+                            };
+                            let _ = req.reply_tx.send(ctx);
+                        }
+
+                        drop(automation);
+                        if must_uninit {
+                            CoUninitialize();
+                        }
+                    });
+                match spawned {
+                    Ok(_) => Some(tx),
+                    Err(_) => None,
+                }
+            })
+            .as_ref()
+    }
+
+    pub fn capture_with_timeout(timeout_ms: u64) -> CaretContext {
+        let Some(sender) = worker_sender() else {
+            return CaretContext::default();
+        };
+        let wait = Duration::from_millis(timeout_ms);
+        let (reply_tx, reply_rx) = mpsc::sync_channel(1);
+        let req = UiaCaptureRequest {
+            deadline: Instant::now() + wait,
+            reply_tx,
+        };
+        if sender.try_send(req).is_err() {
+            return CaretContext::default();
+        }
+        reply_rx.recv_timeout(wait).unwrap_or_default()
     }
 }
 
 pub fn capture_caret_context(timeout_ms: u64) -> CaretContext {
     #[cfg(target_os = "windows")]
     {
-        let (tx, rx) = std::sync::mpsc::channel();
-        let spawn_result = std::thread::Builder::new()
-            .name("aura-caret-capture".into())
-            .spawn(move || {
-                let ctx = capture_caret_context_internal();
-                let _ = tx.send(ctx);
-            });
-
-        if spawn_result.is_err() {
+        if timeout_ms == 0 {
             return CaretContext::default();
         }
-
-        rx.recv_timeout(std::time::Duration::from_millis(timeout_ms))
-            .unwrap_or_default()
+        if let Some(ctx) = fast_win32::try_capture() {
+            return ctx;
+        }
+        let effective_timeout_ms = timeout_ms.max(DEFAULT_CARET_CAPTURE_TIMEOUT_MS);
+        uia_worker::capture_with_timeout(effective_timeout_ms)
     }
 
     #[cfg(not(target_os = "windows"))]

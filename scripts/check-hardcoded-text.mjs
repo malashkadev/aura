@@ -1,15 +1,14 @@
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 
 const read = (p) => readFileSync(p, "utf8");
-const html = read("src/index.html");
 
 console.log("=== CHECKING HARDCODED TEXT IN INTERACTIVE ELEMENTS AND HEADINGS ===");
 
 // Options and bare spans are intentionally excluded: language names, provider
 // names and model names are proper nouns, while spec values are populated by
 // main.js at runtime. The gate focuses on controls and headings a user reads
-// as interface copy.
-const auditedTags = new Set(["button", "a", "label", "h1", "h2", "h3", "summary"]);
+// as interface copy across all three desktop windows.
+const auditedTags = ["button", "a", "label", "h1", "h2", "h3", "summary"];
 const allowedExact = new Set([
   "AURA",
   "Aura",
@@ -37,26 +36,63 @@ const allowedExact = new Set([
   "Parakeet TDT 0.6b v3 (int8)",
 ]);
 
-const tagRegex = /<([a-zA-Z0-9-]+)([^>]*)>([^<]+)<\/\1>/g;
+const allSrcJs = readdirSync("src")
+  .filter((f) => f.endsWith(".js"))
+  .sort();
+const mainBundleJs = allSrcJs
+  .filter((f) => f !== "overlay.js" && f !== "tray-menu.js")
+  .map((f) => read(`src/${f}`))
+  .join("\n");
+
+const surfaces = [
+  { file: "src/index.html", js: mainBundleJs },
+  { file: "src/overlay.html", js: read("src/overlay.js") },
+  { file: "src/tray-menu.html", js: read("src/tray-menu.js") },
+];
+
+const tagRegex = new RegExp(`<(${auditedTags.join("|")})\\b([^>]*)>([\\s\\S]*?)<\\/\\1>`, "gi");
 const unlocalized = [];
-let match;
 
-while ((match = tagRegex.exec(html)) !== null) {
-  const tagName = match[1].toLowerCase();
-  const attrs = match[2];
-  const text = match[3].trim();
+for (const { file, js } of surfaces) {
+  const html = read(file)
+    .replace(/<style[\s\S]*?<\/style>/gi, "")
+    .replace(/<script[\s\S]*?<\/script>/gi, "");
 
-  if (!auditedTags.has(tagName) || !text) continue;
-  if (attrs.includes("data-i18n=")) continue;
-  if (allowedExact.has(text)) continue;
-  if (/^[0-9\s.,/\\+\u2013\u2014:;!?()#%*\u2022\u2192\u2039\u203A\u2713]+$/.test(text)) continue;
+  let match;
+  tagRegex.lastIndex = 0;
+  while ((match = tagRegex.exec(html)) !== null) {
+    const tagName = match[1].toLowerCase();
+    const attrs = match[2];
+    const inner = match[3];
 
-  unlocalized.push({ tag: tagName, attrs: attrs.trim(), text });
+    if (attrs.includes("data-i18n=") || inner.includes("data-i18n=")) continue;
+
+    // Strip nested SVGs and child elements that have their own data-i18n or JS ID localization
+    const stripped = inner
+      .replace(/<svg[\s\S]*?<\/svg>/gi, " ")
+      .replace(/<[^>]+>/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+
+    if (!stripped) continue;
+    if (allowedExact.has(stripped)) continue;
+    if (/^[0-9\s.,/\\+\u2013\u2014:;!?()#%*\u2022\u2192\u2039\u203A\u2713]+$/.test(stripped)) continue;
+
+    const selfId = attrs.match(/\sid="([^"]+)"/)?.[1];
+    const childIds = [...inner.matchAll(/\sid="([^"]+)"/g)].map((m) => m[1]);
+    const candidateIds = [selfId, ...childIds].filter(Boolean);
+    const localizedInJs = candidateIds.some(
+      (id) => js.includes(`"${id}"`) || js.includes(`'${id}'`),
+    );
+    if (localizedInJs) continue;
+
+    unlocalized.push({ file, tag: tagName, attrs: attrs.trim(), text: stripped });
+  }
 }
 
-console.log(`Found ${unlocalized.length} interactive/heading element(s) without data-i18n:`);
+console.log(`Found ${unlocalized.length} interactive/heading element(s) without localization across ${surfaces.length} windows:`);
 for (const item of unlocalized) {
-  console.log(`  <${item.tag} ${item.attrs}> -> "${item.text}"`);
+  console.log(`  ${item.file}: <${item.tag} ${item.attrs}> -> "${item.text}"`);
 }
 
 console.log(`\nHardcoded-text result: ${unlocalized.length === 0 ? "PASS" : "FAIL"}`);

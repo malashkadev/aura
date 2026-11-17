@@ -2,3 +2,13 @@
 identifier = "allow-set-ui-language"
 description = "Enables updating the persisted interface language."
 commands.allow = ["set_ui_language"]
+
+[[permission]]
+identifier = "allow-set-transcription-mode"
+description = "Enables updating the persisted transcription mode."
+commands.allow = ["set_transcription_mode"]
+
+[[permission]]
+identifier = "allow-set-recognition-language"
+description = "Enables updating the persisted speech recognition language."
+commands.allow = ["set_recognition_language"]

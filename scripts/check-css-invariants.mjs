@@ -6,6 +6,7 @@ const cssFiles = ["src/style.css", "src/tray-menu.css", "src/overlay.html"];
 if (existsSync("src/overlay.css")) {
   cssFiles.push("src/overlay.css");
 }
+const htmlFiles = ["src/index.html", "src/overlay.html", "src/tray-menu.html"];
 
 console.log("=== CHECKING CSS INVARIANTS & ZERO SHADOWS/GLOWS ===");
 
@@ -20,13 +21,66 @@ const allowedShadowPatterns = [
   /^box-shadow:\s*0\s+0\s+0\s+9999px\s+rgba\(\s*0,\s*0,\s*0,\s*0?\.5\d?\s*\);?$/,
 ];
 
+const solidOrangeDeclPattern =
+  /^background(?:-color)?:\s*(?:var\(--accent-color\)|#ff4200|#fe4200|rgb\(\s*25[45],\s*66,\s*0\s*\)|rgba\(\s*(?:25[45],\s*66,\s*0|var\(--accent-color-rgb\)),\s*(?:1|1\.0+)\s*\))(\s*!important)?;?$/i;
+
 function isAllowedShadow(trimmed) {
   return allowedShadowPatterns.some((pattern) => pattern.test(trimmed));
 }
 
+function lineAtOffset(text, offset) {
+  return text.slice(0, offset).split("\n").length;
+}
+
+function checkHoverBlocks(file, cssSource, baseLineOffset = 0) {
+  // Strip CSS comments while preserving line breaks so line numbers stay accurate
+  const stripped = cssSource.replace(/\/\*[\s\S]*?\*\//g, (comment) =>
+    comment.replace(/[^\n]/g, " "),
+  );
+
+  // Walk balanced braces so @media / @supports wrappers are descended into cleanly
+  function scanRules(text, offsetBase) {
+    let i = 0;
+    while (i < text.length) {
+      const openIdx = text.indexOf("{", i);
+      if (openIdx === -1) break;
+      const selector = text.slice(i, openIdx).trim();
+      let depth = 1;
+      let closeIdx = openIdx + 1;
+      while (closeIdx < text.length && depth > 0) {
+        if (text[closeIdx] === "{") depth += 1;
+        else if (text[closeIdx] === "}") depth -= 1;
+        closeIdx += 1;
+      }
+      const body = text.slice(openIdx + 1, closeIdx - 1);
+      if (selector.startsWith("@media") || selector.startsWith("@supports")) {
+        scanRules(body, offsetBase + openIdx + 1);
+      } else if (selector.includes(":hover")) {
+        const bodyStartOffset = offsetBase + openIdx + 1;
+        const bodyLines = body.split("\n");
+        let relOffset = 0;
+        for (const rawLine of bodyLines) {
+          const decl = rawLine.trim();
+          if (solidOrangeDeclPattern.test(decl)) {
+            const lineNum = baseLineOffset + lineAtOffset(stripped, bodyStartOffset + relOffset);
+            const message = `${file}:${lineNum}: solid orange hover fill in '${selector.replace(/\s+/g, " ")}': ${decl}`;
+            issues.push(message);
+            console.log(`[SOLID ORANGE HOVER] ${message}`);
+          }
+          relOffset += rawLine.length + 1;
+        }
+      }
+      i = closeIdx;
+    }
+  }
+
+  scanRules(stripped, 0);
+}
+
 for (const file of cssFiles) {
   console.log(`\n--- Inspecting ${file} ---`);
-  const lines = read(file).split("\n");
+  const content = read(file).replaceAll("\r\n", "\n");
+  const lines = content.split("\n");
 
   lines.forEach((line, idx) => {
     const lineNum = idx + 1;
@@ -51,22 +105,29 @@ for (const file of cssFiles) {
       issues.push(message);
       console.log(`[DROP-SHADOW] ${message}`);
     }
-
-    const solidOrangeFill =
-      trimmed.includes("background: var(--accent-color)") ||
-      trimmed.includes("background-color: var(--accent-color)") ||
-      trimmed.includes("background: #fe4200") ||
-      trimmed.includes("background: #ff4200");
-    const nearHover =
-      line.includes(":hover") ||
-      lines[idx - 1]?.includes(":hover") ||
-      lines[idx - 2]?.includes(":hover");
-    if (solidOrangeFill && nearHover) {
-      const message = `${file}:${lineNum}: solid orange hover fill: ${trimmed}`;
-      issues.push(message);
-      console.log(`[SOLID ORANGE HOVER] ${message}`);
-    }
   });
+
+  if (file.endsWith(".html")) {
+    for (const styleMatch of content.matchAll(/<style\b[^>]*>([\s\S]*?)<\/style>/gi)) {
+      const styleStartLine = lineAtOffset(content, styleMatch.index) - 1;
+      checkHoverBlocks(file, styleMatch[1], styleStartLine);
+    }
+  } else {
+    checkHoverBlocks(file, content, 0);
+  }
+}
+
+for (const htmlFile of htmlFiles) {
+  const html = read(htmlFile).replaceAll("\r\n", "\n");
+  for (const attrMatch of html.matchAll(/\sstyle="([^"]+)"/g)) {
+    const styleVal = attrMatch[1];
+    const lineNum = lineAtOffset(html, attrMatch.index);
+    if (/(?:box-shadow|text-shadow|drop-shadow)/i.test(styleVal)) {
+      const message = `${htmlFile}:${lineNum}: inline shadow/glow style is forbidden: style="${styleVal}"`;
+      issues.push(message);
+      console.log(`[INLINE-STYLE] ${message}`);
+    }
+  }
 }
 
 console.log(`\nCSS invariant result: ${issues.length === 0 ? "PASS" : "FAIL"} (${issues.length} issue(s))`);

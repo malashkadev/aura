@@ -1,38 +1,97 @@
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 
-const read = (p) => readFileSync(p, "utf8");
-const mainJs = read("src/main.js");
+const read = (p) => readFileSync(p, "utf8").replaceAll("\r\n", "\n");
 
-console.log("=== CHECKING DYNAMIC / HARDCODED STRINGS IN MAIN.JS ===");
+console.log("=== CHECKING DYNAMIC / HARDCODED STRINGS ACROSS SRC/*.JS ===");
 
-const lines = mainJs.split("\n");
+const jsFiles = readdirSync("src")
+  .filter((f) => f.endsWith(".js"))
+  .sort();
+
 const suspicious = [];
 
-lines.forEach((line, idx) => {
-  const lineNum = idx + 1;
-  const trimmed = line.trim();
+function lineAtOffset(text, offset) {
+  return text.slice(0, offset).split("\n").length;
+}
 
-  // Skip lines inside i18nDict.
-  if (lineNum > 20 && lineNum < 3900) return;
-
-  // A template literal that starts with a translation lookup is localized;
-  // only literal strings and untranslated templates are actionable.
-  if (/showStatus\(\s*["'`]/.test(trimmed) && !/showStatus\(\s*`\$\{getTranslation\(/.test(trimmed)) {
-    suspicious.push({ lineNum, type: "showStatus hardcoded", text: trimmed });
+function computeSkippedRanges(fileName, content) {
+  const ranges = [];
+  if (fileName === "main.js") {
+    const startIdx = content.indexOf("const i18nDict =");
+    const endMarker = "\n};\n\nlet currentLanguage";
+    const endIdx = content.indexOf(endMarker, startIdx);
+    if (startIdx === -1 || endIdx === -1) {
+      suspicious.push({
+        file: fileName,
+        lineNum: 1,
+        type: "dictionary marker missing",
+        text: "Could not locate dynamic i18nDict..currentLanguage bounds in src/main.js",
+      });
+    } else {
+      ranges.push([lineAtOffset(content, startIdx), lineAtOffset(content, endIdx + 3)]);
+    }
+  } else if (fileName === "tray-menu.js") {
+    const i18nStart = content.indexOf("const I18N = {");
+    const i18nEnd = content.indexOf("\n};", i18nStart);
+    if (i18nStart !== -1 && i18nEnd !== -1) {
+      ranges.push([lineAtOffset(content, i18nStart), lineAtOffset(content, i18nEnd + 3)]);
+    }
+    const langsStart = content.indexOf("const SUPPORTED_LANGS = [");
+    const langsEnd = content.indexOf("\n];", langsStart);
+    if (langsStart !== -1 && langsEnd !== -1) {
+      ranges.push([lineAtOffset(content, langsStart), lineAtOffset(content, langsEnd + 3)]);
+    }
   }
+  return ranges;
+}
 
-  if (/(?:textContent|innerText)\s*=\s*["'][\u0410-\u042f\u0430-\u044fA-Za-z]{4,}/.test(trimmed)) {
-    suspicious.push({ lineNum, type: "textContent hardcoded", text: trimmed });
-  }
+for (const fileName of jsFiles) {
+  const content = read(`src/${fileName}`);
+  const skippedRanges = computeSkippedRanges(fileName, content);
+  const lines = content.split("\n");
 
-  if (/setAttribute\(\s*["'](?:title|aria-label)["']\s*,\s*["'][\u0410-\u042f\u0430-\u044fA-Za-z]/.test(trimmed)) {
-    suspicious.push({ lineNum, type: "attribute hardcoded", text: trimmed });
-  }
-});
+  lines.forEach((line, idx) => {
+    const lineNum = idx + 1;
+    if (skippedRanges.some(([from, to]) => lineNum >= from && lineNum <= to)) {
+      return;
+    }
 
-console.log(`Found ${suspicious.length} suspicious hardcoded line(s) outside the dictionary:`);
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith("//") || trimmed.startsWith("*")) {
+      return;
+    }
+
+    // Skip locale table key-value entries in overlay.js (or shared i18n objects)
+    if (/^(?:ru|en|de|es|fr|it|zh|pt|tr|ja|nl):\s*["']/.test(trimmed)) {
+      return;
+    }
+
+    // A template literal that starts with a translation lookup is localized;
+    // only literal strings and untranslated templates are actionable.
+    if (
+      /showStatus\(\s*["'`]/.test(trimmed) &&
+      !/showStatus\(\s*`\$\{getTranslation\(/.test(trimmed)
+    ) {
+      suspicious.push({ file: fileName, lineNum, type: "showStatus hardcoded", text: trimmed });
+    }
+
+    if (/(?:textContent|innerText)\s*=\s*["'][\u0410-\u042f\u0430-\u044fA-Za-z]{4,}/.test(trimmed)) {
+      suspicious.push({ file: fileName, lineNum, type: "textContent hardcoded", text: trimmed });
+    }
+
+    if (
+      /setAttribute\(\s*["'](?:title|aria-label)["']\s*,\s*["'][\u0410-\u042f\u0430-\u044fA-Za-z]/.test(
+        trimmed,
+      )
+    ) {
+      suspicious.push({ file: fileName, lineNum, type: "attribute hardcoded", text: trimmed });
+    }
+  });
+}
+
+console.log(`Scanned ${jsFiles.length} JS module(s). Found ${suspicious.length} suspicious hardcoded line(s):`);
 for (const item of suspicious) {
-  console.log(`  Line ${item.lineNum} [${item.type}]: ${item.text}`);
+  console.log(`  src/${item.file}:${item.lineNum} [${item.type}]: ${item.text}`);
 }
 
 console.log(`\nDynamic-string result: ${suspicious.length === 0 ? "PASS" : "FAIL"}`);

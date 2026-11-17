@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 
 console.log("=== CHECKING IPC INVOCATION SIGNATURES ===");
 
@@ -41,7 +41,11 @@ function toSnakeCase(str) {
   return str.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`);
 }
 
-const jsFiles = ["src/main.js", "src/overlay.js", "src/tray-menu.js"];
+const jsFiles = readdirSync("src")
+  .filter((f) => f.endsWith(".js"))
+  .sort()
+  .map((f) => `src/${f}`);
+const calledCommands = new Set();
 
 let issueCount = 0;
 function reportIssue(kind, message) {
@@ -62,6 +66,7 @@ for (const file of jsFiles) {
   while ((inv = invokeRegex.exec(content)) !== null) {
     const cmd = inv[1];
     const rawArgs = inv[2];
+    calledCommands.add(cmd);
     const rustParams = rustCommands.get(cmd);
     if (!rustParams) {
       reportIssue("warn", `[WARN] ${file}: Command '${cmd}' not found in lib.rs #[tauri::command] map.`);
@@ -116,6 +121,12 @@ for (const file of jsFiles) {
     }
   }
 }
+for (const cmd of rustCommands.keys()) {
+  if (!calledCommands.has(cmd)) {
+    console.log(`[INFO] #[tauri::command] '${cmd}' is registered in lib.rs but not invoked from src/*.js.`);
+  }
+}
+
 console.log(`\nIPC signature result: ${issueCount === 0 ? "PASS" : "FAIL"} (${issueCount} issue(s))`);
 if (issueCount > 0) {
   process.exitCode = 1;

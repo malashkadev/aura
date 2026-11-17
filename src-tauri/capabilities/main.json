@@ -35,7 +35,6 @@
     "allow-log-frontend-event",
     "allow-start-mic-meter",
     "allow-stop-mic-meter",
-    "allow-reprocess-history-text",
     "allow-get-audio-input-devices",
     "allow-toggle-gaming-mode",
     "allow-get-gaming-mode-state",

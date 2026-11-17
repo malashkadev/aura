@@ -1,3 +1,5 @@
+// @ts-check
+
 /**
  * Reads the settings form into the payload sent to `set_settings`.
  *
@@ -6,9 +8,34 @@
  * the orchestrator. The returned object must match the non-secret fields of
  * `settings_secure::Settings` one-to-one (guarded by a test).
  */
+
+/**
+ * @typedef {Object} TextReplacementRule
+ * @property {string} trigger
+ * @property {string} replacement
+ */
+
+/**
+ * @typedef {Object} CollectFormSettingsInput
+ * @property {string} modelName
+ * @property {string} llmModel
+ * @property {string} [localEngine]
+ * @property {string} uiLanguage
+ * @property {string} transcriptionMode
+ * @property {string} apiProvider
+ * @property {string} localAcceleration
+ * @property {TextReplacementRule[]} textReplacements
+ * @property {boolean} completedOnboarding
+ * @property {string[]} disabledEditCommands
+ */
+
+/**
+ * @param {CollectFormSettingsInput} params
+ */
 export function collectFormSettings({
   modelName,
   llmModel,
+  localEngine,
   uiLanguage,
   transcriptionMode,
   apiProvider,
@@ -17,14 +44,27 @@ export function collectFormSettings({
   completedOnboarding,
   disabledEditCommands,
 }) {
+  /** @param {string} id */
   const byId = (id) => document.getElementById(id);
+
+  /**
+   * @param {string} id
+   * @param {string} fallback
+   * @returns {string}
+   */
   const valueOf = (id, fallback) => {
-    const element = byId(id);
-    return element ? element.value : fallback;
+    const element = /** @type {(HTMLElement & { value?: string }) | null} */ (byId(id));
+    return element && typeof element.value === "string" ? element.value : fallback;
   };
+
+  /**
+   * @param {string} id
+   * @param {boolean} fallback
+   * @returns {boolean}
+   */
   const checkedOf = (id, fallback) => {
-    const element = byId(id);
-    return element ? element.checked : fallback;
+    const element = /** @type {(HTMLElement & { checked?: boolean }) | null} */ (byId(id));
+    return element && typeof element.checked === "boolean" ? element.checked : fallback;
   };
 
   return {
@@ -42,13 +82,13 @@ export function collectFormSettings({
     cloud_fallback_enabled: checkedOf("checkbox-cloud-fallback", true),
     autostart: checkedOf("checkbox-autostart", false),
     automatic_update_checks: checkedOf("checkbox-automatic-update-checks", false),
-    local_engine: valueOf("select-local-engine", "whisper"),
+    local_engine: localEngine || valueOf("select-local-engine", "whisper"),
     local_acceleration: localAcceleration,
     overlay_sounds: checkedOf("checkbox-sounds", true),
     overlay_sound_theme: valueOf("select-sound-theme", "zen"),
     overlay_sound_volume: (() => {
-      const element = byId("range-sound-volume");
-      return element ? parseFloat(element.value) / 100 : 0.8;
+      const element = /** @type {(HTMLElement & { value?: string }) | null} */ (byId("range-sound-volume"));
+      return element && typeof element.value === "string" ? parseFloat(element.value) / 100 : 0.8;
     })(),
     copy_context_on_start: checkedOf("checkbox-selection-edit-enabled", false),
     audio_input_device: valueOf("select-audio-device", "default"),
@@ -57,8 +97,8 @@ export function collectFormSettings({
     gaming_mode_enabled: checkedOf("checkbox-gaming-mode", false),
     gaming_mode_auto_detect: checkedOf("checkbox-gaming-mode-auto-detect", false),
     vram_standby_timeout_mins: (() => {
-      const element = byId("select-vram-standby");
-      return element ? (parseInt(element.value, 10) || 0) : 30;
+      const element = /** @type {(HTMLElement & { value?: string }) | null} */ (byId("select-vram-standby"));
+      return element && typeof element.value === "string" ? (parseInt(element.value, 10) || 0) : 30;
     })(),
     text_replacements: textReplacements,
     ai_edit_mode: checkedOf("checkbox-selection-edit-enabled", false)

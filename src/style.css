@@ -1008,6 +1008,10 @@ body {
   padding-right: 40px;
 }
 
+.api-key-input-wrapper.has-saved-key .custom-input {
+  padding-right: 70px;
+}
+
 .custom-input {
   background-color: hsl(0, 0%, 8%);
   border: 1px solid var(--border-color);
@@ -1038,11 +1042,51 @@ body {
   opacity: 0.65;
 }
 
+.btn-clear-api-key {
+  position: absolute;
+  right: 38px;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border-radius: var(--radius-sm);
+  background: none;
+  border: 1px solid transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition);
+}
+
+.btn-clear-api-key[hidden] {
+  display: none;
+}
+
+.btn-clear-api-key:hover:not(:disabled) {
+  color: var(--status-error);
+  background-color: rgba(var(--status-error-rgb), 0.14);
+  border-color: transparent;
+}
+
+.btn-clear-api-key:active:not(:disabled) {
+  transform: scale(0.95);
+}
+
+.btn-clear-api-key:disabled {
+  cursor: default;
+  opacity: 0.4;
+}
+
 .btn-toggle-visibility {
   position: absolute;
-  right: 12px;
+  right: 8px;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border-radius: var(--radius-sm);
   background: none;
-  border: none;
+  border: 1px solid transparent;
   color: var(--text-muted);
   cursor: pointer;
   display: flex;
@@ -1051,8 +1095,21 @@ body {
   transition: var(--transition);
 }
 
-.btn-toggle-visibility:hover {
+.btn-toggle-visibility:hover,
+.btn-toggle-visibility.visible {
   color: var(--text-primary);
+}
+
+.btn-clear-api-key:focus-visible,
+.btn-toggle-visibility:focus-visible {
+  outline: none;
+  border-color: rgba(255, 255, 255, 0.28);
+}
+
+.clear-key-icon {
+  width: 15px;
+  height: 15px;
+  pointer-events: none;
 }
 
 .eye-icon {
@@ -2567,7 +2624,7 @@ body {
 .engine-health-chip.health-warn {
   color: var(--text-muted);
   background-color: rgba(255, 255, 255, 0.04);
-  border: 1px solid var(--border-subtle);
+  border: 1px solid var(--border-color);
 }
 
 .btn-icon {

@@ -1,3 +1,5 @@
+// @ts-check
+
 /**
  * Debounced settings autosave.
  *
@@ -7,12 +9,45 @@
  * returns `{ permanentFailure }` when the backend rejected the values in a way
  * that must not be retried automatically.
  */
+
+/**
+ * @typedef {Object} AutosaveContext
+ * @property {number} revisionAtStart
+ */
+
+/**
+ * @typedef {Object} AutosaveResult
+ * @property {boolean} [permanentFailure]
+ */
+
+/**
+ * @typedef {Object} SettingsAutosaveOptions
+ * @property {(context: AutosaveContext) => Promise<AutosaveResult | void> | AutosaveResult | void} save
+ * @property {() => boolean} isEnabled
+ * @property {number} [normalDelay]
+ * @property {number} [immediateDelay]
+ */
+
+/**
+ * @typedef {Object} SettingsAutosaveController
+ * @property {(immediate?: boolean) => void} mark
+ * @property {() => void} markClean
+ * @property {() => boolean} isDirty
+ * @property {() => boolean} isSaving
+ * @property {() => Promise<void>} flush
+ */
+
+/**
+ * @param {SettingsAutosaveOptions} options
+ * @returns {SettingsAutosaveController}
+ */
 export function createSettingsAutosave({
   save,
   isEnabled,
   normalDelay = 700,
   immediateDelay = 150,
 }) {
+  /** @type {ReturnType<typeof setTimeout> | null} */
   let timer = null;
   let revision = 0;
   let dirty = false;
@@ -26,6 +61,9 @@ export function createSettingsAutosave({
     }
   }
 
+  /**
+   * @param {boolean} immediate
+   */
   function schedule(immediate) {
     clearTimer();
     timer = setTimeout(() => {
@@ -36,6 +74,9 @@ export function createSettingsAutosave({
     }, immediate ? immediateDelay : normalDelay);
   }
 
+  /**
+   * @param {boolean} [immediate]
+   */
   function mark(immediate = false) {
     if (!isEnabled()) return;
     dirty = true;
@@ -59,7 +100,7 @@ export function createSettingsAutosave({
     let permanentFailure = false;
     try {
       const result = await save({ revisionAtStart });
-      permanentFailure = Boolean(result?.permanentFailure);
+      permanentFailure = Boolean(result && typeof result === "object" && result.permanentFailure);
       if (revision === revisionAtStart) {
         dirty = false;
       }

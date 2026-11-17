@@ -10,6 +10,7 @@ import { createHistoryView } from "./history-view.js";
 import { createModelCards } from "./model-cards.js";
 import { createSettingsAutosave } from "./settings-autosave.js";
 import { collectFormSettings } from "./settings-form.js";
+import { createSoundSynth } from "./sound-themes.js";
 
 try {
   hydrateAppIcons();
@@ -298,6 +299,8 @@ const i18nDict = {
     "history_copy_title": "Скопировать в буфер обмена",
     "history_search_clear": "Очистить поиск",
     "api_key_toggle_visibility": "Показать/скрыть ключ",
+    "clear_api_key_tooltip": "Удалить сохранённый ключ",
+    "api_key_cleared": "API-ключ удалён",
     "history_filters_label": "Фильтры истории",
     "onboarding_skip": "Пропустить обучение",
     "onboarding_prev": "Назад",
@@ -596,6 +599,8 @@ const i18nDict = {
     "history_copy_title": "Copy to clipboard",
     "history_search_clear": "Clear search",
     "api_key_toggle_visibility": "Show/hide key",
+    "clear_api_key_tooltip": "Remove saved key",
+    "api_key_cleared": "API key removed",
     "history_filters_label": "History filters",
     "onboarding_skip": "Skip tutorial",
     "onboarding_prev": "Back",
@@ -894,6 +899,8 @@ const i18nDict = {
     "history_copy_title": "In die Zwischenablage kopieren",
     "history_search_clear": "Suche löschen",
     "api_key_toggle_visibility": "Schlüssel anzeigen/ausblenden",
+    "clear_api_key_tooltip": "Gespeicherten Schlüssel entfernen",
+    "api_key_cleared": "API-Schlüssel entfernt",
     "history_filters_label": "Verlaufsfilter",
     "onboarding_skip": "Tutorial überspringen",
     "onboarding_prev": "Zurück",
@@ -1192,6 +1199,8 @@ const i18nDict = {
     "history_copy_title": "Copiar al portapapeles",
     "history_search_clear": "Borrar búsqueda",
     "api_key_toggle_visibility": "Mostrar/ocultar clave",
+    "clear_api_key_tooltip": "Eliminar clave guardada",
+    "api_key_cleared": "Clave API eliminada",
     "history_filters_label": "Filtros del historial",
     "onboarding_skip": "Omitir aprendizaje",
     "onboarding_prev": "Atrás",
@@ -1490,6 +1499,8 @@ const i18nDict = {
     "history_copy_title": "Copier dans le presse-papiers",
     "history_search_clear": "Effacer la recherche",
     "api_key_toggle_visibility": "Afficher/masquer la clé",
+    "clear_api_key_tooltip": "Supprimer la clé enregistrée",
+    "api_key_cleared": "Clé API supprimée",
     "history_filters_label": "Filtres de l'historique",
     "onboarding_skip": "Ignorer le tutoriel",
     "onboarding_prev": "Retour",
@@ -1788,6 +1799,8 @@ const i18nDict = {
     "history_copy_title": "Copia negli appunti",
     "history_search_clear": "Cancella ricerca",
     "api_key_toggle_visibility": "Mostra/nascondi chiave",
+    "clear_api_key_tooltip": "Rimuovi chiave salvata",
+    "api_key_cleared": "Chiave API rimossa",
     "history_filters_label": "Filtri della cronologia",
     "onboarding_skip": "Salta introduzione",
     "onboarding_prev": "Indietro",
@@ -2086,6 +2099,8 @@ const i18nDict = {
     "history_copy_title": "复制到剪贴板",
     "history_search_clear": "清除搜索",
     "api_key_toggle_visibility": "显示/隐藏密钥",
+    "clear_api_key_tooltip": "删除已保存的密钥",
+    "api_key_cleared": "API 密钥已删除",
     "history_filters_label": "历史记录筛选",
     "onboarding_skip": "跳过教程",
     "onboarding_prev": "上一步",
@@ -2384,6 +2399,8 @@ const i18nDict = {
     "history_copy_title": "Copiar para a área de transferência",
     "history_search_clear": "Limpar pesquisa",
     "api_key_toggle_visibility": "Mostrar/ocultar chave",
+    "clear_api_key_tooltip": "Remover chave guardada",
+    "api_key_cleared": "Chave API removida",
     "history_filters_label": "Filtros do histórico",
     "onboarding_skip": "Pular tutorial",
     "onboarding_prev": "Voltar",
@@ -2682,6 +2699,8 @@ const i18nDict = {
     "history_copy_title": "Panoya kopyala",
     "history_search_clear": "Aramayı temizle",
     "api_key_toggle_visibility": "Anahtarı göster/gizle",
+    "clear_api_key_tooltip": "Kayıtlı anahtarı kaldır",
+    "api_key_cleared": "API anahtarı kaldırıldı",
     "history_filters_label": "Geçmiş filtreleri",
     "onboarding_skip": "Öğreticiyi atla",
     "onboarding_prev": "Geri",
@@ -2939,15 +2958,13 @@ function pickSelectValue(select, value) {
   select.blur();
 }
 
-function movePanelFocus(select, direction) {
-  const panel = select.closest(".select-wrap").querySelector(".select-panel");
-  if (!panel) return;
+function setPanelFocusIndex(select, targetIndex) {
+  const panel = select.closest(".select-wrap")?.querySelector(".select-panel");
+  if (!panel) return null;
   const items = Array.from(panel.querySelectorAll(".select-panel-item"));
   if (items.length === 0) return null;
-  const currentIndex = items.findIndex((item) => item.classList.contains("is-focused"));
-  let next = currentIndex === -1 ? 0 : currentIndex + direction;
-  next = (next + items.length) % items.length;
-  const nextItem = items[next];
+  const bounded = ((targetIndex % items.length) + items.length) % items.length;
+  const nextItem = items[bounded];
   items.forEach((item) => {
     item.classList.toggle("is-focused", item === nextItem);
   });
@@ -2958,6 +2975,16 @@ function movePanelFocus(select, direction) {
     }
   }
   return nextItem;
+}
+
+function movePanelFocus(select, direction) {
+  const panel = select.closest(".select-wrap")?.querySelector(".select-panel");
+  if (!panel) return null;
+  const items = Array.from(panel.querySelectorAll(".select-panel-item"));
+  if (items.length === 0) return null;
+  const currentIndex = items.findIndex((item) => item.classList.contains("is-focused"));
+  const next = currentIndex === -1 ? 0 : currentIndex + direction;
+  return setPanelFocusIndex(select, next);
 }
 
 function handleSelectMousedown(event) {
@@ -2982,10 +3009,22 @@ function handleSelectKeydown(event) {
     }
     return;
   }
+  if (event.key === "Tab") {
+    closeSelectPanels(true);
+    return;
+  }
   if (event.key === "Escape") {
     event.preventDefault();
     closeSelectPanels();
     select.focus();
+    return;
+  }
+  if (event.key === "Home" || event.key === "End") {
+    event.preventDefault();
+    const items = panel.querySelectorAll(".select-panel-item");
+    if (items.length > 0) {
+      setPanelFocusIndex(select, event.key === "Home" ? 0 : items.length - 1);
+    }
     return;
   }
   if (event.key === "ArrowDown" || event.key === "ArrowUp") {
@@ -3041,6 +3080,12 @@ function initSelectPanels() {
     wrap.appendChild(value);
 
     select.addEventListener("keydown", handleSelectKeydown);
+    wrap.addEventListener("focusout", (event) => {
+      if (!panel.classList.contains("open")) return;
+      const nextTarget = event.relatedTarget;
+      if (nextTarget instanceof Node && wrap.contains(nextTarget)) return;
+      closeSelectPanels();
+    });
 
     // Clicking the associated <label for="…"> activates the native select
     // directly (the OS dropdown would open over the custom panel), so the
@@ -3315,12 +3360,26 @@ document.addEventListener("DOMContentLoaded", () => {
   /** @type {number | null} */
   let engineStaggerCleanupTimer = null;
 
-  /** @param {Element | null} el */
-  function replayEngineSwitchFade(el) {
-    if (!(el instanceof HTMLElement)) return;
-    el.classList.remove("engine-switch-fade");
-    void el.offsetWidth;
-    el.classList.add("engine-switch-fade");
+  function setSpinnerWithText(el, labelText) {
+    if (!el) return;
+    let spinner = el.querySelector(".spinner-inline");
+    const expected = ` ${labelText}`;
+    if (!spinner) {
+      el.replaceChildren();
+      spinner = document.createElement("span");
+      spinner.className = "spinner-inline";
+      spinner.setAttribute("aria-hidden", "true");
+      el.append(spinner, document.createTextNode(expected));
+      return;
+    }
+    const textNode = spinner.nextSibling;
+    if (textNode && textNode.nodeType === Node.TEXT_NODE) {
+      if (textNode.nodeValue !== expected) {
+        textNode.nodeValue = expected;
+      }
+    } else {
+      el.append(document.createTextNode(expected));
+    }
   }
 
   /**
@@ -3566,6 +3625,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // Toggle API Key visibility
   const apiKeyInput = document.getElementById("input-api-key");
   const toggleKeyBtn = document.getElementById("btn-toggle-key");
+  const clearKeyBtn = document.getElementById("btn-clear-key");
   toggleKeyBtn.addEventListener("click", () => {
     if (apiKeyInput.type === "password") {
       apiKeyInput.type = "text";
@@ -3662,24 +3722,21 @@ const radioCloud = document.getElementById("radio-cloud");
       gpuSettings.style.display = "block";
     }
     if (isParakeet) {
-      const wasHidden = groupParakeetModels.style.display === "none";
       groupWhisperModels.style.display = "none";
       groupParakeetModels.style.display = "block";
-      if (wasHidden) replayEngineSwitchFade(groupParakeetModels);
-      selectModelCard("parakeet-v3");
+      selectModelCard("parakeet-v3", false);
     } else {
-      const wasHidden = groupWhisperModels.style.display === "none";
       groupWhisperModels.style.display = "block";
       groupParakeetModels.style.display = "none";
-      if (wasHidden) replayEngineSwitchFade(groupWhisperModels);
       if (selectedModelName === "parakeet-v3") {
-        selectModelCard(lastSelectedWhisperModel || "large-v3-turbo-q5_0");
+        selectModelCard(lastSelectedWhisperModel || "large-v3-turbo-q5_0", false);
       }
     }
     modelCardsView.syncActions();
   }
 
 async function refreshEngineHealth() {
+    if (document.hidden) return;
     const chip = document.getElementById("engine-health-chip");
     if (!chip) return;
     try {
@@ -3704,7 +3761,7 @@ async function refreshEngineHealth() {
         return;
       }
       if (health.starting) {
-        chip.innerHTML = `<span class="spinner-inline" aria-hidden="true"></span> ${getTranslation("engine_starting")}`;
+        setSpinnerWithText(chip, getTranslation("engine_starting"));
         chip.classList.add("health-warn");
         return;
       }
@@ -3732,9 +3789,14 @@ async function refreshEngineHealth() {
   // resident server needs seconds to boot and warm up. Poll fast until the
   // server reports running (or stops starting).
   function kickEngineStatusPolling(maxAttempts = 30) {
-    if (engineFastPollTimer) return;
+    if (engineFastPollTimer || document.hidden) return;
     let attempts = 0;
     engineFastPollTimer = setInterval(async () => {
+      if (document.hidden) {
+        clearInterval(engineFastPollTimer);
+        engineFastPollTimer = null;
+        return;
+      }
       attempts++;
       await refreshEngineHealth();
       const running = Boolean(lastHealthState && lastHealthState.running);
@@ -3750,9 +3812,27 @@ async function refreshEngineHealth() {
     selectLocalEngine.addEventListener("change", () => {
       updateLocalEngineUI();
       updateLocalModelSummary();
-      autosave.mark(true);
-      refreshEngineHealth();
-      kickEngineStatusPolling();
+      const nextEngine = selectLocalEngine.value || "whisper";
+      if (nextEngine === "parakeet") {
+        if (modelCardsView.isDownloaded("parakeet-v3")) {
+          committedLocalEngine = "parakeet";
+          committedModelName = "parakeet-v3";
+          autosave.mark(true);
+          refreshEngineHealth();
+          kickEngineStatusPolling();
+        }
+      } else {
+        committedLocalEngine = "whisper";
+        const candidateWhisper = selectedModelName === "parakeet-v3"
+          ? (lastSelectedWhisperModel || "base")
+          : selectedModelName;
+        if (modelCardsView.isDownloaded(candidateWhisper)) {
+          committedModelName = candidateWhisper;
+          autosave.mark(true);
+          refreshEngineHealth();
+          kickEngineStatusPolling();
+        }
+      }
     });
   }
 
@@ -3791,11 +3871,7 @@ async function refreshEngineHealth() {
     const editModelGroup = document.getElementById("edit-custom-provider-model-group");
     [urlGroup, modelGroup, editUrlGroup, editModelGroup].forEach((group) => {
       if (group) {
-        const wasHidden = group.style.display === "none";
         group.style.display = isCustom ? "flex" : "none";
-        if (isCustom && wasHidden) {
-          replayEngineSwitchFade(group);
-        }
       }
     });
   }
@@ -3813,6 +3889,7 @@ async function refreshEngineHealth() {
   const selectEditCloudProvider = document.getElementById("select-edit-cloud-provider");
   const apiKeyInputEdit = document.getElementById("input-edit-api-key");
   const toggleKeyEditBtn = document.getElementById("btn-toggle-key-edit");
+  const clearKeyEditBtn = document.getElementById("btn-clear-key-edit");
   const inputCustomUrl = document.getElementById("input-custom-url");
   const inputCustomModel = document.getElementById("input-custom-model");
   const inputEditCustomUrl = document.getElementById("input-edit-custom-url");
@@ -3858,249 +3935,26 @@ const btnSaveSettings = document.getElementById("btn-save-settings");
   const selectAudioDevice = document.getElementById("select-audio-device");
   let lastSoundVolume = 80;
 
-  let settingsAudioCtx = null;
-  let settingsGlobalGain = null;
-
-  function initSettingsAudioCtx(vol) {
-    if (!settingsAudioCtx) {
-      settingsAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      settingsGlobalGain = settingsAudioCtx.createGain();
-      settingsGlobalGain.connect(settingsAudioCtx.destination);
-    }
-    if (settingsAudioCtx.state === "suspended") {
-      settingsAudioCtx.resume();
-    }
-    const safeVol = Math.max(0, Math.min(1.0, vol / 100));
-    settingsGlobalGain.gain.setValueAtTime(safeVol, settingsAudioCtx.currentTime);
-  }
-
-  function playSettingsBowl(freq, duration, gainStart = 0.08) {
-    const now = settingsAudioCtx.currentTime;
-    const components = [
-      { f: freq, gain: gainStart, decay: duration },
-      { f: freq * 1.5, gain: gainStart * 0.45, decay: duration * 0.8 },
-      { f: freq * 2.76, gain: gainStart * 0.3, decay: duration * 0.55 }
-    ];
-    components.forEach(comp => {
-      const oscA = settingsAudioCtx.createOscillator();
-      const gainA = settingsAudioCtx.createGain();
-      oscA.type = "sine";
-      oscA.frequency.setValueAtTime(comp.f - 0.7, now);
-
-      const oscB = settingsAudioCtx.createOscillator();
-      const gainB = settingsAudioCtx.createGain();
-      oscB.type = "sine";
-      oscB.frequency.setValueAtTime(comp.f + 0.7, now);
-
-      const attack = 0.015;
-      gainA.gain.setValueAtTime(0.0001, now);
-      gainA.gain.linearRampToValueAtTime(comp.gain, now + attack);
-      gainA.gain.exponentialRampToValueAtTime(0.0001, now + comp.decay);
-
-      gainB.gain.setValueAtTime(0.0001, now);
-      gainB.gain.linearRampToValueAtTime(comp.gain, now + attack);
-      gainB.gain.exponentialRampToValueAtTime(0.0001, now + comp.decay);
-
-      oscA.connect(gainA);
-      gainA.connect(settingsGlobalGain);
-      oscB.connect(gainB);
-      gainB.connect(settingsGlobalGain);
-
-      oscA.start(now);
-      oscA.stop(now + comp.decay + 0.1);
-      oscB.start(now);
-      oscB.stop(now + comp.decay + 0.1);
-    });
-  }
-
-  function playSettingsRhodes(freq, duration, gainStart = 0.08) {
-    const now = settingsAudioCtx.currentTime;
-    const osc1 = settingsAudioCtx.createOscillator();
-    const osc2 = settingsAudioCtx.createOscillator();
-    const gain1 = settingsAudioCtx.createGain();
-    const gain2 = settingsAudioCtx.createGain();
-
-    osc1.type = "triangle";
-    osc1.frequency.setValueAtTime(freq, now);
-    osc2.type = "sine";
-    osc2.frequency.setValueAtTime(freq, now);
-
-    const attack = 0.010;
-    gain1.gain.setValueAtTime(0.0001, now);
-    gain1.gain.linearRampToValueAtTime(gainStart * 0.4, now + attack);
-    gain1.gain.exponentialRampToValueAtTime(0.0001, now + duration);
-
-    gain2.gain.setValueAtTime(0.0001, now);
-    gain2.gain.linearRampToValueAtTime(gainStart * 0.7, now + attack);
-    gain2.gain.exponentialRampToValueAtTime(0.0001, now + duration);
-
-    osc1.connect(gain1);
-    gain1.connect(settingsGlobalGain);
-    osc2.connect(gain2);
-    gain2.connect(settingsGlobalGain);
-
-    osc1.start(now);
-    osc1.stop(now + duration + 0.1);
-    osc2.start(now);
-    osc2.stop(now + duration + 0.1);
-  }
-
-  function playSettingsSciFi(freqStart, freqEnd, duration, gainStart = 0.06) {
-    const now = settingsAudioCtx.currentTime;
-    const osc1 = settingsAudioCtx.createOscillator();
-    const osc2 = settingsAudioCtx.createOscillator();
-    const gainNode = settingsAudioCtx.createGain();
-
-    osc1.type = "sine";
-    osc1.frequency.setValueAtTime(freqStart, now);
-    osc1.frequency.exponentialRampToValueAtTime(freqEnd, now + duration);
-
-    osc2.type = "sine";
-    osc2.frequency.setValueAtTime(freqStart + 3.0, now);
-    osc2.frequency.exponentialRampToValueAtTime(freqEnd + 3.0, now + duration);
-
-    const attack = 0.012;
-    gainNode.gain.setValueAtTime(0.0001, now);
-    gainNode.gain.linearRampToValueAtTime(gainStart, now + attack);
-    gainNode.gain.exponentialRampToValueAtTime(0.0001, now + duration);
-
-    osc1.connect(gainNode);
-    osc2.connect(gainNode);
-    gainNode.connect(settingsGlobalGain);
-
-    osc1.start(now);
-    osc1.stop(now + duration + 0.1);
-    osc2.start(now);
-    osc2.stop(now + duration + 0.1);
-  }
-
-  function playSettingsBell(freq, duration, gainStart = 0.07) {
-    const now = settingsAudioCtx.currentTime;
-    const osc1 = settingsAudioCtx.createOscillator();
-    const osc2 = settingsAudioCtx.createOscillator();
-    const osc3 = settingsAudioCtx.createOscillator();
-    const gain1 = settingsAudioCtx.createGain();
-    const gain2 = settingsAudioCtx.createGain();
-    const gain3 = settingsAudioCtx.createGain();
-
-    osc1.type = "sine";
-    osc1.frequency.setValueAtTime(freq, now);
-    osc2.type = "sine";
-    osc2.frequency.setValueAtTime(freq * 2.0, now);
-    osc3.type = "sine";
-    osc3.frequency.setValueAtTime(freq * 3.0, now);
-
-    const attack = 0.006;
-    gain1.gain.setValueAtTime(0.0001, now);
-    gain1.gain.linearRampToValueAtTime(gainStart, now + attack);
-    gain1.gain.exponentialRampToValueAtTime(0.0001, now + duration);
-
-    gain2.gain.setValueAtTime(0.0001, now);
-    gain2.gain.linearRampToValueAtTime(gainStart * 0.45, now + attack);
-    gain2.gain.exponentialRampToValueAtTime(0.0001, now + duration * 0.7);
-
-    gain3.gain.setValueAtTime(0.0001, now);
-    gain3.gain.linearRampToValueAtTime(gainStart * 0.25, now + attack);
-    gain3.gain.exponentialRampToValueAtTime(0.0001, now + duration * 0.4);
-
-    osc1.connect(gain1);
-    gain1.connect(settingsGlobalGain);
-    osc2.connect(gain2);
-    gain2.connect(settingsGlobalGain);
-    osc3.connect(gain3);
-    gain3.connect(settingsGlobalGain);
-
-    osc1.start(now);
-    osc1.stop(now + duration + 0.1);
-    osc2.start(now);
-    osc2.stop(now + duration + 0.1);
-    osc3.start(now);
-    osc3.stop(now + duration + 0.1);
-  }
-
-  function playSettingsWaterDrop(fStart, fEnd, duration, gainStart = 0.08) {
-    const now = settingsAudioCtx.currentTime;
-    const osc = settingsAudioCtx.createOscillator();
-    const gain = settingsAudioCtx.createGain();
-
-    osc.type = "sine";
-    osc.frequency.setValueAtTime(fStart, now);
-    osc.frequency.exponentialRampToValueAtTime(fEnd, now + (duration * 0.65));
-    osc.frequency.exponentialRampToValueAtTime(fEnd * 0.9, now + duration);
-
-    gain.gain.setValueAtTime(0.0001, now);
-    gain.gain.linearRampToValueAtTime(gainStart, now + 0.008);
-    gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
-
-    osc.connect(gain);
-    gain.connect(settingsGlobalGain);
-
-    osc.start(now);
-    osc.stop(now + duration + 0.02);
-  }
-
-  function playSettingsHapticClick(clickFreq, duration, gainStart = 0.10) {
-    const now = settingsAudioCtx.currentTime;
-    const osc = settingsAudioCtx.createOscillator();
-    const gain = settingsAudioCtx.createGain();
-
-    osc.type = "sine";
-    osc.frequency.setValueAtTime(clickFreq * 2.5, now);
-    osc.frequency.exponentialRampToValueAtTime(clickFreq * 0.6, now + duration);
-
-    gain.gain.setValueAtTime(0.0001, now);
-    gain.gain.linearRampToValueAtTime(gainStart, now + 0.002);
-    gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
-
-    const bufferSize = Math.floor(settingsAudioCtx.sampleRate * 0.008);
-    const noiseBuffer = settingsAudioCtx.createBuffer(1, bufferSize, settingsAudioCtx.sampleRate);
-    const output = noiseBuffer.getChannelData(0);
-    for (let i = 0; i < bufferSize; i++) {
-      output[i] = Math.random() * 2 - 1;
-    }
-    const noise = settingsAudioCtx.createBufferSource();
-    noise.buffer = noiseBuffer;
-    const filter = settingsAudioCtx.createBiquadFilter();
-    filter.type = "bandpass";
-    filter.frequency.value = 2800;
-    const noiseGain = settingsAudioCtx.createGain();
-    noiseGain.gain.setValueAtTime(gainStart * 0.35, now);
-    noiseGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.008);
-
-    noise.connect(filter);
-    filter.connect(noiseGain);
-    noiseGain.connect(settingsGlobalGain);
-    noise.start(now);
-
-    osc.connect(gain);
-    gain.connect(settingsGlobalGain);
-    osc.start(now);
-    osc.stop(now + duration);
-  }
+  const settingsSynth = createSoundSynth({ initialVolume: 0.8 });
 
   function playSettingsThemePreview(vol) {
     if (vol <= 0) return;
     const theme = (selectSoundTheme && selectSoundTheme.value) || "zen";
-    try {
-      initSettingsAudioCtx(vol);
-      if (theme === "rhodes") {
-        playSettingsRhodes(440.00, 0.65, 0.07);
-        setTimeout(() => { playSettingsRhodes(554.37, 0.80, 0.07); }, 90);
-      } else if (theme === "scifi") {
-        playSettingsSciFi(440.00, 880.00, 0.22, 0.055);
-      } else if (theme === "classic") {
-        playSettingsBell(440.00, 0.45, 0.06);
-        setTimeout(() => { playSettingsBell(659.25, 0.60, 0.06); }, 90);
-      } else if (theme === "bubble") {
-        playSettingsWaterDrop(400, 950, 0.12, 0.08);
-      } else if (theme === "haptic") {
-        playSettingsHapticClick(180, 0.03, 0.12);
-      } else {
-        // Default: zen
-        playSettingsBowl(174.61, 1.2, 0.08);
-      }
-    } catch (_) {}
+    settingsSynth.setVolume(Math.max(0, Math.min(1.0, vol / 100)));
+    settingsSynth.playStart(theme);
   }
+
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) {
+      settingsSynth.suspend();
+      if (engineFastPollTimer) {
+        clearInterval(engineFastPollTimer);
+        engineFastPollTimer = null;
+      }
+    } else if (isSettingsLoaded && radioLocal && radioLocal.checked) {
+      refreshEngineHealth();
+    }
+  });
 
   function updateVolumeSliderVisuals(val) {
     const v = Math.max(0, Math.min(100, Math.round(val)));
@@ -4343,21 +4197,83 @@ const btnSaveSettings = document.getElementById("btn-save-settings");
   let previousSelProvider = selectProvider ? selectProvider.value : "gemini";
 
   function renderProviderKeyInput() {
-    const provider = selectProvider ? selectProvider.value : "gemini";
+    const provider = selectProvider
+      ? selectProvider.value
+      : (selectEditCloudProvider ? selectEditCloudProvider.value : "gemini");
     const val = apiKeys[provider] || "";
+    const hasSaved = Boolean(apiKeyPresent[provider]);
     const providerDict = i18nDict[currentLanguage] || i18nDict.ru;
-    const placeholder = apiKeyPresent[provider]
+    const placeholder = hasSaved
       ? providerDict.key_saved_placeholder || "•••••••• (saved securely)"
       : providerDict.key_placeholder || "Enter API key";
 
     if (apiKeyInput) {
       apiKeyInput.value = val;
       apiKeyInput.placeholder = placeholder;
+      const wrapper = apiKeyInput.closest(".api-key-input-wrapper");
+      if (wrapper) {
+        wrapper.classList.toggle("has-saved-key", hasSaved);
+      }
+    }
+    if (clearKeyBtn) {
+      clearKeyBtn.hidden = !hasSaved;
     }
     if (apiKeyInputEdit) {
       apiKeyInputEdit.value = val;
       apiKeyInputEdit.placeholder = placeholder;
+      const editWrapper = apiKeyInputEdit.closest(".api-key-input-wrapper");
+      if (editWrapper) {
+        editWrapper.classList.toggle("has-saved-key", hasSaved);
+      }
     }
+    if (clearKeyEditBtn) {
+      clearKeyEditBtn.hidden = !hasSaved;
+    }
+  }
+
+  let isClearingApiKey = false;
+  async function clearSavedProviderKey(targetInput) {
+    if (isClearingApiKey) return;
+    const provider = selectProvider
+      ? selectProvider.value
+      : (selectEditCloudProvider ? selectEditCloudProvider.value : "gemini");
+    if (!apiKeyPresent[provider]) return;
+    isClearingApiKey = true;
+    if (clearKeyBtn) clearKeyBtn.disabled = true;
+    if (clearKeyEditBtn) clearKeyEditBtn.disabled = true;
+    pendingSelfSaves += 1;
+    try {
+      await invoke("set_provider_key", { provider, key: "" });
+      apiKeyPresent[provider] = false;
+      apiKeyDirty[provider] = false;
+      apiKeys[provider] = "";
+      renderProviderKeyInput();
+      showStatus(getTranslation("api_key_cleared"), "neutral");
+      if (targetInput && typeof targetInput.focus === "function") {
+        targetInput.focus({ preventScroll: true });
+      }
+    } catch (err) {
+      console.error(`Failed to clear ${provider} key:`, err);
+      showStatus(`${getTranslation("status_save_error")}${localizedBackendError(err)}`, true);
+    } finally {
+      pendingSelfSaves = Math.max(0, pendingSelfSaves - 1);
+      lastSelfSaveFinishedAt = performance.now();
+      if (clearKeyBtn) clearKeyBtn.disabled = false;
+      if (clearKeyEditBtn) clearKeyEditBtn.disabled = false;
+      isClearingApiKey = false;
+    }
+  }
+
+  if (clearKeyBtn) {
+    clearKeyBtn.addEventListener("click", () => {
+      clearSavedProviderKey(apiKeyInput);
+    });
+  }
+
+  if (clearKeyEditBtn) {
+    clearKeyEditBtn.addEventListener("click", () => {
+      clearSavedProviderKey(apiKeyInputEdit);
+    });
   }
 
   function handleProviderChange(newProvider) {
@@ -4378,21 +4294,39 @@ const btnSaveSettings = document.getElementById("btn-save-settings");
     autosave.mark(true);
   }
 
+  function syncEditedApiKeyValue(provider, rawValue, sourceInput) {
+    const trimmed = (rawValue || "").trim();
+    apiKeys[provider] = rawValue;
+    if (sourceInput === apiKeyInput && apiKeyInputEdit) {
+      apiKeyInputEdit.value = rawValue;
+    } else if (sourceInput === apiKeyInputEdit && apiKeyInput) {
+      apiKeyInput.value = rawValue;
+    }
+    if (!trimmed && apiKeyPresent[provider]) {
+      apiKeys[provider] = "";
+      apiKeyDirty[provider] = false;
+      renderProviderKeyInput();
+      return false;
+    }
+    apiKeyDirty[provider] = true;
+    return true;
+  }
+
   if (apiKeyInput) {
     apiKeyInput.addEventListener("input", () => {
       const provider = selectProvider ? selectProvider.value : "gemini";
-      apiKeys[provider] = apiKeyInput.value;
-      apiKeyDirty[provider] = true;
-      if (apiKeyInputEdit) apiKeyInputEdit.value = apiKeyInput.value;
+      if (syncEditedApiKeyValue(provider, apiKeyInput.value, apiKeyInput)) {
+        autosave.mark(false);
+      }
     });
   }
 
   if (apiKeyInputEdit) {
     apiKeyInputEdit.addEventListener("input", () => {
       const provider = selectProvider ? selectProvider.value : (selectEditCloudProvider ? selectEditCloudProvider.value : "gemini");
-      apiKeys[provider] = apiKeyInputEdit.value;
-      apiKeyDirty[provider] = true;
-      if (apiKeyInput) apiKeyInput.value = apiKeyInputEdit.value;
+      if (syncEditedApiKeyValue(provider, apiKeyInputEdit.value, apiKeyInputEdit)) {
+        autosave.mark(false);
+      }
     });
   }
 
@@ -4442,10 +4376,14 @@ const btnSaveSettings = document.getElementById("btn-save-settings");
   }
 
   let selectedModelName = "base";
+  let committedModelName = "base";
+  let committedLocalEngine = "whisper";
   let lastSelectedWhisperModel = "large-v3-turbo-q5_0";
   let selectedLlmModel = "qwen3-1.7b";
   let disabledEditCommands = [];
   let activeLocalAcceleration = "cpu";
+  let pendingSelfSaves = 0;
+  let lastSelfSaveFinishedAt = 0;
 
   let isSettingsLoaded = false;
   let hasCompletedOnboarding = false;
@@ -4470,7 +4408,7 @@ const btnSaveSettings = document.getElementById("btn-save-settings");
       return;
     }
 
-    replacements.forEach((rep, index) => {
+    replacements.forEach((rep) => {
       const item = document.createElement("div");
       item.className = "replacement-item";
 
@@ -4505,9 +4443,12 @@ const btnSaveSettings = document.getElementById("btn-save-settings");
         if (item.classList.contains("is-deleting")) return;
         item.classList.add("is-deleting");
         setTimeout(() => {
-          currentReplacements.splice(index, 1);
-          renderReplacementsList(currentReplacements);
-          autosave.mark(true);
+          const currentIdx = currentReplacements.indexOf(rep);
+          if (currentIdx !== -1) {
+            currentReplacements.splice(currentIdx, 1);
+            renderReplacementsList(currentReplacements);
+            autosave.mark(true);
+          }
         }, 180);
       });
 
@@ -4619,11 +4560,11 @@ const btnSaveSettings = document.getElementById("btn-save-settings");
 
     const groupLlmModels = document.getElementById("group-llm-models");
     const inputs = [
-      radioCloud, radioLocal, selectProvider, selectEditCloudProvider, apiKeyInput, apiKeyInputEdit,
+      radioCloud, radioLocal, selectProvider, selectEditCloudProvider,
       inputCustomUrl, inputEditCustomUrl, inputCustomModel, inputEditCustomModel, selectHotkey,
       selectLanguage, textareaDictionary, checkboxToggle, checkboxCloudFallback,
       checkboxAutostart, checkboxAutomaticUpdateChecks, checkboxStreaming, checkboxSounds,
-      selectSoundTheme, rangeVolume, selectLocalEngine, checkboxCopyContext, checkboxLogSpeechText,
+      selectSoundTheme, rangeVolume, checkboxCopyContext, checkboxLogSpeechText,
       checkboxOverlayTimer, checkboxGamingAuto, selectVramStandby, selectAiEditMode, selectTranslateTarget,
       checkboxSmartContext, checkboxSmartContextTrailingPeriod
     ];
@@ -4647,14 +4588,10 @@ const btnSaveSettings = document.getElementById("btn-save-settings");
         const needsLocal = mode === "auto" || mode === "local";
         const needsCloud = mode === "auto" || mode === "cloud";
         if (groupLlmModels) {
-          const wasHidden = groupLlmModels.style.display === "none";
           groupLlmModels.style.display = needsLocal ? "" : "none";
-          if (needsLocal && wasHidden) replayEngineSwitchFade(groupLlmModels);
         }
         if (groupCloud) {
-          const wasHidden = groupCloud.style.display === "none";
           groupCloud.style.display = needsCloud ? "" : "none";
-          if (needsCloud && wasHidden) replayEngineSwitchFade(groupCloud);
         }
       }
     };
@@ -4676,9 +4613,9 @@ const btnSaveSettings = document.getElementById("btn-save-settings");
 
     const checkboxGamingMode = document.getElementById("checkbox-gaming-mode");
 
-    updateGamingModeUi = function(isActive) {
+    updateGamingModeUi = function(manualEnabled) {
       if (checkboxGamingMode) {
-        checkboxGamingMode.checked = isActive;
+        checkboxGamingMode.checked = !!manualEnabled;
       }
     };
 
@@ -4704,10 +4641,17 @@ const btnSaveSettings = document.getElementById("btn-save-settings");
       });
     }
 
-    listen("gaming-mode-changed", (event) => {
+    listen("gaming-mode-changed", async (event) => {
       if (typeof event.payload === "boolean") {
-        updateGamingModeUi(event.payload);
-        updatePerformanceSummary();
+        if (!isTogglingGaming) {
+          try {
+            const latest = await invoke("get_settings");
+            if (latest) {
+              updateGamingModeUi(!!latest.gaming_mode_enabled);
+              updatePerformanceSummary();
+            }
+          } catch (_) {}
+        }
         refreshEngineHealth();
       }
     });
@@ -4723,10 +4667,11 @@ const btnSaveSettings = document.getElementById("btn-save-settings");
       return selectedLlmModel === model;
     }
     if (model === "parakeet-v3") {
-      return selectedModelName === model
+      return committedModelName === model
+        || selectedModelName === model
         || Boolean(selectLocalEngine && selectLocalEngine.value === "parakeet");
     }
-    return selectedModelName === model;
+    return committedModelName === model || selectedModelName === model;
   }
 
   // WAI-ARIA radio group: arrow keys move between cards within the same group
@@ -4747,7 +4692,7 @@ const btnSaveSettings = document.getElementById("btn-save-settings");
       }
     });
 
-    card.addEventListener("keydown", async (e) => {
+    card.addEventListener("keydown", (e) => {
       if (e.target.closest("[data-static]")) {
         return;
       }
@@ -4758,7 +4703,6 @@ const btnSaveSettings = document.getElementById("btn-save-settings");
       if (e.key === "Enter" || e.key === " ") {
         e.preventDefault();
         const model = card.dataset.model;
-        const downloaded = await invoke("get_downloaded_models").catch(() => []);
         if (modelCardsView.isDownloaded(model)) {
           selectModelCard(model);
         }
@@ -4787,16 +4731,15 @@ const btnSaveSettings = document.getElementById("btn-save-settings");
     });
   });
 
-  function selectModelCard(model, markModified = true) {
+  function selectModelCard(model, markModified = true, forceSave = false) {
     if (model.startsWith("qwen3-")) {
       // Local edit models are a separate setting (settings.llm_model); they
       // must never overwrite the ASR model_name selection.
       const isDownloaded = modelCardsView.isDownloaded(model);
-      if (selectedLlmModel !== model) {
-        selectedLlmModel = model;
-        if (markModified) {
-          autosave.mark(true);
-        }
+      const changed = selectedLlmModel !== model;
+      selectedLlmModel = model;
+      if (markModified && (changed || forceSave) && isDownloaded) {
+        autosave.mark(true);
       }
       modelCards.forEach(c => {
         if (!c.dataset.model.startsWith("qwen3-")) {
@@ -4813,11 +4756,19 @@ const btnSaveSettings = document.getElementById("btn-save-settings");
     if (model !== "parakeet-v3") {
       lastSelectedWhisperModel = model;
     }
-    if (selectedModelName !== model) {
-      selectedModelName = model;
-      if (markModified) {
-        autosave.mark(true);
+    const changed = selectedModelName !== model;
+    selectedModelName = model;
+    const isInstalled = modelCardsView.isDownloaded(model);
+    if (isInstalled) {
+      committedModelName = model;
+      if (model === "parakeet-v3" && selectLocalEngine && selectLocalEngine.value === "parakeet") {
+        committedLocalEngine = "parakeet";
+      } else if (model !== "parakeet-v3") {
+        committedLocalEngine = "whisper";
       }
+    }
+    if (markModified && (changed || forceSave) && isInstalled) {
+      autosave.mark(true);
     }
     modelCards.forEach(c => {
       if (c.dataset.model.startsWith("qwen3-")) {
@@ -4856,10 +4807,12 @@ const btnSaveSettings = document.getElementById("btn-save-settings");
           radioCloud.checked = true;
         }
         
+        committedLocalEngine = settings.local_engine || "whisper";
+        committedModelName = settings.model_name || "base";
         if (settings.model_name && settings.model_name !== "parakeet-v3") {
           lastSelectedWhisperModel = settings.model_name;
         }
-        selectModelCard(settings.model_name || "base", false);
+        selectModelCard(committedModelName, false);
         if (typeof settings.ai_edit_mode === "string") {
           const aiEditSelect = document.getElementById("select-ai-edit-mode");
           if (aiEditSelect) {
@@ -4982,12 +4935,7 @@ const btnSaveSettings = document.getElementById("btn-save-settings");
         if (checkboxGamingMode) {
           checkboxGamingMode.checked = !!settings.gaming_mode_enabled;
         }
-        try {
-          const isGamingActive = await invoke("get_gaming_mode_state");
-          updateGamingModeUi(isGamingActive);
-        } catch (_) {
-          updateGamingModeUi(!!settings.gaming_mode_enabled);
-        }
+        updateGamingModeUi(!!settings.gaming_mode_enabled);
         const checkboxGamingAuto = document.getElementById("checkbox-gaming-mode-auto-detect");
         if (checkboxGamingAuto) {
           checkboxGamingAuto.checked = !!settings.gaming_mode_auto_detect;
@@ -5014,6 +4962,8 @@ const btnSaveSettings = document.getElementById("btn-save-settings");
         updateEngineUI(true);
         await loadAudioDevices(settings.audio_input_device || "default");
         await modelCardsView.refresh();
+        committedLocalEngine = settings.local_engine || "whisper";
+        committedModelName = settings.model_name || "base";
 
         activeLocalAcceleration = settings.local_acceleration || "cpu";
         selectGpuProvider(activeLocalAcceleration);
@@ -5033,7 +4983,7 @@ const btnSaveSettings = document.getElementById("btn-save-settings");
         });
         if (!engineHealthTimer) {
           engineHealthTimer = setInterval(() => {
-            if (document.hasFocus()) {
+            if (!document.hidden && document.hasFocus()) {
               refreshEngineHealth();
             }
           }, 10000);
@@ -5060,8 +5010,9 @@ const btnSaveSettings = document.getElementById("btn-save-settings");
       apiKeys[selectProvider.value] = apiKeyInput.value.trim();
 
       const settings = collectFormSettings({
-        modelName: selectedModelName,
+        modelName: committedModelName,
         llmModel: selectedLlmModel,
+        localEngine: committedLocalEngine,
         uiLanguage: currentLanguage,
         transcriptionMode: radioLocal.checked ? "local" : "cloud",
         apiProvider: selectProvider.value,
@@ -5072,11 +5023,20 @@ const btnSaveSettings = document.getElementById("btn-save-settings");
         disabledEditCommands,
       });
 
-const autostartWarning = await invoke("set_settings", { settings });
+      pendingSelfSaves += 1;
+      const autostartWarning = await invoke("set_settings", { settings }).finally(() => {
+        pendingSelfSaves = Math.max(0, pendingSelfSaves - 1);
+        lastSelfSaveFinishedAt = performance.now();
+      });
       const failedProviders = [];
       for (const provider of ["gemini", "openai", "groq", "huggingface", "custom"]) {
         if (apiKeyDirty[provider]) {
-          const key = apiKeys[provider].trim();
+          const key = (apiKeys[provider] || "").trim();
+          if (!key && apiKeyPresent[provider]) {
+            apiKeyDirty[provider] = false;
+            apiKeys[provider] = "";
+            continue;
+          }
           try {
             await invoke("set_provider_key", { provider, key });
             apiKeyPresent[provider] = key.length > 0;
@@ -5227,7 +5187,15 @@ const autostartWarning = await invoke("set_settings", { settings });
   // Cross-window sync: tray-driven changes, live history updates and
   // streaming degradation notices emitted by the Rust side.
   listen("settings-changed", () => {
-    if (!isSettingsLoaded || autosave.isSaving() || autosave.isDirty()) return;
+    if (
+      !isSettingsLoaded ||
+      autosave.isSaving() ||
+      autosave.isDirty() ||
+      pendingSelfSaves > 0 ||
+      performance.now() - lastSelfSaveFinishedAt < 350
+    ) {
+      return;
+    }
     loadSettings();
   });
 
@@ -5429,14 +5397,13 @@ cancelBtn.addEventListener("click", (e) => {
     const fillEl = document.getElementById(`fill-gpu-${progress.provider}`);
     const percentEl = document.getElementById(`pct-gpu-${progress.provider}`);
     const progressEl = document.getElementById(`progress-gpu-${progress.provider}`);
-    const actionEl = document.getElementById(`action-gpu-${progress.provider}`);
 
     if (fillEl && percentEl) {
       if (progress.status === "installing") {
         if (progressEl) progressEl.classList.add("installing");
         fillEl.style.width = "100%";
         const installText = getTranslation("gpu_status_installing") || "Установка...";
-        percentEl.innerHTML = `<span class="spinner-inline" aria-hidden="true"></span> ${installText}`;
+        setSpinnerWithText(percentEl, installText);
       } else {
         if (progressEl) progressEl.classList.remove("installing");
         const percentage = typeof progress.percentage === 'number' ? Math.round(progress.percentage) : 0;
@@ -5446,14 +5413,16 @@ cancelBtn.addEventListener("click", (e) => {
     }
 
     if (progress.done) {
-      if (progressEl) {
-        progressEl.classList.remove("installing");
-        const cancelBtn = progressEl.querySelector(".btn-cancel-download");
-        if (cancelBtn) cancelBtn.remove();
-        progressEl.style.display = "none";
+      const wasDrivenByLocalDownload = activeGpuDownloads.delete(progress.provider);
+      if (!wasDrivenByLocalDownload) {
+        if (progressEl) {
+          progressEl.classList.remove("installing");
+          const cancelBtn = progressEl.querySelector(".btn-cancel-download");
+          if (cancelBtn) cancelBtn.remove();
+          progressEl.style.display = "none";
+        }
+        updateGpuCardStates();
       }
-      if (actionEl) actionEl.style.display = "flex";
-      updateGpuCardStates();
     }
   });
 
@@ -5532,6 +5501,11 @@ card.addEventListener("keydown", async (e) => {
         return;
       }
 
+      const previousFocus = document.activeElement instanceof HTMLElement
+        && document.activeElement !== document.body
+        ? document.activeElement
+        : null;
+
       titleEl.textContent = title;
       msgEl.textContent = message;
       btnOk.textContent = confirmText;
@@ -5555,7 +5529,11 @@ card.addEventListener("keydown", async (e) => {
           const button = document.createElement("button");
           button.type = "button";
           button.className = "modal-link-button";
-          button.innerHTML = `<span>${label}</span>${getIcon("external", { size: 11, className: "link-icon" })}`;
+          const labelSpan = document.createElement("span");
+          labelSpan.textContent = label;
+          const iconWrap = document.createElement("span");
+          iconWrap.innerHTML = getIcon("external", { size: 11, className: "link-icon" });
+          button.append(labelSpan, ...iconWrap.childNodes);
           button.addEventListener("click", () => {
             invoke("open_url", { url }).catch(console.error);
           });
@@ -5564,6 +5542,7 @@ card.addEventListener("keydown", async (e) => {
       }
       if (modal.open) modal.close();
       modal.showModal();
+      btnCancel.focus({ preventScroll: true });
       requestAnimationFrame(() => modal.classList.add("active"));
 
       let settled = false;
@@ -5578,6 +5557,9 @@ card.addEventListener("keydown", async (e) => {
         linksEl.hidden = true;
         setTimeout(() => {
           if (modal.open) modal.close();
+          if (previousFocus && document.contains(previousFocus)) {
+            previousFocus.focus({ preventScroll: true });
+          }
           resolve(result);
         }, 160);
       }
@@ -5859,6 +5841,20 @@ if (e.button === 0 && !e.target.closest(".window-control-btn") && !e.target.clos
       const toggleKeyText = dict.api_key_toggle_visibility || "Show/hide key";
       btnToggleKeyEdit.setAttribute("aria-label", toggleKeyText);
       btnToggleKeyEdit.setAttribute("title", toggleKeyText);
+    }
+
+    const btnClearKey = document.getElementById("btn-clear-key");
+    if (btnClearKey) {
+      const clearKeyText = dict.clear_api_key_tooltip || "Remove saved key";
+      btnClearKey.setAttribute("aria-label", clearKeyText);
+      btnClearKey.setAttribute("title", clearKeyText);
+    }
+
+    const btnClearKeyEdit = document.getElementById("btn-clear-key-edit");
+    if (btnClearKeyEdit) {
+      const clearKeyText = dict.clear_api_key_tooltip || "Remove saved key";
+      btnClearKeyEdit.setAttribute("aria-label", clearKeyText);
+      btnClearKeyEdit.setAttribute("title", clearKeyText);
     }
 
     const historyFiltersGroup = document.querySelector(".history-filters");
@@ -6159,6 +6155,9 @@ if (e.button === 0 && !e.target.closest(".window-control-btn") && !e.target.clos
             await file.text(),
             Object.keys(current || {})
           );
+          const importedCustomUrl = typeof candidate.custom_api_url === "string"
+            ? candidate.custom_api_url.trim()
+            : "";
           const confirmed = await showConfirm(
             getTranslation("backup_title"),
             getTranslation("backup_import_confirm"),
@@ -6166,7 +6165,20 @@ if (e.button === 0 && !e.target.closest(".window-control-btn") && !e.target.clos
             getTranslation("confirm_cancel")
           );
           if (!confirmed) return;
-          await invoke("set_settings", { settings: candidate });
+          if (importedCustomUrl) {
+            const customUrlConfirmed = await showConfirm(
+              getTranslation("api_custom_url"),
+              `${getTranslation("api_custom_url")}: ${importedCustomUrl}`,
+              getTranslation("confirm_ok"),
+              getTranslation("confirm_cancel")
+            );
+            if (!customUrlConfirmed) return;
+          }
+          pendingSelfSaves += 1;
+          await invoke("set_settings", { settings: candidate }).finally(() => {
+            pendingSelfSaves = Math.max(0, pendingSelfSaves - 1);
+            lastSelfSaveFinishedAt = performance.now();
+          });
           window.location.reload();
         } catch (err) {
           console.error("Failed to import settings", err);
@@ -6193,6 +6205,7 @@ if (e.button === 0 && !e.target.closest(".window-control-btn") && !e.target.clos
   }
 
   let updateAvailable = false;
+  let isInstallingUpdate = false;
 
   async function checkForUpdates(announceNoUpdate = false) {
     const checkButton = document.getElementById("btn-check-updates");
@@ -6223,11 +6236,17 @@ if (e.button === 0 && !e.target.closest(".window-control-btn") && !e.target.clos
   }
 
   async function installAvailableUpdate() {
-    if (!updateAvailable) {
-      await checkForUpdates(true);
-      if (!updateAvailable) return;
+    if (isInstallingUpdate) return;
+    isInstallingUpdate = true;
+    if (updateBadge) {
+      updateBadge.disabled = true;
+      updateBadge.setAttribute("aria-disabled", "true");
     }
     try {
+      if (!updateAvailable) {
+        await checkForUpdates(true);
+        if (!updateAvailable) return;
+      }
       showStatus(getTranslation("update_installing"));
       await invoke("install_app_update");
       showStatus(getTranslation("update_installed_restarting"), "success");
@@ -6238,6 +6257,12 @@ if (e.button === 0 && !e.target.closest(".window-control-btn") && !e.target.clos
       invoke("open_url", {
         url: "https://github.com/malashkadev/aura/releases/latest"
       }).catch((openError) => console.error("Failed to open release page", openError));
+    } finally {
+      isInstallingUpdate = false;
+      if (updateBadge) {
+        updateBadge.disabled = false;
+        updateBadge.removeAttribute("aria-disabled");
+      }
     }
   }
 
@@ -6282,8 +6307,12 @@ if (e.button === 0 && !e.target.closest(".window-control-btn") && !e.target.clos
     localStorage.setItem("aura_ui_lang", savedUiLang);
     localStorage.setItem("ui-language", savedUiLang);
     if (settings && settings.ui_language !== savedUiLang) {
+      pendingSelfSaves += 1;
       invoke("set_ui_language", { uiLanguage: savedUiLang }).catch(error => {
         console.error("Failed to migrate interface language", error);
+      }).finally(() => {
+        pendingSelfSaves = Math.max(0, pendingSelfSaves - 1);
+        lastSelfSaveFinishedAt = performance.now();
       });
     }
 
@@ -6297,10 +6326,14 @@ if (e.button === 0 && !e.target.closest(".window-control-btn") && !e.target.clos
         localStorage.setItem("aura_ui_lang", selectedLang);
         localStorage.setItem("ui-language", selectedLang);
         applyLanguage(selectedLang);
+        pendingSelfSaves += 1;
         try {
           await invoke("set_ui_language", { uiLanguage: selectedLang });
         } catch (error) {
           console.error("Failed to persist interface language", error);
+        } finally {
+          pendingSelfSaves = Math.max(0, pendingSelfSaves - 1);
+          lastSelfSaveFinishedAt = performance.now();
         }
       });
     }

@@ -212,6 +212,9 @@
               <label for="input-api-key" class="field-label" data-i18n="api_key">API-ключ</label>
               <div class="api-key-input-wrapper">
                 <input type="password" id="input-api-key" class="custom-input" placeholder="Введите ваш API-ключ..." autocomplete="off" />
+                <button type="button" class="btn-clear-api-key" id="btn-clear-key" title="Удалить сохранённый ключ" aria-label="Удалить сохранённый ключ" hidden>
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="clear-key-icon" aria-hidden="true"><path d="M4 7h16"></path></svg>
+                </button>
                 <button type="button" class="btn-toggle-visibility" id="btn-toggle-key" aria-label="Показать/скрыть ключ">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="eye-icon"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
                 </button>
@@ -536,7 +539,7 @@
             <h2 class="card-title" data-i18n="vocab_title">Словарь</h2>
             <p class="card-desc" data-i18n="vocab_desc">Термины и имена через запятую.</p>
             <div class="form-group">
-              <textarea id="textarea-dictionary" class="custom-textarea" placeholder="Например: Аура, коммит, репозиторий..." autocomplete="off"></textarea>
+              <textarea id="textarea-dictionary" class="custom-textarea" maxlength="4096" placeholder="Например: Аура, коммит, репозиторий..." autocomplete="off"></textarea>
             </div>
           </div>
 
@@ -750,6 +753,9 @@
                           <label for="input-edit-api-key" class="field-label" data-i18n="api_key">API-ключ</label>
                           <div class="api-key-input-wrapper">
                             <input type="password" id="input-edit-api-key" class="custom-input" placeholder="Введите ваш API-ключ..." autocomplete="off" />
+                            <button type="button" class="btn-clear-api-key" id="btn-clear-key-edit" title="Удалить сохранённый ключ" aria-label="Удалить сохранённый ключ" hidden>
+                              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="clear-key-icon" aria-hidden="true"><path d="M4 7h16"></path></svg>
+                            </button>
                             <button type="button" class="btn-toggle-visibility" id="btn-toggle-key-edit" aria-label="Показать/скрыть ключ">
                               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="eye-icon"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
                             </button>

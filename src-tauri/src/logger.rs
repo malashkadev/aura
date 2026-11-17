@@ -45,18 +45,27 @@ pub fn init(log_dir: PathBuf) {
         eprintln!("[LOGGER ERROR] Failed to create log directory: {}", e);
         return;
     }
+    let _ = crate::secure_storage::apply_restrictive_acl(&log_dir);
 
     let (tx, rx) = mpsc::sync_channel::<String>(LOGGER_QUEUE_CAPACITY);
     let dir = log_dir.clone();
 
     thread::spawn(move || {
+        let mut acl_applied = false;
         while let Ok(msg) = rx.recv() {
             if let Err(e) = rotate_logs_if_needed(&dir, MAX_LOG_SIZE) {
                 eprintln!("[LOGGER ERROR] Failed log rotation: {}", e);
             }
             let log_path = dir.join(LOG_FILE_NAME);
+            let existed = log_path.exists();
             if let Ok(mut file) = OpenOptions::new().create(true).append(true).open(&log_path) {
                 let _ = writeln!(file, "{}", msg);
+                drop(file);
+                if (!existed || !acl_applied)
+                    && crate::secure_storage::apply_restrictive_acl(&log_path).is_ok()
+                {
+                    acl_applied = true;
+                }
             }
         }
     });
@@ -122,16 +131,19 @@ pub fn log_panic_sync(message: &str) {
     };
 
     let _ = fs::create_dir_all(&log_dir);
-    if let Ok(mut file) = OpenOptions::new()
-        .create(true)
-        .append(true)
-        .open(log_dir.join(LOG_FILE_NAME))
-    {
+    let _ = crate::secure_storage::apply_restrictive_acl(&log_dir);
+    let log_path = log_dir.join(LOG_FILE_NAME);
+    let existed = log_path.exists();
+    if let Ok(mut file) = OpenOptions::new().create(true).append(true).open(&log_path) {
         let _ = writeln!(file, "{}", line);
+        drop(file);
+        if !existed {
+            let _ = crate::secure_storage::apply_restrictive_acl(&log_path);
+        }
     }
 }
 
-pub fn log(level: &str, tag: &str, session: Option<&str>, message: &str) {
+fn format_log_line(level: &str, tag: &str, session: Option<&str>, message: &str) -> String {
     let timestamp = format_timestamp(SystemTime::now());
     let level_str = level.to_uppercase();
     let session_str = match session {
@@ -139,11 +151,14 @@ pub fn log(level: &str, tag: &str, session: Option<&str>, message: &str) {
         Some(s) => format!(" [{}]", s),
         None => String::new(),
     };
-
-    let formatted_line = format!(
+    format!(
         "{} [{}] [{}]{} {}",
         timestamp, level_str, tag, session_str, message
-    );
+    )
+}
+
+pub fn log(level: &str, tag: &str, session: Option<&str>, message: &str) {
+    let formatted_line = format_log_line(level, tag, session, message);
     eprintln!("{}", formatted_line);
 
     let lock = match LOGGER_TX.lock() {
@@ -168,6 +183,22 @@ pub fn log(level: &str, tag: &str, session: Option<&str>, message: &str) {
     }
 }
 
+/// Non-blocking logger safe to call from `WH_KEYBOARD_LL` and real-time callbacks:
+/// never writes to `stderr` (`eprintln!`) and never blocks on `LOGGER_TX`.
+pub fn log_from_hook(level: &str, tag: &str, session: Option<&str>, message: &str) {
+    let Ok(lock) = LOGGER_TX.try_lock() else {
+        DROPPED_LOG_LINES.fetch_add(1, Ordering::Relaxed);
+        return;
+    };
+    let Some(tx) = lock.as_ref() else {
+        return;
+    };
+    let formatted_line = format_log_line(level, tag, session, message);
+    if matches!(tx.try_send(formatted_line), Err(TrySendError::Full(_))) {
+        DROPPED_LOG_LINES.fetch_add(1, Ordering::Relaxed);
+    }
+}
+
 pub fn rotate_logs_if_needed(log_dir: &Path, max_bytes: u64) -> std::io::Result<()> {
     let log_path = log_dir.join(LOG_FILE_NAME);
     if log_path.exists() {
@@ -184,6 +215,7 @@ pub fn rotate_logs_if_needed(log_dir: &Path, max_bytes: u64) -> std::io::Result<
                 }
                 let _ = fs::rename(&log_path, &log_1_path);
                 File::create(&log_path)?;
+                let _ = crate::secure_storage::apply_restrictive_acl(&log_path);
             }
         }
     }
@@ -922,26 +954,88 @@ fn redact_profile_paths(report: &str, profile_dir: &str) -> String {
     redacted
 }
 
+fn sanitize_single_log_line(line: &str) -> String {
+    if let Some(pos) = line.find("Final result: ") {
+        let start = pos + "Final result: ".len();
+        let speech = &line[start..];
+        if !speech.starts_with("[REDACTED:") {
+            return format!("{}{}", &line[..start], anonymize_speech(speech, false));
+        }
+        return line.to_string();
+    }
+
+    if let Some(pos) = line.find("for spoken '") {
+        let start = pos + "for spoken '".len();
+        let rest = &line[start..];
+        if let Some(end_rel) = rest
+            .rfind("' (default target lang: ")
+            .or_else(|| rest.rfind('\''))
+        {
+            let speech = &rest[..end_rel];
+            if !speech.starts_with("[REDACTED:") {
+                return format!(
+                    "{}{}{}",
+                    &line[..start],
+                    anonymize_speech(speech, false),
+                    &rest[end_rel..]
+                );
+            }
+        }
+        return line.to_string();
+    }
+
+    if let Some(pos) = line.find("Classifier answer for ") {
+        let start = pos + "Classifier answer for ".len();
+        let rest = &line[start..];
+        if let Some(after_open) = rest.strip_prefix('"') {
+            if let Some(end_rel) = after_open.rfind("\": ") {
+                let speech = &after_open[..end_rel];
+                if !speech.starts_with("[REDACTED:") {
+                    return format!(
+                        "{}\"{}\"{}",
+                        &line[..start],
+                        anonymize_speech(speech, false),
+                        &after_open[end_rel + 1..]
+                    );
+                }
+            }
+        } else if let Some(after_open) = rest.strip_prefix('\'') {
+            if let Some(end_rel) = after_open.rfind("': ") {
+                let speech = &after_open[..end_rel];
+                if !speech.starts_with("[REDACTED:") {
+                    return format!(
+                        "{}'{}'{}",
+                        &line[..start],
+                        anonymize_speech(speech, false),
+                        &after_open[end_rel + 1..]
+                    );
+                }
+            }
+        } else if let Some(end_rel) = rest.find(": ") {
+            let speech = &rest[..end_rel];
+            if !speech.starts_with("[REDACTED:") {
+                return format!(
+                    "{}{}{}",
+                    &line[..start],
+                    anonymize_speech(speech, false),
+                    &rest[end_rel..]
+                );
+            }
+        }
+        return line.to_string();
+    }
+
+    line.to_string()
+}
+
 pub fn sanitize_logs_for_report(logs: &[String], log_speech_text: bool) -> Vec<String> {
     if log_speech_text {
         return logs.to_vec();
     }
 
     logs.iter()
-        .map(|line| {
-            if let Some(pos) = line.find("Final result: ") {
-                let prefix = &line[..pos + "Final result: ".len()];
-                let speech = &line[pos + "Final result: ".len()..];
-                if !speech.starts_with("[REDACTED:") {
-                    let redacted = anonymize_speech(speech, false);
-                    format!("{}{}", prefix, redacted)
-                } else {
-                    line.clone()
-                }
-            } else {
-                line.clone()
-            }
-        })
+        .map(String::as_str)
+        .map(sanitize_single_log_line)
         .collect()
 }
 
@@ -1535,14 +1629,29 @@ mod tests {
         let logs = vec![
             "2026-07-20 00:58:11.597Z [INFO] [ASR] [#session-1] Final result: Hello world test speech".to_string(),
             "2026-07-20 00:58:35.784Z [INFO] [ASR] [#session-2] Final result: [REDACTED: 3 words, 12 chars]".to_string(),
+            "2026-07-20 00:58:40.000Z [INFO] [LLM] Edit intent detected: NotACommand for spoken 'don't share this note' (default target lang: 'en')".to_string(),
+            "2026-07-20 00:58:42.000Z [INFO] [LLM] Classifier answer for \"private spoken phrase\": DICTATION -> Some(true)".to_string(),
         ];
 
         let sanitized_off = sanitize_logs_for_report(&logs, false);
-        assert_eq!(sanitized_off[0], "2026-07-20 00:58:11.597Z [INFO] [ASR] [#session-1] Final result: [REDACTED: 4 words, 23 chars]");
-        assert_eq!(sanitized_off[1], "2026-07-20 00:58:35.784Z [INFO] [ASR] [#session-2] Final result: [REDACTED: 3 words, 12 chars]");
+        assert_eq!(
+            sanitized_off[0],
+            "2026-07-20 00:58:11.597Z [INFO] [ASR] [#session-1] Final result: [REDACTED: 4 words, 23 chars]"
+        );
+        assert_eq!(
+            sanitized_off[1],
+            "2026-07-20 00:58:35.784Z [INFO] [ASR] [#session-2] Final result: [REDACTED: 3 words, 12 chars]"
+        );
+        assert_eq!(
+            sanitized_off[2],
+            "2026-07-20 00:58:40.000Z [INFO] [LLM] Edit intent detected: NotACommand for spoken '[REDACTED: 4 words, 21 chars]' (default target lang: 'en')"
+        );
+        assert_eq!(
+            sanitized_off[3],
+            "2026-07-20 00:58:42.000Z [INFO] [LLM] Classifier answer for \"[REDACTED: 3 words, 21 chars]\": DICTATION -> Some(true)"
+        );
 
         let sanitized_on = sanitize_logs_for_report(&logs, true);
-        assert_eq!(sanitized_on[0], logs[0]);
-        assert_eq!(sanitized_on[1], logs[1]);
+        assert_eq!(sanitized_on, logs);
     }
 }

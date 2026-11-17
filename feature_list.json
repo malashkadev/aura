@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "updated": "2026-11-15",
-  "source": "AUDIT_2026-11-15",
+  "updated": "2026-11-18",
+  "source": "AUDIT_2026-11-18",
   "features": [
     {
       "id": "feat-001",
@@ -18,7 +18,7 @@
       "status": "done",
       "priority": "P0",
       "commit": "793579f",
-      "evidence": "npm run audit exit 0 with 10 PASS results; npm test 49/49; negative exit-code checks for CSS, titles, hardcoded text, ARIA, elements and dynamic strings",
+      "evidence": "npm run audit exit 0 with 10 PASS results via single-process scripts/run-all-audits.mjs (~140 ms); dynamic src/*.js and 3-window coverage; negative exit-code propagation",
       "depends_on": ["feat-001"]
     },
     {
@@ -26,6 +26,7 @@
       "title": "Harness artifacts and startup entrypoint",
       "status": "done",
       "priority": "P0",
+      "commit": "fa02b6a",
       "evidence": "init.sh, init.ps1, progress.md, session-handoff.md, feature_list.json, ROADMAP.md; AGENTS.md has no stale artifact or storybook references",
       "depends_on": []
     },
@@ -34,6 +35,7 @@
       "title": "Product and design records tracked and corrected",
       "status": "done",
       "priority": "P1",
+      "commit": "fa02b6a",
       "evidence": "PRODUCT.md rewritten without filler-removal or neon claims; PRODUCT.md and DESIGN.md tracked in git",
       "depends_on": ["feat-003"]
     },
@@ -43,16 +45,16 @@
       "status": "done",
       "priority": "P2",
       "commit": "1d0f204, f04c0c2, 1fd16fc, 404363d",
-      "evidence": "npm test 53/53; npm run audit 10/10 PASS; cargo test 239 passed; init.ps1 exit 0; pre-JS select fallback screenshot captured",
+      "evidence": "cached_or_load_settings_without_secrets eliminates idle DPAPI/lsass calls; gaming-mode checkbox isolated from 3D auto-detect; uninstalled engine browsing isolated from committed settings; explicit API-key clear across Speech/Text tabs",
       "depends_on": ["feat-003"]
     },
     {
       "id": "feat-006",
-      "title": "Security hygiene: HTTPS custom URL, temp WAV sweep, yanked dependency update",
+      "title": "Security hygiene: HTTPS custom URL, temp WAV sweep, yanked dependency update, least-privilege IPC",
       "status": "done",
       "priority": "P2",
       "commit": "8e842ab, 7978a47, 8580b3e",
-      "evidence": "npm test 54/54; cargo test 241 passed; cargo audit 0 CVE / 10 allowed warnings; init.ps1 exit 0; withGlobalTauri kept with capabilities as the tested boundary",
+      "evidence": "tray-menu narrowed to set_transcription_mode/set_recognition_language; dead reprocess_history_text removed; open_url HTTPS+host allowlist; log_frontend_event sanitized; streaming VAD truncation preserves 2-ACE DACL; history.dpapi corrupt-blob quarantine tested",
       "depends_on": ["feat-003"]
     },
     {
@@ -61,7 +63,7 @@
       "status": "done",
       "priority": "P2",
       "commit": "19eb873",
-      "evidence": "npm test guard passes; cargo test 237 passed; 12 MB sidecar binary and provenance entry removed; no run_punctuation references remain",
+      "evidence": "npm test guard passes; cargo test passes; 12 MB sidecar binary and provenance entry removed; no run_punctuation references remain",
       "depends_on": ["feat-006"]
     },
     {
@@ -78,8 +80,8 @@
       "title": "Modularize main.js by responsibility",
       "status": "in_progress",
       "priority": "P1",
-      "commit": "31a82ae, 2e05c6e, 2ede29f, 8dc69e0",
-      "evidence": "history -> src/history-view.js; model cards -> src/model-cards.js; autosave -> src/settings-autosave.js with unit tests; form collection -> src/settings-form.js; DOMContentLoaded init fix a3d8f74; npm test 70/70; npm run audit 10/10; behavior unchanged",
+      "commit": "31a82ae, 2e05c6e, 2ede29f, 8dc69e0, a3d8f74",
+      "evidence": "extracted history-view.js, model-cards.js, settings-autosave.js, settings-form.js, and sound-themes.js; // @ts-check + JSDoc active on 12/13 src/*.js modules (tsc 0 errors); npm test 75/75; next: loadSettings form hydration and i18n dictionary extraction",
       "depends_on": ["feat-005", "feat-007", "feat-008"]
     },
     {
@@ -87,15 +89,15 @@
       "title": "Modularize lib.rs commands by domain",
       "status": "planned",
       "priority": "P1",
-      "evidence": "",
+      "evidence": "prerequisites landed: serialized settings::update_settings, narrow tray commands set_transcription_mode/set_recognition_language, dead reprocess_history_text removed",
       "depends_on": ["feat-006", "feat-009"]
     },
     {
       "id": "feat-011",
-      "title": "P3 desktop polish",
-      "status": "planned",
-      "priority": "P3",
-      "evidence": "",
+      "title": "P1–P4 audit remediation, hot-path speedup, desktop polish, and explicit API-key clear",
+      "status": "done",
+      "priority": "P1",
+      "evidence": "persistent COM STA UIA worker (35 ms) + authoritative selection Ctrl+C skip (-260 ms); adaptive tail hold (90 ms toggle / 100-250 ms hold) + single-pass StreamingVad + 16 kHz-only FIR resampler; zero idle rAF/timer/AudioContext in hidden overlay.js; tray optimistic rollback + roving focus; #btn-clear-key & #btn-clear-key-edit Visual QA + behavioral tests; npm test 75/75; npm run audit 10/10 (~140 ms); cargo test 264 passed; CI rust-cache + SHA-256 prebuilt audit binaries",
       "depends_on": ["feat-005", "feat-006"]
     },
     {

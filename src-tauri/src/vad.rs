@@ -5,6 +5,9 @@ const VAD_CHUNK_SIZE: usize = 512;
 const SPEECH_THRESHOLD: f32 = 0.4;
 const ENDPOINT_TRAILING_SILENCE_FRAMES: usize = 14;
 
+/// 600 ms of trailing padding at 16 kHz preserved after the last speech frame.
+pub const TRAILING_SILENCE_PADDING_SAMPLES: u64 = 9_600;
+
 #[derive(Debug, Default, PartialEq, Eq)]
 pub struct VadPushResult {
     pub speech_detected: bool,
@@ -71,6 +74,9 @@ pub struct StreamingVad {
     detector: VoiceActivityDetector,
     pending: Vec<f32>,
     endpoint_tracker: EndpointTracker,
+    processed_samples: u64,
+    ever_had_speech: bool,
+    last_speech_end_sample: Option<u64>,
 }
 
 impl StreamingVad {
@@ -84,11 +90,51 @@ impl StreamingVad {
             detector,
             pending: Vec::with_capacity(VAD_CHUNK_SIZE * 2),
             endpoint_tracker: EndpointTracker::new(ENDPOINT_TRAILING_SILENCE_FRAMES),
+            processed_samples: 0,
+            ever_had_speech: false,
+            last_speech_end_sample: None,
         })
+    }
+
+    pub fn has_speech(&self) -> bool {
+        self.ever_had_speech
+    }
+
+    pub fn last_speech_end_sample(&self) -> Option<u64> {
+        self.last_speech_end_sample
+    }
+
+    pub fn total_observed_samples(&self) -> u64 {
+        self.processed_samples
+            .saturating_add(self.pending.len() as u64)
     }
 
     pub fn push(&mut self, samples: &[f32]) -> bool {
         self.push_with_endpoints(samples).speech_detected
+    }
+
+    /// Incrementally evaluates 16 kHz samples without allocating event vectors,
+    /// updating cumulative `has_speech()` and `last_speech_end_sample()` state.
+    pub fn observe_samples(&mut self, samples: &[f32]) -> bool {
+        self.pending.extend(
+            samples
+                .iter()
+                .map(|sample| if sample.is_finite() { *sample } else { 0.0 }),
+        );
+        let complete_len = self.pending.len() / VAD_CHUNK_SIZE * VAD_CHUNK_SIZE;
+        let mut speech_detected = false;
+        for frame in self.pending[..complete_len].chunks_exact(VAD_CHUNK_SIZE) {
+            let is_speech = self.detector.predict(frame.iter().copied()) > SPEECH_THRESHOLD;
+            self.processed_samples = self.processed_samples.saturating_add(VAD_CHUNK_SIZE as u64);
+            if is_speech {
+                self.ever_had_speech = true;
+                self.last_speech_end_sample = Some(self.processed_samples);
+                speech_detected = true;
+            }
+            let _ = self.endpoint_tracker.observe(is_speech);
+        }
+        self.pending.drain(..complete_len);
+        speech_detected
     }
 
     pub fn push_with_threshold(&mut self, samples: &[f32], threshold: f32) -> bool {
@@ -101,6 +147,11 @@ impl StreamingVad {
         let mut speech_detected = false;
         for frame in self.pending[..complete_len].chunks_exact(VAD_CHUNK_SIZE) {
             let is_speech = self.detector.predict(frame.iter().copied()) > threshold;
+            self.processed_samples = self.processed_samples.saturating_add(VAD_CHUNK_SIZE as u64);
+            if is_speech {
+                self.ever_had_speech = true;
+                self.last_speech_end_sample = Some(self.processed_samples);
+            }
             speech_detected |= is_speech;
             let _ = self.endpoint_tracker.observe(is_speech);
         }
@@ -122,6 +173,11 @@ impl StreamingVad {
             .enumerate()
         {
             let is_speech = self.detector.predict(frame.iter().copied()) > SPEECH_THRESHOLD;
+            self.processed_samples = self.processed_samples.saturating_add(VAD_CHUNK_SIZE as u64);
+            if is_speech {
+                self.ever_had_speech = true;
+                self.last_speech_end_sample = Some(self.processed_samples);
+            }
             result.speech_detected |= is_speech;
             let endpoint = self.endpoint_tracker.observe(is_speech);
             let frame_end = (frame_index + 1) * VAD_CHUNK_SIZE;
@@ -156,7 +212,13 @@ impl StreamingVad {
         let pending_len = self.pending.len().min(VAD_CHUNK_SIZE);
         frame[..pending_len].copy_from_slice(&self.pending[..pending_len]);
         self.pending.clear();
-        self.detector.predict(frame.iter().copied()) > SPEECH_THRESHOLD
+        self.processed_samples = self.processed_samples.saturating_add(pending_len as u64);
+        let is_speech = self.detector.predict(frame.iter().copied()) > SPEECH_THRESHOLD;
+        if is_speech {
+            self.ever_had_speech = true;
+            self.last_speech_end_sample = Some(self.processed_samples);
+        }
+        is_speech
     }
 }
 
@@ -340,7 +402,7 @@ pub fn trim_trailing_silence_wav(
 
     let chunk_size = vad_chunk_size(16000);
     // 600ms padding: 0.60 * 16000 = 9600 samples
-    let padding_samples = (0.60 * 16000.0) as usize;
+    let padding_samples = TRAILING_SILENCE_PADDING_SAMPLES as usize;
     let speech_end_sample = (last_speech_frame + 1) * chunk_size;
     let keep_len = (speech_end_sample + padding_samples).min(samples_i16.len());
 
@@ -354,6 +416,7 @@ pub fn trim_trailing_silence_wav(
     {
         let mut writer = hound::WavWriter::create(&temp_output, spec)
             .map_err(|e| format!("Failed to create trimmed WAV writer: {e}"))?;
+        let _ = crate::secure_storage::apply_restrictive_acl(&temp_output);
         for &sample in &samples_i16[..keep_len] {
             writer
                 .write_sample(sample)
@@ -369,6 +432,15 @@ pub fn trim_trailing_silence_wav(
         std::fs::copy(&temp_output, output_wav)
             .map_err(|copy_err| format!("Failed to copy trimmed WAV ({e}; {copy_err})"))?;
         let _ = std::fs::remove_file(&temp_output);
+    }
+
+    if let Err(error) = crate::secure_storage::apply_restrictive_acl(output_wav) {
+        crate::logger::log(
+            "WARN",
+            "VAD",
+            None,
+            &format!("Could not restrict ACL on trimmed WAV: {error}"),
+        );
     }
 
     Ok(true)
@@ -552,6 +624,51 @@ mod tests {
         let _ = std::fs::remove_file(&silence);
     }
 
+    #[cfg(target_os = "windows")]
+    fn file_dacl_ace_count(path: &std::path::Path) -> usize {
+        use std::os::windows::ffi::OsStrExt;
+        use windows_sys::Win32::Foundation::LocalFree;
+        use windows_sys::Win32::Security::Authorization::{GetNamedSecurityInfoW, SE_FILE_OBJECT};
+        use windows_sys::Win32::Security::{
+            AclSizeInformation, GetAclInformation, ACL_SIZE_INFORMATION, DACL_SECURITY_INFORMATION,
+        };
+        unsafe {
+            let path_wide: Vec<u16> = path.as_os_str().encode_wide().chain(Some(0)).collect();
+            let mut dacl: *mut windows_sys::Win32::Security::ACL = std::ptr::null_mut();
+            let mut descriptor: *mut std::ffi::c_void = std::ptr::null_mut();
+            let result = GetNamedSecurityInfoW(
+                path_wide.as_ptr(),
+                SE_FILE_OBJECT,
+                DACL_SECURITY_INFORMATION,
+                std::ptr::null_mut(),
+                std::ptr::null_mut(),
+                &mut dacl,
+                std::ptr::null_mut(),
+                &mut descriptor,
+            );
+            if result != 0 || dacl.is_null() {
+                if !descriptor.is_null() {
+                    LocalFree(descriptor);
+                }
+                return usize::MAX;
+            }
+            let mut size_info: ACL_SIZE_INFORMATION = std::mem::zeroed();
+            let ok = GetAclInformation(
+                dacl,
+                &mut size_info as *mut _ as *mut std::ffi::c_void,
+                std::mem::size_of::<ACL_SIZE_INFORMATION>() as u32,
+                AclSizeInformation,
+            );
+            if !descriptor.is_null() {
+                LocalFree(descriptor);
+            }
+            if ok == 0 {
+                return usize::MAX;
+            }
+            size_info.AceCount as usize
+        }
+    }
+
     #[test]
     fn test_trim_trailing_silence_wav() {
         let dir = std::env::temp_dir();
@@ -573,6 +690,13 @@ mod tests {
         let trimmed = trim_trailing_silence_wav(&test_wav, &test_wav).unwrap();
         assert!(trimmed, "Trailing silence should be trimmed");
 
+        #[cfg(target_os = "windows")]
+        assert_eq!(
+            file_dacl_ace_count(&test_wav),
+            2,
+            "trimmed WAV must retain restrictive 2-ACE DACL"
+        );
+
         let trimmed_duration = {
             let r = hound::WavReader::open(&test_wav).unwrap();
             r.duration() as usize
@@ -582,5 +706,32 @@ mod tests {
         // 32,000 trailing silence samples should be largely stripped, leaving speech + padding
         assert!(trimmed_duration < orig_duration - 15_000);
         assert!(trimmed_duration >= 8_000);
+    }
+
+    #[test]
+    fn streaming_vad_observe_samples_tracks_speech_and_tail_offset() {
+        let mut silent_vad = StreamingVad::new_16k().expect("build silent VAD");
+        let silent_samples = [0.0f32; 1_655];
+        for chunk in silent_samples.chunks(331) {
+            assert!(!silent_vad.observe_samples(chunk));
+        }
+        assert!(!silent_vad.finish_pending_has_speech());
+        assert!(!silent_vad.has_speech());
+        assert_eq!(silent_vad.last_speech_end_sample(), None);
+        assert_eq!(silent_vad.total_observed_samples(), 1_655);
+
+        let mut speech_vad = StreamingVad::new_16k().expect("build speech VAD");
+        let mut samples = chirp_samples();
+        let chirp_len = samples.len() as u64;
+        samples.resize(samples.len() + 16_000, 0.0);
+        for chunk in samples.chunks(389) {
+            speech_vad.observe_samples(chunk);
+        }
+        let _ = speech_vad.finish_pending_has_speech();
+        assert!(speech_vad.has_speech());
+        let speech_end = speech_vad
+            .last_speech_end_sample()
+            .expect("speech end sample must be recorded");
+        assert!(speech_end > 0 && speech_end <= chirp_len + VAD_CHUNK_SIZE as u64);
     }
 }

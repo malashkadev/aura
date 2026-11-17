@@ -135,22 +135,32 @@ const rsFiles = readdirSync(rustSrcDir).filter(f => f.endsWith(".rs"));
 const rustEmittedEvents = new Set();
 for (const rf of rsFiles) {
   const content = read(join(rustSrcDir, rf));
-  for (const m of content.matchAll(/\.emit(?:_to)?\(\s*["']([^"']+)["']/g)) {
+  for (const m of content.matchAll(/\.emit\(\s*["']([^"']+)["']/g)) {
+    rustEmittedEvents.add(m[1]);
+  }
+  for (const m of content.matchAll(
+    /\.emit_to\(\s*(?:["'][^"']*["']|[a-zA-Z0-9_:]+(?:\([^)]*\))?)\s*,\s*["']([^"']+)["']/g,
+  )) {
     rustEmittedEvents.add(m[1]);
   }
 }
 console.log("Rust emitted events across all .rs files:", [...rustEmittedEvents]);
 
-// Find all listen( in main.js, overlay.js, tray-menu.js
-const mainListeners = new Set([...normMain.matchAll(/listen\(\s*["']([^"']+)["']/g)].map(m => m[1]));
-const overlayListeners = new Set([...overlayJs.replaceAll("\r\n", "\n").matchAll(/listen\(\s*["']([^"']+)["']/g)].map(m => m[1]));
-const trayListeners = new Set([...normTray.matchAll(/listen\(\s*["']([^"']+)["']/g)].map(m => m[1]));
-
-console.log("main.js listens to:", [...mainListeners]);
-console.log("overlay.js listens to:", [...overlayListeners]);
-console.log("tray-menu.js listens to:", [...trayListeners]);
-
-const allJsListeners = new Set([...mainListeners, ...overlayListeners, ...trayListeners]);
+// Find all listen( across every src/*.js module
+const allSrcJsFiles = readdirSync("src")
+  .filter((f) => f.endsWith(".js"))
+  .sort();
+const allJsListeners = new Set();
+for (const jsFile of allSrcJsFiles) {
+  const jsContent = read(join("src", jsFile)).replaceAll("\r\n", "\n");
+  const fileListeners = [...new Set([...jsContent.matchAll(/listen\(\s*["']([^"']+)["']/g)].map((m) => m[1]))];
+  if (fileListeners.length > 0) {
+    console.log(`src/${jsFile} listens to:`, fileListeners);
+    for (const ev of fileListeners) {
+      allJsListeners.add(ev);
+    }
+  }
+}
 for (const re of rustEmittedEvents) {
   if (!allJsListeners.has(re)) {
     reportIssue("INFO", "EVENT", `Rust emits event '${re}' which has no JS listener.`);

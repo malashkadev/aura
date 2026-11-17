@@ -1,6 +1,6 @@
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 use std::fs::File;
-use std::io::BufWriter;
+use std::io::{BufWriter, Seek, SeekFrom, Write};
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::{mpsc, Arc, Mutex, OnceLock};
@@ -19,6 +19,15 @@ const CONTROL_POLL_INTERVAL: Duration = Duration::from_millis(10);
 const START_TIMEOUT: Duration = Duration::from_secs(10);
 const FIR_TAPS: usize = 63;
 const WAV_WRITE_BUFFER_BYTES: usize = 256 * 1024;
+const WAV_HEADER_BYTES: u64 = 44;
+const TOGGLE_TAIL_HOLD_MS: u64 = 90;
+const HOLD_MIN_TAIL_MS: u64 = 100;
+const HOLD_MAX_TAIL_MS: u64 = 250;
+/// 180 ms at 16 kHz: when Hold mode has already drained >= 100 ms of WASAPI buffers
+/// and at least the last 180 ms contain no speech, stop immediately instead of waiting 250 ms.
+const HOLD_TRAILING_SILENCE_SAMPLES: u64 = 2_880;
+const CALLBACK_POOL_BUFFERS: usize = 16;
+const CALLBACK_POOL_INITIAL_CAPACITY: usize = 4_096;
 
 pub struct AudioRecorder {
     state: Mutex<Option<ActiveRecording>>,
@@ -28,11 +37,15 @@ pub struct AudioRecorder {
     /// that window would open a concurrent stream on the same device; refuse
     /// it instead (C13).
     starting: AtomicBool,
+    /// Single-pass VAD result produced by the last completed recording session:
+    /// `Some(true)` = speech detected and trailing silence > 600 ms already trimmed,
+    /// `Some(false)` = pure silence, `None` = streaming VAD unavailable (use file fallback).
+    last_vad_has_speech: Mutex<Option<bool>>,
 }
 
 struct ActiveRecording {
     command_tx: mpsc::SyncSender<RecorderCommand>,
-    worker: thread::JoinHandle<Result<(), String>>,
+    worker: thread::JoinHandle<Result<Option<bool>, String>>,
     shared: Arc<Mutex<RecordingBuffer>>,
     sample_stream: Option<AudioSampleStream>,
 }
@@ -137,9 +150,9 @@ fn decrement_queued_chunks(queued_chunks: &AtomicU64) {
     }
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum RecorderCommand {
-    Stop,
+    Stop { is_toggle: bool },
     Cancel,
 }
 
@@ -176,12 +189,36 @@ impl Default for RecordingBuffer {
     }
 }
 
-type BufferedWavWriter = hound::WavWriter<BufWriter<File>>;
+fn pcm16_wav_header(data_bytes: u32) -> [u8; 44] {
+    let riff_chunk_size = 36u32.saturating_add(data_bytes);
+    let sample_rate = OUTPUT_SAMPLE_RATE;
+    let channels = 1u16;
+    let bits_per_sample = 16u16;
+    let block_align = channels * (bits_per_sample / 8);
+    let byte_rate = sample_rate * u32::from(block_align);
 
-/// Writes into a side file and only publishes the final WAV path after a
-/// successful header update and flush. Dropping the guard removes the side file.
+    let mut header = [0u8; 44];
+    header[0..4].copy_from_slice(b"RIFF");
+    header[4..8].copy_from_slice(&riff_chunk_size.to_le_bytes());
+    header[8..12].copy_from_slice(b"WAVE");
+    header[12..16].copy_from_slice(b"fmt ");
+    header[16..20].copy_from_slice(&16u32.to_le_bytes());
+    header[20..22].copy_from_slice(&1u16.to_le_bytes()); // WAVE_FORMAT_PCM
+    header[22..24].copy_from_slice(&channels.to_le_bytes());
+    header[24..28].copy_from_slice(&sample_rate.to_le_bytes());
+    header[28..32].copy_from_slice(&byte_rate.to_le_bytes());
+    header[32..34].copy_from_slice(&block_align.to_le_bytes());
+    header[34..36].copy_from_slice(&bits_per_sample.to_le_bytes());
+    header[36..40].copy_from_slice(b"data");
+    header[40..44].copy_from_slice(&data_bytes.to_le_bytes());
+    header
+}
+
+/// Writes into a side file and only publishes the final WAV path after optional
+/// trailing-silence truncation, header finalization, flush, rename, and DACL
+/// application. Dropping the guard removes the side file.
 struct PendingWavFile {
-    writer: Option<BufferedWavWriter>,
+    writer: Option<BufWriter<File>>,
     partial_path: PathBuf,
     final_path: PathBuf,
     sample_count: u64,
@@ -209,16 +246,14 @@ impl PendingWavFile {
                 &format!("Could not restrict ACL on pending recording: {error}"),
             );
         }
-        let buffered = BufWriter::with_capacity(WAV_WRITE_BUFFER_BYTES, file);
-        let writer = match hound::WavWriter::new(buffered, wav_spec()) {
-            Ok(writer) => writer,
-            Err(error) => {
-                let _ = std::fs::remove_file(&partial_path);
-                return Err(format!("Failed to create WAV writer: {error}"));
-            }
-        };
+        let mut buffered = BufWriter::with_capacity(WAV_WRITE_BUFFER_BYTES, file);
+        if let Err(error) = buffered.write_all(&pcm16_wav_header(0)) {
+            drop(buffered);
+            let _ = std::fs::remove_file(&partial_path);
+            return Err(format!("Failed to write initial WAV header: {error}"));
+        }
         Ok(Self {
-            writer: Some(writer),
+            writer: Some(buffered),
             partial_path,
             final_path,
             sample_count: 0,
@@ -231,26 +266,61 @@ impl PendingWavFile {
             .writer
             .as_mut()
             .ok_or_else(|| "Pending WAV writer is already closed".to_string())?;
-        for &sample in samples {
+        let mut pcm_bytes = [0u8; 2048];
+        for chunk in samples.chunks(pcm_bytes.len() / 2) {
+            let byte_len = chunk.len() * 2;
+            for (idx, &sample) in chunk.iter().enumerate() {
+                let bytes = sample_to_pcm_i16(sample).to_le_bytes();
+                pcm_bytes[idx * 2] = bytes[0];
+                pcm_bytes[idx * 2 + 1] = bytes[1];
+            }
             writer
-                .write_sample(sample_to_pcm_i16(sample))
-                .map_err(|e| format!("Failed to write WAV sample: {e}"))?;
+                .write_all(&pcm_bytes[..byte_len])
+                .map_err(|e| format!("Failed to write WAV samples: {e}"))?;
         }
         self.sample_count = self.sample_count.saturating_add(samples.len() as u64);
         Ok(())
     }
 
-    fn commit(mut self) -> Result<(), String> {
+    #[cfg(test)]
+    fn commit(self) -> Result<(), String> {
+        self.commit_with_keep_samples(None)
+    }
+
+    fn commit_with_keep_samples(mut self, max_samples_to_keep: Option<u64>) -> Result<(), String> {
         if self.sample_count == 0 {
             return Err("No audio samples were recorded".to_string());
         }
-        let writer = self
+        let final_samples =
+            max_samples_to_keep.map_or(self.sample_count, |keep| keep.clamp(1, self.sample_count));
+        let data_bytes_u64 = final_samples
+            .checked_mul(2)
+            .ok_or_else(|| "WAV sample count overflow".to_string())?;
+        let data_bytes = u32::try_from(data_bytes_u64)
+            .map_err(|_| "WAV recording exceeds maximum 4 GB RIFF size".to_string())?;
+
+        let buffered = self
             .writer
             .take()
             .ok_or_else(|| "Pending WAV writer is already closed".to_string())?;
-        writer
-            .finalize()
-            .map_err(|e| format!("Failed to finalize WAV file: {e}"))?;
+        let mut file = buffered
+            .into_inner()
+            .map_err(|e| format!("Failed to flush pending WAV file: {}", e.error()))?;
+
+        // Truncate trailing silence BEFORE finalizing the WAV header, renaming
+        // `.wav.partial -> .wav`, and applying the restrictive DACL.
+        if final_samples < self.sample_count {
+            file.set_len(WAV_HEADER_BYTES + data_bytes_u64)
+                .map_err(|e| format!("Failed to truncate trailing silence in WAV file: {e}"))?;
+        }
+
+        file.seek(SeekFrom::Start(0))
+            .map_err(|e| format!("Failed to seek WAV header: {e}"))?;
+        file.write_all(&pcm16_wav_header(data_bytes))
+            .map_err(|e| format!("Failed to finalize WAV header: {e}"))?;
+        file.flush()
+            .map_err(|e| format!("Failed to flush finalized WAV file: {e}"))?;
+        drop(file);
 
         match std::fs::remove_file(&self.final_path) {
             Ok(()) => {}
@@ -328,19 +398,23 @@ fn wav_spec() -> hound::WavSpec {
 
 /// Stateful downmixer/resampler used by the recorder worker and tests.
 ///
-/// Keeping the FIR history and fractional output position across callback chunks
-/// prevents discontinuities and timing drift at chunk boundaries.
+/// Uses a doubled contiguous ring buffer of length `taps + 1` so FIR convolution
+/// runs ONLY at output 16 kHz sample positions (rather than on every 48 kHz/96 kHz
+/// input frame) without modulo indexing in the inner loop.
 struct StreamingResampler {
     channels: usize,
     input_rate: u32,
     partial_frame: Vec<f32>,
-    coefficients: Vec<f32>,
+    coefficients_rev: Vec<f32>,
+    ring_len: usize,
     history: Vec<f32>,
-    history_pos: usize,
+    write_pos: usize,
     input_index: u64,
     output_step: f64,
     next_output_position: f64,
-    previous_filtered: Option<(f64, f32)>,
+    cached_filtered: Option<(u64, f32)>,
+    #[cfg(test)]
+    fir_evaluations: u64,
 }
 
 impl StreamingResampler {
@@ -353,37 +427,85 @@ impl StreamingResampler {
         }
 
         let coefficients = lowpass_coefficients(input_rate, OUTPUT_SAMPLE_RATE);
+        let taps = coefficients.len();
+        let ring_len = taps + 1;
+        let coefficients_rev: Vec<f32> = coefficients.into_iter().rev().collect();
         Ok(Self {
             channels: channels as usize,
             input_rate,
             partial_frame: Vec::with_capacity(channels as usize),
-            history: vec![0.0; coefficients.len()],
-            coefficients,
-            history_pos: 0,
+            coefficients_rev,
+            ring_len,
+            history: vec![0.0; ring_len * 2],
+            write_pos: 0,
             input_index: 0,
             output_step: input_rate as f64 / OUTPUT_SAMPLE_RATE as f64,
             next_output_position: 0.0,
-            previous_filtered: None,
+            cached_filtered: None,
+            #[cfg(test)]
+            fir_evaluations: 0,
         })
     }
 
     fn process_interleaved(&mut self, input: &[f32], output: &mut Vec<f32>) {
-        for &sample in input {
-            self.partial_frame.push(sanitize_sample(sample));
-            if self.partial_frame.len() == self.channels {
-                let mono = self.partial_frame.iter().copied().sum::<f32>() / self.channels as f32;
-                self.partial_frame.clear();
-                let filtered = self.filter_sample(mono);
-                self.emit_filtered(filtered, output);
+        if self.channels == 1 {
+            for &sample in input {
+                self.push_mono(sanitize_sample(sample), output);
             }
+            return;
+        }
+
+        let mut remaining = input;
+        if !self.partial_frame.is_empty() {
+            let needed = self.channels - self.partial_frame.len();
+            if remaining.len() < needed {
+                for &sample in remaining {
+                    self.partial_frame.push(sanitize_sample(sample));
+                }
+                return;
+            }
+            for &sample in &remaining[..needed] {
+                self.partial_frame.push(sanitize_sample(sample));
+            }
+            let mono = self.partial_frame.iter().copied().sum::<f32>() / self.channels as f32;
+            self.partial_frame.clear();
+            self.push_mono(mono, output);
+            remaining = &remaining[needed..];
+        }
+
+        let inv_channels = 1.0 / self.channels as f32;
+        let chunks = remaining.chunks_exact(self.channels);
+        let tail = chunks.remainder();
+        for frame in chunks {
+            let mut sum = 0.0f32;
+            for &sample in frame {
+                sum += sanitize_sample(sample);
+            }
+            self.push_mono(sum * inv_channels, output);
+        }
+        for &sample in tail {
+            self.partial_frame.push(sanitize_sample(sample));
         }
     }
 
     fn finish(&mut self, output: &mut Vec<f32>) {
         self.partial_frame.clear();
 
-        if let Some((_, last)) = self.previous_filtered {
-            let end = self.input_index as f64;
+        if self.input_index == 0 {
+            return;
+        }
+        let end = self.input_index as f64;
+        if self.next_output_position < end - f64::EPSILON {
+            let last_idx = self.input_index - 1;
+            let last_pos = (self.write_pos + self.ring_len - 1) % self.ring_len;
+            let last = match self.cached_filtered {
+                Some((idx, val)) if idx == last_idx => val,
+                _ => {
+                    let val = self.convolve_at_slot(last_pos);
+                    self.cached_filtered = Some((last_idx, val));
+                    val
+                }
+            };
             while self.next_output_position < end - f64::EPSILON {
                 output.push(last);
                 self.next_output_position += self.output_step;
@@ -391,46 +513,70 @@ impl StreamingResampler {
         }
     }
 
-    fn filter_sample(&mut self, sample: f32) -> f32 {
-        if self.coefficients.len() == 1 {
-            return sample;
+    #[inline]
+    fn convolve_at_slot(&mut self, slot: usize) -> f32 {
+        #[cfg(test)]
+        {
+            self.fir_evaluations += 1;
         }
-
-        self.history[self.history_pos] = sample;
-        let len = self.history.len();
-        let mut filtered = 0.0f32;
-        for (lag, coefficient) in self.coefficients.iter().enumerate() {
-            let index = (self.history_pos + len - (lag % len)) % len;
-            filtered += coefficient * self.history[index];
+        let taps = self.coefficients_rev.len();
+        if taps == 1 {
+            return self.history[slot];
         }
-        self.history_pos = (self.history_pos + 1) % len;
-        filtered
+        let end = slot + self.ring_len + 1;
+        let start = end - taps;
+        let window = &self.history[start..end];
+        let mut sum = 0.0f32;
+        for (&coeff, &sample) in self.coefficients_rev.iter().zip(window.iter()) {
+            sum += coeff * sample;
+        }
+        sum
     }
 
-    fn emit_filtered(&mut self, current: f32, output: &mut Vec<f32>) {
+    #[inline]
+    fn push_mono(&mut self, sample: f32, output: &mut Vec<f32>) {
+        let pos = self.write_pos;
+        self.history[pos] = sample;
+        self.history[pos + self.ring_len] = sample;
+        self.write_pos = (pos + 1) % self.ring_len;
+
         let current_position = self.input_index as f64;
-        match self.previous_filtered {
-            None => {
-                if self.next_output_position <= current_position + f64::EPSILON {
-                    output.push(current);
-                    self.next_output_position += self.output_step;
-                }
-            }
-            Some((previous_position, previous)) => {
+        if self.next_output_position <= current_position + f64::EPSILON {
+            let current = self.convolve_at_slot(pos);
+            if self.input_index == 0 {
+                output.push(current);
+                self.next_output_position += self.output_step;
+            } else {
+                let prev_idx = self.input_index - 1;
+                let previous_position = prev_idx as f64;
+                let mut previous_val: Option<f32> = None;
                 while self.next_output_position <= current_position + f64::EPSILON {
-                    let span = current_position - previous_position;
-                    let fraction = if span > 0.0 {
-                        ((self.next_output_position - previous_position) / span).clamp(0.0, 1.0)
-                            as f32
+                    let fraction =
+                        (self.next_output_position - previous_position).clamp(0.0, 1.0) as f32;
+                    if (1.0 - fraction).abs() <= f32::EPSILON {
+                        output.push(current);
                     } else {
-                        1.0
-                    };
-                    output.push(previous + (current - previous) * fraction);
+                        let prev = match previous_val {
+                            Some(v) => v,
+                            None => {
+                                let v = match self.cached_filtered {
+                                    Some((idx, cached)) if idx == prev_idx => cached,
+                                    _ => {
+                                        let prev_slot = (pos + self.ring_len - 1) % self.ring_len;
+                                        self.convolve_at_slot(prev_slot)
+                                    }
+                                };
+                                previous_val = Some(v);
+                                v
+                            }
+                        };
+                        output.push(prev + (current - prev) * fraction);
+                    }
                     self.next_output_position += self.output_step;
                 }
             }
+            self.cached_filtered = Some((self.input_index, current));
         }
-        self.previous_filtered = Some((current_position, current));
         self.input_index += 1;
     }
 }
@@ -481,6 +627,25 @@ impl AudioRecorder {
         Self {
             state: Mutex::new(None),
             starting: AtomicBool::new(false),
+            last_vad_has_speech: Mutex::new(None),
+        }
+    }
+
+    fn set_last_vad_has_speech(&self, value: Option<bool>) {
+        match self.last_vad_has_speech.lock() {
+            Ok(mut guard) => *guard = value,
+            Err(poisoned) => *poisoned.into_inner() = value,
+        }
+    }
+
+    /// Takes and clears the single-pass `StreamingVad` result of the last finished recording:
+    /// - `Some(true)`: speech was detected and trailing silence > 600 ms was already truncated.
+    /// - `Some(false)`: no speech was detected anywhere in the recording.
+    /// - `None`: streaming VAD did not run; callers should fall back to file-based VAD.
+    pub fn take_last_vad_has_speech(&self) -> Option<bool> {
+        match self.last_vad_has_speech.lock() {
+            Ok(mut guard) => guard.take(),
+            Err(poisoned) => poisoned.into_inner().take(),
         }
     }
 
@@ -534,6 +699,7 @@ impl AudioRecorder {
                 return Err("Already recording".to_string());
             }
         }
+        self.set_last_vad_has_speech(None);
 
         let (command_tx, command_rx) = mpsc::sync_channel(1);
         let (ready_tx, ready_rx) = mpsc::sync_channel(1);
@@ -614,7 +780,11 @@ impl AudioRecorder {
     }
 
     pub fn stop_recording(&self) -> Result<(), String> {
-        self.finish_recording(RecorderCommand::Stop)
+        self.stop_recording_adaptive(false)
+    }
+
+    pub fn stop_recording_adaptive(&self, is_toggle: bool) -> Result<(), String> {
+        self.finish_recording(RecorderCommand::Stop { is_toggle })
     }
 
     pub fn cancel_recording(&self) -> Result<(), String> {
@@ -671,10 +841,24 @@ impl AudioRecorder {
 
         let command_error = active.command_tx.send(command).err();
         match active.worker.join() {
-            Ok(result) => result,
-            Err(_) => Err(command_error
-                .map(|e| format!("Audio worker stopped before receiving its command: {e}"))
-                .unwrap_or_else(|| "Audio worker panicked".to_string())),
+            Ok(Ok(vad_has_speech)) => {
+                if matches!(command, RecorderCommand::Stop { .. }) {
+                    self.set_last_vad_has_speech(vad_has_speech);
+                } else {
+                    self.set_last_vad_has_speech(None);
+                }
+                Ok(())
+            }
+            Ok(Err(err)) => {
+                self.set_last_vad_has_speech(None);
+                Err(err)
+            }
+            Err(_) => {
+                self.set_last_vad_has_speech(None);
+                Err(command_error
+                    .map(|e| format!("Audio worker stopped before receiving its command: {e}"))
+                    .unwrap_or_else(|| "Audio worker panicked".to_string()))
+            }
         }
     }
 }
@@ -691,13 +875,18 @@ pub struct MicMeterPayload {
     pub is_speech: bool,
 }
 
-static ACTIVE_MIC_METER_STOP: OnceLock<Mutex<Option<Arc<AtomicBool>>>> = OnceLock::new();
+struct ActiveMicMeter {
+    stop: Arc<AtomicBool>,
+    handle: Option<thread::JoinHandle<()>>,
+}
+
+static ACTIVE_MIC_METER: OnceLock<Mutex<Option<ActiveMicMeter>>> = OnceLock::new();
 
 fn clear_active_meter_if_matches(thread_stop: &Arc<AtomicBool>) {
-    let mutex = ACTIVE_MIC_METER_STOP.get_or_init(|| Mutex::new(None));
+    let mutex = ACTIVE_MIC_METER.get_or_init(|| Mutex::new(None));
     if let Ok(mut guard) = mutex.lock() {
         if let Some(current) = guard.as_ref() {
-            if Arc::ptr_eq(current, thread_stop) {
+            if Arc::ptr_eq(&current.stop, thread_stop) {
                 *guard = None;
             }
         }
@@ -705,7 +894,7 @@ fn clear_active_meter_if_matches(thread_stop: &Arc<AtomicBool>) {
 }
 
 pub fn is_mic_meter_running() -> bool {
-    let mutex = ACTIVE_MIC_METER_STOP.get_or_init(|| Mutex::new(None));
+    let mutex = ACTIVE_MIC_METER.get_or_init(|| Mutex::new(None));
     if let Ok(guard) = mutex.lock() {
         guard.is_some()
     } else {
@@ -714,10 +903,19 @@ pub fn is_mic_meter_running() -> bool {
 }
 
 pub fn stop_mic_meter() {
-    let mutex = ACTIVE_MIC_METER_STOP.get_or_init(|| Mutex::new(None));
-    if let Ok(mut guard) = mutex.lock() {
-        if let Some(stop_flag) = guard.take() {
-            stop_flag.store(true, Ordering::SeqCst);
+    let active = {
+        let mutex = ACTIVE_MIC_METER.get_or_init(|| Mutex::new(None));
+        match mutex.lock() {
+            Ok(mut guard) => guard.take(),
+            Err(poisoned) => poisoned.into_inner().take(),
+        }
+    };
+    if let Some(mut active) = active {
+        active.stop.store(true, Ordering::SeqCst);
+        if let Some(handle) = active.handle.take() {
+            if handle.thread().id() != thread::current().id() {
+                let _ = handle.join();
+            }
         }
     }
 }
@@ -729,17 +927,15 @@ pub fn start_mic_meter<R: tauri::Runtime>(
     stop_mic_meter();
 
     let stop_flag = Arc::new(AtomicBool::new(false));
-    {
-        let mutex = ACTIVE_MIC_METER_STOP.get_or_init(|| Mutex::new(None));
-        let mut guard = mutex
-            .lock()
-            .map_err(|_| "Failed to lock mic meter state".to_string())?;
-        *guard = Some(Arc::clone(&stop_flag));
-    }
-
     let dev_name = device_name.map(str::to_string);
     let thread_stop = Arc::clone(&stop_flag);
-    std::thread::Builder::new()
+
+    let mutex = ACTIVE_MIC_METER.get_or_init(|| Mutex::new(None));
+    let mut guard = mutex
+        .lock()
+        .map_err(|_| "Failed to lock mic meter state".to_string())?;
+
+    let handle = std::thread::Builder::new()
         .name("aura-mic-meter".to_string())
         .spawn(move || {
             let device = match find_input_device(dev_name.as_deref()) {
@@ -756,18 +952,27 @@ pub fn start_mic_meter<R: tauri::Runtime>(
                     return;
                 }
             };
-            let sample_rate = config.sample_rate().0;
-            let channels = config.channels();
             let sample_format = config.sample_format();
             let stream_config: cpal::StreamConfig = config.into();
 
             let (sample_tx, sample_rx) = mpsc::sync_channel::<Vec<f32>>(64);
+            let (recycle_tx, recycle_rx) = mpsc::sync_channel::<Vec<f32>>(16);
+            for _ in 0..8 {
+                let _ = recycle_tx.try_send(Vec::with_capacity(CALLBACK_POOL_INITIAL_CAPACITY));
+            }
+            let cb_recycle_tx = recycle_tx.clone();
             let stream = match sample_format {
                 cpal::SampleFormat::I16 => device.build_input_stream(
                     &stream_config,
                     move |data: &[i16], _| {
-                        let samples = data.iter().map(|&s| s as f32 / 32768.0).collect();
-                        let _ = sample_tx.try_send(samples);
+                        let mut samples = recycle_rx
+                            .try_recv()
+                            .unwrap_or_else(|_| Vec::with_capacity(data.len()));
+                        samples.clear();
+                        samples.extend(data.iter().map(|&s| sanitize_sample(s as f32 / 32768.0)));
+                        if let Err(mpsc::TrySendError::Full(buf)) = sample_tx.try_send(samples) {
+                            let _ = cb_recycle_tx.try_send(buf);
+                        }
                     },
                     |_| {},
                     None,
@@ -775,11 +980,17 @@ pub fn start_mic_meter<R: tauri::Runtime>(
                 cpal::SampleFormat::U16 => device.build_input_stream(
                     &stream_config,
                     move |data: &[u16], _| {
-                        let samples = data
-                            .iter()
-                            .map(|&s| (s as f32 - 32768.0) / 32768.0)
-                            .collect();
-                        let _ = sample_tx.try_send(samples);
+                        let mut samples = recycle_rx
+                            .try_recv()
+                            .unwrap_or_else(|_| Vec::with_capacity(data.len()));
+                        samples.clear();
+                        samples.extend(
+                            data.iter()
+                                .map(|&s| sanitize_sample((s as f32 - 32768.0) / 32768.0)),
+                        );
+                        if let Err(mpsc::TrySendError::Full(buf)) = sample_tx.try_send(samples) {
+                            let _ = cb_recycle_tx.try_send(buf);
+                        }
                     },
                     |_| {},
                     None,
@@ -787,8 +998,17 @@ pub fn start_mic_meter<R: tauri::Runtime>(
                 cpal::SampleFormat::I32 => device.build_input_stream(
                     &stream_config,
                     move |data: &[i32], _| {
-                        let samples = data.iter().map(|&s| s as f32 / 2147483648.0).collect();
-                        let _ = sample_tx.try_send(samples);
+                        let mut samples = recycle_rx
+                            .try_recv()
+                            .unwrap_or_else(|_| Vec::with_capacity(data.len()));
+                        samples.clear();
+                        samples.extend(
+                            data.iter()
+                                .map(|&s| sanitize_sample(s as f32 / 2147483648.0)),
+                        );
+                        if let Err(mpsc::TrySendError::Full(buf)) = sample_tx.try_send(samples) {
+                            let _ = cb_recycle_tx.try_send(buf);
+                        }
                     },
                     |_| {},
                     None,
@@ -796,8 +1016,14 @@ pub fn start_mic_meter<R: tauri::Runtime>(
                 cpal::SampleFormat::F32 => device.build_input_stream(
                     &stream_config,
                     move |data: &[f32], _| {
-                        let samples = data.to_vec();
-                        let _ = sample_tx.try_send(samples);
+                        let mut samples = recycle_rx
+                            .try_recv()
+                            .unwrap_or_else(|_| Vec::with_capacity(data.len()));
+                        samples.clear();
+                        samples.extend(data.iter().map(|&s| sanitize_sample(s)));
+                        if let Err(mpsc::TrySendError::Full(buf)) = sample_tx.try_send(samples) {
+                            let _ = cb_recycle_tx.try_send(buf);
+                        }
                     },
                     |_| {},
                     None,
@@ -821,42 +1047,31 @@ pub fn start_mic_meter<R: tauri::Runtime>(
                 return;
             }
 
-            let mut resampler = match StreamingResampler::new(channels, sample_rate) {
-                Ok(r) => r,
-                Err(_) => {
-                    clear_active_meter_if_matches(&thread_stop);
-                    return;
-                }
-            };
-            let mut vad = crate::vad::StreamingVad::new_16k().ok();
             let mut last_emit = std::time::Instant::now();
-            let mut accumulated_samples = Vec::with_capacity(1024);
+            let mut acc_sum_sq = 0.0f32;
+            let mut acc_count = 0usize;
 
             while !thread_stop.load(Ordering::Relaxed) {
                 match sample_rx.recv_timeout(Duration::from_millis(15)) {
                     Ok(raw_chunk) => {
-                        let mut resampled_chunk = Vec::new();
-                        resampler.process_interleaved(&raw_chunk, &mut resampled_chunk);
-                        accumulated_samples.extend_from_slice(&resampled_chunk);
+                        for &s in &raw_chunk {
+                            acc_sum_sq += s * s;
+                        }
+                        acc_count += raw_chunk.len();
+                        let _ = recycle_tx.try_send(raw_chunk);
 
-                        if (accumulated_samples.len() >= 512
-                            || last_emit.elapsed() >= Duration::from_millis(20))
-                            && !accumulated_samples.is_empty()
+                        if (acc_count >= 512 || last_emit.elapsed() >= Duration::from_millis(20))
+                            && acc_count > 0
                         {
-                            let sum_sq: f32 = accumulated_samples.iter().map(|&s| s * s).sum();
-                            let rms = (sum_sq / accumulated_samples.len() as f32).sqrt();
+                            let rms = (acc_sum_sq / acc_count as f32).sqrt();
                             let volume = (rms * 3.5).clamp(0.0, 1.0);
-
-                            let is_speech = if let Some(vad_ref) = vad.as_mut() {
-                                vad_ref.push_with_threshold(&accumulated_samples, 0.25)
-                            } else {
-                                volume > 0.05
-                            };
+                            let is_speech = volume > 0.05;
 
                             let _ = app_handle
                                 .emit("mic-meter-level", MicMeterPayload { volume, is_speech });
 
-                            accumulated_samples.clear();
+                            acc_sum_sq = 0.0;
+                            acc_count = 0;
                             last_emit = std::time::Instant::now();
                         }
                     }
@@ -865,11 +1080,71 @@ pub fn start_mic_meter<R: tauri::Runtime>(
                 }
             }
 
+            drop(stream);
             clear_active_meter_if_matches(&thread_stop);
         })
         .map_err(|e| format!("Failed to spawn mic meter thread: {e}"))?;
 
+    *guard = Some(ActiveMicMeter {
+        stop: stop_flag,
+        handle: Some(handle),
+    });
+
     Ok(())
+}
+
+fn should_continue_tail_hold(
+    is_toggle: bool,
+    elapsed: Duration,
+    total_samples: u64,
+    last_speech_sample: Option<u64>,
+) -> bool {
+    if is_toggle {
+        return elapsed < Duration::from_millis(TOGGLE_TAIL_HOLD_MS);
+    }
+    if elapsed < Duration::from_millis(HOLD_MIN_TAIL_MS) {
+        return true;
+    }
+    if elapsed >= Duration::from_millis(HOLD_MAX_TAIL_MS) {
+        return false;
+    }
+    match last_speech_sample {
+        Some(last_speech) => {
+            total_samples.saturating_sub(last_speech) < HOLD_TRAILING_SILENCE_SAMPLES
+        }
+        None => false,
+    }
+}
+
+fn finalize_session_wav_with_vad(
+    wav_writer: PendingWavFile,
+    streaming_vad: Option<&mut crate::vad::StreamingVad>,
+) -> Result<Option<bool>, String> {
+    let vad_outcome = streaming_vad.map(|vad| {
+        let _ = vad.finish_pending_has_speech();
+        (vad.has_speech(), vad.last_speech_end_sample())
+    });
+
+    match vad_outcome {
+        Some((true, Some(speech_end))) => {
+            let keep_samples =
+                speech_end.saturating_add(crate::vad::TRAILING_SILENCE_PADDING_SAMPLES);
+            wav_writer.commit_with_keep_samples(Some(keep_samples))?;
+            Ok(Some(true))
+        }
+        Some((true, None)) => {
+            wav_writer.commit_with_keep_samples(None)?;
+            Ok(Some(true))
+        }
+        Some((false, _)) => {
+            wav_writer.commit_with_keep_samples(None)?;
+            Ok(Some(false))
+        }
+        None => {
+            wav_writer.commit_with_keep_samples(None)?;
+            Ok(None)
+        }
+    }
 }
 
 fn recorder_worker(
@@ -880,8 +1155,8 @@ fn recorder_worker(
     sample_stream: Option<SampleStreamPublisher>,
     device_name: Option<String>,
     on_volume: Box<dyn Fn(f32) + Send>,
-) -> Result<(), String> {
-    let (stream, sample_rx, error_rx, dropped_chunks, channels, sample_rate) =
+) -> Result<Option<bool>, String> {
+    let (stream, sample_rx, recycle_tx, error_rx, dropped_chunks, channels, sample_rate) =
         match setup_input_stream(device_name.as_deref()) {
             Ok(value) => value,
             Err(error) => {
@@ -906,6 +1181,10 @@ fn recorder_worker(
         }
     };
 
+    let mut streaming_vad = crate::vad::StreamingVad::new_16k().ok();
+    let mut scratch_resampled = Vec::with_capacity(1024);
+    let mut total_observed_samples = 0u64;
+
     if let Err(error) = stream.play() {
         let error = format!("Failed to start the input stream: {error}");
         let _ = ready_tx.send(Err(error.clone()));
@@ -918,10 +1197,14 @@ fn recorder_worker(
     let outcome = loop {
         if let Err(error) = drain_audio_queue(
             &sample_rx,
+            &recycle_tx,
             &shared,
             sample_stream.as_ref(),
             &mut resampler,
             &mut wav_writer,
+            streaming_vad.as_mut(),
+            &mut scratch_resampled,
+            &mut total_observed_samples,
             on_volume.as_ref(),
         ) {
             break Err(error);
@@ -938,20 +1221,36 @@ fn recorder_worker(
         }
     };
 
-    if matches!(outcome, Ok(RecorderCommand::Stop)) {
-        // Post-Release Audio Grace Buffer (Tail Hold):
-        // Allow hardware/WASAPI buffers and human speech decay to capture trailing
-        // phonemes and final words for 450ms before severing the input stream.
-        let grace_deadline = std::time::Instant::now() + Duration::from_millis(450);
-        while std::time::Instant::now() < grace_deadline {
+    if let Ok(RecorderCommand::Stop { is_toggle }) = outcome {
+        // Adaptive Post-Release Audio Grace Buffer (Tail Hold):
+        // - Toggle mode: 90 ms WASAPI hardware drain.
+        // - Hold mode: minimum 100 ms WASAPI drain, early exit once the last 180 ms
+        //   contain no speech, capped at 250 ms.
+        let tail_started = std::time::Instant::now();
+        loop {
             let _ = drain_audio_queue(
                 &sample_rx,
+                &recycle_tx,
                 &shared,
                 sample_stream.as_ref(),
                 &mut resampler,
                 &mut wav_writer,
+                streaming_vad.as_mut(),
+                &mut scratch_resampled,
+                &mut total_observed_samples,
                 on_volume.as_ref(),
             );
+            let last_speech = streaming_vad
+                .as_ref()
+                .and_then(|vad| vad.last_speech_end_sample());
+            if !should_continue_tail_hold(
+                is_toggle,
+                tail_started.elapsed(),
+                total_observed_samples,
+                last_speech,
+            ) {
+                break;
+            }
             std::thread::sleep(Duration::from_millis(10));
         }
     }
@@ -984,10 +1283,14 @@ fn recorder_worker(
             Ok(chunk) => {
                 if let Err(error) = append_audio_chunk(
                     chunk,
+                    &recycle_tx,
                     &shared,
                     sample_stream.as_ref(),
                     &mut resampler,
                     &mut wav_writer,
+                    streaming_vad.as_mut(),
+                    &mut scratch_resampled,
+                    &mut total_observed_samples,
                     on_volume.as_ref(),
                 ) {
                     remember_runtime_error(&shared, &error);
@@ -1014,12 +1317,17 @@ fn recorder_worker(
         );
     }
 
-    if matches!(command, RecorderCommand::Stop) {
+    if matches!(command, RecorderCommand::Stop { .. }) {
         let mut tail = Vec::new();
         resampler.finish(&mut tail);
-        if let Err(error) =
-            append_resampled_samples(tail, &shared, sample_stream.as_ref(), &mut wav_writer)
-        {
+        if let Err(error) = append_resampled_samples(
+            tail,
+            &shared,
+            sample_stream.as_ref(),
+            &mut wav_writer,
+            streaming_vad.as_mut(),
+            &mut total_observed_samples,
+        ) {
             remember_runtime_error(&shared, &error);
             return Err(error);
         }
@@ -1041,14 +1349,17 @@ fn recorder_worker(
     // ASR worker finish in parallel with the buffered WAV header flush/rename.
     drop(sample_stream);
 
-    if matches!(command, RecorderCommand::Stop) {
-        if let Err(error) = wav_writer.commit() {
-            remember_runtime_error(&shared, &error);
-            return Err(error);
-        }
+    if matches!(command, RecorderCommand::Stop { .. }) {
+        return match finalize_session_wav_with_vad(wav_writer, streaming_vad.as_mut()) {
+            Ok(vad_has_speech) => Ok(vad_has_speech),
+            Err(error) => {
+                remember_runtime_error(&shared, &error);
+                Err(error)
+            }
+        };
     }
 
-    Ok(())
+    Ok(None)
 }
 
 fn remember_runtime_error(shared: &Arc<Mutex<RecordingBuffer>>, error: &str) {
@@ -1076,6 +1387,7 @@ fn panic_payload_text(payload: Box<dyn std::any::Any + Send>) -> String {
 type StreamSetup = (
     cpal::Stream,
     mpsc::Receiver<AudioChunk>,
+    mpsc::SyncSender<Vec<f32>>,
     mpsc::Receiver<String>,
     Arc<AtomicU64>,
     u16,
@@ -1093,6 +1405,11 @@ fn setup_input_stream(device_name: Option<&str>) -> Result<StreamSetup, String> 
     let stream_config: cpal::StreamConfig = config.into();
 
     let (sample_tx, sample_rx) = mpsc::sync_channel(AUDIO_QUEUE_CAPACITY);
+    let (recycle_tx, recycle_rx) = mpsc::sync_channel(AUDIO_QUEUE_CAPACITY);
+    for _ in 0..CALLBACK_POOL_BUFFERS {
+        let _ = recycle_tx.try_send(Vec::with_capacity(CALLBACK_POOL_INITIAL_CAPACITY));
+    }
+    let cb_recycle_tx = recycle_tx.clone();
     let (error_tx, error_rx) = mpsc::channel();
     let dropped = Arc::new(AtomicU64::new(0));
     let callback_dropped = Arc::clone(&dropped);
@@ -1101,8 +1418,14 @@ fn setup_input_stream(device_name: Option<&str>) -> Result<StreamSetup, String> 
         cpal::SampleFormat::I16 => device.build_input_stream(
             &stream_config,
             move |data: &[i16], _| {
-                let samples = data.iter().map(|&s| s as f32 / 32768.0).collect();
-                publish_audio_chunk(samples, &sample_tx, &callback_dropped);
+                fill_and_publish_audio_chunk(
+                    data.iter().map(|&s| s as f32 / 32768.0),
+                    data.len(),
+                    &recycle_rx,
+                    &cb_recycle_tx,
+                    &sample_tx,
+                    &callback_dropped,
+                );
             },
             move |error| {
                 let _ = error_tx.send(format!("Audio input stream failed: {error}"));
@@ -1112,11 +1435,14 @@ fn setup_input_stream(device_name: Option<&str>) -> Result<StreamSetup, String> 
         cpal::SampleFormat::U16 => device.build_input_stream(
             &stream_config,
             move |data: &[u16], _| {
-                let samples = data
-                    .iter()
-                    .map(|&s| (s as f32 - 32768.0) / 32768.0)
-                    .collect();
-                publish_audio_chunk(samples, &sample_tx, &callback_dropped);
+                fill_and_publish_audio_chunk(
+                    data.iter().map(|&s| (s as f32 - 32768.0) / 32768.0),
+                    data.len(),
+                    &recycle_rx,
+                    &cb_recycle_tx,
+                    &sample_tx,
+                    &callback_dropped,
+                );
             },
             move |error| {
                 let _ = error_tx.send(format!("Audio input stream failed: {error}"));
@@ -1126,8 +1452,14 @@ fn setup_input_stream(device_name: Option<&str>) -> Result<StreamSetup, String> 
         cpal::SampleFormat::I32 => device.build_input_stream(
             &stream_config,
             move |data: &[i32], _| {
-                let samples = data.iter().map(|&s| s as f32 / 2147483648.0).collect();
-                publish_audio_chunk(samples, &sample_tx, &callback_dropped);
+                fill_and_publish_audio_chunk(
+                    data.iter().map(|&s| s as f32 / 2147483648.0),
+                    data.len(),
+                    &recycle_rx,
+                    &cb_recycle_tx,
+                    &sample_tx,
+                    &callback_dropped,
+                );
             },
             move |error| {
                 let _ = error_tx.send(format!("Audio input stream failed: {error}"));
@@ -1137,7 +1469,14 @@ fn setup_input_stream(device_name: Option<&str>) -> Result<StreamSetup, String> 
         cpal::SampleFormat::F32 => device.build_input_stream(
             &stream_config,
             move |data: &[f32], _| {
-                publish_audio_chunk(data.to_vec(), &sample_tx, &callback_dropped);
+                fill_and_publish_audio_chunk(
+                    data.iter().copied(),
+                    data.len(),
+                    &recycle_rx,
+                    &cb_recycle_tx,
+                    &sample_tx,
+                    &callback_dropped,
+                );
             },
             move |error| {
                 let _ = error_tx.send(format!("Audio input stream failed: {error}"));
@@ -1148,65 +1487,142 @@ fn setup_input_stream(device_name: Option<&str>) -> Result<StreamSetup, String> 
     }
     .map_err(|e| format!("Failed to build input stream: {e}"))?;
 
-    Ok((stream, sample_rx, error_rx, dropped, channels, sample_rate))
+    Ok((
+        stream,
+        sample_rx,
+        recycle_tx,
+        error_rx,
+        dropped,
+        channels,
+        sample_rate,
+    ))
 }
 
-fn publish_audio_chunk(
-    mut samples: Vec<f32>,
+fn fill_and_publish_audio_chunk<I>(
+    iter: I,
+    len_hint: usize,
+    recycle_rx: &mpsc::Receiver<Vec<f32>>,
+    recycle_tx: &mpsc::SyncSender<Vec<f32>>,
     sender: &mpsc::SyncSender<AudioChunk>,
     dropped: &AtomicU64,
-) {
+) where
+    I: Iterator<Item = f32>,
+{
+    let mut samples = recycle_rx
+        .try_recv()
+        .unwrap_or_else(|_| Vec::with_capacity(len_hint));
+    samples.clear();
     let mut sum_sq = 0.0f32;
-    for sample in &mut samples {
-        *sample = sanitize_sample(*sample);
-        sum_sq += *sample * *sample;
+    for raw in iter {
+        let s = sanitize_sample(raw);
+        sum_sq += s * s;
+        samples.push(s);
     }
     let rms = if samples.is_empty() {
         0.0
     } else {
         (sum_sq / samples.len() as f32).sqrt()
     };
-    if let Err(mpsc::TrySendError::Full(_)) = sender.try_send(AudioChunk { samples, rms }) {
+    if let Err(mpsc::TrySendError::Full(chunk)) = sender.try_send(AudioChunk { samples, rms }) {
+        let _ = recycle_tx.try_send(chunk.samples);
         dropped.fetch_add(1, Ordering::Relaxed);
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 fn drain_audio_queue(
     receiver: &mpsc::Receiver<AudioChunk>,
+    recycle_tx: &mpsc::SyncSender<Vec<f32>>,
     shared: &Arc<Mutex<RecordingBuffer>>,
     sample_stream: Option<&SampleStreamPublisher>,
     resampler: &mut StreamingResampler,
     wav_writer: &mut PendingWavFile,
+    mut streaming_vad: Option<&mut crate::vad::StreamingVad>,
+    scratch_resampled: &mut Vec<f32>,
+    total_observed_samples: &mut u64,
     on_volume: &dyn Fn(f32),
 ) -> Result<(), String> {
     while let Ok(chunk) = receiver.try_recv() {
         append_audio_chunk(
             chunk,
+            recycle_tx,
             shared,
             sample_stream,
             resampler,
             wav_writer,
+            streaming_vad.as_deref_mut(),
+            scratch_resampled,
+            total_observed_samples,
             on_volume,
         )?;
     }
     Ok(())
 }
 
+#[allow(clippy::too_many_arguments)]
 fn append_audio_chunk(
     chunk: AudioChunk,
+    recycle_tx: &mpsc::SyncSender<Vec<f32>>,
     shared: &Arc<Mutex<RecordingBuffer>>,
     sample_stream: Option<&SampleStreamPublisher>,
     resampler: &mut StreamingResampler,
     wav_writer: &mut PendingWavFile,
+    streaming_vad: Option<&mut crate::vad::StreamingVad>,
+    scratch_resampled: &mut Vec<f32>,
+    total_observed_samples: &mut u64,
     on_volume: &dyn Fn(f32),
 ) -> Result<(), String> {
-    let capacity = chunk.samples.len() * OUTPUT_SAMPLE_RATE as usize
-        / (resampler.input_rate as usize * resampler.channels).max(1)
-        + 2;
-    let mut converted = Vec::with_capacity(capacity);
-    resampler.process_interleaved(&chunk.samples, &mut converted);
-    append_resampled_samples(converted, shared, sample_stream, wav_writer)?;
-    on_volume(chunk.rms);
+    let rms = chunk.rms;
+    if sample_stream.is_some() {
+        let capacity = chunk.samples.len() * OUTPUT_SAMPLE_RATE as usize
+            / (resampler.input_rate as usize * resampler.channels).max(1)
+            + 2;
+        let mut converted = Vec::with_capacity(capacity);
+        resampler.process_interleaved(&chunk.samples, &mut converted);
+        let _ = recycle_tx.try_send(chunk.samples);
+        append_resampled_samples(
+            converted,
+            shared,
+            sample_stream,
+            wav_writer,
+            streaming_vad,
+            total_observed_samples,
+        )?;
+    } else {
+        scratch_resampled.clear();
+        resampler.process_interleaved(&chunk.samples, scratch_resampled);
+        let _ = recycle_tx.try_send(chunk.samples);
+        append_resampled_slice_no_stream(
+            scratch_resampled,
+            shared,
+            wav_writer,
+            streaming_vad,
+            total_observed_samples,
+        )?;
+    }
+    on_volume(rms);
+    Ok(())
+}
+
+fn append_resampled_slice_no_stream(
+    samples: &[f32],
+    shared: &Arc<Mutex<RecordingBuffer>>,
+    wav_writer: &mut PendingWavFile,
+    streaming_vad: Option<&mut crate::vad::StreamingVad>,
+    total_observed_samples: &mut u64,
+) -> Result<(), String> {
+    if samples.is_empty() {
+        return Ok(());
+    }
+    *total_observed_samples = total_observed_samples.saturating_add(samples.len() as u64);
+    if let Some(vad) = streaming_vad {
+        vad.observe_samples(samples);
+    }
+    wav_writer.write_samples(samples)?;
+    shared
+        .lock()
+        .map_err(|_| "Audio sample buffer is unavailable".to_string())?
+        .append_samples(samples);
     Ok(())
 }
 
@@ -1215,11 +1631,16 @@ fn append_resampled_samples(
     shared: &Arc<Mutex<RecordingBuffer>>,
     sample_stream: Option<&SampleStreamPublisher>,
     wav_writer: &mut PendingWavFile,
+    streaming_vad: Option<&mut crate::vad::StreamingVad>,
+    total_observed_samples: &mut u64,
 ) -> Result<(), String> {
     if samples.is_empty() {
         return Ok(());
     }
-
+    *total_observed_samples = total_observed_samples.saturating_add(samples.len() as u64);
+    if let Some(vad) = streaming_vad {
+        vad.observe_samples(&samples);
+    }
     wav_writer.write_samples(&samples)?;
     retain_and_publish_samples(samples, shared, sample_stream)
 }
@@ -1631,15 +2052,206 @@ mod tests {
         assert!((f32_samples[4] - -0.5).abs() < 1e-6);
     }
 
+    static MIC_METER_TEST_LOCK: Mutex<()> = Mutex::new(());
+
+    #[cfg(target_os = "windows")]
+    fn file_dacl_ace_count(path: &Path) -> usize {
+        use std::os::windows::ffi::OsStrExt;
+        use windows_sys::Win32::Foundation::LocalFree;
+        use windows_sys::Win32::Security::Authorization::{GetNamedSecurityInfoW, SE_FILE_OBJECT};
+        use windows_sys::Win32::Security::{
+            AclSizeInformation, GetAclInformation, ACL_SIZE_INFORMATION, DACL_SECURITY_INFORMATION,
+        };
+        unsafe {
+            let path_wide: Vec<u16> = path.as_os_str().encode_wide().chain(Some(0)).collect();
+            let mut dacl: *mut windows_sys::Win32::Security::ACL = std::ptr::null_mut();
+            let mut descriptor: *mut std::ffi::c_void = std::ptr::null_mut();
+            let result = GetNamedSecurityInfoW(
+                path_wide.as_ptr(),
+                SE_FILE_OBJECT,
+                DACL_SECURITY_INFORMATION,
+                std::ptr::null_mut(),
+                std::ptr::null_mut(),
+                &mut dacl,
+                std::ptr::null_mut(),
+                &mut descriptor,
+            );
+            if result != 0 || dacl.is_null() {
+                if !descriptor.is_null() {
+                    LocalFree(descriptor);
+                }
+                return usize::MAX;
+            }
+            let mut size_info: ACL_SIZE_INFORMATION = std::mem::zeroed();
+            let ok = GetAclInformation(
+                dacl,
+                &mut size_info as *mut _ as *mut std::ffi::c_void,
+                std::mem::size_of::<ACL_SIZE_INFORMATION>() as u32,
+                AclSizeInformation,
+            );
+            if !descriptor.is_null() {
+                LocalFree(descriptor);
+            }
+            if ok == 0 {
+                return usize::MAX;
+            }
+            size_info.AceCount as usize
+        }
+    }
+
+    fn speech_chirp_16k() -> Vec<f32> {
+        let sr = OUTPUT_SAMPLE_RATE as usize;
+        (0..sr)
+            .map(|i| {
+                let f = 120.0 + 900.0 * (i as f32 / sr as f32);
+                let t = i as f32 / sr as f32;
+                let env = 0.5 * (1.0 - (2.0 * std::f32::consts::PI * 4.0 * t).cos());
+                (2.0 * std::f32::consts::PI * f * t).sin() * 0.8 * env
+            })
+            .collect()
+    }
+
+    #[test]
+    fn adaptive_tail_hold_respects_toggle_and_hold_bounds() {
+        // Toggle mode: 90ms drain regardless of trailing speech state.
+        assert!(should_continue_tail_hold(
+            true,
+            Duration::from_millis(89),
+            16_000,
+            Some(15_900)
+        ));
+        assert!(!should_continue_tail_hold(
+            true,
+            Duration::from_millis(90),
+            16_000,
+            Some(15_900)
+        ));
+
+        // Hold mode: always drains at least 100ms, then exits immediately when >= 180ms (2,880 samples) are silent.
+        assert!(should_continue_tail_hold(
+            false,
+            Duration::from_millis(99),
+            16_000,
+            Some(10_000)
+        ));
+        assert!(!should_continue_tail_hold(
+            false,
+            Duration::from_millis(100),
+            16_000,
+            Some(16_000 - HOLD_TRAILING_SILENCE_SAMPLES)
+        ));
+
+        // Hold mode with active speech right before key release keeps draining past 100ms up to 250ms ceiling.
+        assert!(should_continue_tail_hold(
+            false,
+            Duration::from_millis(150),
+            16_000,
+            Some(15_000)
+        ));
+        assert!(!should_continue_tail_hold(
+            false,
+            Duration::from_millis(250),
+            16_000,
+            Some(15_999)
+        ));
+
+        // Hold mode with pure silence exits right at 100ms.
+        assert!(!should_continue_tail_hold(
+            false,
+            Duration::from_millis(100),
+            8_000,
+            None
+        ));
+    }
+
+    #[test]
+    fn streaming_vad_commit_trims_trailing_silence_before_publish_and_preserves_dacl() {
+        let speech_path = test_wav_path("streaming-vad-trim");
+        remove_test_wav(&speech_path);
+
+        let mut samples = speech_chirp_16k();
+        let speech_len = samples.len() as u64;
+        // Append 2.5 seconds of trailing silence (40,000 samples)
+        samples.resize(samples.len() + 40_000, 0.0);
+
+        let mut pending = PendingWavFile::create(speech_path.clone()).expect("create pending WAV");
+        let mut vad = crate::vad::StreamingVad::new_16k().expect("build streaming VAD");
+        for chunk in samples.chunks(320) {
+            vad.observe_samples(chunk);
+            pending.write_samples(chunk).expect("write chunk");
+        }
+
+        let outcome =
+            finalize_session_wav_with_vad(pending, Some(&mut vad)).expect("finalize with VAD");
+        assert_eq!(outcome, Some(true));
+        assert!(speech_path.exists());
+
+        #[cfg(target_os = "windows")]
+        assert_eq!(
+            file_dacl_ace_count(&speech_path),
+            2,
+            "committed trimmed WAV must have restrictive 2-ACE DACL"
+        );
+
+        let duration = {
+            let reader = hound::WavReader::open(&speech_path).expect("open finalized WAV");
+            assert_eq!(reader.spec(), wav_spec());
+            u64::from(reader.duration())
+        };
+        remove_test_wav(&speech_path);
+
+        let max_expected = speech_len + crate::vad::TRAILING_SILENCE_PADDING_SAMPLES + 512;
+        assert!(
+            duration <= max_expected,
+            "trailing silence beyond 600ms padding must be truncated before commit (got {duration}, max {max_expected})"
+        );
+        assert!(duration >= crate::vad::TRAILING_SILENCE_PADDING_SAMPLES);
+
+        // Pure silence session returns Some(false)
+        let silent_path = test_wav_path("streaming-vad-silence");
+        remove_test_wav(&silent_path);
+        let mut silent_pending =
+            PendingWavFile::create(silent_path.clone()).expect("create silent pending WAV");
+        let mut silent_vad = crate::vad::StreamingVad::new_16k().expect("build silent VAD");
+        let silence = vec![0.0f32; 16_000];
+        silent_vad.observe_samples(&silence);
+        silent_pending
+            .write_samples(&silence)
+            .expect("write silence");
+        let silent_outcome = finalize_session_wav_with_vad(silent_pending, Some(&mut silent_vad))
+            .expect("finalize silence");
+        assert_eq!(silent_outcome, Some(false));
+        remove_test_wav(&silent_path);
+    }
+
+    #[test]
+    fn resampler_evaluates_fir_only_at_output_points() {
+        let mut resampler = StreamingResampler::new(2, 48_000).expect("48k stereo resampler");
+        let raw = vec![0.25f32; 48_000 * 2]; // 1 second of 48 kHz stereo (48,000 frames)
+        let mut out = Vec::with_capacity(16_002);
+        resampler.process_interleaved(&raw, &mut out);
+        resampler.finish(&mut out);
+
+        assert_eq!(out.len(), 16_000);
+        assert_eq!(
+            resampler.fir_evaluations, 16_000,
+            "48 kHz -> 16 kHz resampler must evaluate FIR once per 16 kHz output sample, not 48,000 times"
+        );
+    }
+
     #[test]
     fn test_clear_active_meter_matches_only_own_handle() {
+        let _lock = MIC_METER_TEST_LOCK.lock().expect("mic meter test lock");
         let stop_1 = Arc::new(AtomicBool::new(false));
         let stop_2 = Arc::new(AtomicBool::new(false));
 
-        let mutex = ACTIVE_MIC_METER_STOP.get_or_init(|| Mutex::new(None));
+        let mutex = ACTIVE_MIC_METER.get_or_init(|| Mutex::new(None));
         {
             let mut guard = mutex.lock().unwrap();
-            *guard = Some(Arc::clone(&stop_2));
+            *guard = Some(ActiveMicMeter {
+                stop: Arc::clone(&stop_2),
+                handle: None,
+            });
         }
 
         // Thread 1 exits and tries to clear with stop_1 - should NOT clear stop_2!
@@ -1647,7 +2259,7 @@ mod tests {
         {
             let guard = mutex.lock().unwrap();
             assert!(guard.is_some());
-            assert!(Arc::ptr_eq(guard.as_ref().unwrap(), &stop_2));
+            assert!(Arc::ptr_eq(&guard.as_ref().unwrap().stop, &stop_2));
         }
 
         // Thread 2 exits and clears with stop_2 - should clear!
@@ -1656,5 +2268,38 @@ mod tests {
             let guard = mutex.lock().unwrap();
             assert!(guard.is_none());
         }
+    }
+
+    #[test]
+    fn stop_mic_meter_joins_worker_thread_before_returning() {
+        let _lock = MIC_METER_TEST_LOCK.lock().expect("mic meter test lock");
+        let stop = Arc::new(AtomicBool::new(false));
+        let finished = Arc::new(AtomicBool::new(false));
+        let thread_stop = Arc::clone(&stop);
+        let thread_finished = Arc::clone(&finished);
+
+        let handle = thread::spawn(move || {
+            while !thread_stop.load(Ordering::Acquire) {
+                thread::sleep(Duration::from_millis(5));
+            }
+            thread::sleep(Duration::from_millis(15));
+            thread_finished.store(true, Ordering::Release);
+            clear_active_meter_if_matches(&thread_stop);
+        });
+
+        let mutex = ACTIVE_MIC_METER.get_or_init(|| Mutex::new(None));
+        *mutex.lock().unwrap() = Some(ActiveMicMeter {
+            stop,
+            handle: Some(handle),
+        });
+        assert!(is_mic_meter_running());
+
+        stop_mic_meter();
+
+        assert!(
+            finished.load(Ordering::Acquire),
+            "stop_mic_meter must join the worker thread before returning"
+        );
+        assert!(!is_mic_meter_running());
     }
 }

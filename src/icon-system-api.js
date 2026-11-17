@@ -1,3 +1,5 @@
+// @ts-check
+
 /**
  * Thin ES-module facade over the classic icon registry in `icon-system.js`.
  *
@@ -7,12 +9,38 @@
  * the application modules a normal `getIcon()` import.
  */
 
-const icons = window.AuraIcons || {
+/**
+ * @typedef {Object} AuraIconOptions
+ * @property {number} [size]
+ * @property {number} [strokeWidth]
+ * @property {string} [className]
+ * @property {string} [title]
+ * @property {boolean} [accent]
+ */
+
+/**
+ * @typedef {Object} AuraIconRegistry
+ * @property {(name: string, options?: AuraIconOptions) => string} body
+ * @property {(name: string, options?: AuraIconOptions) => string} svg
+ * @property {(name: string, options?: AuraIconOptions) => string} [brandSvg]
+ * @property {(root?: ParentNode) => void} hydrate
+ * @property {(name: string) => string} [resolve]
+ */
+
+const globalWithIcons = /** @type {Window & typeof globalThis & { AuraIcons?: AuraIconRegistry }} */ (window);
+
+/** @type {AuraIconRegistry} */
+const icons = globalWithIcons.AuraIcons || {
   body: () => "",
   svg: () => "",
   hydrate: () => {},
 };
 
+/**
+ * @param {string} name
+ * @param {AuraIconOptions} [options]
+ * @returns {string}
+ */
 export function getIcon(name, options = {}) {
   try {
     return icons.svg(name, options);
@@ -22,6 +50,11 @@ export function getIcon(name, options = {}) {
   }
 }
 
+/**
+ * @param {string} name
+ * @param {AuraIconOptions} [options]
+ * @returns {string}
+ */
 export function getBrandIcon(name, options = {}) {
   try {
     return typeof icons.brandSvg === "function" ? icons.brandSvg(name, options) : "";
@@ -31,10 +64,19 @@ export function getBrandIcon(name, options = {}) {
   }
 }
 
-export function iconBody(name) {
-  return icons.body(name);
+/**
+ * @param {string} name
+ * @param {AuraIconOptions} [options]
+ * @returns {string}
+ */
+export function iconBody(name, options) {
+  return icons.body(name, options);
 }
 
+/**
+ * @param {ParentNode} [root]
+ * @returns {void}
+ */
 export function hydrateIcons(root = document) {
   icons.hydrate(root);
 }

@@ -22,6 +22,7 @@ static RECORDING_ACTIVE: AtomicBool = AtomicBool::new(false);
 static SHORTCUT_ACTIVE: AtomicBool = AtomicBool::new(false);
 static KEY_SUPPRESSED: AtomicBool = AtomicBool::new(false);
 static HOOK_PAUSED: AtomicBool = AtomicBool::new(false);
+static LIVE_TARGET_MONITORING: AtomicBool = AtomicBool::new(false);
 
 /// Marks whether the keyboard hook is paused (e.g. during Gaming Mode).
 pub fn set_hook_paused(paused: bool) {
@@ -41,6 +42,17 @@ pub fn is_hook_paused() -> bool {
 /// Marks whether a recording session is active (enables Esc interception).
 pub fn set_recording_active(active: bool) {
     RECORDING_ACTIVE.store(active, Ordering::SeqCst);
+}
+
+/// Marks whether live-preview target monitoring is armed so the OS hook skips
+/// locking `USER_INPUT_CALLBACK` during ordinary typing outside a streaming
+/// dictation session.
+pub fn set_live_target_monitoring(active: bool) {
+    LIVE_TARGET_MONITORING.store(active, Ordering::Release);
+}
+
+pub fn is_live_target_monitoring() -> bool {
+    LIVE_TARGET_MONITORING.load(Ordering::Acquire)
 }
 
 /// Registers the callback fired when the user presses Esc during recording.
@@ -75,7 +87,7 @@ where
 
 fn notify_user_input() {
     invoke_fn_callback(&USER_INPUT_CALLBACK, || {
-        crate::logger::log(
+        crate::logger::log_from_hook(
             "ERROR",
             "Hotkey",
             None,
@@ -518,7 +530,7 @@ mod windows_impl {
             HOTKEY_PAIR.store(packed, Ordering::SeqCst);
             SUPPRESSED_MODIFIERS.store(0, Ordering::SeqCst);
             KEY_SUPPRESSED.store(false, Ordering::SeqCst);
-            crate::logger::log(
+            crate::logger::log_from_hook(
                 "INFO",
                 "Hotkey",
                 None,
@@ -532,12 +544,25 @@ mod windows_impl {
         SHORTCUT_ACTIVE.store(false, Ordering::SeqCst);
         KEY_SUPPRESSED.store(false, Ordering::SeqCst);
         apply_pending_hotkey();
-        crate::logger::log(
+        crate::logger::log_from_hook(
             "INFO",
             "Hotkey",
             None,
             "Session lock/unlock or hook pause detected; stale hotkey state cleared",
         );
+    }
+
+    fn handle_session_change(is_lock: bool) {
+        clear_phantom_hotkey_state();
+        if is_lock && RECORDING_ACTIVE.swap(false, Ordering::SeqCst) {
+            crate::logger::log_from_hook(
+                "INFO",
+                "Hotkey",
+                None,
+                "Workstation locked during active recording; cancelling session",
+            );
+            notify_cancel();
+        }
     }
 
     unsafe extern "system" fn session_wnd_proc(
@@ -549,7 +574,7 @@ mod windows_impl {
         if msg == WM_WTSSESSION_CHANGE
             && (wparam == WTS_SESSION_LOCK as WPARAM || wparam == WTS_SESSION_UNLOCK as WPARAM)
         {
-            clear_phantom_hotkey_state();
+            handle_session_change(wparam == WTS_SESSION_LOCK as WPARAM);
         }
         DefWindowProcW(hwnd, msg, wparam, lparam)
     }
@@ -607,7 +632,7 @@ mod windows_impl {
             Ordering::Relaxed,
         );
         invoke_bool_callback(&CALLBACK, is_down, || {
-            crate::logger::log(
+            crate::logger::log_from_hook(
                 "ERROR",
                 "Hotkey",
                 None,
@@ -618,7 +643,7 @@ mod windows_impl {
 
     fn notify_cancel() {
         invoke_fn_callback(&CANCEL_CALLBACK, || {
-            crate::logger::log(
+            crate::logger::log_from_hook(
                 "ERROR",
                 "Hotkey",
                 None,
@@ -730,7 +755,7 @@ mod windows_impl {
                     modifier_is_down(MOD_CTRL),
                 ) {
                     if !INJECTED_TARGET_WARNED.swap(true, Ordering::Relaxed) {
-                        crate::logger::log(
+                        crate::logger::log_from_hook(
                             "WARN",
                             "Hotkey",
                             None,
@@ -751,7 +776,7 @@ mod windows_impl {
                     && SHORTCUT_ACTIVE.load(Ordering::Relaxed)
                     && !INJECTED_TARGET_WARNED.swap(true, Ordering::Relaxed)
                 {
-                    crate::logger::log(
+                    crate::logger::log_from_hook(
                         "WARN",
                         "Hotkey",
                         None,
@@ -838,7 +863,7 @@ mod windows_impl {
                             (state as u16 & 0x8000) != 0
                         });
                     if target_still_held {
-                        crate::logger::log(
+                        crate::logger::log_from_hook(
                             "INFO",
                             "Hotkey",
                             None,
@@ -901,7 +926,10 @@ mod windows_impl {
             // non-modifier key can change the target editor (typing, Backspace,
             // Ctrl+Z, navigation, etc.). Injected SendInput events returned at
             // the top of this hook and therefore never desynchronize Aura.
-            if is_down && !is_any_modifier_key(vk_code) {
+            if is_down
+                && !is_any_modifier_key(vk_code)
+                && LIVE_TARGET_MONITORING.load(Ordering::Acquire)
+            {
                 notify_user_input();
             }
         }
@@ -1011,9 +1039,12 @@ mod windows_impl {
             ));
         }
 
+        static SESSION_TEST_LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
+
         #[test]
         fn session_change_clears_phantom_hotkey_state() {
             use std::sync::atomic::Ordering;
+            let _guard = SESSION_TEST_LOCK.lock().expect("session test lock");
 
             SUPPRESSED_MODIFIERS.store(MOD_ALT | MOD_SHIFT, Ordering::SeqCst);
             SHORTCUT_ACTIVE.store(true, Ordering::SeqCst);
@@ -1024,6 +1055,50 @@ mod windows_impl {
             assert_eq!(SUPPRESSED_MODIFIERS.load(Ordering::SeqCst), 0);
             assert!(!SHORTCUT_ACTIVE.load(Ordering::SeqCst));
             assert!(!KEY_SUPPRESSED.load(Ordering::SeqCst));
+        }
+
+        #[test]
+        fn session_lock_cancels_active_recording_once() {
+            use super::handle_session_change;
+            use crate::keyboard_hook::{
+                is_live_target_monitoring, set_cancel_callback, set_live_target_monitoring,
+                set_recording_active, CANCEL_CALLBACK, RECORDING_ACTIVE,
+            };
+            use std::sync::atomic::{AtomicUsize, Ordering};
+            use std::sync::Arc;
+
+            let _guard = SESSION_TEST_LOCK.lock().expect("session test lock");
+
+            let cancel_hits = Arc::new(AtomicUsize::new(0));
+            let hits_clone = Arc::clone(&cancel_hits);
+            set_cancel_callback(move || {
+                hits_clone.fetch_add(1, Ordering::SeqCst);
+            })
+            .expect("register cancel callback");
+
+            // Unlock while recording is active must not cancel, only clear phantom state.
+            set_recording_active(true);
+            handle_session_change(false);
+            assert_eq!(cancel_hits.load(Ordering::SeqCst), 0);
+            assert!(RECORDING_ACTIVE.load(Ordering::SeqCst));
+
+            // Workstation lock while recording is active must cancel and disarm RECORDING_ACTIVE.
+            handle_session_change(true);
+            assert_eq!(cancel_hits.load(Ordering::SeqCst), 1);
+            assert!(!RECORDING_ACTIVE.load(Ordering::SeqCst));
+
+            // Subsequent lock when inactive must not fire cancel again.
+            handle_session_change(true);
+            assert_eq!(cancel_hits.load(Ordering::SeqCst), 1);
+
+            if let Ok(mut cb) = CANCEL_CALLBACK.lock() {
+                *cb = None;
+            }
+
+            set_live_target_monitoring(true);
+            assert!(is_live_target_monitoring());
+            set_live_target_monitoring(false);
+            assert!(!is_live_target_monitoring());
         }
 
         #[test]
@@ -1344,7 +1419,7 @@ mod macos_impl {
                     guard.key_code = key;
                 }
                 Err(poisoned) => {
-                    crate::logger::log(
+                    crate::logger::log_from_hook(
                         "ERROR",
                         "Hotkey",
                         None,
@@ -1356,7 +1431,7 @@ mod macos_impl {
                 }
             }
             KEY_SUPPRESSED.store(false, Ordering::SeqCst);
-            crate::logger::log(
+            crate::logger::log_from_hook(
                 "INFO",
                 "Hotkey",
                 None,
@@ -1369,7 +1444,7 @@ mod macos_impl {
         SHORTCUT_ACTIVE.store(false, Ordering::SeqCst);
         KEY_SUPPRESSED.store(false, Ordering::SeqCst);
         apply_pending_hotkey();
-        crate::logger::log(
+        crate::logger::log_from_hook(
             "INFO",
             "Hotkey",
             None,
@@ -1456,7 +1531,7 @@ mod macos_impl {
 
     fn notify_hotkey(is_down: bool) {
         invoke_bool_callback(&CALLBACK, is_down, || {
-            crate::logger::log(
+            crate::logger::log_from_hook(
                 "ERROR",
                 "Hotkey",
                 None,
@@ -1467,7 +1542,7 @@ mod macos_impl {
 
     fn notify_cancel() {
         invoke_fn_callback(&CANCEL_CALLBACK, || {
-            crate::logger::log(
+            crate::logger::log_from_hook(
                 "ERROR",
                 "Hotkey",
                 None,
@@ -1511,7 +1586,7 @@ mod macos_impl {
             let guard = match HOTKEY_CONFIG.lock() {
                 Ok(guard) => guard,
                 Err(poisoned) => {
-                    crate::logger::log(
+                    crate::logger::log_from_hook(
                         "ERROR",
                         "Hotkey",
                         None,
@@ -1559,7 +1634,7 @@ mod macos_impl {
                 // Modifier released while the target key is still held: defer
                 // finalization to the target key-up (mirrors the Windows latch
                 // behavior) so remaining auto-repeats stay suppressed.
-                crate::logger::log(
+                crate::logger::log_from_hook(
                     "INFO",
                     "Hotkey",
                     None,

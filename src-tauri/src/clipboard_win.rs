@@ -63,7 +63,12 @@ fn write_private(mut write: impl FnMut() -> bool) -> bool {
         }
         let wrote = unsafe {
             EmptyClipboard();
-            write()
+            let ok = write();
+            if !ok {
+                // Never publish unmarked data if exclusion format registration/setting failed.
+                EmptyClipboard();
+            }
+            ok
         };
         unsafe { CloseClipboard() };
         if wrote {

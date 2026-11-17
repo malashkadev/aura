@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import vm from "node:vm";
 
 console.log("=== RUNNING FULL PROGRAM INTEGRITY AUDIT ===");
@@ -11,20 +11,56 @@ function reportError(...args) {
   console.error(...args);
 }
 
-// 1. Check DOM IDs in index.html vs main.js
+const allSrcJsNames = readdirSync("src")
+  .filter((f) => f.endsWith(".js"))
+  .sort();
+const allJsFiles = allSrcJsNames.map((name) => ({
+  name,
+  content: read(`src/${name}`),
+}));
+
+// 1. Check DOM IDs in index.html vs main-window JS modules
 const html = read("src/index.html");
 const mainJs = read("src/main.js");
-const htmlIds = new Set([...html.matchAll(/id="([^"]+)"/g)].map(m => m[1]));
+const overlayHtml = read("src/overlay.html");
+const overlayJs = read("src/overlay.js");
+const trayHtml = read("src/tray-menu.html");
+const trayJs = read("src/tray-menu.js");
 
-// Find getElementById in main.js
-const getElementByIdMatches = [...mainJs.matchAll(/getElementById\(["']([^"']+)["']\)/g)].map(m => m[1]);
+const htmlIds = new Set([...html.matchAll(/id="([^"]+)"/g)].map((m) => m[1]));
+const overlayHtmlIds = new Set([...overlayHtml.matchAll(/id="([^"]+)"/g)].map((m) => m[1]));
+const trayHtmlIds = new Set([...trayHtml.matchAll(/id="([^"]+)"/g)].map((m) => m[1]));
+const anyWindowIds = new Set([...htmlIds, ...overlayHtmlIds, ...trayHtmlIds]);
+
+const sharedJsModules = new Set([
+  "icon-system.js",
+  "icon-system-api.js",
+  "icon-system-integration.js",
+  "sound-themes.js",
+]);
+const mainWindowModules = allJsFiles.filter(
+  (f) => f.name !== "overlay.js" && f.name !== "tray-menu.js",
+);
+
 const missingIds = [];
-for (const id of getElementByIdMatches) {
-  if (!htmlIds.has(id)) {
-    missingIds.push(id);
+let totalMainGetById = 0;
+for (const mod of mainWindowModules) {
+  const ids = [...mod.content.matchAll(/getElementById\(["']([^"']+)["']\)/g)].map((m) => m[1]);
+  totalMainGetById += ids.length;
+  const allowedIds = sharedJsModules.has(mod.name) ? anyWindowIds : htmlIds;
+  for (const id of ids) {
+    if (!allowedIds.has(id)) {
+      missingIds.push(`${mod.name}:#${id}`);
+    }
   }
 }
-console.log(`Checked ${getElementByIdMatches.length} getElementById calls. Missing IDs:`, missingIds);
+console.log(
+  `Checked ${totalMainGetById} getElementById calls across ${mainWindowModules.length} main/shared JS module(s). Missing IDs:`,
+  missingIds,
+);
+if (missingIds.length > 0) {
+  reportError("[ERROR] Missing DOM IDs in main/shared JS modules:", missingIds);
+}
 
 // 2. Parse i18n dictionaries in main.js
 const normalized = mainJs.replaceAll("\r\n", "\n");
@@ -78,9 +114,15 @@ for (const loc of locales) {
   }
 }
 
-// Check getTranslation calls in main.js
-const getTranslationCalls = [...new Set([...mainJs.matchAll(/getTranslation\(["']([^"']+)["']/g)].map(m => m[1]))];
-console.log(`Found ${getTranslationCalls.length} getTranslation calls in main.js`);
+// Check getTranslation calls across all main-window JS modules
+const getTranslationCalls = [
+  ...new Set(
+    mainWindowModules.flatMap((mod) =>
+      [...mod.content.matchAll(/getTranslation\(["']([^"']+)["']/g)].map((m) => m[1]),
+    ),
+  ),
+];
+console.log(`Found ${getTranslationCalls.length} getTranslation calls across src/*.js`);
 const missingGetTrans = {};
 for (const loc of locales) {
   missingGetTrans[loc] = [];
@@ -115,31 +157,25 @@ for (const k of allKeys) {
 }
 
 // 3. Overlay inspection
-const overlayHtml = read("src/overlay.html");
-const overlayJs = read("src/overlay.js");
-const overlayHtmlIds = new Set([...overlayHtml.matchAll(/id="([^"]+)"/g)].map(m => m[1]));
 const overlayGetElementById = [...overlayJs.matchAll(/getElementById\(["']([^"']+)["']\)/g)].map(m => m[1]);
 const overlayMissingIds = overlayGetElementById.filter(id => !overlayHtmlIds.has(id));
 console.log("Overlay missing IDs:", overlayMissingIds);
+if (overlayMissingIds.length > 0) {
+  reportError("[ERROR] Overlay missing IDs:", overlayMissingIds);
+}
 
 // 4. Tray menu inspection
-const trayHtml = read("src/tray-menu.html");
-const trayJs = read("src/tray-menu.js");
-const trayHtmlIds = new Set([...trayHtml.matchAll(/id="([^"]+)"/g)].map(m => m[1]));
 const trayGetElementById = [...trayJs.matchAll(/getElementById\(["']([^"']+)["']\)/g)].map(m => m[1]);
 const trayMissingIds = trayGetElementById.filter(id => !trayHtmlIds.has(id));
 console.log("Tray menu missing IDs:", trayMissingIds);
+if (trayMissingIds.length > 0) {
+  reportError("[ERROR] Tray menu missing IDs:", trayMissingIds);
+}
 
-// 5. Tauri command invocation audit
-const allJsFiles = [
-  { name: "main.js", content: mainJs },
-  { name: "overlay.js", content: overlayJs },
-  { name: "tray-menu.js", content: trayJs }
-];
-
+// 5. Tauri command invocation audit across all src/*.js modules
 const invokedCommands = [];
 for (const f of allJsFiles) {
-  const regex = /invoke\(["']([^"']+)["'](?:\s*,\s*(\{[\s\S]*?\}))?\)/g;
+  const regex = /(?:^|[^a-zA-Z0-9_$])invoke\(\s*["']([^"']+)["'](?:\s*,\s*(\{[\s\S]*?\}))?\s*\)/g;
   let m;
   while ((m = regex.exec(f.content)) !== null) {
     const cmd = m[1];
@@ -147,7 +183,7 @@ for (const f of allJsFiles) {
     invokedCommands.push({ file: f.name, cmd, rawArgs });
   }
 }
-console.log(`Found ${invokedCommands.length} invoke calls across JS files.`);
+console.log(`Found ${invokedCommands.length} invoke calls across ${allJsFiles.length} JS file(s).`);
 
 // Read Rust commands from lib.rs
 const libRs = read("src-tauri/src/lib.rs");
@@ -162,11 +198,15 @@ const mainCap = JSON.parse(read("src-tauri/capabilities/main.json"));
 const overlayCap = JSON.parse(read("src-tauri/capabilities/overlay.json"));
 const trayCap = JSON.parse(read("src-tauri/capabilities/tray-menu.json"));
 
-const capPermissions = {
-  "main.js": new Set(mainCap.permissions),
-  "overlay.js": new Set(overlayCap.permissions),
-  "tray-menu.js": new Set(trayCap.permissions),
-};
+const mainPerms = new Set(mainCap.permissions);
+const overlayPerms = new Set(overlayCap.permissions);
+const trayPerms = new Set(trayCap.permissions);
+
+function capabilityForFile(fileName) {
+  if (fileName === "overlay.js") return overlayPerms;
+  if (fileName === "tray-menu.js") return trayPerms;
+  return mainPerms;
+}
 
 for (const inv of invokedCommands) {
   if (!registeredCommands.has(inv.cmd)) {
@@ -174,7 +214,7 @@ for (const inv of invokedCommands) {
   }
   // Check permission in capability
   const expectedPerm = `allow-${inv.cmd.replaceAll("_", "-")}`;
-  const perms = capPermissions[inv.file];
+  const perms = capabilityForFile(inv.file);
   if (perms && !perms.has(expectedPerm)) {
     reportError(`[ERROR] Capability for ${inv.file} is missing permission: '${expectedPerm}' for command '${inv.cmd}'`);
   }

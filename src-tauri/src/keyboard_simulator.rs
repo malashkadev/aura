@@ -14,8 +14,18 @@ impl FocusTarget {
     }
 
     pub fn is_compatible_with(&self, current: &FocusTarget) -> bool {
-        if self.is_empty() || current.is_empty() {
+        self.is_compatible_with_owner(current, window_owner)
+    }
+
+    fn is_compatible_with_owner<F>(&self, current: &FocusTarget, owner_of: F) -> bool
+    where
+        F: FnOnce(isize) -> isize,
+    {
+        if self.is_empty() {
             return true;
+        }
+        if current.is_empty() {
+            return false;
         }
         if self.hwnd == current.hwnd {
             return true;
@@ -23,11 +33,26 @@ impl FocusTarget {
         if self.root_hwnd != 0 && self.root_hwnd == current.root_hwnd {
             return true;
         }
-        if self.process_id != 0 && self.process_id == current.process_id {
+        if self.process_id != 0
+            && self.process_id == current.process_id
+            && self.root_hwnd != 0
+            && current.root_hwnd != 0
+            && owner_of(current.root_hwnd) == self.root_hwnd
+        {
             return true;
         }
         false
     }
+}
+
+#[cfg(target_os = "windows")]
+fn window_owner(hwnd: isize) -> isize {
+    windows_impl::get_window_owner(hwnd)
+}
+
+#[cfg(not(target_os = "windows"))]
+fn window_owner(_hwnd: isize) -> isize {
+    0
 }
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
@@ -60,14 +85,99 @@ fn replacement_batch_count(units: usize) -> usize {
     units.div_ceil(REPLACEMENT_BATCH_UNITS)
 }
 
-fn replacement_dispatch_metrics(backspaces: usize, new_text: &str) -> ReplacementDispatchMetrics {
-    let utf16_units = new_text.encode_utf16().count();
+fn next_unicode_batch_end(units: &[u16], start: usize) -> usize {
+    let mut end = (start + REPLACEMENT_BATCH_UNITS).min(units.len());
+    // If batch boundary cuts between a surrogate pair, include the low surrogate
+    // so the surrogate pair is never split across batch boundaries.
+    if end < units.len()
+        && (0xD800..=0xDBFF).contains(&units[end - 1])
+        && (0xDC00..=0xDFFF).contains(&units[end])
+    {
+        end += 1;
+    }
+    end
+}
+
+fn unicode_batch_count(units: &[u16]) -> usize {
+    let mut start = 0usize;
+    let mut batches = 0usize;
+    while start < units.len() {
+        start = next_unicode_batch_end(units, start);
+        batches += 1;
+    }
+    batches
+}
+
+fn dispatch_unicode_units_with<Stop, SendUnit, Sleep>(
+    units: &[u16],
+    should_stop: &Stop,
+    mut send_unit: SendUnit,
+    mut sleep_ms: Sleep,
+) -> Result<usize, (usize, String)>
+where
+    Stop: Fn() -> bool,
+    SendUnit: FnMut(&[u16]) -> Result<(), (usize, String)>,
+    Sleep: FnMut(u64),
+{
+    let mut dispatched = 0usize;
+    let mut batches = 0usize;
+    while dispatched < units.len() {
+        if should_stop() {
+            return Err((
+                dispatched,
+                "keyboard replacement interrupted before Unicode batch".to_string(),
+            ));
+        }
+        let end = next_unicode_batch_end(units, dispatched);
+        let mut idx = dispatched;
+        while idx < end {
+            if idx > dispatched && should_stop() {
+                return Err((
+                    idx,
+                    "keyboard replacement interrupted during Unicode batch".to_string(),
+                ));
+            }
+            let is_surrogate_pair = (0xD800..=0xDBFF).contains(&units[idx])
+                && idx + 1 < units.len()
+                && (0xDC00..=0xDFFF).contains(&units[idx + 1]);
+            let chunk = if is_surrogate_pair {
+                &units[idx..idx + 2]
+            } else {
+                &units[idx..idx + 1]
+            };
+            if let Err((inserted_events, message)) = send_unit(chunk) {
+                let committed_in_chunk = (inserted_events / 2).min(chunk.len());
+                return Err((idx + committed_in_chunk, message));
+            }
+            let prev_idx = idx;
+            idx += chunk.len();
+            if idx < units.len() {
+                let delay = if (idx / 15) > (prev_idx / 15) { 10 } else { 1 };
+                sleep_ms(delay);
+            }
+        }
+        dispatched = end;
+        batches += 1;
+    }
+    Ok(batches)
+}
+
+fn replacement_dispatch_metrics_for_units(
+    backspaces: usize,
+    utf16_units: &[u16],
+) -> ReplacementDispatchMetrics {
     ReplacementDispatchMetrics {
         backspaces,
-        utf16_units,
+        utf16_units: utf16_units.len(),
         batches: replacement_batch_count(backspaces)
-            .saturating_add(replacement_batch_count(utf16_units)),
+            .saturating_add(unicode_batch_count(utf16_units)),
     }
+}
+
+#[cfg(any(test, target_os = "macos"))]
+fn replacement_dispatch_metrics(backspaces: usize, new_text: &str) -> ReplacementDispatchMetrics {
+    let utf16_units: Vec<u16> = new_text.encode_utf16().collect();
+    replacement_dispatch_metrics_for_units(backspaces, &utf16_units)
 }
 
 fn partial_keyup_recovery_index(inserted: u32, expected: u32) -> Option<usize> {
@@ -80,8 +190,9 @@ fn partial_keyup_recovery_index(inserted: u32, expected: u32) -> Option<usize> {
 #[cfg(target_os = "windows")]
 mod windows_impl {
     use super::{
-        partial_keyup_recovery_index, replacement_dispatch_metrics, ReplacementDispatchMetrics,
-        TextReplacementError, REPLACEMENT_BATCH_PAUSE_MS, REPLACEMENT_BATCH_UNITS,
+        dispatch_unicode_units_with, partial_keyup_recovery_index,
+        replacement_dispatch_metrics_for_units, ReplacementDispatchMetrics, TextReplacementError,
+        REPLACEMENT_BATCH_PAUSE_MS, REPLACEMENT_BATCH_UNITS,
     };
     use windows_sys::Win32::UI::Input::KeyboardAndMouse::{
         GetAsyncKeyState, SendInput, INPUT, INPUT_KEYBOARD, KEYBDINPUT, KEYEVENTF_KEYUP,
@@ -103,15 +214,6 @@ mod windows_impl {
             dwExtraInfo: AURA_TAG,
         };
         input
-    }
-
-    fn append_key_pair(inputs: &mut Vec<INPUT>, virtual_key: u16, scan_code: u16, flags: u32) {
-        inputs.push(keyboard_input(virtual_key, scan_code, flags));
-        inputs.push(keyboard_input(
-            virtual_key,
-            scan_code,
-            flags | KEYEVENTF_KEYUP,
-        ));
     }
 
     fn send_input_batch(inputs: &mut [INPUT], label: &str) -> Result<(), (usize, String)> {
@@ -173,8 +275,16 @@ mod windows_impl {
             }
             let units = (count - dispatched).min(REPLACEMENT_BATCH_UNITS);
             for i in 0..units {
-                let mut inputs = Vec::with_capacity(2);
-                append_key_pair(&mut inputs, 0x08, 0, 0);
+                if i > 0 && should_stop() {
+                    return Err((
+                        dispatched + i,
+                        "keyboard replacement interrupted during Backspace batch".to_string(),
+                    ));
+                }
+                let mut inputs = [
+                    keyboard_input(0x08, 0, 0),
+                    keyboard_input(0x08, 0, KEYEVENTF_KEYUP),
+                ];
                 if let Err((inserted, message)) = send_input_batch(&mut inputs, "Backspace batch") {
                     return Err((dispatched + i + inserted / 2, message));
                 }
@@ -198,57 +308,28 @@ mod windows_impl {
     where
         F: Fn() -> bool,
     {
-        let mut dispatched = 0usize;
-        let mut batches = 0usize;
-        while dispatched < units.len() {
-            if should_stop() {
-                return Err((
-                    dispatched,
-                    "keyboard replacement interrupted before Unicode batch".to_string(),
-                ));
-            }
-            let mut end = (dispatched + REPLACEMENT_BATCH_UNITS).min(units.len());
-            // If batch boundary cuts between a surrogate pair, include the low surrogate
-            // so the surrogate pair is never split across batch boundaries.
-            if end < units.len()
-                && (0xD800..=0xDBFF).contains(&units[end - 1])
-                && (0xDC00..=0xDFFF).contains(&units[end])
-            {
-                end += 1;
-            }
-
-            let mut idx = dispatched;
-            while idx < end {
-                let unit = units[idx];
-                let is_surrogate_pair = (0xD800..=0xDBFF).contains(&unit)
-                    && idx + 1 < units.len()
-                    && (0xDC00..=0xDFFF).contains(&units[idx + 1]);
-
-                let (units_to_send, mut inputs) = if is_surrogate_pair {
-                    let mut inp = Vec::with_capacity(4);
-                    append_key_pair(&mut inp, 0, unit, KEYEVENTF_UNICODE);
-                    append_key_pair(&mut inp, 0, units[idx + 1], KEYEVENTF_UNICODE);
-                    (2usize, inp)
+        dispatch_unicode_units_with(
+            units,
+            should_stop,
+            |chunk| {
+                if chunk.len() == 2 {
+                    let mut inputs = [
+                        keyboard_input(0, chunk[0], KEYEVENTF_UNICODE),
+                        keyboard_input(0, chunk[0], KEYEVENTF_UNICODE | KEYEVENTF_KEYUP),
+                        keyboard_input(0, chunk[1], KEYEVENTF_UNICODE),
+                        keyboard_input(0, chunk[1], KEYEVENTF_UNICODE | KEYEVENTF_KEYUP),
+                    ];
+                    send_input_batch(&mut inputs, "Unicode batch")
                 } else {
-                    let mut inp = Vec::with_capacity(2);
-                    append_key_pair(&mut inp, 0, unit, KEYEVENTF_UNICODE);
-                    (1usize, inp)
-                };
-
-                if let Err((inserted, message)) = send_input_batch(&mut inputs, "Unicode batch") {
-                    return Err((idx + (inserted / 2).min(units_to_send), message));
+                    let mut inputs = [
+                        keyboard_input(0, chunk[0], KEYEVENTF_UNICODE),
+                        keyboard_input(0, chunk[0], KEYEVENTF_UNICODE | KEYEVENTF_KEYUP),
+                    ];
+                    send_input_batch(&mut inputs, "Unicode batch")
                 }
-
-                idx += units_to_send;
-                if idx < units.len() {
-                    let delay = if idx.is_multiple_of(15) { 10 } else { 1 };
-                    std::thread::sleep(std::time::Duration::from_millis(delay));
-                }
-            }
-            dispatched = end;
-            batches += 1;
-        }
-        Ok(batches)
+            },
+            |delay| std::thread::sleep(std::time::Duration::from_millis(delay)),
+        )
     }
 
     fn release_modifiers() -> Vec<u16> {
@@ -338,50 +419,22 @@ mod windows_impl {
         }
     }
 
-    pub fn simulate_copy() {
+    /// Dispatches Ctrl+C and reports whether the OS accepted every event.
+    /// `false` means input was blocked (typically UIPI on an elevated target).
+    pub fn simulate_copy_checked() -> bool {
         let released = release_modifiers();
         std::thread::sleep(std::time::Duration::from_millis(30));
-        unsafe {
-            let mut inputs = [std::mem::zeroed::<INPUT>(); 4];
-
-            inputs[0].r#type = INPUT_KEYBOARD;
-            inputs[0].Anonymous.ki = KEYBDINPUT {
-                wVk: VK_CONTROL,
-                wScan: 0,
-                dwFlags: 0,
-                time: 0,
-                dwExtraInfo: AURA_TAG,
-            };
-
-            inputs[1].r#type = INPUT_KEYBOARD;
-            inputs[1].Anonymous.ki = KEYBDINPUT {
-                wVk: 0x43, // C key
-                wScan: 0,
-                dwFlags: 0,
-                time: 0,
-                dwExtraInfo: AURA_TAG,
-            };
-
-            inputs[2].r#type = INPUT_KEYBOARD;
-            inputs[2].Anonymous.ki = KEYBDINPUT {
-                wVk: 0x43,
-                wScan: 0,
-                dwFlags: KEYEVENTF_KEYUP,
-                time: 0,
-                dwExtraInfo: AURA_TAG,
-            };
-
-            inputs[3].r#type = INPUT_KEYBOARD;
-            inputs[3].Anonymous.ki = KEYBDINPUT {
-                wVk: VK_CONTROL,
-                wScan: 0,
-                dwFlags: KEYEVENTF_KEYUP,
-                time: 0,
-                dwExtraInfo: AURA_TAG,
-            };
+        let accepted = unsafe {
+            let mut inputs = [
+                keyboard_input(VK_CONTROL, 0, 0),
+                keyboard_input(0x43, 0, 0),
+                keyboard_input(0x43, 0, KEYEVENTF_KEYUP),
+                keyboard_input(VK_CONTROL, 0, KEYEVENTF_KEYUP),
+            ];
 
             let inserted = SendInput(4, inputs.as_mut_ptr(), std::mem::size_of::<INPUT>() as i32);
-            if inserted != 4 {
+            let ok = inserted == 4;
+            if !ok {
                 crate::logger::log(
                     "WARN",
                     "Keyboard",
@@ -389,9 +442,17 @@ mod windows_impl {
                     &format!("SendInput accepted {inserted}/4 events for copy; target may block injection (UIPI/elevated window)"),
                 );
             }
+            ok
+        };
+        if accepted {
+            std::thread::sleep(std::time::Duration::from_millis(30));
         }
-        std::thread::sleep(std::time::Duration::from_millis(30));
         restore_modifiers(&released);
+        accepted
+    }
+
+    pub fn simulate_copy() {
+        let _ = simulate_copy_checked();
     }
 
     /// Dispatches Ctrl+V and reports whether the OS accepted every event.
@@ -479,13 +540,23 @@ mod windows_impl {
     }
 
     const GA_ROOT: u32 = 2;
+    const GW_OWNER: u32 = 4;
 
     #[link(name = "user32")]
     extern "system" {
         pub fn GetForegroundWindow() -> isize;
         pub fn GetAncestor(hwnd: isize, gaflags: u32) -> isize;
+        pub fn GetWindow(hwnd: isize, ucmd: u32) -> isize;
         pub fn GetWindowThreadProcessId(hwnd: isize, lpdwprocessid: *mut u32) -> u32;
         pub fn GetKeyboardLayout(idthread: u32) -> isize;
+    }
+
+    pub(super) fn get_window_owner(hwnd: isize) -> isize {
+        if hwnd == 0 {
+            0
+        } else {
+            unsafe { GetWindow(hwnd, GW_OWNER) }
+        }
     }
 
     pub fn get_foreground_window() -> isize {
@@ -539,29 +610,23 @@ mod windows_impl {
         }
     }
 
-    pub fn send_left_arrows(count: usize) {
+    pub fn send_left_arrows_cancellable<F>(count: usize, should_stop: F)
+    where
+        F: Fn() -> bool,
+    {
+        if count == 0 {
+            return;
+        }
         let released = release_modifiers();
         unsafe {
             for index in 0..count {
-                let mut inputs = [std::mem::zeroed::<INPUT>(); 2];
-
-                inputs[0].r#type = INPUT_KEYBOARD;
-                inputs[0].Anonymous.ki = KEYBDINPUT {
-                    wVk: 0x25,
-                    wScan: 0,
-                    dwFlags: 0,
-                    time: 0,
-                    dwExtraInfo: AURA_TAG,
-                };
-
-                inputs[1].r#type = INPUT_KEYBOARD;
-                inputs[1].Anonymous.ki = KEYBDINPUT {
-                    wVk: 0x25,
-                    wScan: 0,
-                    dwFlags: KEYEVENTF_KEYUP,
-                    time: 0,
-                    dwExtraInfo: AURA_TAG,
-                };
+                if should_stop() {
+                    break;
+                }
+                let mut inputs = [
+                    keyboard_input(0x25, 0, 0),
+                    keyboard_input(0x25, 0, KEYEVENTF_KEYUP),
+                ];
 
                 SendInput(2, inputs.as_mut_ptr(), std::mem::size_of::<INPUT>() as i32);
                 let delay = if (index + 1) % 10 == 0 { 15 } else { 3 };
@@ -569,6 +634,10 @@ mod windows_impl {
             }
         }
         restore_modifiers(&released);
+    }
+
+    pub fn send_left_arrows(count: usize) {
+        send_left_arrows_cancellable(count, || false);
     }
 
     pub fn replace_text<F>(
@@ -579,13 +648,13 @@ mod windows_impl {
     where
         F: Fn() -> bool,
     {
-        let metrics = replacement_dispatch_metrics(backspace_count, new_text);
+        let utf16_units: Vec<u16> = new_text.encode_utf16().collect();
+        let metrics = replacement_dispatch_metrics_for_units(backspace_count, &utf16_units);
         if metrics.backspaces == 0 && metrics.utf16_units == 0 {
             return Ok(metrics);
         }
 
         let released = release_modifiers();
-        let utf16_units: Vec<u16> = new_text.encode_utf16().collect();
         let dispatch_result = (|| {
             let backspace_batches = dispatch_backspace_batches(backspace_count, &should_stop)
                 .map_err(|(committed, message)| TextReplacementError {
@@ -738,7 +807,7 @@ mod macos_impl {
         pub const kCFStringEncodingUTF8: u32 = 0x08000100;
     }
 
-    pub fn simulate_copy() {
+    pub fn simulate_copy_checked() -> bool {
         let Some(source) = create_event_source() else {
             crate::logger::log(
                 "ERROR",
@@ -746,10 +815,15 @@ mod macos_impl {
                 None,
                 "Failed to create macOS event source",
             );
-            return;
+            return false;
         };
-        let _ = post_keyboard_event(&source, 8, true, kCGEventFlagMaskCommand, None);
-        let _ = post_keyboard_event(&source, 8, false, kCGEventFlagMaskCommand, None);
+        let down = post_keyboard_event(&source, 8, true, kCGEventFlagMaskCommand, None);
+        let up = post_keyboard_event(&source, 8, false, kCGEventFlagMaskCommand, None);
+        down && up
+    }
+
+    pub fn simulate_copy() {
+        let _ = simulate_copy_checked();
     }
 
     pub fn simulate_paste() -> bool {
@@ -857,7 +931,13 @@ mod macos_impl {
         }
     }
 
-    pub fn send_left_arrows(count: usize) {
+    pub fn send_left_arrows_cancellable<F>(count: usize, should_stop: F)
+    where
+        F: Fn() -> bool,
+    {
+        if count == 0 {
+            return;
+        }
         let Some(source) = create_event_source() else {
             crate::logger::log(
                 "ERROR",
@@ -867,11 +947,19 @@ mod macos_impl {
             );
             return;
         };
-        for _ in 0..count {
+        for index in 0..count {
+            if should_stop() {
+                break;
+            }
             let _ = post_keyboard_event(&source, 123, true, 0, None);
             let _ = post_keyboard_event(&source, 123, false, 0, None);
-            std::thread::sleep(std::time::Duration::from_millis(3));
+            let delay = if (index + 1) % 10 == 0 { 15 } else { 3 };
+            std::thread::sleep(std::time::Duration::from_millis(delay));
         }
+    }
+
+    pub fn send_left_arrows(count: usize) {
+        send_left_arrows_cancellable(count, || false);
     }
 
     pub fn replace_text<F>(
@@ -949,13 +1037,15 @@ mod macos_impl {
 #[cfg(target_os = "windows")]
 pub use windows_impl::{
     get_active_layout_language, get_focus_target, get_foreground_window, replace_text,
-    send_dummy_key, send_left_arrows, simulate_copy, simulate_paste,
+    send_dummy_key, send_left_arrows, send_left_arrows_cancellable, simulate_copy,
+    simulate_copy_checked, simulate_paste,
 };
 
 #[cfg(target_os = "macos")]
 pub use macos_impl::{
     get_active_layout_language, get_focus_target, get_foreground_window, replace_text,
-    send_dummy_key, send_left_arrows, simulate_copy, simulate_paste,
+    send_dummy_key, send_left_arrows, send_left_arrows_cancellable, simulate_copy,
+    simulate_copy_checked, simulate_paste,
 };
 
 #[cfg(test)]
@@ -1035,7 +1125,7 @@ mod tests {
         let target_c = FocusTarget {
             hwnd: 300,
             root_hwnd: 3000,
-            process_id: 42, // Same process (e.g. child popup dialog)
+            process_id: 42, // Same process: compatible only if owned popup of root_hwnd 1000
         };
         let target_other = FocusTarget {
             hwnd: 500,
@@ -1044,19 +1134,84 @@ mod tests {
         };
 
         assert!(empty.is_compatible_with(&target_a));
-        assert!(target_a.is_compatible_with(&empty));
+        assert!(
+            !target_a.is_compatible_with(&empty),
+            "lost foreground focus (hwnd == 0) must reject live typing"
+        );
         assert!(target_a.is_compatible_with(&target_a));
         assert!(target_a.is_compatible_with(&target_b));
-        assert!(target_a.is_compatible_with(&target_c));
+        assert!(target_a.is_compatible_with_owner(&target_c, |hwnd| {
+            if hwnd == 3000 {
+                1000
+            } else {
+                0
+            }
+        }));
+        assert!(
+            !target_a.is_compatible_with_owner(&target_c, |_| 0),
+            "unowned sibling top-level window of the same process must not match"
+        );
         assert!(!target_a.is_compatible_with(&target_other));
     }
 
     #[test]
     fn surrogate_pair_at_batch_boundary_is_not_split() {
+        // 31 BMP units + 1 surrogate pair (2 units) = 33 UTF-16 units:
+        // extends batch 1 to 33 so metrics.batches == dispatched batches == 1.
         let text = format!("{}😀", "a".repeat(REPLACEMENT_BATCH_UNITS - 1));
         let utf16_units: Vec<u16> = text.encode_utf16().collect();
-        assert_eq!(utf16_units.len(), REPLACEMENT_BATCH_UNITS + 1);
-        assert!((0xD800..=0xDBFF).contains(&utf16_units[REPLACEMENT_BATCH_UNITS - 1]));
-        assert!((0xDC00..=0xDFFF).contains(&utf16_units[REPLACEMENT_BATCH_UNITS]));
+        let metrics = replacement_dispatch_metrics(0, &text);
+        assert_eq!(metrics.utf16_units, REPLACEMENT_BATCH_UNITS + 1);
+        assert_eq!(metrics.batches, 1);
+
+        let mut sent_chunks: Vec<Vec<u16>> = Vec::new();
+        let mut sleeps: Vec<u64> = Vec::new();
+        let batches = dispatch_unicode_units_with(
+            &utf16_units,
+            &|| false,
+            |chunk| {
+                sent_chunks.push(chunk.to_vec());
+                Ok(())
+            },
+            |ms| sleeps.push(ms),
+        )
+        .expect("dispatch succeeds");
+
+        assert_eq!(batches, metrics.batches);
+        assert_eq!(
+            sent_chunks.last().map(Vec::as_slice),
+            Some(&utf16_units[REPLACEMENT_BATCH_UNITS - 1..]),
+            "surrogate pair must be dispatched atomically in one chunk"
+        );
+
+        // Surrogate pair straddling the 15-unit flush boundary (offset 14..16) must trigger 10ms flush.
+        let boundary_text = format!("{}😀b", "a".repeat(14));
+        let boundary_units: Vec<u16> = boundary_text.encode_utf16().collect();
+        let mut boundary_sleeps = Vec::new();
+        dispatch_unicode_units_with(
+            &boundary_units,
+            &|| false,
+            |_| Ok(()),
+            |ms| boundary_sleeps.push(ms),
+        )
+        .expect("boundary dispatch succeeds");
+        assert!(
+            boundary_sleeps.contains(&10),
+            "surrogate pair straddling unit 15 must still trigger the 10ms queue flush"
+        );
+
+        // Per-character cancellation inside a batch stops immediately and reports exact committed units.
+        let count = std::cell::Cell::new(0usize);
+        let err = dispatch_unicode_units_with(
+            &utf16_units,
+            &|| count.get() >= 5,
+            |_| {
+                count.set(count.get() + 1);
+                Ok(())
+            },
+            |_| {},
+        )
+        .expect_err("must stop mid-batch on cancellation");
+        assert_eq!(err.0, 5);
     }
 }

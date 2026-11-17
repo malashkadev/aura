@@ -261,4 +261,82 @@ mod tests {
             .any(|window| window == b"private dictation"));
         assert_eq!(decode_entries(&encoded).unwrap(), entries);
     }
+
+    #[cfg(target_os = "windows")]
+    #[test]
+    fn corrupt_encrypted_history_is_quarantined_and_recovers_on_next_read() {
+        let dir = std::env::temp_dir().join(format!(
+            "aura-history-corrupt-{}-{}",
+            std::process::id(),
+            timestamp_millis()
+        ));
+        fs::create_dir_all(&dir).unwrap();
+        let encrypted_path = dir.join("history.dpapi");
+
+        // 1. Corrupt DPAPI ciphertext is quarantined to .corrupt-*
+        let broken_blob = b"AURA-DPAPI-1\0corrupted-history-payload";
+        fs::write(&encrypted_path, broken_blob).unwrap();
+        assert!(read_encrypted(&encrypted_path).is_err());
+        assert!(!encrypted_path.exists());
+        assert_eq!(read_encrypted(&encrypted_path).unwrap(), Vec::new());
+
+        // 2. Valid DPAPI ciphertext wrapping invalid JSON is also quarantined
+        let broken_json = secure_storage::protect_for_current_user(b"{not-valid-array").unwrap();
+        fs::write(&encrypted_path, broken_json).unwrap();
+        assert!(read_encrypted(&encrypted_path).is_err());
+        assert!(!encrypted_path.exists());
+
+        let backups: Vec<PathBuf> = fs::read_dir(&dir)
+            .unwrap()
+            .filter_map(Result::ok)
+            .map(|e| e.path())
+            .filter(|p| {
+                p.file_name()
+                    .and_then(|n| n.to_str())
+                    .is_some_and(|n| n.starts_with("history.corrupt-"))
+            })
+            .collect();
+        assert!(!backups.is_empty());
+
+        let _ = fs::remove_dir_all(dir);
+    }
+
+    #[cfg(target_os = "windows")]
+    #[test]
+    fn legacy_history_json_migrates_to_dpapi_and_quarantines_corrupt_legacy() {
+        let dir = std::env::temp_dir().join(format!(
+            "aura-history-migrate-{}-{}",
+            std::process::id(),
+            timestamp_millis()
+        ));
+        fs::create_dir_all(&dir).unwrap();
+        let encrypted_path = dir.join("history.dpapi");
+        let legacy_path = dir.join("history.json");
+
+        // Valid legacy plaintext JSON migrates into DPAPI and removes history.json
+        fs::write(
+            &legacy_path,
+            r#"[{"text":"migrated item","timestamp_ms":100,"mode":"local"}]"#,
+        )
+        .unwrap();
+        let migrated = migrate_legacy_if_needed(&encrypted_path, &legacy_path)
+            .unwrap()
+            .expect("legacy file must migrate");
+        assert_eq!(migrated.len(), 1);
+        assert_eq!(migrated[0].text, "migrated item");
+        assert!(!legacy_path.exists());
+        assert!(encrypted_path.exists());
+        assert_eq!(read_encrypted(&encrypted_path).unwrap(), migrated);
+        assert!(migrate_legacy_if_needed(&encrypted_path, &legacy_path)
+            .unwrap()
+            .is_none());
+
+        // Malformed legacy JSON is quarantined when history.dpapi is absent
+        fs::remove_file(&encrypted_path).unwrap();
+        fs::write(&legacy_path, b"not json").unwrap();
+        assert!(migrate_legacy_if_needed(&encrypted_path, &legacy_path).is_err());
+        assert!(!legacy_path.exists());
+
+        let _ = fs::remove_dir_all(dir);
+    }
 }

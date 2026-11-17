@@ -1083,6 +1083,36 @@ pub fn strip_hallucinated_prefixes(text: &str) -> String {
     current_text.trim().to_string()
 }
 
+fn strip_case_insensitive_suffix<'a>(text: &'a str, suffix_lower: &str) -> Option<&'a str> {
+    let clean = text.trim_end_matches(['.', '!', '?', '…', ' ']);
+    let target = suffix_lower.trim_end_matches(['.', '!', '?', '…', ' ']);
+    if target.is_empty() {
+        return None;
+    }
+    let target_chars = target.chars().count();
+    let mut matched_lower_chars = 0usize;
+    for (byte_idx, ch) in clean.char_indices().rev() {
+        matched_lower_chars += ch.to_lowercase().count();
+        if matched_lower_chars == target_chars {
+            if byte_idx == 0 {
+                return None;
+            }
+            if clean[byte_idx..]
+                .chars()
+                .flat_map(char::to_lowercase)
+                .eq(target.chars())
+            {
+                return Some(&clean[..byte_idx]);
+            }
+            return None;
+        }
+        if matched_lower_chars > target_chars {
+            return None;
+        }
+    }
+    None
+}
+
 /// Strips hallucinated closing/trailing artifacts that Whisper routinely appends
 /// during end-of-speech silence (e.g. "Спасибо.", "Спасибо за просмотр.", "Thank you for watching.").
 pub fn strip_trailing_hallucinations(text: &str) -> String {
@@ -1174,32 +1204,13 @@ pub fn strip_trailing_hallucinations(text: &str) -> String {
     let mut current = trimmed.to_string();
 
     'outer: loop {
-        let current_lower = current.to_lowercase();
         for &suffix in MEDIA_SUFFIXES {
-            let clean_lower = current_lower.trim_end_matches(['.', '!', '?', '…', ' ']);
-            if clean_lower.ends_with(suffix) && clean_lower.len() > suffix.len() {
-                let cut_char_count = clean_lower[..clean_lower.len() - suffix.len()]
-                    .chars()
-                    .count();
-                let cut_pos = current
-                    .char_indices()
-                    .nth(cut_char_count)
-                    .map(|(idx, _)| idx)
-                    .unwrap_or_else(|| {
-                        let raw = clean_lower.len() - suffix.len();
-                        if current.is_char_boundary(raw) {
-                            raw
-                        } else {
-                            current.len()
-                        }
-                    });
-                if cut_pos < current.len() {
-                    let head = current[..cut_pos].trim_end();
-                    let clean_head = head.trim_end_matches([' ', '\t', ':', '-', '—', ',']);
-                    if !clean_head.is_empty() {
-                        current = clean_head.to_string();
-                        continue 'outer;
-                    }
+            if let Some(prefix) = strip_case_insensitive_suffix(&current, suffix) {
+                let head = prefix.trim_end();
+                let clean_head = head.trim_end_matches([' ', '\t', ':', '-', '—', ',']);
+                if !clean_head.is_empty() {
+                    current = clean_head.to_string();
+                    continue 'outer;
                 }
             }
         }
@@ -1211,48 +1222,25 @@ pub fn strip_trailing_hallucinations(text: &str) -> String {
     const CLOSURE_WORDS: &[&str] = &["спасибо", "thank you"];
 
     for &closure in CLOSURE_WORDS {
-        let current_lower = current.to_lowercase();
-        let clean_lower = current_lower.trim_end_matches(['.', '!', '?', '…', ' ']);
-        if clean_lower.ends_with(closure) && clean_lower.len() > closure.len() {
-            let cut_char_count = clean_lower[..clean_lower.len() - closure.len()]
-                .chars()
-                .count();
-            let cut_pos = current
-                .char_indices()
-                .nth(cut_char_count)
-                .map(|(idx, _)| idx)
-                .unwrap_or_else(|| {
-                    let raw = clean_lower.len() - closure.len();
-                    if current.is_char_boundary(raw) {
-                        raw
-                    } else {
-                        current.len()
-                    }
-                });
-            if cut_pos < current.len() {
-                let prefix = &current[..cut_pos];
-                let prefix_trimmed = prefix.trim_end();
-                let last_char = prefix_trimmed.chars().last().unwrap_or('\0');
-                let is_terminal = matches!(last_char, '.' | '!' | '?' | '…');
+        if let Some(prefix) = strip_case_insensitive_suffix(&current, closure) {
+            let prefix_trimmed = prefix.trim_end();
+            let last_char = prefix_trimmed.chars().last().unwrap_or('\0');
+            let is_terminal = matches!(last_char, '.' | '!' | '?' | '…');
 
-                if is_terminal {
-                    // Must not be preceded by genuine gratitude modifiers like "большое", "огромное", "вам", "тебе"
-                    let words: Vec<&str> = prefix_trimmed.split_whitespace().collect();
-                    if let Some(&last_word) = words.last() {
-                        let clean_last = last_word
-                            .trim_matches(|c: char| !c.is_alphabetic())
-                            .to_lowercase();
-                        if clean_last == "большое"
-                            || clean_last == "огромное"
-                            || clean_last == "сердечное"
-                            || clean_last == "тебе"
-                            || clean_last == "вам"
-                        {
-                            continue;
-                        }
+            if is_terminal {
+                // Must not be preceded by genuine gratitude modifiers like "большое", "огромное", "вам", "тебе"
+                if let Some(last_word) = prefix_trimmed.split_whitespace().last() {
+                    let clean_last = last_word
+                        .trim_matches(|c: char| !c.is_alphabetic())
+                        .to_lowercase();
+                    if matches!(
+                        clean_last.as_str(),
+                        "большое" | "огромное" | "сердечное" | "тебе" | "вам"
+                    ) {
+                        continue;
                     }
-                    return prefix_trimmed.to_string();
                 }
+                return prefix_trimmed.to_string();
             }
         }
     }
@@ -2474,5 +2462,19 @@ mod tests {
             pruned,
             Some("Это первая мысль… Это вторая мысль.".to_string())
         );
+    }
+
+    #[test]
+    fn test_strip_trailing_hallucinations_turkish_dotted_i_no_shift() {
+        // 'İ' (U+0130) expands to two chars ('i' + U+0307) under to_lowercase();
+        // prefix char-index arithmetic must not shift into the suffix.
+        let media = "İİİ İstanbul çok güzel. Thank you for watching.";
+        assert_eq!(
+            strip_trailing_hallucinations(media),
+            "İİİ İstanbul çok güzel."
+        );
+
+        let closure = "İİİ İzmir harika! Thank you.";
+        assert_eq!(strip_trailing_hallucinations(closure), "İİİ İzmir harika!");
     }
 }

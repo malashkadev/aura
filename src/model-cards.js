@@ -1,4 +1,33 @@
+// @ts-check
+
 import { getIcon } from "./icon-system-api.js";
+
+/**
+ * @typedef {Object} ModelDownloadProgressPayload
+ * @property {string} model
+ * @property {number} [percentage]
+ * @property {string} [status]
+ * @property {boolean} [done]
+ */
+
+/**
+ * @typedef {Object} ModelCardsDeps
+ * @property {(cmd: string, args?: Record<string, unknown>) => Promise<any>} invoke
+ * @property {(event: string, handler: (event: { payload: any }) => void) => Promise<() => void> | void} listen
+ * @property {(title: string, message: string, confirmText?: string, cancelText?: string) => Promise<boolean>} showConfirm
+ * @property {(message: string, kindOrError?: boolean | string) => void} showStatus
+ * @property {() => Record<string, string>} getDict
+ * @property {(key: string, params?: Record<string, string | number>) => string} getTranslation
+ * @property {(err: unknown) => string} localizedBackendError
+ * @property {(model: string) => boolean} isModelActive
+ * @property {(model: string, markModified?: boolean, forceSave?: boolean) => void} selectModelCard
+ * @property {() => string} getSelectedModel
+ * @property {() => string} getSelectedLlm
+ * @property {(model: string) => void} setSelectedLlm
+ * @property {() => void} notifySelectionChanged
+ * @property {(model: string) => void} onModelDeleted
+ * @property {() => void} onRefreshComplete
+ */
 
 /**
  * Owns the model-card surface: installed-state rendering, download and delete
@@ -7,6 +36,8 @@ import { getIcon } from "./icon-system-api.js";
  * Selection state stays in main.js: the module receives `isModelActive`,
  * `selectModelCard` and the selected-model getters, so the radio-group rules
  * keep one owner while the DOM lifecycle moves here.
+ *
+ * @param {ModelCardsDeps} deps
  */
 export function createModelCards({
   invoke,
@@ -25,10 +56,18 @@ export function createModelCards({
   onModelDeleted,
   onRefreshComplete,
 }) {
-  const modelCards = document.querySelectorAll(".model-card[data-model]");
+  const modelCards = /** @type {NodeListOf<HTMLElement>} */ (
+    document.querySelectorAll(".model-card[data-model]")
+  );
+  /** @type {string[]} */
   let downloadedModelList = [];
+  /** @type {Set<string>} */
   const inFlightModelDownloads = new Set();
 
+  /**
+   * @param {string} model
+   * @returns {string}
+   */
   function getModelDisplayName(model) {
     if (!model) return "";
     const card = document.querySelector(`.model-card[data-model="${model}"]`);
@@ -38,6 +77,7 @@ export function createModelCards({
         return nameEl.textContent.trim();
       }
     }
+    /** @type {Record<string, string>} */
     const names = {
       "tiny": "Whisper Tiny",
       "base": "Whisper Base",
@@ -54,9 +94,12 @@ export function createModelCards({
 
   function syncActions() {
     const dict = getDict();
-    document.querySelectorAll(".model-card[data-model]").forEach(card => {
-      const model = card.dataset.model;
-      const button = card.querySelector(".btn-delete-card-model");
+    document.querySelectorAll(".model-card[data-model]").forEach((el) => {
+      const card = /** @type {HTMLElement} */ (el);
+      const model = card.dataset.model || "";
+      const button = /** @type {HTMLButtonElement | null} */ (
+        card.querySelector(".btn-delete-card-model")
+      );
       if (!button) {
         return;
       }
@@ -79,7 +122,7 @@ export function createModelCards({
       downloadedModelList = Array.isArray(downloaded) ? downloaded : [];
       const dict = getDict();
       modelCards.forEach(card => {
-        const model = card.dataset.model;
+        const model = card.dataset.model || "";
         if (inFlightModelDownloads.has(model)) {
           return;
         }
@@ -132,7 +175,7 @@ export function createModelCards({
       const downloadedLlm = downloadedModelList.filter(id => id.startsWith("qwen3-"));
       if (downloadedLlm.length === 0) {
         modelCards.forEach(c => {
-          if (c.dataset.model.startsWith("qwen3-")) {
+          if ((c.dataset.model || "").startsWith("qwen3-")) {
             c.classList.remove("active");
             c.setAttribute("aria-checked", "false");
           }
@@ -150,6 +193,37 @@ export function createModelCards({
     }
   }
 
+  /**
+   * @param {HTMLElement | null} pctEl
+   * @param {string} installText
+   */
+  function setInstallingProgressLabel(pctEl, installText) {
+    if (!pctEl) return;
+    let spinner = pctEl.querySelector(".spinner-inline");
+    if (!spinner) {
+      pctEl.replaceChildren();
+      spinner = document.createElement("span");
+      spinner.className = "spinner-inline";
+      spinner.setAttribute("aria-hidden", "true");
+      const textNode = document.createTextNode(` ${installText}`);
+      pctEl.append(spinner, textNode);
+      return;
+    }
+    const textNode = spinner.nextSibling;
+    const expected = ` ${installText}`;
+    if (textNode && textNode.nodeType === Node.TEXT_NODE) {
+      if (textNode.nodeValue !== expected) {
+        textNode.nodeValue = expected;
+      }
+    } else {
+      pctEl.append(document.createTextNode(expected));
+    }
+  }
+
+  /**
+   * @param {string} model
+   * @returns {Promise<void>}
+   */
   async function download(model) {
     if (inFlightModelDownloads.has(model)) {
       return;
@@ -196,12 +270,16 @@ export function createModelCards({
       }
 
       await invoke("download_model_command", { modelName: model });
+      if (!downloadedModelList.includes(model)) {
+        downloadedModelList = [...downloadedModelList, model];
+      }
+      inFlightModelDownloads.delete(model);
       const isLlmCard = model.startsWith("qwen3-");
       const selectionUntouched = isLlmCard
         ? getSelectedLlm() === llmAtStart
         : getSelectedModel() === modelAtStart;
       if (selectionUntouched) {
-        selectModelCard(model);
+        selectModelCard(model, true, true);
       }
     } catch (err) {
       console.error(err);
@@ -219,13 +297,14 @@ export function createModelCards({
         if (cancelBtn) cancelBtn.remove();
         progressEl.style.display = "none";
       }
-      if (actionEl) {
-        actionEl.style.display = "flex";
-      }
       await refresh();
     }
   }
 
+  /**
+   * @param {string} model
+   * @returns {Promise<void>}
+   */
   async function remove(model) {
     const modelDisplayName = getModelDisplayName(model);
     if (isModelActive(model)) {
@@ -252,7 +331,8 @@ export function createModelCards({
         try {
           const downloaded = await invoke("get_downloaded_models");
           const replacement = (Array.isArray(downloaded) ? downloaded : []).find(
-            id => id.startsWith("qwen3-") && id !== model
+            /** @param {string} id */
+            (id) => id.startsWith("qwen3-") && id !== model
           );
           if (replacement) {
             selectModelCard(replacement);
@@ -273,7 +353,7 @@ export function createModelCards({
   }
 
   listen("model-download-progress", (event) => {
-    const payload = event.payload;
+    const payload = /** @type {ModelDownloadProgressPayload | null | undefined} */ (event.payload);
     if (!payload) return;
 
     const model = payload.model;
@@ -282,14 +362,13 @@ export function createModelCards({
     const fillEl = document.getElementById(`fill-${model}`);
     const pctEl = document.getElementById(`pct-${model}`);
     const progressEl = document.getElementById(`progress-${model}`);
-    const actionEl = document.getElementById(`action-${model}`);
 
     if (fillEl && pctEl) {
       if (payload.status === "installing" || (percent >= 100 && !payload.done)) {
         if (progressEl) progressEl.classList.add("installing");
         fillEl.style.width = "100%";
         const installText = getTranslation("gpu_status_installing") || "Установка...";
-        pctEl.innerHTML = `<span class="spinner-inline" aria-hidden="true"></span> ${installText}`;
+        setInstallingProgressLabel(pctEl, installText);
       } else {
         if (progressEl) progressEl.classList.remove("installing");
         fillEl.style.width = `${percent}%`;
@@ -302,20 +381,22 @@ export function createModelCards({
       if (!isInternalPayload) {
         showStatus(getTranslation("model_downloaded_success_pattern", { model: getModelDisplayName(model) }), "success");
       }
-      if (progressEl) {
-        progressEl.classList.remove("installing");
-        const cancelBtn = progressEl.querySelector(".btn-cancel-download");
-        if (cancelBtn) cancelBtn.remove();
-        progressEl.style.display = "none";
+      const wasDrivenByLocalDownload = inFlightModelDownloads.delete(model);
+      if (!wasDrivenByLocalDownload) {
+        if (progressEl) {
+          progressEl.classList.remove("installing");
+          const cancelBtn = progressEl.querySelector(".btn-cancel-download");
+          if (cancelBtn) cancelBtn.remove();
+          progressEl.style.display = "none";
+        }
+        refresh();
       }
-      if (actionEl) actionEl.style.display = "flex";
-      refresh();
     }
   });
 
   return {
     getDownloadedModels: () => downloadedModelList,
-    isDownloaded: (model) => downloadedModelList.includes(model),
+    isDownloaded: /** @param {string} model */ (model) => downloadedModelList.includes(model),
     getModelDisplayName,
     refresh,
     download,

@@ -1,15 +1,55 @@
-const { listen } = (window.__TAURI__ && window.__TAURI__.event) || { listen: () => {} };
+// @ts-check
 
-const bars = document.querySelectorAll(".sound-bar");
-const statusEl = document.getElementById("overlay-status");
-const statusTextEl = document.getElementById("overlay-status-text");
-const pill = document.querySelector(".overlay-pill");
-const cardEl = document.querySelector(".overlay-card");
+import { createSoundSynth } from "./sound-themes.js";
+
+/**
+ * @typedef {Object} TauriOverlayBridge
+ * @property {{ listen: (eventName: string, handler: (event: { payload: any }) => void) => Promise<() => void> | void }} [event]
+ * @property {{ invoke: (cmd: string, args?: Record<string, unknown>) => Promise<any> }} [core]
+ */
+
+/**
+ * @typedef {Object} OverlayPreferencesPayload
+ * @property {string} [ui_language]
+ * @property {boolean} [overlay_sounds]
+ * @property {string} [overlay_sound_theme]
+ * @property {number} [overlay_sound_volume]
+ * @property {boolean} [overlay_show_timer]
+ */
+
+const tauriWindow = /** @type {Window & typeof globalThis & { __TAURI__?: TauriOverlayBridge }} */ (window);
+const { listen } = (tauriWindow.__TAURI__ && tauriWindow.__TAURI__.event) || { listen: () => {} };
+
+const bars = /** @type {NodeListOf<SVGElement>} */ (document.querySelectorAll(".sound-bar"));
+const statusEl = /** @type {HTMLElement | null} */ (document.getElementById("overlay-status"));
+const statusTextEl = /** @type {HTMLElement | null} */ (document.getElementById("overlay-status-text"));
+const pill = /** @type {HTMLElement | null} */ (document.querySelector(".overlay-pill"));
+const cardEl = /** @type {HTMLElement | null} */ (document.querySelector(".overlay-card"));
 const auraSvg = document.getElementById("aura-svg");
-const barsGroup = document.getElementById("bars-group");
-let currentState = "recording";
+const barsGroup = /** @type {HTMLElement | SVGElement | null} */ (document.getElementById("bars-group"));
+let currentState = "idle";
 
 let isEditContext = false;
+
+const SUPPORTED_UI_LANGS = ["ru", "en", "de", "es", "fr", "it", "zh", "pt", "tr"];
+const SUPPORTED_SOUND_THEMES = ["zen", "rhodes", "scifi", "classic", "bubble", "haptic"];
+
+/** @returns {string} */
+function resolveUiLang() {
+  let lang = "ru";
+  try {
+    lang = localStorage.getItem("aura_ui_lang") || "ru";
+  } catch (_) {}
+  if (!SUPPORTED_UI_LANGS.includes(lang)) {
+    lang = "en";
+  }
+  if (document.documentElement && document.documentElement.lang !== lang) {
+    document.documentElement.lang = lang;
+  }
+  return lang;
+}
+
+resolveUiLang();
 
 function updateStatusVisibility() {
   const hasText = statusTextEl
@@ -23,6 +63,7 @@ function updateStatusVisibility() {
   }
 }
 
+/** @param {string} text */
 function setOverlayText(text) {
   if (statusTextEl) {
     statusTextEl.textContent = text;
@@ -45,272 +86,47 @@ listen("selection-context-active", (event) => {
 // it so a hide request from an old session can never mask a brand-new
 // recording (state strings alone cannot distinguish two sessions).
 let stateCycle = 0;
+/** @type {number | null} */
 let recordStart = null;
 let angle = 0;
 // Pending auto-hide timer from a previous state (e.g. an error). Cleared when
 // a newer session owns the overlay, so it can never hide a fresh recording.
+/** @type {ReturnType<typeof setTimeout> | null} */
 let hideTimerId = null;
+/** @type {ReturnType<typeof setInterval> | null} */
+let recordingTimerId = null;
+/** @type {number | null} */
+let rafId = null;
+/** @type {ReturnType<typeof setTimeout> | null} */
+let audioSuspendTimerId = null;
 
 // Windows "Show animations" off: static bars, no pill transition.
 const reduceMotionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
 
-let audioCtx = null;
-let soundVolume = 0.8;
-let globalGain = null;
-
-function initAudioCtx() {
-  if (!audioCtx) {
-    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    globalGain = audioCtx.createGain();
-    globalGain.gain.value = soundVolume;
-    globalGain.connect(audioCtx.destination);
-  }
-}
-
-// Tibetan singing bowl physical modeling synth.
-// Layers inharmonic overtones and detuned oscillator pairs to generate natural shimmering phase beating (tremolo).
-function playBowl(freq, duration, gainStart = 0.08) {
-  initAudioCtx();
-  if (audioCtx.state === "suspended") {
-    audioCtx.resume();
-  }
-
-  const now = audioCtx.currentTime;
-
-  // We layer 3 resonant components: fundamental, warm overtone, and metallic ring
-  const components = [
-    { f: freq, gain: gainStart, decay: duration },
-    { f: freq * 1.5, gain: gainStart * 0.45, decay: duration * 0.8 },
-    { f: freq * 2.76, gain: gainStart * 0.3, decay: duration * 0.55 }
-  ];
-
-  components.forEach(comp => {
-    // Oscillator pair detuned by ~1.4Hz creates natural acoustic shimmering tremolo (beating)
-    const oscA = audioCtx.createOscillator();
-    const gainA = audioCtx.createGain();
-    oscA.type = "sine";
-    oscA.frequency.setValueAtTime(comp.f - 0.7, now);
-
-    const oscB = audioCtx.createOscillator();
-    const gainB = audioCtx.createGain();
-    oscB.type = "sine";
-    oscB.frequency.setValueAtTime(comp.f + 0.7, now);
-
-    // Soft mallet attack (15ms) prevents harsh transients
-    const attack = 0.015;
-    
-    gainA.gain.setValueAtTime(0.0001, now);
-    gainA.gain.linearRampToValueAtTime(comp.gain, now + attack);
-    gainA.gain.exponentialRampToValueAtTime(0.0001, now + comp.decay);
-
-    gainB.gain.setValueAtTime(0.0001, now);
-    gainB.gain.linearRampToValueAtTime(comp.gain, now + attack);
-    gainB.gain.exponentialRampToValueAtTime(0.0001, now + comp.decay);
-
-    oscA.connect(gainA);
-    gainA.connect(globalGain);
-
-    oscB.connect(gainB);
-    gainB.connect(globalGain);
-
-    oscA.start(now);
-    oscA.stop(now + comp.decay + 0.1);
-
-    oscB.start(now);
-    oscB.stop(now + comp.decay + 0.1);
-  });
-}
-
-function playRhodes(freq, duration, gainStart = 0.08) {
-  initAudioCtx();
-  if (audioCtx.state === "suspended") {
-    audioCtx.resume();
-  }
-  const now = audioCtx.currentTime;
-  const osc1 = audioCtx.createOscillator();
-  const osc2 = audioCtx.createOscillator();
-  const gain1 = audioCtx.createGain();
-  const gain2 = audioCtx.createGain();
-
-  osc1.type = "triangle";
-  osc1.frequency.setValueAtTime(freq, now);
-
-  osc2.type = "sine";
-  osc2.frequency.setValueAtTime(freq, now);
-
-  const attack = 0.010;
-  gain1.gain.setValueAtTime(0.0001, now);
-  gain1.gain.linearRampToValueAtTime(gainStart * 0.4, now + attack);
-  gain1.gain.exponentialRampToValueAtTime(0.0001, now + duration);
-
-  gain2.gain.setValueAtTime(0.0001, now);
-  gain2.gain.linearRampToValueAtTime(gainStart * 0.7, now + attack);
-  gain2.gain.exponentialRampToValueAtTime(0.0001, now + duration);
-
-  osc1.connect(gain1);
-  gain1.connect(globalGain);
-  osc2.connect(gain2);
-  gain2.connect(globalGain);
-
-  osc1.start(now);
-  osc1.stop(now + duration + 0.1);
-  osc2.start(now);
-  osc2.stop(now + duration + 0.1);
-}
-
-function playSciFi(freqStart, freqEnd, duration, gainStart = 0.06) {
-  initAudioCtx();
-  if (audioCtx.state === "suspended") {
-    audioCtx.resume();
-  }
-  const now = audioCtx.currentTime;
-  const osc1 = audioCtx.createOscillator();
-  const osc2 = audioCtx.createOscillator();
-  const gainNode = audioCtx.createGain();
-
-  osc1.type = "sine";
-  osc1.frequency.setValueAtTime(freqStart, now);
-  osc1.frequency.exponentialRampToValueAtTime(freqEnd, now + duration);
-
-  osc2.type = "sine";
-  osc2.frequency.setValueAtTime(freqStart + 3.0, now);
-  osc2.frequency.exponentialRampToValueAtTime(freqEnd + 3.0, now + duration);
-
-  const attack = 0.012;
-  gainNode.gain.setValueAtTime(0.0001, now);
-  gainNode.gain.linearRampToValueAtTime(gainStart, now + attack);
-  gainNode.gain.exponentialRampToValueAtTime(0.0001, now + duration);
-
-  osc1.connect(gainNode);
-  osc2.connect(gainNode);
-  gainNode.connect(globalGain);
-
-  osc1.start(now);
-  osc1.stop(now + duration + 0.1);
-  osc2.start(now);
-  osc2.stop(now + duration + 0.1);
-}
-
-function playBell(freq, duration, gainStart = 0.07) {
-  initAudioCtx();
-  if (audioCtx.state === "suspended") {
-    audioCtx.resume();
-  }
-  const now = audioCtx.currentTime;
-  const osc1 = audioCtx.createOscillator();
-  const osc2 = audioCtx.createOscillator();
-  const osc3 = audioCtx.createOscillator();
-  const gain1 = audioCtx.createGain();
-  const gain2 = audioCtx.createGain();
-  const gain3 = audioCtx.createGain();
-
-  osc1.type = "sine";
-  osc1.frequency.setValueAtTime(freq, now);
-  osc2.type = "sine";
-  osc2.frequency.setValueAtTime(freq * 2.0, now);
-  osc3.type = "sine";
-  osc3.frequency.setValueAtTime(freq * 3.0, now);
-
-  const attack = 0.006;
-  gain1.gain.setValueAtTime(0.0001, now);
-  gain1.gain.linearRampToValueAtTime(gainStart, now + attack);
-  gain1.gain.exponentialRampToValueAtTime(0.0001, now + duration);
-
-  gain2.gain.setValueAtTime(0.0001, now);
-  gain2.gain.linearRampToValueAtTime(gainStart * 0.45, now + attack);
-  gain2.gain.exponentialRampToValueAtTime(0.0001, now + duration * 0.7);
-
-  gain3.gain.setValueAtTime(0.0001, now);
-  gain3.gain.linearRampToValueAtTime(gainStart * 0.25, now + attack);
-  gain3.gain.exponentialRampToValueAtTime(0.0001, now + duration * 0.4);
-
-  osc1.connect(gain1);
-  gain1.connect(globalGain);
-  osc2.connect(gain2);
-  gain2.connect(globalGain);
-  osc3.connect(gain3);
-  gain3.connect(globalGain);
-
-  osc1.start(now);
-  osc1.stop(now + duration + 0.1);
-  osc2.start(now);
-  osc2.stop(now + duration + 0.1);
-  osc3.start(now);
-  osc3.stop(now + duration + 0.1);
-}
-
-function playWaterDrop(fStart, fEnd, duration, gainStart = 0.08) {
-  initAudioCtx();
-  if (audioCtx.state === "suspended") {
-    audioCtx.resume();
-  }
-  const now = audioCtx.currentTime;
-  const osc = audioCtx.createOscillator();
-  const gain = audioCtx.createGain();
-
-  osc.type = "sine";
-  osc.frequency.setValueAtTime(fStart, now);
-  osc.frequency.exponentialRampToValueAtTime(fEnd, now + (duration * 0.65));
-  osc.frequency.exponentialRampToValueAtTime(fEnd * 0.9, now + duration);
-
-  gain.gain.setValueAtTime(0.0001, now);
-  gain.gain.linearRampToValueAtTime(gainStart, now + 0.008);
-  gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
-
-  osc.connect(gain);
-  gain.connect(globalGain);
-
-  osc.start(now);
-  osc.stop(now + duration + 0.02);
-}
-
-function playHapticClick(clickFreq, duration, gainStart = 0.10) {
-  initAudioCtx();
-  if (audioCtx.state === "suspended") {
-    audioCtx.resume();
-  }
-  const now = audioCtx.currentTime;
-  const osc = audioCtx.createOscillator();
-  const gain = audioCtx.createGain();
-
-  osc.type = "sine";
-  osc.frequency.setValueAtTime(clickFreq * 2.5, now);
-  osc.frequency.exponentialRampToValueAtTime(clickFreq * 0.6, now + duration);
-
-  gain.gain.setValueAtTime(0.0001, now);
-  gain.gain.linearRampToValueAtTime(gainStart, now + 0.002);
-  gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
-
-  const bufferSize = Math.floor(audioCtx.sampleRate * 0.008);
-  const noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
-  const output = noiseBuffer.getChannelData(0);
-  for (let i = 0; i < bufferSize; i++) {
-    output[i] = Math.random() * 2 - 1;
-  }
-  const noise = audioCtx.createBufferSource();
-  noise.buffer = noiseBuffer;
-  const filter = audioCtx.createBiquadFilter();
-  filter.type = "bandpass";
-  filter.frequency.value = 2800;
-  const noiseGain = audioCtx.createGain();
-  noiseGain.gain.setValueAtTime(gainStart * 0.35, now);
-  noiseGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.008);
-
-  noise.connect(filter);
-  filter.connect(noiseGain);
-  noiseGain.connect(globalGain);
-  noise.start(now);
-
-  osc.connect(gain);
-  gain.connect(globalGain);
-  osc.start(now);
-  osc.stop(now + duration);
-}
-
+const overlaySynth = createSoundSynth({ initialVolume: 0.8 });
 let soundsEnabled = true;
 let soundTheme = "zen";
+let soundVolume = 0.8;
 let overlayShowTimer = true;
 
+function cancelScheduledAudioSuspend() {
+  if (audioSuspendTimerId !== null) {
+    clearTimeout(audioSuspendTimerId);
+    audioSuspendTimerId = null;
+  }
+}
+
+function scheduleIdleAudioSuspend() {
+  cancelScheduledAudioSuspend();
+  audioSuspendTimerId = setTimeout(() => {
+    audioSuspendTimerId = null;
+    if (!pill || !pill.classList.contains("visible")) {
+      overlaySynth.suspend();
+    }
+  }, 2200);
+}
+
+/** @param {OverlayPreferencesPayload | null | undefined} settings */
 function applyActiveThemeSettings(settings) {
   if (!settings || typeof settings !== "object") {
     return;
@@ -319,10 +135,13 @@ function applyActiveThemeSettings(settings) {
     try {
       localStorage.setItem("aura_ui_lang", settings.ui_language);
     } catch (_) {}
+    resolveUiLang();
   }
   soundsEnabled = settings.overlay_sounds !== false;
-  soundTheme = settings.overlay_sound_theme || "zen";
+  const candidateTheme = settings.overlay_sound_theme || "zen";
+  soundTheme = SUPPORTED_SOUND_THEMES.includes(candidateTheme) ? candidateTheme : "zen";
   soundVolume = typeof settings.overlay_sound_volume === "number" ? settings.overlay_sound_volume : 0.8;
+  overlaySynth.setVolume(soundVolume);
   overlayShowTimer = settings.overlay_show_timer !== false;
   if (document.body) {
     document.body.classList.toggle("no-timer", !overlayShowTimer);
@@ -334,9 +153,6 @@ function applyActiveThemeSettings(settings) {
   ) {
     setOverlayText("");
   }
-  if (globalGain && audioCtx) {
-    globalGain.gain.setValueAtTime(soundVolume, audioCtx.currentTime);
-  }
 }
 
 listen("overlay-preferences", (event) => {
@@ -345,95 +161,33 @@ listen("overlay-preferences", (event) => {
 
 function playThemeStart() {
   if (!soundsEnabled) return;
-  if (soundTheme === "rhodes") {
-    playRhodes(440.00, 0.65, 0.07);
-    setTimeout(() => { playRhodes(554.37, 0.80, 0.07); }, 90);
-  } else if (soundTheme === "scifi") {
-    playSciFi(440.00, 880.00, 0.22, 0.055);
-  } else if (soundTheme === "classic") {
-    playBell(440.00, 0.45, 0.06);
-    setTimeout(() => { playBell(659.25, 0.60, 0.06); }, 90);
-  } else if (soundTheme === "bubble") {
-    playWaterDrop(400, 950, 0.12, 0.08);
-  } else if (soundTheme === "haptic") {
-    playHapticClick(180, 0.03, 0.12);
-  } else {
-    // Default: zen
-    playBowl(174.61, 1.2, 0.08);
-  }
+  cancelScheduledAudioSuspend();
+  overlaySynth.playStart(soundTheme);
 }
 
 function playThemeSuccess() {
   if (!soundsEnabled) return;
-  if (soundTheme === "rhodes") {
-    playRhodes(220.00, 0.45, 0.06);
-    setTimeout(() => {
-      playRhodes(329.63, 0.45, 0.06);
-      setTimeout(() => {
-        playRhodes(440.00, 0.45, 0.06);
-        setTimeout(() => {
-          playRhodes(554.37, 0.45, 0.06);
-          setTimeout(() => {
-            playRhodes(659.25, 0.85, 0.06);
-          }, 70);
-        }, 70);
-      }, 70);
-    }, 70);
-  } else if (soundTheme === "scifi") {
-    playSciFi(523.25, 1046.50, 0.18, 0.05);
-    setTimeout(() => { playSciFi(783.99, 1567.98, 0.18, 0.045); }, 65);
-  } else if (soundTheme === "classic") {
-    playBell(440.00, 0.35, 0.05);
-    setTimeout(() => {
-      playBell(554.37, 0.35, 0.05);
-      setTimeout(() => {
-        playBell(659.25, 0.45, 0.05);
-        setTimeout(() => {
-          playBell(880.00, 0.75, 0.05);
-        }, 70);
-      }, 70);
-    }, 70);
-  } else if (soundTheme === "bubble") {
-    playWaterDrop(380, 850, 0.10, 0.07);
-    setTimeout(() => { playWaterDrop(500, 1200, 0.15, 0.08); }, 90);
-  } else if (soundTheme === "haptic") {
-    playHapticClick(240, 0.025, 0.10);
-    setTimeout(() => { playHapticClick(360, 0.04, 0.12); }, 70);
-  } else {
-    // Default: zen
-    playBowl(174.61, 1.8, 0.07);
-    setTimeout(() => { playBowl(261.63, 1.8, 0.06); }, 60);
-  }
+  cancelScheduledAudioSuspend();
+  overlaySynth.playSuccess(soundTheme);
 }
 
 function playThemeError() {
   if (!soundsEnabled) return;
-  if (soundTheme === "rhodes") {
-    playRhodes(554.37, 0.35, 0.07);
-    setTimeout(() => { playRhodes(440.00, 0.55, 0.07); }, 120);
-  } else if (soundTheme === "scifi") {
-    playSciFi(587.33, 293.66, 0.28, 0.06);
-  } else if (soundTheme === "classic") {
-    playBell(659.25, 0.35, 0.06);
-    setTimeout(() => { playBell(440.00, 0.50, 0.06); }, 120);
-  } else if (soundTheme === "bubble") {
-    playWaterDrop(650, 280, 0.18, 0.08);
-  } else if (soundTheme === "haptic") {
-    playHapticClick(120, 0.05, 0.12);
-    setTimeout(() => { playHapticClick(90, 0.08, 0.12); }, 100);
-  } else {
-    // Default: zen
-    playBowl(174.61, 0.45, 0.07);
-  }
+  cancelScheduledAudioSuspend();
+  overlaySynth.playError(soundTheme);
 }
 
 const restHeight = 2.5;
 const maxHeight = 16.0;
 
-// Exact silence reference color (#722205) and Aura tactical orange (#FF4200)
+// Exact silence reference color (#722205) and Aura tactical orange (#ff4200)
 const COLOR_SILENCE = { r: 114, g: 34, b: 5 };
 const COLOR_SPEECH = { r: 255, g: 66, b: 0 };
 
+/**
+ * @param {number} energy
+ * @returns {string}
+ */
 function getBarHeatColor(energy) {
   const clamped = Math.max(0, Math.min(1, energy));
   const r = Math.round(COLOR_SILENCE.r + (COLOR_SPEECH.r - COLOR_SILENCE.r) * clamped);
@@ -464,8 +218,29 @@ function resetBars() {
   });
 }
 
+/** @param {string} color */
 function setBarColor(color) {
   bars.forEach(bar => bar.setAttribute("fill", color));
+}
+
+function applyReducedMotionBars() {
+  if (currentState === "recording") {
+    bars.forEach((bar, index) => {
+      const h = barStates[index].targetHeight;
+      bar.setAttribute("height", h.toString());
+      bar.setAttribute("y", (15.0 - h / 2).toString());
+      bar.setAttribute("rx", Math.min(1.5, h / 2).toFixed(2));
+      const barEnergy = Math.max(0, Math.min(1, (h - restHeight) / 7.0));
+      bar.setAttribute("fill", getBarHeatColor(barEnergy));
+    });
+  } else if (currentState === "processing") {
+    bars.forEach(bar => {
+      bar.setAttribute("height", "4.0");
+      bar.setAttribute("y", "12.6");
+      bar.setAttribute("rx", "1.5");
+      bar.setAttribute("fill", "#ff4200");
+    });
+  }
 }
 
 // State Crossfade Tracker (550ms silky smooth transition for beam & wave)
@@ -491,13 +266,21 @@ let morphState = {
   currentProgress: 0.0
 };
 
+/**
+ * @param {number} t
+ * @returns {number}
+ */
 function solveCubicBezier(t) {
   const c1 = 1 - t;
   return 1 - Math.pow(c1, 3.2);
 }
 
+/**
+ * @param {number} target
+ * @param {number} [duration]
+ */
 function startMorph(target, duration = 380) {
-  if (duration === 0) {
+  if (duration === 0 || reduceMotionQuery.matches) {
     morphState.active = false;
     morphState.currentProgress = target;
     morphState.targetProgress = target;
@@ -513,8 +296,10 @@ function startMorph(target, duration = 380) {
     duration: duration,
     currentProgress: morphState.currentProgress
   };
+  startAnimationLoop();
 }
 
+/** @param {number} prog */
 function applyMorphProgress(prog) {
   const currentWidth = 134 - (134 - 39) * prog;
   if (cardEl) {
@@ -530,43 +315,65 @@ function applyMorphProgress(prog) {
 
 // Recording timer shown under the pill
 function updateTimer() {
-  if (currentState === "recording" && recordStart) {
-    if (!overlayShowTimer) {
-      setOverlayText("");
-      return;
-    }
-    const elapsed = Date.now() - recordStart;
-    if (elapsed < 3000) {
-      setOverlayText("");
-      return;
-    }
-    const secs = Math.floor(elapsed / 1000);
-    const m = Math.floor(secs / 60);
-    const s = String(secs % 60).padStart(2, "0");
-    setOverlayText(`${m}:${s}`);
+  if (currentState !== "recording" || !recordStart) {
+    stopRecordingTimer();
+    return;
+  }
+  if (!overlayShowTimer) {
+    setOverlayText("");
+    return;
+  }
+  const elapsed = Date.now() - recordStart;
+  if (elapsed < 3000) {
+    setOverlayText("");
+    return;
+  }
+  const secs = Math.floor(elapsed / 1000);
+  const m = Math.floor(secs / 60);
+  const s = String(secs % 60).padStart(2, "0");
+  setOverlayText(`${m}:${s}`);
+}
+
+function startRecordingTimer() {
+  if (recordingTimerId !== null) return;
+  recordingTimerId = setInterval(updateTimer, 500);
+}
+
+function stopRecordingTimer() {
+  if (recordingTimerId !== null) {
+    clearInterval(recordingTimerId);
+    recordingTimerId = null;
   }
 }
-setInterval(updateTimer, 500);
 
-// Main animation and physics loop (60fps)
-function updateAnimation() {
+function stopAnimationLoop() {
+  if (rafId !== null) {
+    cancelAnimationFrame(rafId);
+    rafId = null;
+  }
+}
+
+function startAnimationLoop() {
   if (reduceMotionQuery.matches) {
-    if (currentState === "recording") {
-      bars.forEach((bar, index) => {
-        const h = barStates[index].targetHeight;
-        bar.setAttribute("height", h.toString());
-        bar.setAttribute("y", (15.0 - h / 2).toString());
-        const barEnergy = Math.max(0, Math.min(1, (h - restHeight) / 7.0));
-        bar.setAttribute("fill", getBarHeatColor(barEnergy));
-      });
-    } else if (currentState === "processing") {
-      bars.forEach(bar => {
-        bar.setAttribute("height", "4.0");
-        bar.setAttribute("y", "12.6");
-        bar.setAttribute("fill", "#FF4200");
-      });
-    }
-    requestAnimationFrame(updateAnimation);
+    stopAnimationLoop();
+    applyReducedMotionBars();
+    return;
+  }
+  if (rafId !== null) return;
+  rafId = requestAnimationFrame(updateAnimation);
+}
+
+// Main animation and physics loop (runs ONLY while overlay is visible or morphing)
+function updateAnimation() {
+  rafId = null;
+
+  if (reduceMotionQuery.matches) {
+    applyReducedMotionBars();
+    return;
+  }
+
+  const isVisible = Boolean(pill && pill.classList.contains("visible"));
+  if (!isVisible && !morphState.active && !transitionState.active) {
     return;
   }
 
@@ -614,7 +421,7 @@ function updateAnimation() {
   const recFactor = 1 - procFactor;
 
   // 3. Audio & wave animation
-  angle += 0.05;
+  angle = (angle + 0.05) % (Math.PI * 2);
 
   bars.forEach((bar, index) => {
     const state = barStates[index];
@@ -631,8 +438,8 @@ function updateAnimation() {
 
     // Dynamic bar color (Variant 2: Per-bar heat / energy):
     // In silence (restHeight = 2.5), energy = 0 -> #722205 (exact silence reference).
-    // As speech elevates bars, energy scales towards 1.0 -> #FE4200 (tactical orange).
-    // During transition to processing or in processing, smoothly illuminate to #FE4200.
+    // As speech elevates bars, energy scales towards 1.0 -> #ff4200 (tactical orange).
+    // During transition to processing or in processing, smoothly illuminate to #ff4200.
     if (currentState === "recording" || currentState === "processing") {
       const barEnergy = Math.max(0, Math.min(1, (state.currentHeight - restHeight) / 7.0));
       const effectiveEnergy = procFactor > 0 ? barEnergy + (1 - barEnergy) * procFactor : barEnergy;
@@ -640,11 +447,10 @@ function updateAnimation() {
     }
   });
 
-  requestAnimationFrame(updateAnimation);
+  if ((pill && pill.classList.contains("visible")) || morphState.active || transitionState.active) {
+    rafId = requestAnimationFrame(updateAnimation);
+  }
 }
-
-// Start the animation loop
-updateAnimation();
 
 const noticeTranslations = {
   "edit-failed": {
@@ -962,16 +768,42 @@ const errorTranslations = {
     zh: "API 密钥余额不足",
     ja: "APIキーの残高が不足しています",
     tr: "API anahtar bakiyesi tükendi"
+  },
+  "Failed to write to clipboard": {
+    ru: "Не удалось записать в буфер обмена",
+    en: "Failed to write to clipboard",
+    de: "Schreiben in die Zwischenablage fehlgeschlagen",
+    fr: "Échec de l'écriture dans le presse-papiers",
+    it: "Impossibile scrivere negli appunti",
+    es: "Error al escribir en el portapapeles",
+    pt: "Falha ao gravar na área de transferência",
+    zh: "无法写入剪贴板",
+    ja: "クリップボードへの書き込みに失敗しました",
+    tr: "Panoya yazılamadı"
+  },
+  "Recognition error": {
+    ru: "Ошибка распознавания",
+    en: "Recognition error",
+    de: "Erkennungsfehler",
+    fr: "Erreur de reconnaissance",
+    it: "Errore di riconoscimento",
+    es: "Error de reconocimiento",
+    pt: "Erro de reconhecimento",
+    zh: "识别错误",
+    ja: "認識エラー",
+    tr: "Tanıma hatası"
   }
 };
 
-function translateError(errStr, lang) {
-  const match = errorTranslations[errStr];
-  if (match && match[lang]) {
-    return match[lang];
+function translateError(/** @type {string} */ errStr, /** @type {string} */ lang) {
+  const errorMap = /** @type {Record<string, Record<string, string>>} */ (errorTranslations);
+  const match = errorMap[errStr];
+  if (match) {
+    return match[lang] || match.en || errStr;
   }
   if (errStr.startsWith("No network:")) {
     const details = errStr.replace("No network:", "").trim();
+    /** @type {Record<string, string>} */
     const netTranslations = {
       ru: "Нет сети:",
       en: "No network:",
@@ -988,6 +820,7 @@ function translateError(errStr, lang) {
     return `${prefix} ${details}`;
   }
   if (errStr.startsWith("custom_api_url_insecure:")) {
+    /** @type {Record<string, string>} */
     const insecureTranslations = {
       ru: "Пользовательский сервер должен использовать HTTPS. HTTP разрешён только для localhost.",
       en: "The custom server must use HTTPS. HTTP is allowed only for localhost.",
@@ -1012,7 +845,8 @@ listen("recording-state", (event) => {
     clearTimeout(hideTimerId);
     hideTimerId = null;
   }
-  currentState = event.payload;
+  const incomingState = typeof event.payload === "string" ? event.payload : "";
+  currentState = incomingState;
   stateCycle += 1;
 
   if (currentState === "recording") {
@@ -1035,15 +869,19 @@ listen("recording-state", (event) => {
       currentWave: transitionState.currentWave
     };
     recordStart = Date.now();
+    resolveUiLang();
     setOverlayText("");
-    statusEl.classList.remove("error");
+    if (statusEl) statusEl.classList.remove("error");
     setBarColor("rgb(114, 34, 5)");
     resetBars();
 
     // Animate show and play startup sound
-    pill.classList.add("visible");
+    if (pill) pill.classList.add("visible");
+    startRecordingTimer();
+    startAnimationLoop();
     playThemeStart();
   } else if (currentState === "processing") {
+    stopRecordingTimer();
     isEditContext = false;
     if (cardEl) {
       cardEl.classList.add("processing");
@@ -1063,35 +901,69 @@ listen("recording-state", (event) => {
       currentWave: transitionState.currentWave
     };
     angle = 0;
-    const uiLang = localStorage.getItem("aura_ui_lang") || "ru";
+    resolveUiLang();
     setOverlayText("");
-    statusEl.classList.remove("error");
+    if (statusEl) statusEl.classList.remove("error");
+    if (pill) pill.classList.add("visible");
+    startAnimationLoop();
   } else if (currentState.startsWith("notice:")) {
+    stopRecordingTimer();
     isEditContext = false;
-    if (cardEl) {
-      cardEl.classList.remove("processing");
-      cardEl.classList.remove("square");
-      cardEl.classList.remove("edit-context");
-      cardEl.style.setProperty("--beam-opacity", "0");
-    }
-    transitionState.active = false;
-    transitionState.currentBeam = 0.0;
-    transitionState.targetBeam = 0.0;
-    transitionState.currentWave = 0.0;
-    transitionState.targetWave = 0.0;
-    startMorph(0.0, 0);
-    // Non-alarming transient message (e.g. cloud->local fallback); no error sound.
     const notice = currentState.substring("notice:".length);
-    const uiLang = localStorage.getItem("aura_ui_lang") || "ru";
-    const translations = noticeTranslations[notice];
-    // A notice is a message, not the countdown: it must stay readable even
-    // when "show timer" is off, otherwise a failed edit looks like nothing
-    // happened.
-    setOverlayText(translations?.[uiLang] || translations?.en || notice);
-    statusEl.classList.remove("error");
-    setBarColor("#FE4200");
-    pill.classList.add("visible");
+    const uiLang = resolveUiLang();
+    const noticeMap = /** @type {Record<string, Record<string, string>>} */ (noticeTranslations);
+    const translations = noticeMap[notice];
+    const isWarmupNotice = notice === "loading-model" || notice === "warming-model";
+
+    if (isWarmupNotice) {
+      currentState = "processing";
+      if (cardEl) {
+        cardEl.classList.add("processing");
+        cardEl.classList.remove("square");
+        cardEl.classList.remove("edit-context");
+      }
+      if (barsGroup) barsGroup.style.opacity = "1";
+      startMorph(0.0, 0);
+      transitionState = {
+        active: true,
+        startTime: performance.now(),
+        duration: 350,
+        startBeam: transitionState.currentBeam,
+        targetBeam: 0.75,
+        currentBeam: transitionState.currentBeam,
+        startWave: transitionState.currentWave,
+        targetWave: 1.0,
+        currentWave: transitionState.currentWave
+      };
+      setOverlayText(translations?.[uiLang] || translations?.en || notice);
+      if (statusEl) statusEl.classList.remove("error");
+      if (pill) pill.classList.add("visible");
+      startAnimationLoop();
+    } else {
+      if (cardEl) {
+        cardEl.classList.remove("processing");
+        cardEl.classList.remove("square");
+        cardEl.classList.remove("edit-context");
+        cardEl.style.setProperty("--beam-opacity", "0");
+      }
+      transitionState.active = false;
+      transitionState.currentBeam = 0.0;
+      transitionState.targetBeam = 0.0;
+      transitionState.currentWave = 0.0;
+      transitionState.targetWave = 0.0;
+      startMorph(0.0, 0);
+      // Non-alarming transient message (e.g. cloud->local fallback); no error sound.
+      // A notice is a message, not the countdown: it must stay readable even
+      // when "show timer" is off, otherwise a failed edit looks like nothing
+      // happened.
+      setOverlayText(translations?.[uiLang] || translations?.en || notice);
+      if (statusEl) statusEl.classList.remove("error");
+      setBarColor("#ff4200");
+      if (pill) pill.classList.add("visible");
+      stopAnimationLoop();
+    }
   } else if (currentState.startsWith("error")) {
+    stopRecordingTimer();
     if (cardEl) {
       cardEl.classList.remove("processing");
       cardEl.classList.remove("square");
@@ -1106,18 +978,19 @@ listen("recording-state", (event) => {
     transitionState.targetWave = 0.0;
     startMorph(0.0, 0);
     recordStart = null;
-    let errMsg = "Ошибка распознавания";
+    let errMsg = "Recognition error";
     if (currentState.includes(":")) {
       errMsg = currentState.substring(currentState.indexOf(":") + 1);
     }
-    const uiLang = localStorage.getItem("aura_ui_lang") || "ru";
+    const uiLang = resolveUiLang();
     setOverlayText(translateError(errMsg, uiLang));
-    statusEl.classList.add("error");
+    if (statusEl) statusEl.classList.add("error");
     setBarColor("#666666");
     resetBars();
+    stopAnimationLoop();
     
     // Ensure the pill is visible to display the error
-    pill.classList.add("visible");
+    if (pill) pill.classList.add("visible");
 
     // Play error sound and animate hide after a brief delay
     playThemeError();
@@ -1128,7 +1001,7 @@ listen("recording-state", (event) => {
       // Only hide if the overlay still shows this same error; a newer
       // session (recording/processing/notice) owns the overlay otherwise.
       if (currentState !== stateAtError || stateCycle !== cycleAtError) return;
-      pill.classList.remove("visible");
+      if (pill) pill.classList.remove("visible");
       hideOverlayAfterPillFade(stateAtError, cycleAtError);
     }, 2500);
   }
@@ -1138,34 +1011,56 @@ listen("recording-state", (event) => {
 // motion the transition is disabled, so the hide must happen immediately.
 // `expectedCycle` guards against a hide request from an old session firing
 // after a brand-new session already took over the overlay.
+/**
+ * @param {string} expectedState
+ * @param {number} expectedCycle
+ */
 function hideOverlayAfterPillFade(expectedState, expectedCycle) {
   const guardExpired = () =>
     currentState !== expectedState || stateCycle !== expectedCycle;
 
   const hideNow = () => {
     if (guardExpired()) return;
-    window.__TAURI__.core
-      .invoke("hide_overlay_window")
-      .catch((err) => console.error("hide_overlay_window failed:", err));
+    stopRecordingTimer();
+    stopAnimationLoop();
+    scheduleIdleAudioSuspend();
+    setOverlayText("");
+    if (cardEl) {
+      cardEl.classList.remove("processing", "edit-context");
+      cardEl.classList.add("square");
+      cardEl.style.setProperty("--beam-opacity", "0");
+    }
+    if (tauriWindow.__TAURI__ && tauriWindow.__TAURI__.core) {
+      tauriWindow.__TAURI__.core
+        .invoke("hide_overlay_window")
+        .catch((err) => console.error("hide_overlay_window failed:", err));
+    }
   };
+
+  /** @param {TransitionEvent} e */
+  function handler(e) {
+    if (!pill || e.target !== pill || e.propertyName !== "opacity") return;
+    pill.removeEventListener("transitionend", handler);
+    clearTimeout(failsafeId);
+    hideNow();
+  }
 
   // Failsafe: if the fade transition never completes (or the event is
   // missed), still hide the window instead of leaving it stranded.
   const failsafeId = setTimeout(() => {
-    pill.classList.remove("visible");
+    if (pill) {
+      pill.removeEventListener("transitionend", handler);
+      pill.classList.remove("visible");
+    }
     hideNow();
   }, 1200);
 
-  if (reduceMotionQuery.matches) {
+  if (reduceMotionQuery.matches || !pill) {
     clearTimeout(failsafeId);
     hideNow();
     return;
   }
-  pill.addEventListener("transitionend", function handler() {
-    pill.removeEventListener("transitionend", handler);
-    clearTimeout(failsafeId);
-    hideNow();
-  });
+  pill.addEventListener("transitionend", handler);
 }
 
 // Listen to the new event "hide-overlay-requested"
@@ -1173,16 +1068,19 @@ listen("hide-overlay-requested", (event) => {
   const payload = event.payload || {};
   const status = payload.status || "success";
 
+  stopRecordingTimer();
+  recordStart = null;
   isEditContext = false;
   if (cardEl) {
     cardEl.classList.remove("edit-context");
   }
-  updateStatusVisibility();
+  setOverlayText("");
 
   if (status === "success") {
     playThemeSuccess();
     currentState = "square";
     if (cardEl) {
+      cardEl.classList.remove("processing");
       cardEl.classList.add("square");
       cardEl.style.setProperty("--beam-opacity", "0");
     }
@@ -1198,7 +1096,7 @@ listen("hide-overlay-requested", (event) => {
     const cycleAtRequest = stateCycle;
     setTimeout(() => {
       if (stateCycle !== cycleAtRequest) return;
-      pill.classList.remove("visible");
+      if (pill) pill.classList.remove("visible");
       hideOverlayAfterPillFade(stateAtRequest, cycleAtRequest);
     }, 520);
   } else {
@@ -1215,7 +1113,8 @@ listen("hide-overlay-requested", (event) => {
     transitionState.targetBeam = 0.0;
     transitionState.currentWave = 0.0;
     transitionState.targetWave = 0.0;
-    pill.classList.remove("visible");
+    stopAnimationLoop();
+    if (pill) pill.classList.remove("visible");
     hideOverlayAfterPillFade(stateAtRequest, cycleAtRequest);
   }
 });
@@ -1250,10 +1149,16 @@ listen("volume-level", (event) => {
     }
     state.targetHeight = h;
   });
+
+  if (reduceMotionQuery.matches) {
+    applyReducedMotionBars();
+  }
 });
 
 // Standalone preview fallback (when opened outside Tauri in browser QA or test runner)
-if (!window.__TAURI__ && pill) {
+if (!tauriWindow.__TAURI__ && pill) {
+  currentState = "recording";
   pill.classList.add("visible");
   setOverlayText("0:00");
+  startAnimationLoop();
 }

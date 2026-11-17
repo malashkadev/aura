@@ -1,3 +1,5 @@
+// @ts-check
+
 /**
  * Replaces the application's legacy inline SVGs with the Aura monochrome set.
  *
@@ -8,6 +10,7 @@
 
 import { icons } from "./icon-system-api.js";
 
+/** @type {Array<[string, string, number?]>} */
 const SINGLE_ICONS = [
   // Window chrome
   ["#btn-window-minimize .control-icon", "window-minimize"],
@@ -25,6 +28,7 @@ const SINGLE_ICONS = [
   ["#label-cloud .engine-segment-icon", "engine-cloud"],
   ["#label-local .engine-segment-icon", "engine-local"],
   [".eye-icon", "eye"],
+  [".clear-key-icon", "trash"],
 
   // Accordions and actions
   [".summary-chevron", "chevron-down"],
@@ -89,6 +93,7 @@ const SINGLE_ICONS = [
   ["#sub-local .check-mark", "check"],
 ];
 
+/** @type {string[]} */
 const SUMMARY_ICONS = [
   "section-local-model",
   "section-performance",
@@ -98,6 +103,7 @@ const SUMMARY_ICONS = [
 
 // One icon per settings card, prepended to the card heading at hydration time.
 // Utility glyphs are intentionally reused where the meaning matches.
+/** @type {Array<[string, string]>} */
 const CARD_TITLES = [
   ["#first-run-card", "download"],
   ["#card-autostart", "power"],
@@ -121,10 +127,14 @@ const CARD_TITLES = [
   ["#card-backup", "database"],
 ];
 
+/**
+ * @param {Element | null} card
+ * @param {string} key
+ */
 function applyCardTitleIcon(card, key) {
   if (!card || card.querySelector(".card-title-row")) return;
   const title = card.querySelector(".card-title");
-  if (!title) return;
+  if (!title || !title.parentNode) return;
 
   const row = document.createElement("div");
   row.className = "card-title-row";
@@ -139,6 +149,11 @@ function applyCardTitleIcon(card, key) {
   row.appendChild(title);
 }
 
+/**
+ * @param {Element | null} svg
+ * @param {string} key
+ * @param {number} [strokeWidth]
+ */
 function applyToSvg(svg, key, strokeWidth = 2) {
   if (!svg || !icons || typeof icons.body !== "function") return;
   const markup = icons.body(key);
@@ -156,6 +171,8 @@ function applyToSvg(svg, key, strokeWidth = 2) {
 /**
  * Hydrates the static icon slots in the settings window and the tray menu.
  * Safe to call on either document: unknown selectors simply match nothing.
+ *
+ * @param {ParentNode} [root]
  */
 export function hydrateAppIcons(root = document) {
   if (!icons || !icons.body) return;

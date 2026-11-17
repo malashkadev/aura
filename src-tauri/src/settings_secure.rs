@@ -1,7 +1,8 @@
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::{Path, PathBuf};
-use std::sync::{Mutex, MutexGuard, OnceLock};
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::{Mutex, MutexGuard, OnceLock, RwLock};
 use tauri::Manager;
 use zeroize::Zeroize;
 
@@ -31,8 +32,14 @@ const ALLOWED_UI_LANGUAGES: &[&str] = &["ru", "en", "de", "es", "fr", "it", "zh"
 const ALLOWED_SOUND_THEMES: &[&str] = &["zen", "rhodes", "scifi", "classic", "bubble", "haptic"];
 const MAX_DICTIONARY_CHARS: usize = 4096;
 const MAX_HOTKEY_CHARS: usize = 64;
+const MAX_CUSTOM_API_URL_CHARS: usize = 512;
+const MAX_CUSTOM_MODEL_NAME_CHARS: usize = 256;
+const MAX_DISABLED_EDIT_COMMANDS: usize = 32;
+const MAX_EDIT_COMMAND_ID_CHARS: usize = 64;
 
 static SETTINGS_LOCK: OnceLock<Mutex<()>> = OnceLock::new();
+static CACHED_SETTINGS: OnceLock<RwLock<Option<Settings>>> = OnceLock::new();
+static CACHED_LOG_SPEECH_TEXT: AtomicBool = AtomicBool::new(false);
 
 fn lock_settings() -> MutexGuard<'static, ()> {
     let mutex = SETTINGS_LOCK.get_or_init(|| Mutex::new(()));
@@ -289,6 +296,36 @@ impl Settings {
                     "Replacement value for '{}' exceeds 2048 characters",
                     r.trigger
                 ));
+            }
+        }
+        if !self.custom_api_url.trim().is_empty() {
+            if self.custom_api_url.chars().count() > MAX_CUSTOM_API_URL_CHARS
+                || self.custom_api_url.chars().any(|ch| ch.is_control())
+            {
+                return Err(format!(
+                    "custom_api_url_insecure: endpoint URL is invalid or exceeds {MAX_CUSTOM_API_URL_CHARS} characters"
+                ));
+            }
+            crate::ai_client::validate_custom_endpoint(&self.custom_api_url)?;
+        }
+        if self.custom_model_name.chars().count() > MAX_CUSTOM_MODEL_NAME_CHARS
+            || self.custom_model_name.chars().any(|ch| ch.is_control())
+        {
+            return Err(format!(
+                "Custom model name is invalid or exceeds {MAX_CUSTOM_MODEL_NAME_CHARS} characters"
+            ));
+        }
+        if self.disabled_edit_commands.len() > MAX_DISABLED_EDIT_COMMANDS {
+            return Err(format!(
+                "Disabled edit commands count cannot exceed {MAX_DISABLED_EDIT_COMMANDS} entries"
+            ));
+        }
+        for cmd in &self.disabled_edit_commands {
+            if cmd.trim().is_empty()
+                || cmd.chars().count() > MAX_EDIT_COMMAND_ID_CHARS
+                || cmd.chars().any(|ch| ch.is_control())
+            {
+                return Err("Disabled edit command entry is invalid or too long".to_string());
             }
         }
         Ok(())
@@ -551,6 +588,64 @@ fn timestamp_millis() -> u128 {
         .unwrap_or_default()
 }
 
+fn scrub_secrets_in_place(settings: &mut Settings) {
+    settings.api_key.zeroize();
+    settings.api_key_gemini.zeroize();
+    settings.api_key_openai.zeroize();
+    settings.api_key_groq.zeroize();
+    settings.api_key_huggingface.zeroize();
+    settings.api_key_custom.zeroize();
+}
+
+fn normalize_non_secret_fields(settings: &mut Settings) {
+    settings.dictionary = settings.dictionary.trim().to_string();
+    settings.hotkey = settings.hotkey.trim().to_string();
+    settings.custom_api_url = settings.custom_api_url.trim().to_string();
+    settings.custom_model_name = settings.custom_model_name.trim().to_string();
+}
+
+fn update_in_memory_cache(settings: &Settings) {
+    CACHED_LOG_SPEECH_TEXT.store(settings.log_speech_text, Ordering::Relaxed);
+    let mut scrubbed = settings.clone();
+    scrub_secrets_in_place(&mut scrubbed);
+    let cache = CACHED_SETTINGS.get_or_init(|| RwLock::new(None));
+    match cache.write() {
+        Ok(mut guard) => *guard = Some(scrubbed),
+        Err(poisoned) => *poisoned.into_inner() = Some(scrubbed),
+    }
+}
+
+/// Returns the last loaded/saved `log_speech_text` preference in O(1) without
+/// disk I/O or DPAPI decryption (defaults to `false` before initialization).
+pub fn cached_log_speech_text() -> bool {
+    CACHED_LOG_SPEECH_TEXT.load(Ordering::Relaxed)
+}
+
+/// Returns a secret-scrubbed clone of the in-memory settings snapshot in O(1)
+/// with zero disk I/O and zero `lsass.exe` DPAPI RPCs.
+pub fn cached_settings_without_secrets() -> Result<Settings, String> {
+    let cache = CACHED_SETTINGS.get_or_init(|| RwLock::new(None));
+    let guard = match cache.read() {
+        Ok(guard) => guard,
+        Err(poisoned) => poisoned.into_inner(),
+    };
+    guard
+        .as_ref()
+        .cloned()
+        .ok_or_else(|| "Settings cache is not initialized yet".to_string())
+}
+
+/// Returns the O(1) in-memory non-secret settings snapshot when warm, falling
+/// back to a single non-DPAPI disk read on cold start.
+pub fn cached_or_load_settings_without_secrets<R: tauri::Runtime>(
+    app_handle: &tauri::AppHandle<R>,
+) -> Result<Settings, String> {
+    if let Ok(cached) = cached_settings_without_secrets() {
+        return Ok(cached);
+    }
+    load_settings_without_secrets(app_handle)
+}
+
 fn load_settings_unlocked<R: tauri::Runtime>(
     app_handle: &tauri::AppHandle<R>,
 ) -> Result<Settings, String> {
@@ -611,6 +706,7 @@ fn load_settings_unlocked<R: tauri::Runtime>(
     }
     secrets.apply_to(&mut settings);
     settings.validate()?;
+    update_in_memory_cache(&settings);
     Ok(settings)
 }
 
@@ -634,6 +730,7 @@ pub fn load_settings_without_secrets<R: tauri::Runtime>(
         settings.local_acceleration = "cpu".to_string();
     }
     settings.validate()?;
+    update_in_memory_cache(&settings);
     Ok(settings)
 }
 
@@ -644,22 +741,58 @@ pub fn save_settings<R: tauri::Runtime>(
     let mut normalized = settings.clone();
     // Keys are never serialized into settings.json; scrub the transient copy
     // instead of letting it linger until the struct is dropped.
-    normalized.api_key.zeroize();
-    normalized.api_key_gemini.zeroize();
-    normalized.api_key_openai.zeroize();
-    normalized.api_key_groq.zeroize();
-    normalized.api_key_huggingface.zeroize();
-    normalized.api_key_custom.zeroize();
-    normalized.dictionary = normalized.dictionary.trim().to_string();
-    normalized.hotkey = normalized.hotkey.trim().to_string();
-    normalized.custom_api_url = normalized.custom_api_url.trim().to_string();
-    normalized.custom_model_name = normalized.custom_model_name.trim().to_string();
+    scrub_secrets_in_place(&mut normalized);
+    normalize_non_secret_fields(&mut normalized);
     normalized.validate()?;
     let _guard = lock_settings();
 
     // API keys are write-only and are updated solely by set_provider_key.
     // Saving a redacted SettingsView must never erase the encrypted store.
-    save_config(&get_settings_path(app_handle)?, &normalized)
+    save_config(&get_settings_path(app_handle)?, &normalized)?;
+    update_in_memory_cache(&normalized);
+    Ok(())
+}
+
+/// Atomically loads, mutates, validates, and saves `Settings` while holding
+/// `SETTINGS_LOCK` across the entire transaction (single DPAPI read).
+/// Returns `(previous_without_secrets, updated_with_active_secrets)`.
+pub fn update_settings<R, F>(
+    app_handle: &tauri::AppHandle<R>,
+    mutate: F,
+) -> Result<(Settings, Settings), String>
+where
+    R: tauri::Runtime,
+    F: FnOnce(&mut Settings) -> Result<(), String>,
+{
+    let _guard = lock_settings();
+    let mut previous = load_settings_unlocked(app_handle)?;
+    let preserved_secrets = ProviderSecrets::from_settings(&previous);
+    let mut next = previous.clone();
+    scrub_secrets_in_place(&mut previous);
+
+    let mutation_result = mutate(&mut next);
+    if let Err(err) = mutation_result {
+        scrub_secrets_in_place(&mut next);
+        return Err(err);
+    }
+
+    let mut disk_copy = next.clone();
+    scrub_secrets_in_place(&mut disk_copy);
+    normalize_non_secret_fields(&mut disk_copy);
+    if let Err(err) = disk_copy.validate() {
+        scrub_secrets_in_place(&mut next);
+        return Err(err);
+    }
+
+    if let Err(err) = save_config(&get_settings_path(app_handle)?, &disk_copy) {
+        scrub_secrets_in_place(&mut next);
+        return Err(err);
+    }
+
+    update_in_memory_cache(&disk_copy);
+    normalize_non_secret_fields(&mut next);
+    preserved_secrets.apply_to(&mut next);
+    Ok((previous, next))
 }
 
 pub fn set_ui_language<R: tauri::Runtime>(
@@ -670,7 +803,10 @@ pub fn set_ui_language<R: tauri::Runtime>(
     let _guard = lock_settings();
     let mut settings = load_settings_unlocked(app_handle)?;
     settings.ui_language = ui_language.to_string();
-    save_config(&get_settings_path(app_handle)?, &settings)
+    scrub_secrets_in_place(&mut settings);
+    save_config(&get_settings_path(app_handle)?, &settings)?;
+    update_in_memory_cache(&settings);
+    Ok(())
 }
 
 pub fn set_provider_key<R: tauri::Runtime>(
@@ -713,7 +849,10 @@ pub fn set_provider_key<R: tauri::Runtime>(
     settings.sync_active_api_key();
     let secrets = ProviderSecrets::from_settings(&settings);
     save_secrets(&get_secrets_path(app_handle)?, &secrets)?;
-    save_config(&get_settings_path(app_handle)?, &settings)
+    scrub_secrets_in_place(&mut settings);
+    save_config(&get_settings_path(app_handle)?, &settings)?;
+    update_in_memory_cache(&settings);
+    Ok(())
 }
 
 #[cfg(test)]
@@ -877,5 +1016,66 @@ mod tests {
         let loaded: Settings = serde_json::from_value(json).unwrap();
         assert!(loaded.smart_context_enabled);
         assert!(loaded.smart_context_trailing_period);
+    }
+
+    #[test]
+    fn validation_enforces_custom_endpoint_model_and_disabled_commands_limits() {
+        let insecure_url = Settings {
+            custom_api_url: "http://example.com/v1".to_string(),
+            ..Settings::default()
+        };
+        let err = insecure_url.validate().unwrap_err();
+        assert!(err.starts_with("custom_api_url_insecure:"));
+
+        let query_url = Settings {
+            custom_api_url: "https://api.example.com/v1?token=abc".to_string(),
+            ..Settings::default()
+        };
+        assert!(query_url.validate().is_err());
+
+        let empty_url = Settings {
+            custom_api_url: String::new(),
+            ..Settings::default()
+        };
+        assert!(empty_url.validate().is_ok());
+
+        let oversized_model = Settings {
+            custom_model_name: "m".repeat(MAX_CUSTOM_MODEL_NAME_CHARS + 1),
+            ..Settings::default()
+        };
+        assert!(oversized_model.validate().is_err());
+
+        let control_model = Settings {
+            custom_model_name: "gpt-4o\nmini".to_string(),
+            ..Settings::default()
+        };
+        assert!(control_model.validate().is_err());
+
+        let too_many_disabled = Settings {
+            disabled_edit_commands: (0..=MAX_DISABLED_EDIT_COMMANDS)
+                .map(|i| format!("cmd_{i}"))
+                .collect(),
+            ..Settings::default()
+        };
+        assert!(too_many_disabled.validate().is_err());
+    }
+
+    #[test]
+    fn in_memory_cache_scrubs_secrets_and_tracks_speech_logging() {
+        let with_secrets = Settings {
+            api_key: "sk-secret".to_string(),
+            api_key_gemini: "AIzaSecret".to_string(),
+            log_speech_text: true,
+            ..Settings::default()
+        };
+        update_in_memory_cache(&with_secrets);
+        assert!(cached_log_speech_text());
+        let cached = cached_settings_without_secrets().unwrap();
+        assert!(cached.api_key.is_empty());
+        assert!(cached.api_key_gemini.is_empty());
+        assert!(cached.log_speech_text);
+
+        update_in_memory_cache(&Settings::default());
+        assert!(!cached_log_speech_text());
     }
 }

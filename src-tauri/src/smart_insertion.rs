@@ -6,6 +6,19 @@ pub struct CaretContext {
     pub source: CaretContextSource,
 }
 
+impl CaretContext {
+    /// Returns `true` when the selection range was read directly from a text
+    /// API (`Win32Edit` or `UiaTextPattern`) so an empty `selected_text`
+    /// authoritatively proves no text is selected, allowing callers to skip
+    /// synthesizing `Ctrl+C`.
+    pub fn has_authoritative_selection(&self) -> bool {
+        matches!(
+            self.source,
+            CaretContextSource::Win32Edit | CaretContextSource::UiaTextPattern
+        )
+    }
+}
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
 pub enum CaretContextSource {
     #[default]
@@ -560,5 +573,22 @@ mod tests {
         let adapted_nbsp =
             adapt_transcription_to_context("Привет, как твои дела?", &ctx_nbsp, true);
         assert_eq!(adapted_nbsp, "Привет, как твои дела?");
+    }
+
+    #[test]
+    fn test_caret_context_authoritative_selection() {
+        for (source, expected) in [
+            (CaretContextSource::Win32Edit, true),
+            (CaretContextSource::UiaTextPattern, true),
+            (CaretContextSource::UiaValuePattern, false),
+            (CaretContextSource::ClipboardFallback, false),
+            (CaretContextSource::None, false),
+        ] {
+            let ctx = CaretContext {
+                source,
+                ..Default::default()
+            };
+            assert_eq!(ctx.has_authoritative_selection(), expected, "{source:?}");
+        }
     }
 }

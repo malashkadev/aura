@@ -75,25 +75,45 @@ pub fn validate_edit_result(
 
     match intent {
         EditIntent::Translate { target_lang } => {
+            let orig_len = original_selection.chars().count();
+            let out_len = output_trimmed.chars().count();
             if target_lang == "ru" {
                 // Should have Cyrillic letters
-                if !is_primarily_cyrillic(output_trimmed) && original_selection.chars().count() > 8
-                {
+                if !is_primarily_cyrillic(output_trimmed) && orig_len > 8 {
                     return Err(ValidationError::WrongScript);
                 }
             } else if ["en", "de", "es", "fr", "it", "pt", "nl", "tr"]
                 .contains(&target_lang.as_str())
             {
                 // Should NOT be primarily Cyrillic if translating to Latin-based European languages
-                if is_primarily_cyrillic(output_trimmed) && original_selection.chars().count() > 8 {
+                if is_primarily_cyrillic(output_trimmed) && orig_len > 8 {
                     return Err(ValidationError::WrongScript);
                 }
             } else if target_lang == "zh" {
                 let has_cjk = output_trimmed
                     .chars()
                     .any(|c| ('\u{4E00}'..='\u{9FFF}').contains(&c));
-                if !has_cjk && original_selection.chars().count() > 8 {
+                if !has_cjk && orig_len > 8 {
                     return Err(ValidationError::WrongScript);
+                }
+            }
+
+            if orig_len > 25 {
+                let orig_has_cjk = original_selection
+                    .chars()
+                    .any(|c| ('\u{4E00}'..='\u{9FFF}').contains(&c));
+                let min_len = if target_lang == "zh" {
+                    orig_len * 15 / 100
+                } else {
+                    orig_len / 4
+                };
+                let max_len = if orig_has_cjk && target_lang != "zh" {
+                    orig_len * 6
+                } else {
+                    orig_len * 4
+                };
+                if out_len < min_len || out_len > max_len {
+                    return Err(ValidationError::LengthOutOfBounds);
                 }
             }
         }
@@ -195,5 +215,45 @@ mod tests {
             "This is an important working document for the whole team.",
         );
         assert_eq!(res, Err(ValidationError::WrongScript));
+    }
+
+    #[test]
+    fn enforces_translation_length_bounds_while_allowing_cjk_ratios() {
+        let long_ru =
+            "Это подробный рабочий документ с описанием архитектуры проекта и плана внедрения.";
+        // Collapsed output (e.g. prompt-injection response) must be rejected.
+        assert_eq!(
+            validate_edit_result(
+                &EditIntent::Translate {
+                    target_lang: "en".to_string(),
+                },
+                long_ru,
+                "переведи на английский",
+                "OK",
+            ),
+            Err(ValidationError::LengthOutOfBounds)
+        );
+        // Runaway hallucination expansion must be rejected.
+        assert_eq!(
+            validate_edit_result(
+                &EditIntent::Translate {
+                    target_lang: "en".to_string(),
+                },
+                long_ru,
+                "переведи на английский",
+                &"This is a valid English sentence. ".repeat(20),
+            ),
+            Err(ValidationError::LengthOutOfBounds)
+        );
+        // Compact Chinese translation (~22% length) must be accepted.
+        assert!(validate_edit_result(
+            &EditIntent::Translate {
+                target_lang: "zh".to_string(),
+            },
+            long_ru,
+            "переведи на китайский",
+            "这是一份详细说明项目架构与实施计划的工作文档。",
+        )
+        .is_ok());
     }
 }
