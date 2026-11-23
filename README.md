@@ -24,6 +24,10 @@ Press and hold the hotkey, speak, and release — Aura instantly transcribes you
 **100% Free & Open Source (AGPL-3.0)** — no subscriptions, paywalls, telemetry, or advertisements.
 
 <p align="center">
+  <img src="docs/aura-teaser.gif" width="100%" alt="Aura — Voice Typing for Windows" />
+</p>
+
+<p align="center">
   <img src="docs/Aura.gif" width="49%" alt="Aura Dictation Demo" />
   <img src="docs/Settings.gif" width="49%" alt="Aura Settings Demo" />
 </p>
@@ -40,11 +44,11 @@ Press and hold the hotkey, speak, and release — Aura instantly transcribes you
 - **Real-time streaming input** — smooth word-level streaming into active fields without flickering or text duplicates (NVIDIA Parakeet).
 - **Text Replacements & Dynamic Macros** — local rules for instant text expansion into snippets, email addresses, or live date/time tokens (`{date}`, `{date_ru}`, `{time}`, `{datetime}`). A `|` marker in a template sets the final cursor position (e.g. `Hello, |!`).
 - **Focus Guard & Context Editing** — ensures transcribed text is never typed into the wrong window if focus shifts (with safe clipboard handoff), and provides 1-click text editing on selected text with an amber contour highlight around the target field.
-- **Audio device selection, WASAPI Hotplug & Tail Hold** — choose physical microphone input devices with dynamic device hotplugging, 450ms tail grace buffer, and non-destructive Silero VAD silence trimming.
+- **Audio device selection, WASAPI Hotplug & Tail Hold** — choose physical microphone input devices with dynamic device hotplugging, adaptive tail grace buffer, and non-destructive Silero VAD silence trimming.
 - **Transcription history with day grouping** — up to 300 encrypted dictations (DPAPI) with day grouping (Today / Yesterday / calendar dates), live search, and source filters.
 - **Custom dictionary** — bias recognition towards your names, brands, and technical terms.
 - **12 language options** — auto-detect, keyboard-layout detection, or fixed selection (ru, en, de, es, fr, it, zh, pt, tr, nl).
-- **Polished overlay with 6 sound themes** — microphone VU meter, recording timer, 6 audio themes (Zen, Rhodes, Sci-Fi, Classic Bell, Bubble, Haptic), and display customization.
+- **Polished overlay with 6 sound themes** — microphone VU meter, recording timer, 6 audio themes (Zen, Xylophone, Pebble, Classic Bell, Bubble, Haptic), and display customization.
 - **Native High-DPI Tray Menu** — modern tray menu with per-monitor DPI scaling, instant gaming mode toggle, and settings access.
 - **System integration & security** — autostart with Windows, Windows DPAPI credential encryption, one-click diagnostic reports with profile-path redaction, and portable settings backup/restore with a native Save As dialog (API keys are never exported).
 - **Guided first run** — if no local model is installed, the General tab offers a one-click Base-model download and microphone test.

@@ -1,22 +1,24 @@
-### ⚡ Hot-Path Latency Speedup (`-450..850 ms`)
-* **Instant Selection Capture**: Persistent COM STA UIA worker (`aura-uia-caret`, `35 ms`) skips synthetic `Ctrl+C` whenever authoritative Win32 or UIA selection is available (`-260 ms`), eliminating phantom line copies in IDEs and `^C` interrupts in terminals.
-* **Non-Destructive Clipboard Probe**: Uses `GetClipboardSequenceNumber()` fallback polling without clearing the clipboard, preserving Explorer files, Excel cells, and rich formats.
-* **Adaptive Audio Capture & Zero-Idle Polling**: Adaptive WASAPI tail hold (`90 ms` Toggle / `100–250 ms` Hold with early silence exit), single-pass `StreamingVad`, 16 kHz FIR `StreamingResampler` with recycled buffer pool, event-driven `IMMNotificationClient` audio hotplugging, and `O(1)` cached non-secret settings reads (`0` idle DPAPI calls).
+### ⚡ Noticeably Faster & Cleaner Workflow
+- **0.5–0.8 s faster per dictation**: Aura captures selected text faster and uses an adaptive end-of-speech pause so recordings finish sooner without clipping final words.
+- **No more phantom `Ctrl+C` or cleared clipboards**: When Windows exposes the selection directly, Aura skips synthetic `Ctrl+C` — eliminating accidental line copies in IDEs and `^C` interrupts in terminals while keeping Explorer files, Excel cells, and images in your clipboard intact.
+- **Clean `Win+V` clipboard history**: Dictated text is marked transient so it no longer clutters Windows clipboard history or cloud clipboard sync.
+- **Lower idle overhead**: Event-driven microphone hotplugging and cached settings eliminate background polling when Aura is idle.
 
-### 🧠 Overhauled Voice Selection Editing & AI Accuracy
-* **Single-Pass `FixGrammar` & 32 Translation Languages**: Expanded `edit_intent.rs` to 32 target languages, added `UnsupportedTranslateTarget` safe rejection, removed conflicting prompt tails, and preserved non-Russian Cyrillic (`uk`, `be`, `sr`, `kk`, etc.), Latin, and CJK languages during proofreading.
-* **Dedicated Custom Edit Model**: Split `custom_edit_model_name` from speech `custom_model_name` across Settings and cloud providers, and strictly isolated `ai_edit_mode == "local"` from unintended cloud fallback.
-* **Safe Dictation Isolation & Context Adaptation**: `PassThroughDictation` preserves normal dictation over selected text, `adapt_edit_result_to_selection_context` restores whitespace boundaries cleanly, and UIPI elevation guards protect admin windows.
+### ✍️ Overhauled Voice Selection Editing
+- **Translate into 32 languages** (up from 10): Voice translation now covers 32 target languages, and a short *"translate"* command detects the selection language properly instead of translating into the same language.
+- **More accurate grammar & punctuation fixes**: Single-pass proofreading preserves original meaning and no longer rewrites non-Russian Cyrillic (Ukrainian, Belarusian, Kazakh, Serbian, etc.), Latin, or CJK text into another language.
+- **Strict local mode & separate custom edit model**: Local editing (Qwen3) never silently falls back to cloud providers, and custom OpenAI-compatible servers now have a dedicated text-editing model field.
+- **Cleaner setup & passthrough dictation**: If no local edit model or cloud API key is configured yet, Settings shows a direct setup notice. Speaking normally over selected text (without an edit command) now keeps your text replacements and silence filtering intact.
 
-### 🎨 6 HUD Overlay Visualizers & Sound Themes
-* **6 Animated HUD Styles (`#card-overlay`)**: Choose between `Wave`, `Matrix`, `Scale`, `Tape`, `Beam`, and `Ribbon` recording visualizers directly in Hotkeys settings alongside the recording timer toggle.
-* **Refreshed Procedural Sound Themes**: Replaced `Rhodes` and `Sci-Fi` with procedural Web Audio `Xylophone` and `Pebble` themes, suspended cleanly on idle (`AudioContext.suspend()`).
-* **Monochrome SVG Icon System**: Unified monochrome SVG iconography across all settings tabs and the High-DPI tray menu.
+### 🎨 Overlay Visualizers, Sound Themes & UI Polish
+- **6 HUD overlay styles**: Pick between **Wave**, **Matrix**, **Scale**, **Tape**, **Beam**, and **Ribbon** visualizers right in Hotkeys settings.
+- **New sound themes**: **Xylophone** and **Pebble** replace *Rhodes* and *Sci-Fi* (existing configs and `v1.2.0` backups automatically migrate to *Zen*).
+- **Refreshed icons & notifications**: Unified monochrome SVG icons across Settings and the tray menu, manually dismissible toasts, and wider overlay notices that no longer clip long messages.
 
-### 🔒 Privacy, Reliability & Security Hardening
-* **Explicit DPAPI Key Controls & Backup Compatibility**: Quiet `.btn-clear-api-key` buttons across Speech and Text tabs protect saved keys from accidental debounce wipes; importing `v1.2.0` settings backups seamlessly fills defaults and migrates legacy sound themes.
-* **Transient Clipboard Privacy & Model Guards**: Dictation inserts are marked transient to avoid Win+V and cloud clipboard history; broken/missing models are rejected before saving, active models cannot be deleted, toasts are dismissible, and Whisper/OpenAI prompt echoes on silence are discarded.
-* **Log ACL Self-Healing & Security Audits**: Added `CONTAINER_INHERIT_ACE | OBJECT_INHERIT_ACE` directory ACL inheritance, 2-step log self-healing, `llm_runner` lock-free process teardown, HTTPS-only custom URLs, and upgraded Rust dependencies (`cookie 0.18.3`, `url 2.5.9`, `rustix 1.1.6`).
+### 🔒 Reliability & Security
+- **Safer API-key management**: Saved keys are protected from accidental empty-input overwrites and now have an explicit clear button.
+- **Model & silence guards**: Incomplete models cannot be selected, the active model cannot be deleted by mistake, errors are shown in plain language, and Whisper/OpenAI prompt echoes on silence are discarded.
+- **Hardening**: Automatic diagnostic log recovery, HTTPS enforcement for custom endpoints, and RustSec dependency updates.
 
 ### Package Manager (WinGet)
 ```cmd
