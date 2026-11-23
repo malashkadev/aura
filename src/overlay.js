@@ -1,6 +1,7 @@
 // @ts-check
 
 import { createSoundSynth } from "./sound-themes.js";
+import { mountOverlayVisualizer, normalizeOverlayStyle } from "./overlay-visualizers.js";
 
 /**
  * @typedef {Object} TauriOverlayBridge
@@ -15,24 +16,25 @@ import { createSoundSynth } from "./sound-themes.js";
  * @property {string} [overlay_sound_theme]
  * @property {number} [overlay_sound_volume]
  * @property {boolean} [overlay_show_timer]
+ * @property {string} [overlay_style]
  */
 
 const tauriWindow = /** @type {Window & typeof globalThis & { __TAURI__?: TauriOverlayBridge }} */ (window);
 const { listen } = (tauriWindow.__TAURI__ && tauriWindow.__TAURI__.event) || { listen: () => {} };
 
-const bars = /** @type {NodeListOf<SVGElement>} */ (document.querySelectorAll(".sound-bar"));
 const statusEl = /** @type {HTMLElement | null} */ (document.getElementById("overlay-status"));
 const statusTextEl = /** @type {HTMLElement | null} */ (document.getElementById("overlay-status-text"));
 const pill = /** @type {HTMLElement | null} */ (document.querySelector(".overlay-pill"));
 const cardEl = /** @type {HTMLElement | null} */ (document.querySelector(".overlay-card"));
 const auraSvg = document.getElementById("aura-svg");
+const svgDefs = auraSvg ? auraSvg.querySelector("defs") : null;
 const barsGroup = /** @type {HTMLElement | SVGElement | null} */ (document.getElementById("bars-group"));
 let currentState = "idle";
 
 let isEditContext = false;
 
 const SUPPORTED_UI_LANGS = ["ru", "en", "de", "es", "fr", "it", "zh", "pt", "tr"];
-const SUPPORTED_SOUND_THEMES = ["zen", "rhodes", "scifi", "classic", "bubble", "haptic"];
+const SUPPORTED_SOUND_THEMES = ["zen", "xylophone", "pebble", "classic", "bubble", "haptic"];
 
 /** @returns {string} */
 function resolveUiLang() {
@@ -88,7 +90,6 @@ listen("selection-context-active", (event) => {
 let stateCycle = 0;
 /** @type {number | null} */
 let recordStart = null;
-let angle = 0;
 // Pending auto-hide timer from a previous state (e.g. an error). Cleared when
 // a newer session owns the overlay, so it can never hide a fresh recording.
 /** @type {ReturnType<typeof setTimeout> | null} */
@@ -108,6 +109,13 @@ let soundsEnabled = true;
 let soundTheme = "zen";
 let soundVolume = 0.8;
 let overlayShowTimer = true;
+let overlayStyle = "wave";
+let latestVolume = 0;
+let smoothEnergy = 0;
+let lastAnimFrameMs = 0;
+
+/** @type {import("./overlay-visualizers.js").OverlayVisualizerController | null} */
+let visualizer = barsGroup ? mountOverlayVisualizer(overlayStyle, barsGroup, svgDefs, "overlay") : null;
 
 function cancelScheduledAudioSuspend() {
   if (audioSuspendTimerId !== null) {
@@ -146,6 +154,22 @@ function applyActiveThemeSettings(settings) {
   if (document.body) {
     document.body.classList.toggle("no-timer", !overlayShowTimer);
   }
+  if (settings.overlay_style !== undefined) {
+    const nextStyle = normalizeOverlayStyle(settings.overlay_style);
+    if (nextStyle !== overlayStyle && barsGroup) {
+      overlayStyle = nextStyle;
+      visualizer = mountOverlayVisualizer(overlayStyle, barsGroup, svgDefs, "overlay");
+      if (currentState.startsWith("error")) {
+        visualizer.setColor("#666666");
+      } else if (currentState.startsWith("notice:")) {
+        visualizer.setColor("#ff4200");
+      } else if (reduceMotionQuery.matches) {
+        visualizer.applyReducedMotion(currentState, latestVolume);
+      } else {
+        visualizer.reset(currentState);
+      }
+    }
+  }
   if (
     !overlayShowTimer &&
     !currentState.startsWith("error") &&
@@ -177,69 +201,25 @@ function playThemeError() {
   overlaySynth.playError(soundTheme);
 }
 
-const restHeight = 2.5;
-const maxHeight = 16.0;
-
-// Exact silence reference color (#722205) and Aura tactical orange (#ff4200)
-const COLOR_SILENCE = { r: 114, g: 34, b: 5 };
-const COLOR_SPEECH = { r: 255, g: 66, b: 0 };
-
-/**
- * @param {number} energy
- * @returns {string}
- */
-function getBarHeatColor(energy) {
-  const clamped = Math.max(0, Math.min(1, energy));
-  const r = Math.round(COLOR_SILENCE.r + (COLOR_SPEECH.r - COLOR_SILENCE.r) * clamped);
-  const g = Math.round(COLOR_SILENCE.g + (COLOR_SPEECH.g - COLOR_SILENCE.g) * clamped);
-  const b = Math.round(COLOR_SILENCE.b + (COLOR_SPEECH.b - COLOR_SILENCE.b) * clamped);
-  return `rgb(${r}, ${g}, ${b})`;
-}
-
-// Track current and target heights for smooth linear interpolation (lerp)
-const barStates = Array.from(bars).map(() => ({
-  currentHeight: restHeight,
-  targetHeight: restHeight
-}));
-
-// Reset all bars to default quiet state
+// Reset active visualizer to default quiet state
 function resetBars() {
-  barStates.forEach(state => {
-    state.targetHeight = restHeight;
-    state.currentHeight = restHeight;
-  });
-  bars.forEach(bar => {
-    bar.setAttribute("height", restHeight.toString());
-    bar.setAttribute("y", (15.0 - restHeight / 2).toString());
-    bar.setAttribute("rx", (restHeight / 2).toString());
-    if (currentState === "recording") {
-      bar.setAttribute("fill", "rgb(114, 34, 5)");
-    }
-  });
+  latestVolume = 0;
+  smoothEnergy = 0;
+  if (visualizer) {
+    visualizer.reset(currentState);
+  }
 }
 
 /** @param {string} color */
 function setBarColor(color) {
-  bars.forEach(bar => bar.setAttribute("fill", color));
+  if (visualizer) {
+    visualizer.setColor(color);
+  }
 }
 
 function applyReducedMotionBars() {
-  if (currentState === "recording") {
-    bars.forEach((bar, index) => {
-      const h = barStates[index].targetHeight;
-      bar.setAttribute("height", h.toString());
-      bar.setAttribute("y", (15.0 - h / 2).toString());
-      bar.setAttribute("rx", Math.min(1.5, h / 2).toFixed(2));
-      const barEnergy = Math.max(0, Math.min(1, (h - restHeight) / 7.0));
-      bar.setAttribute("fill", getBarHeatColor(barEnergy));
-    });
-  } else if (currentState === "processing") {
-    bars.forEach(bar => {
-      bar.setAttribute("height", "4.0");
-      bar.setAttribute("y", "12.6");
-      bar.setAttribute("rx", "1.5");
-      bar.setAttribute("fill", "#ff4200");
-    });
+  if (visualizer) {
+    visualizer.applyReducedMotion(currentState, latestVolume);
   }
 }
 
@@ -351,6 +331,7 @@ function stopAnimationLoop() {
     cancelAnimationFrame(rafId);
     rafId = null;
   }
+  lastAnimFrameMs = 0;
 }
 
 function startAnimationLoop() {
@@ -418,37 +399,32 @@ function updateAnimation() {
   }
 
   const procFactor = transitionState.currentWave;
-  const recFactor = 1 - procFactor;
+  const nowPerf = performance.now();
+  const dt = lastAnimFrameMs > 0
+    ? Math.min(0.05, Math.max(0.001, (nowPerf - lastAnimFrameMs) / 1000))
+    : 1 / 60;
+  lastAnimFrameMs = nowPerf;
 
-  // 3. Audio & wave animation
-  angle = (angle + 0.05) % (Math.PI * 2);
+  const activeVolume = currentState === "recording" ? latestVolume : 0;
+  const normEnergy = activeVolume > 0.00005 ? Math.min(1, Math.sqrt(activeVolume) * 2.05) : 0;
+  smoothEnergy += (normEnergy - smoothEnergy) * (normEnergy > smoothEnergy ? 0.36 : 0.16);
 
-  bars.forEach((bar, index) => {
-    const state = barStates[index];
-    const distFromCenter = Math.abs(index - 4.5);
-    const targetProcH = 4.0 + Math.sin(angle - distFromCenter * 0.45) * 3.5;
-
-    const blendedTarget = state.targetHeight * recFactor + targetProcH * procFactor;
-    state.currentHeight += (blendedTarget - state.currentHeight) * 0.16;
-
-    const y = 15.0 - (state.currentHeight / 2);
-    bar.setAttribute("height", state.currentHeight.toFixed(2));
-    bar.setAttribute("y", y.toFixed(2));
-    bar.setAttribute("rx", (Math.min(1.5, state.currentHeight / 2)).toFixed(2));
-
-    // Dynamic bar color (Variant 2: Per-bar heat / energy):
-    // In silence (restHeight = 2.5), energy = 0 -> #722205 (exact silence reference).
-    // As speech elevates bars, energy scales towards 1.0 -> #ff4200 (tactical orange).
-    // During transition to processing or in processing, smoothly illuminate to #ff4200.
-    if (currentState === "recording" || currentState === "processing") {
-      const barEnergy = Math.max(0, Math.min(1, (state.currentHeight - restHeight) / 7.0));
-      const effectiveEnergy = procFactor > 0 ? barEnergy + (1 - barEnergy) * procFactor : barEnergy;
-      bar.setAttribute("fill", getBarHeatColor(effectiveEnergy));
-    }
-  });
+  if (visualizer) {
+    visualizer.update({
+      volume: activeVolume,
+      energy: smoothEnergy,
+      nowMs: Date.now(),
+      dt,
+      procFactor,
+      state: currentState,
+      previewActive: true,
+    });
+  }
 
   if ((pill && pill.classList.contains("visible")) || morphState.active || transitionState.active) {
     rafId = requestAnimationFrame(updateAnimation);
+  } else {
+    lastAnimFrameMs = 0;
   }
 }
 
@@ -900,7 +876,6 @@ listen("recording-state", (event) => {
       targetWave: 1.0,
       currentWave: transitionState.currentWave
     };
-    angle = 0;
     resolveUiLang();
     setOverlayText("");
     if (statusEl) statusEl.classList.remove("error");
@@ -1131,24 +1106,7 @@ listen("volume-level", (event) => {
     if (isNaN(volume)) volume = 0.0;
   }
 
-  barStates.forEach((state, index) => {
-    let h = restHeight;
-    // Make wave react to even tiny volume fluctuations
-    if (volume > 0.00005) {
-      const boosted = Math.sqrt(volume); // e.g. sqrt(0.001) = 0.031
-
-      // Generate organic ripples based on time and index to simulate frequency bands
-      const time = Date.now() * 0.007;
-      const wave = 0.35 +
-        Math.sin(time * (0.9 + index * 0.12) + index * 1.6) * 0.4 +
-        Math.cos(time * 0.65 - index * 0.95) * 0.25;
-
-      // Apply multiplier to normalized wave coefficient
-      h = restHeight + (boosted * 36.0 * Math.max(0.05, wave));
-      h = Math.min(maxHeight, Math.max(restHeight, h));
-    }
-    state.targetHeight = h;
-  });
+  latestVolume = Math.max(0, volume);
 
   if (reduceMotionQuery.matches) {
     applyReducedMotionBars();

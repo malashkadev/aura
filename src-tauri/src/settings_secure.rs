@@ -29,7 +29,9 @@ const ALLOWED_LANGUAGES: &[&str] = &[
 const ALLOWED_TRANSLATE_TARGETS: &[&str] =
     &["en", "ru", "de", "es", "fr", "it", "zh", "pt", "tr", "nl"];
 const ALLOWED_UI_LANGUAGES: &[&str] = &["ru", "en", "de", "es", "fr", "it", "zh", "pt", "tr"];
-const ALLOWED_SOUND_THEMES: &[&str] = &["zen", "rhodes", "scifi", "classic", "bubble", "haptic"];
+const ALLOWED_SOUND_THEMES: &[&str] =
+    &["zen", "xylophone", "pebble", "classic", "bubble", "haptic"];
+const ALLOWED_OVERLAY_STYLES: &[&str] = &["wave", "matrix", "scale", "tape", "beam", "ribbon"];
 const MAX_DICTIONARY_CHARS: usize = 4096;
 const MAX_HOTKEY_CHARS: usize = 64;
 const MAX_CUSTOM_API_URL_CHARS: usize = 512;
@@ -78,6 +80,10 @@ pub struct Settings {
     pub api_key_custom: String,
     pub custom_api_url: String,
     pub custom_model_name: String,
+    /// Chat/LLM model name used for cloud text editing with `api_provider == "custom"`,
+    /// kept separate from `custom_model_name` (Whisper/ASR transcription model).
+    #[serde(default = "default_custom_edit_model_name")]
+    pub custom_edit_model_name: String,
     pub model_name: String,
     pub hotkey: String,
     pub streaming_enabled: bool,
@@ -107,6 +113,8 @@ pub struct Settings {
     pub smart_context_trailing_period: bool,
     pub log_speech_text: bool,
     pub overlay_show_timer: bool,
+    #[serde(default = "default_overlay_style")]
+    pub overlay_style: String,
     #[serde(default = "default_audio_device")]
     pub audio_input_device: String,
     #[serde(default = "default_vram_standby_timeout_mins")]
@@ -149,6 +157,14 @@ fn default_audio_device() -> String {
     "default".to_string()
 }
 
+fn default_custom_edit_model_name() -> String {
+    "meta-llama/Llama-3.3-70B-Instruct".to_string()
+}
+
+fn default_overlay_style() -> String {
+    "wave".to_string()
+}
+
 impl Default for Settings {
     fn default() -> Self {
         Self {
@@ -163,6 +179,7 @@ impl Default for Settings {
             api_key_custom: String::new(),
             custom_api_url: "https://api.deepinfra.com/v1/openai".to_string(),
             custom_model_name: "openai/whisper-large-v3-turbo".to_string(),
+            custom_edit_model_name: default_custom_edit_model_name(),
             model_name: "base".to_string(),
             hotkey: "Alt+V".to_string(),
             streaming_enabled: false,
@@ -185,6 +202,7 @@ impl Default for Settings {
             smart_context_trailing_period: true,
             log_speech_text: false,
             overlay_show_timer: true,
+            overlay_style: default_overlay_style(),
             audio_input_device: "default".to_string(),
             vram_standby_timeout_mins: 30,
             gaming_mode_enabled: false,
@@ -244,6 +262,7 @@ impl Settings {
             &self.overlay_sound_theme,
             ALLOWED_SOUND_THEMES,
         )?;
+        validate_choice("overlay style", &self.overlay_style, ALLOWED_OVERLAY_STYLES)?;
 
         let hotkey_len = self.hotkey.chars().count();
         if hotkey_len == 0 || hotkey_len > MAX_HOTKEY_CHARS {
@@ -313,6 +332,16 @@ impl Settings {
         {
             return Err(format!(
                 "Custom model name is invalid or exceeds {MAX_CUSTOM_MODEL_NAME_CHARS} characters"
+            ));
+        }
+        if self.custom_edit_model_name.chars().count() > MAX_CUSTOM_MODEL_NAME_CHARS
+            || self
+                .custom_edit_model_name
+                .chars()
+                .any(|ch| ch.is_control())
+        {
+            return Err(format!(
+                "Custom edit model name is invalid or exceeds {MAX_CUSTOM_MODEL_NAME_CHARS} characters"
             ));
         }
         if self.disabled_edit_commands.len() > MAX_DISABLED_EDIT_COMMANDS {
@@ -602,6 +631,16 @@ fn normalize_non_secret_fields(settings: &mut Settings) {
     settings.hotkey = settings.hotkey.trim().to_string();
     settings.custom_api_url = settings.custom_api_url.trim().to_string();
     settings.custom_model_name = settings.custom_model_name.trim().to_string();
+    settings.custom_edit_model_name = settings.custom_edit_model_name.trim().to_string();
+}
+
+fn migrate_legacy_sound_theme(settings: &mut Settings) -> bool {
+    if matches!(settings.overlay_sound_theme.as_str(), "rhodes" | "scifi") {
+        settings.overlay_sound_theme = "zen".to_string();
+        true
+    } else {
+        false
+    }
 }
 
 fn update_in_memory_cache(settings: &Settings) {
@@ -657,6 +696,7 @@ fn load_settings_unlocked<R: tauri::Runtime>(
     if migrated_unsupported_acceleration {
         settings.local_acceleration = "cpu".to_string();
     }
+    let migrated_legacy_sound_theme = migrate_legacy_sound_theme(&mut settings);
     let config_contained_plaintext = !settings.api_key.is_empty()
         || !settings.api_key_gemini.is_empty()
         || !settings.api_key_openai.is_empty()
@@ -701,7 +741,10 @@ fn load_settings_unlocked<R: tauri::Runtime>(
         }
         legacy_secrets
     };
-    if config_contained_plaintext || migrated_unsupported_acceleration {
+    if config_contained_plaintext
+        || migrated_unsupported_acceleration
+        || migrated_legacy_sound_theme
+    {
         save_config(&config_path, &settings)?;
     }
     secrets.apply_to(&mut settings);
@@ -729,6 +772,7 @@ pub fn load_settings_without_secrets<R: tauri::Runtime>(
     if settings.local_acceleration == "directml" {
         settings.local_acceleration = "cpu".to_string();
     }
+    migrate_legacy_sound_theme(&mut settings);
     settings.validate()?;
     update_in_memory_cache(&settings);
     Ok(settings)
@@ -743,6 +787,7 @@ pub fn save_settings<R: tauri::Runtime>(
     // instead of letting it linger until the struct is dropped.
     scrub_secrets_in_place(&mut normalized);
     normalize_non_secret_fields(&mut normalized);
+    migrate_legacy_sound_theme(&mut normalized);
     normalized.validate()?;
     let _guard = lock_settings();
 
@@ -779,6 +824,7 @@ where
     let mut disk_copy = next.clone();
     scrub_secrets_in_place(&mut disk_copy);
     normalize_non_secret_fields(&mut disk_copy);
+    migrate_legacy_sound_theme(&mut disk_copy);
     if let Err(err) = disk_copy.validate() {
         scrub_secrets_in_place(&mut next);
         return Err(err);
@@ -791,6 +837,7 @@ where
 
     update_in_memory_cache(&disk_copy);
     normalize_non_secret_fields(&mut next);
+    migrate_legacy_sound_theme(&mut next);
     preserved_secrets.apply_to(&mut next);
     Ok((previous, next))
 }
@@ -1051,6 +1098,18 @@ mod tests {
         };
         assert!(control_model.validate().is_err());
 
+        let oversized_edit_model = Settings {
+            custom_edit_model_name: "m".repeat(MAX_CUSTOM_MODEL_NAME_CHARS + 1),
+            ..Settings::default()
+        };
+        assert!(oversized_edit_model.validate().is_err());
+
+        let control_edit_model = Settings {
+            custom_edit_model_name: "llama-3.3\n70b".to_string(),
+            ..Settings::default()
+        };
+        assert!(control_edit_model.validate().is_err());
+
         let too_many_disabled = Settings {
             disabled_edit_commands: (0..=MAX_DISABLED_EDIT_COMMANDS)
                 .map(|i| format!("cmd_{i}"))
@@ -1058,6 +1117,51 @@ mod tests {
             ..Settings::default()
         };
         assert!(too_many_disabled.validate().is_err());
+
+        for style in ALLOWED_OVERLAY_STYLES {
+            let valid_style = Settings {
+                overlay_style: (*style).to_string(),
+                ..Settings::default()
+            };
+            assert!(valid_style.validate().is_ok());
+        }
+
+        let invalid_style = Settings {
+            overlay_style: "unknown-style".to_string(),
+            ..Settings::default()
+        };
+        assert!(invalid_style.validate().is_err());
+
+        for theme in ALLOWED_SOUND_THEMES {
+            let valid_theme = Settings {
+                overlay_sound_theme: (*theme).to_string(),
+                ..Settings::default()
+            };
+            assert!(valid_theme.validate().is_ok());
+        }
+
+        for removed in ["rhodes", "scifi"] {
+            let mut legacy = Settings {
+                overlay_sound_theme: removed.to_string(),
+                ..Settings::default()
+            };
+            assert!(legacy.validate().is_err());
+            assert!(migrate_legacy_sound_theme(&mut legacy));
+            assert_eq!(legacy.overlay_sound_theme, "zen");
+            assert!(legacy.validate().is_ok());
+
+            let mut prepared = Settings {
+                overlay_sound_theme: removed.to_string(),
+                dictionary: "  Aura  ".to_string(),
+                ..Settings::default()
+            };
+            scrub_secrets_in_place(&mut prepared);
+            normalize_non_secret_fields(&mut prepared);
+            migrate_legacy_sound_theme(&mut prepared);
+            assert!(prepared.validate().is_ok());
+            assert_eq!(prepared.overlay_sound_theme, "zen");
+            assert_eq!(prepared.dictionary, "Aura");
+        }
     }
 
     #[test]

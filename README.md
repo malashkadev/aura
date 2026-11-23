@@ -128,24 +128,13 @@ cargo test
 - **Secure local storage** — API keys and transcription history are encrypted using **Windows DPAPI** (`CryptProtectData`) with file access restricted to the current user and SYSTEM via ACL.
 - **Update checks** run only on demand or when explicitly enabled in settings.
 
-## What's new in v1.2.0
+## What's new in v1.2.5
 
-- **Voice selection editing** — select any text in any Windows app, hold the hotkey, and speak a command: fix grammar or translate directly in-place.
-- **Smart context-aware text insertion** — inspects surrounding caret context via ultra-fast Win32 messages and UI Automation to adapt letter casing, spacing, and punctuation.
-- **Local recognition is now the default** — out of the box Aura transcribes with the resident Whisper/Parakeet engine on CPU or NVIDIA CUDA; cloud AI remains an opt-in.
-- **Next-gen HUD overlay** — hardware-accelerated Dual Beams border, Diffuse Contour Glow in edit mode, and kinetic morphing into a compact square.
-- **Interactive spotlight tour** — 5-step guided feature walkthrough with docked footer and concentric corner geometry.
-- **Cursor marker in replacements** — place `|` in a template to control the final caret position (e.g. `Hello, |!`).
-- **6 procedural Web Audio sound themes** — synthesized click-free sound themes with compact volume track and live feedback.
-- **Smarter caret-context capture** — a native Win32 fast path for standard edit controls, with UI Automation as a fallback; password fields are skipped.
-- **Input protection & switcher harmony** — suppresses layout-switcher replay (Caramba Switcher / PowerToys) and hotkey auto-repeat leaks.
-- **Locked-session recovery** — the global hotkey no longer stays stuck after a Windows lock/unlock cycle.
-- **Filler-loop filtering** — `ммммм` / `hmmmm` silence hallucinations are discarded while real short words survive.
-- **Redesigned Commands Guide** — a cleaner two-column reference for the active voice-editing commands.
-- **Installer reliability** — Aura launches de-elevated after installation, with a one-shot retry if the first start is missed.
-- **Portable settings backup** — export/import settings, dictionary, and replacements as JSON without API keys via native Save As dialog.
-- **Guided first run** — a model-download and microphone-test card appears when local mode has no speech model.
-- **Privacy and accessibility polish** — diagnostic reports redact the profile path; selects and the spotlight tour have full keyboard focus management.
+- **Hot-path latency speedup (`-450..850 ms`)** — persistent COM STA UIA worker (`aura-uia-caret`), skipping synthetic `Ctrl+C` when authoritative selection is present, non-destructive clipboard probe, adaptive tail hold (`90 ms` Toggle / `100–250 ms` Hold), single-pass `StreamingVad`, 16 kHz FIR resampler, event-driven WASAPI hotplug, and zero idle DPAPI decryption.
+- **Overhauled voice selection editing** — accurate single-pass `FixGrammar` (preserving non-Russian Cyrillic and Latin/CJK languages) and `Translate` across 32 languages, isolated `PassThroughDictation` when no command is spoken, dedicated `custom_edit_model_name`, and strict local-only mode without accidental cloud fallback.
+- **6 HUD overlay visualizers (`#card-overlay`)** — switch between `Wave`, `Matrix`, `Scale`, `Tape`, `Beam`, and `Ribbon` recording visualizers directly in Hotkeys settings.
+- **Refreshed sound themes & DPAPI key controls** — procedural `Xylophone` and `Pebble` themes (replacing `Rhodes` and `Sci-Fi`), quiet explicit API-key clear buttons, transient Win+V clipboard privacy, dismissible toasts, and backwards-compatible `v1.2.0` settings backup import.
+- **Security & stability hardening** — `Containers/Objects` ACL inheritance + log self-healing, HTTPS-only custom URLs, least-privilege tray capabilities, `llm_runner` lock-free process teardown, and RustSec dependency upgrades (`cookie 0.18.3`, `url 2.5.9`, `rustix 1.1.6`).
 
 ## Roadmap
 

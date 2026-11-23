@@ -1004,12 +1004,15 @@ body {
   align-items: center;
 }
 
-.api-key-input-wrapper .custom-input {
+.api-key-input-wrapper.has-saved-key .custom-input {
   padding-right: 40px;
 }
 
-.api-key-input-wrapper.has-saved-key .custom-input {
-  padding-right: 70px;
+/* Suppress Edge/WebView2 native password reveal/clear controls on write-only
+   API key inputs so no stray eye icon appears alongside #btn-clear-key. */
+.custom-input::-ms-reveal,
+.custom-input::-ms-clear {
+  display: none;
 }
 
 .custom-input {
@@ -1044,7 +1047,7 @@ body {
 
 .btn-clear-api-key {
   position: absolute;
-  right: 38px;
+  right: 8px;
   width: 28px;
   height: 28px;
   padding: 0;
@@ -1078,30 +1081,7 @@ body {
   opacity: 0.4;
 }
 
-.btn-toggle-visibility {
-  position: absolute;
-  right: 8px;
-  width: 28px;
-  height: 28px;
-  padding: 0;
-  border-radius: var(--radius-sm);
-  background: none;
-  border: 1px solid transparent;
-  color: var(--text-muted);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: var(--transition);
-}
-
-.btn-toggle-visibility:hover,
-.btn-toggle-visibility.visible {
-  color: var(--text-primary);
-}
-
-.btn-clear-api-key:focus-visible,
-.btn-toggle-visibility:focus-visible {
+.btn-clear-api-key:focus-visible {
   outline: none;
   border-color: rgba(255, 255, 255, 0.28);
 }
@@ -1110,11 +1090,6 @@ body {
   width: 15px;
   height: 15px;
   pointer-events: none;
-}
-
-.eye-icon {
-  width: 18px;
-  height: 18px;
 }
 
 .btn-primary {
@@ -1778,7 +1753,6 @@ body {
 }
 
 /* Tactile Active States */
-.btn-toggle-visibility:active,
 .btn-clear-history:active,
 .btn-copy-history:active,
 .btn-reset-icon:active,
@@ -1799,8 +1773,7 @@ body {
 }
 
 /* Transitions for tactile feedback scaling */
-.btn-primary,
-.btn-toggle-visibility {
+.btn-primary {
   transition: transform 0.15s var(--ease-out), background-color 0.25s, border-color 0.25s, box-shadow 0.25s, color 0.25s;
 }
 
@@ -3314,7 +3287,6 @@ body {
 .btn-cancel-download:focus-visible,
 .replacement-delete:focus-visible,
 .btn-clear-search:focus-visible,
-.btn-toggle-visibility:focus-visible,
 .update-badge:focus-visible {
   outline: 2px solid var(--accent-color);
   outline-offset: 2px;
@@ -4005,5 +3977,92 @@ body {
   .summary-spec {
     min-width: 160px;
     padding-left: 12px;
+  }
+}
+
+/* Overlay Visualization Style Picker (#card-overlay) */
+.overlay-style-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.overlay-style-tile {
+  appearance: none;
+  background-color: hsla(0, 0%, 8%, 0.45);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 12px 10px 10px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: inherit;
+  font-family: inherit;
+  transition: transform 0.15s var(--ease-out), border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.overlay-style-tile:hover {
+  border-color: rgba(255, 255, 255, 0.16);
+  background-color: hsla(0, 0%, 11%, 0.65);
+}
+
+.overlay-style-tile.active {
+  border-color: rgba(255, 255, 255, 0.24);
+  background-color: rgba(255, 255, 255, 0.06);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.09);
+}
+
+.overlay-style-tile:active {
+  transform: scale(0.985);
+}
+
+.overlay-style-tile:focus-visible {
+  outline: 2px solid var(--accent-color);
+  outline-offset: 2px;
+}
+
+.overlay-style-preview {
+  width: 134px;
+  height: 39px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--bg-color);
+  border: 1px solid var(--border-color);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  overflow: hidden;
+  flex-shrink: 0;
+  transform: scale(0.92);
+  transform-origin: center;
+  margin: -2px 0;
+}
+
+.overlay-style-preview svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.overlay-style-name {
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.2;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  transition: color 0.16s ease;
+}
+
+.overlay-style-tile:hover .overlay-style-name,
+.overlay-style-tile.active .overlay-style-name {
+  color: var(--text-primary);
+}
+
+@media (max-width: 680px) {
+  .overlay-style-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }

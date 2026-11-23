@@ -11,6 +11,7 @@ import { createModelCards } from "./model-cards.js";
 import { createSettingsAutosave } from "./settings-autosave.js";
 import { collectFormSettings } from "./settings-form.js";
 import { createSoundSynth } from "./sound-themes.js";
+import { createOverlayPreviewSvg, normalizeOverlayStyle } from "./overlay-visualizers.js";
 
 try {
   hydrateAppIcons();
@@ -91,8 +92,8 @@ const i18nDict = {
     "sound_volume_label": "Громкость звука",
     "sound_theme_label": "Звуковая тема",
     "sound_theme_zen": "Дзен",
-    "sound_theme_rhodes": "Rhodes",
-    "sound_theme_scifi": "Sci-Fi",
+    "sound_theme_xylophone": "Ксилофон",
+    "sound_theme_pebble": "Галька",
     "sound_theme_classic": "Колокольчик",
     "sound_theme_bubble": "Капля воды",
     "sound_theme_haptic": "Тактильный свитч",
@@ -118,7 +119,7 @@ const i18nDict = {
     "history_unit_sec": "с",
     "history_group_today": "Сегодня",
     "history_group_yesterday": "Вчера",
-    "about_version": "v1.2.0",
+    "about_version": "v1.2.5",
     "about_description": "Инструмент глобального голосового ввода для Windows. Программа переводит речь в текст и вставляет его в любое активное окно с автоматическим форматированием и расстановкой пунктуации.",
     "about_row_tour_title": "Вводный экскурс по возможностям",
     "about_row_tour_desc": "Интерактивный тур с подсказками по основным функциям",
@@ -258,8 +259,15 @@ const i18nDict = {
     "api_custom_url": "Адрес API сервера",
     "api_custom_model": "Имя модели",
     "provider_opt_custom": "Пользовательский сервер",
-    "overlay_timer_title": "Таймер оверлея",
-    "overlay_timer_desc": "Счётчик времени под индикатором. Ошибки отображаются всегда.",
+    "overlay_card_title": "Оверлей",
+    "overlay_card_desc": "Визуализация записи и таймер под индикатором. Ошибки отображаются всегда.",
+    "overlay_style_label": "Визуализация",
+    "overlay_style_wave": "Волна",
+    "overlay_style_matrix": "Матрица",
+    "overlay_style_scale": "Шкала",
+    "overlay_style_tape": "Лента",
+    "overlay_style_beam": "Луч",
+    "overlay_style_ribbon": "Поток",
     "overlay_timer_checkbox": "Показывать таймер в оверлее",
     "mic_meter_title": "Микрофон",
     "mic_meter_desc": "Устройство ввода и проверка сигнала",
@@ -298,7 +306,6 @@ const i18nDict = {
     "window_close": "Закрыть",
     "history_copy_title": "Скопировать в буфер обмена",
     "history_search_clear": "Очистить поиск",
-    "api_key_toggle_visibility": "Показать/скрыть ключ",
     "clear_api_key_tooltip": "Удалить сохранённый ключ",
     "api_key_cleared": "API-ключ удалён",
     "history_filters_label": "Фильтры истории",
@@ -391,8 +398,8 @@ const i18nDict = {
     "sound_volume_label": "Sound Volume",
     "sound_theme_label": "Sound Theme",
     "sound_theme_zen": "Zen",
-    "sound_theme_rhodes": "Rhodes",
-    "sound_theme_scifi": "Sci-Fi",
+    "sound_theme_xylophone": "Xylophone",
+    "sound_theme_pebble": "Pebble",
     "sound_theme_classic": "Bell",
     "sound_theme_bubble": "Water Drop",
     "sound_theme_haptic": "Haptic Switch",
@@ -418,7 +425,7 @@ const i18nDict = {
     "history_unit_sec": "s",
     "history_group_today": "Today",
     "history_group_yesterday": "Yesterday",
-    "about_version": "v1.2.0",
+    "about_version": "v1.2.5",
     "about_description": "Global voice input tool for Windows. The program transcribes speech to text and inserts it into any active window with automatic formatting and punctuation.",
     "about_row_tour_title": "Feature Tour",
     "about_row_tour_desc": "Interactive walkthrough of core features",
@@ -558,8 +565,15 @@ const i18nDict = {
     "api_custom_url": "Server API URL",
     "api_custom_model": "Model Name",
     "provider_opt_custom": "Custom Server",
-    "overlay_timer_title": "Overlay timer",
-    "overlay_timer_desc": "Time counter below the indicator. Errors are always shown.",
+    "overlay_card_title": "Overlay",
+    "overlay_card_desc": "Recording visualization and timer below the indicator. Errors are always shown.",
+    "overlay_style_label": "Visualization",
+    "overlay_style_wave": "Wave",
+    "overlay_style_matrix": "Matrix",
+    "overlay_style_scale": "Scale",
+    "overlay_style_tape": "Tape",
+    "overlay_style_beam": "Beam",
+    "overlay_style_ribbon": "Flow",
     "overlay_timer_checkbox": "Show timer on overlay",
     "mic_meter_title": "Microphone",
     "mic_meter_desc": "Input device and signal check",
@@ -598,7 +612,6 @@ const i18nDict = {
     "window_close": "Close",
     "history_copy_title": "Copy to clipboard",
     "history_search_clear": "Clear search",
-    "api_key_toggle_visibility": "Show/hide key",
     "clear_api_key_tooltip": "Remove saved key",
     "api_key_cleared": "API key removed",
     "history_filters_label": "History filters",
@@ -699,8 +712,8 @@ const i18nDict = {
     "sound_volume_label": "Tonlautstärke",
     "sound_theme_label": "Sound-Theme",
     "sound_theme_zen": "Zen",
-    "sound_theme_rhodes": "Rhodes",
-    "sound_theme_scifi": "Sci-Fi",
+    "sound_theme_xylophone": "Xylophon",
+    "sound_theme_pebble": "Kiesel",
     "sound_theme_classic": "Glocke",
     "sound_theme_bubble": "Wassertropfen",
     "sound_theme_haptic": "Haptischer Schalter",
@@ -726,7 +739,7 @@ const i18nDict = {
     "history_unit_sec": "s",
     "history_group_today": "Heute",
     "history_group_yesterday": "Gestern",
-    "about_version": "v1.2.0",
+    "about_version": "v1.2.5",
     "about_description": "Globales Spracheingabe-Tool für Windows. Die Anwendung überträgt Sprache in Text und fügt ihn mit automatischer Formatierung und Zeichensetzung in jedes aktive Fenster ein.",
     "about_row_tour_title": "Funktionstour",
     "about_row_tour_desc": "Interaktive Einführung in die wichtigsten Funktionen",
@@ -858,8 +871,15 @@ const i18nDict = {
     "api_custom_url": "Server-API-Adresse",
     "api_custom_model": "Modellname",
     "provider_opt_custom": "Benutzerdefinierter Server",
-    "overlay_timer_title": "Overlay-Timer",
-    "overlay_timer_desc": "Zeitzähler unter der Anzeige. Fehler werden immer angezeigt.",
+    "overlay_card_title": "Overlay",
+    "overlay_card_desc": "Aufnahme-Visualisierung und Timer unter der Anzeige. Fehler werden immer angezeigt.",
+    "overlay_style_label": "Visualisierung",
+    "overlay_style_wave": "Welle",
+    "overlay_style_matrix": "Matrix",
+    "overlay_style_scale": "Skala",
+    "overlay_style_tape": "Band",
+    "overlay_style_beam": "Strahl",
+    "overlay_style_ribbon": "Fluss",
     "overlay_timer_checkbox": "Timer im Overlay anzeigen",
     "mic_meter_title": "Mikrofon",
     "mic_meter_desc": "Eingabegerät und Signalprüfung",
@@ -898,7 +918,6 @@ const i18nDict = {
     "window_close": "Schließen",
     "history_copy_title": "In die Zwischenablage kopieren",
     "history_search_clear": "Suche löschen",
-    "api_key_toggle_visibility": "Schlüssel anzeigen/ausblenden",
     "clear_api_key_tooltip": "Gespeicherten Schlüssel entfernen",
     "api_key_cleared": "API-Schlüssel entfernt",
     "history_filters_label": "Verlaufsfilter",
@@ -988,8 +1007,8 @@ const i18nDict = {
     "sound_volume_label": "Volumen del sonido",
     "sound_theme_label": "Tema sonoro",
     "sound_theme_zen": "Zen",
-    "sound_theme_rhodes": "Rhodes",
-    "sound_theme_scifi": "Sci-Fi",
+    "sound_theme_xylophone": "Xilófono",
+    "sound_theme_pebble": "Guijarro",
     "sound_theme_classic": "Campana",
     "sound_theme_bubble": "Gota de agua",
     "sound_theme_haptic": "Interruptor háptico",
@@ -1015,7 +1034,7 @@ const i18nDict = {
     "history_unit_sec": "s",
     "history_group_today": "Hoy",
     "history_group_yesterday": "Ayer",
-    "about_version": "v1.2.0",
+    "about_version": "v1.2.5",
     "about_description": "Herramienta de entrada de voz global para Windows. El programa transcribe el habla en texto y lo inserta en cualquier ventana activa con formato y puntuación automáticos.",
     "about_row_tour_title": "Paseo de funciones",
     "about_row_tour_desc": "Guía interactiva de las funciones principales",
@@ -1158,8 +1177,15 @@ const i18nDict = {
     "api_custom_url": "Dirección API del servidor",
     "api_custom_model": "Nombre del modelo",
     "provider_opt_custom": "Servidor personalizado",
-    "overlay_timer_title": "Temporizador del overlay",
-    "overlay_timer_desc": "Contador de tiempo bajo el indicador. Los errores siempre se muestran.",
+    "overlay_card_title": "Overlay",
+    "overlay_card_desc": "Visualización de grabación y temporizador bajo el indicador. Los errores siempre se muestran.",
+    "overlay_style_label": "Visualización",
+    "overlay_style_wave": "Onda",
+    "overlay_style_matrix": "Matriz",
+    "overlay_style_scale": "Escala",
+    "overlay_style_tape": "Cinta",
+    "overlay_style_beam": "Haz",
+    "overlay_style_ribbon": "Flujo",
     "overlay_timer_checkbox": "Mostrar temporizador en el overlay",
     "mic_meter_title": "Micrófono",
     "mic_meter_desc": "Dispositivo de entrada y prueba de señal",
@@ -1198,7 +1224,6 @@ const i18nDict = {
     "window_close": "Cerrar",
     "history_copy_title": "Copiar al portapapeles",
     "history_search_clear": "Borrar búsqueda",
-    "api_key_toggle_visibility": "Mostrar/ocultar clave",
     "clear_api_key_tooltip": "Eliminar clave guardada",
     "api_key_cleared": "Clave API eliminada",
     "history_filters_label": "Filtros del historial",
@@ -1288,8 +1313,8 @@ const i18nDict = {
     "sound_volume_label": "Volume du son",
     "sound_theme_label": "Thème sonore",
     "sound_theme_zen": "Zen",
-    "sound_theme_rhodes": "Rhodes",
-    "sound_theme_scifi": "Sci-Fi",
+    "sound_theme_xylophone": "Xylophone",
+    "sound_theme_pebble": "Galet",
     "sound_theme_classic": "Cloche",
     "sound_theme_bubble": "Goutte d'eau",
     "sound_theme_haptic": "Interrupteur haptique",
@@ -1315,7 +1340,7 @@ const i18nDict = {
     "history_unit_sec": "s",
     "history_group_today": "Aujourd'hui",
     "history_group_yesterday": "Hier",
-    "about_version": "v1.2.0",
+    "about_version": "v1.2.5",
     "about_description": "Outil de saisie vocale globale pour Windows. Le programme transcrit la parole en texte et l'insère dans n'importe quelle fenêtre active avec un formatage et une ponctuation automatiques.",
     "about_row_tour_title": "Visite guidée",
     "about_row_tour_desc": "Présentation interactive des fonctionnalités clés",
@@ -1458,8 +1483,15 @@ const i18nDict = {
     "api_custom_url": "Adresse API du serveur",
     "api_custom_model": "Nom du modèle",
     "provider_opt_custom": "Serveur personnalisé",
-    "overlay_timer_title": "Minuteur de l'overlay",
-    "overlay_timer_desc": "Compteur de temps sous l'indicateur. Les erreurs sont toujours affichées.",
+    "overlay_card_title": "Overlay",
+    "overlay_card_desc": "Visualisation d'enregistrement et minuteur sous l'indicateur. Les erreurs sont toujours affichées.",
+    "overlay_style_label": "Visualisation",
+    "overlay_style_wave": "Onde",
+    "overlay_style_matrix": "Matrice",
+    "overlay_style_scale": "Échelle",
+    "overlay_style_tape": "Bande",
+    "overlay_style_beam": "Faisceau",
+    "overlay_style_ribbon": "Flux",
     "overlay_timer_checkbox": "Afficher le minuteur sur l'overlay",
     "mic_meter_title": "Microphone",
     "mic_meter_desc": "Périphérique d'entrée et test du signal",
@@ -1498,7 +1530,6 @@ const i18nDict = {
     "window_close": "Fermer",
     "history_copy_title": "Copier dans le presse-papiers",
     "history_search_clear": "Effacer la recherche",
-    "api_key_toggle_visibility": "Afficher/masquer la clé",
     "clear_api_key_tooltip": "Supprimer la clé enregistrée",
     "api_key_cleared": "Clé API supprimée",
     "history_filters_label": "Filtres de l'historique",
@@ -1588,8 +1619,8 @@ const i18nDict = {
     "sound_volume_label": "Volume del suono",
     "sound_theme_label": "Tema sonoro",
     "sound_theme_zen": "Zen",
-    "sound_theme_rhodes": "Rhodes",
-    "sound_theme_scifi": "Sci-Fi",
+    "sound_theme_xylophone": "Xilofono",
+    "sound_theme_pebble": "Ciottolo",
     "sound_theme_classic": "Campanella",
     "sound_theme_bubble": "Goccia d'acqua",
     "sound_theme_haptic": "Interruttore tattile",
@@ -1615,7 +1646,7 @@ const i18nDict = {
     "history_unit_sec": "s",
     "history_group_today": "Oggi",
     "history_group_yesterday": "Ieri",
-    "about_version": "v1.2.0",
+    "about_version": "v1.2.5",
     "about_description": "Strumento di inserimento vocale globale per Windows. Il programma trascrive la voce in testo e la inserisce in qualsiasi finestra attiva con formattazione e punteggiatura automatiche.",
     "about_row_tour_title": "Tour delle funzionalità",
     "about_row_tour_desc": "Guida interattiva alle funzionalità principali",
@@ -1758,8 +1789,15 @@ const i18nDict = {
     "api_custom_url": "Indirizzo API del server",
     "api_custom_model": "Nome del modello",
     "provider_opt_custom": "Server personalizzato",
-    "overlay_timer_title": "Timer dell'overlay",
-    "overlay_timer_desc": "Contatore del tempo sotto l'indicatore. Gli errori sono sempre visibili.",
+    "overlay_card_title": "Overlay",
+    "overlay_card_desc": "Visualizzazione della registrazione e timer sotto l'indicatore. Gli errori sono sempre visibili.",
+    "overlay_style_label": "Visualizzazione",
+    "overlay_style_wave": "Onda",
+    "overlay_style_matrix": "Matrice",
+    "overlay_style_scale": "Scala",
+    "overlay_style_tape": "Nastro",
+    "overlay_style_beam": "Raggio",
+    "overlay_style_ribbon": "Flusso",
     "overlay_timer_checkbox": "Mostra timer nell'overlay",
     "mic_meter_title": "Microfono",
     "mic_meter_desc": "Dispositivo di ingresso e test del segnale",
@@ -1798,7 +1836,6 @@ const i18nDict = {
     "window_close": "Chiudi",
     "history_copy_title": "Copia negli appunti",
     "history_search_clear": "Cancella ricerca",
-    "api_key_toggle_visibility": "Mostra/nascondi chiave",
     "clear_api_key_tooltip": "Rimuovi chiave salvata",
     "api_key_cleared": "Chiave API rimossa",
     "history_filters_label": "Filtri della cronologia",
@@ -1888,8 +1925,8 @@ const i18nDict = {
     "sound_volume_label": "音量",
     "sound_theme_label": "声音主题",
     "sound_theme_zen": "禅宗",
-    "sound_theme_rhodes": "Rhodes",
-    "sound_theme_scifi": "科幻",
+    "sound_theme_xylophone": "木琴",
+    "sound_theme_pebble": "鹅卵石",
     "sound_theme_classic": "铃声",
     "sound_theme_bubble": "水滴音",
     "sound_theme_haptic": "触感微动",
@@ -1915,7 +1952,7 @@ const i18nDict = {
     "history_unit_sec": "秒",
     "history_group_today": "今天",
     "history_group_yesterday": "昨天",
-    "about_version": "v1.2.0",
+    "about_version": "v1.2.5",
     "about_description": "适用于 Windows 的全局语音输入工具。本程序可以将语音转录为文本，并以自动格式和标点符号插入到任何活动窗口中。",
     "about_row_tour_title": "功能导览",
     "about_row_tour_desc": "核心功能交互式引导介绍",
@@ -2058,8 +2095,15 @@ const i18nDict = {
     "api_custom_url": "服务器 API 地址",
     "api_custom_model": "模型名称",
     "provider_opt_custom": "自定义服务器",
-    "overlay_timer_title": "悬浮窗计时器",
-    "overlay_timer_desc": "指示器下方的计时器。错误始终显示。",
+    "overlay_card_title": "悬浮窗",
+    "overlay_card_desc": "录音动画与指示器下方的计时器。错误始终显示。",
+    "overlay_style_label": "可视化样式",
+    "overlay_style_wave": "声波",
+    "overlay_style_matrix": "矩阵",
+    "overlay_style_scale": "刻度",
+    "overlay_style_tape": "光带",
+    "overlay_style_beam": "光束",
+    "overlay_style_ribbon": "流光",
     "overlay_timer_checkbox": "在悬浮窗上显示计时器",
     "mic_meter_title": "麦克风",
     "mic_meter_desc": "输入设备与信号检测",
@@ -2098,7 +2142,6 @@ const i18nDict = {
     "window_close": "关闭",
     "history_copy_title": "复制到剪贴板",
     "history_search_clear": "清除搜索",
-    "api_key_toggle_visibility": "显示/隐藏密钥",
     "clear_api_key_tooltip": "删除已保存的密钥",
     "api_key_cleared": "API 密钥已删除",
     "history_filters_label": "历史记录筛选",
@@ -2188,8 +2231,8 @@ const i18nDict = {
     "sound_volume_label": "Volume do som",
     "sound_theme_label": "Tema sonoro",
     "sound_theme_zen": "Zen",
-    "sound_theme_rhodes": "Rhodes",
-    "sound_theme_scifi": "Sci-Fi",
+    "sound_theme_xylophone": "Xilofone",
+    "sound_theme_pebble": "Seixo",
     "sound_theme_classic": "Sino",
     "sound_theme_bubble": "Gota de água",
     "sound_theme_haptic": "Interruptor tátil",
@@ -2215,7 +2258,7 @@ const i18nDict = {
     "history_unit_sec": "s",
     "history_group_today": "Hoje",
     "history_group_yesterday": "Ontem",
-    "about_version": "v1.2.0",
+    "about_version": "v1.2.5",
     "about_description": "Ferramenta de entrada de voz global para Windows. O programa transcreve a fala em texto e a insere em qualquer janela ativa com formatação e pontuação automáticas.",
     "about_row_tour_title": "Tour de recursos",
     "about_row_tour_desc": "Guia interativo dos principais recursos",
@@ -2358,8 +2401,15 @@ const i18nDict = {
     "api_custom_url": "Endereço da API do servidor",
     "api_custom_model": "Nome do modelo",
     "provider_opt_custom": "Servidor personalizado",
-    "overlay_timer_title": "Temporizador do overlay",
-    "overlay_timer_desc": "Contador de tempo abaixo do indicador. Erros são sempre exibidos.",
+    "overlay_card_title": "Overlay",
+    "overlay_card_desc": "Visualização da gravação e temporizador abaixo do indicador. Erros são sempre exibidos.",
+    "overlay_style_label": "Visualização",
+    "overlay_style_wave": "Onda",
+    "overlay_style_matrix": "Matriz",
+    "overlay_style_scale": "Escala",
+    "overlay_style_tape": "Fita",
+    "overlay_style_beam": "Feixe",
+    "overlay_style_ribbon": "Fluxo",
     "overlay_timer_checkbox": "Exibir temporizador no overlay",
     "mic_meter_title": "Microfone",
     "mic_meter_desc": "Dispositivo de entrada e teste de sinal",
@@ -2398,7 +2448,6 @@ const i18nDict = {
     "window_close": "Fechar",
     "history_copy_title": "Copiar para a área de transferência",
     "history_search_clear": "Limpar pesquisa",
-    "api_key_toggle_visibility": "Mostrar/ocultar chave",
     "clear_api_key_tooltip": "Remover chave guardada",
     "api_key_cleared": "Chave API removida",
     "history_filters_label": "Filtros do histórico",
@@ -2488,8 +2537,8 @@ const i18nDict = {
     "sound_volume_label": "Ses Seviyesi",
     "sound_theme_label": "Ses Teması",
     "sound_theme_zen": "Zen",
-    "sound_theme_rhodes": "Rhodes",
-    "sound_theme_scifi": "Sci-Fi",
+    "sound_theme_xylophone": "Ksilofon",
+    "sound_theme_pebble": "Çakıl",
     "sound_theme_classic": "Zil",
     "sound_theme_bubble": "Su Damlası",
     "sound_theme_haptic": "Haptik Anahtar",
@@ -2515,7 +2564,7 @@ const i18nDict = {
     "history_unit_sec": "sn",
     "history_group_today": "Bugün",
     "history_group_yesterday": "Dün",
-    "about_version": "v1.2.0",
+    "about_version": "v1.2.5",
     "about_description": "Windows için genel sesli giriş aracı. Program, konuşmayı metne dönüştürür ve otomatik biçimlendirme ve noktalama işaretleriyle herhangi bir aktif pencereye ekler.",
     "about_row_tour_title": "Özellik Turu",
     "about_row_tour_desc": "Temel özelliklere ilişkin etkileşimli rehber",
@@ -2658,8 +2707,15 @@ const i18nDict = {
     "api_custom_url": "Sunucu API Adresi",
     "api_custom_model": "Model Adı",
     "provider_opt_custom": "Özel Sunucu",
-    "overlay_timer_title": "Arayüz zamanlayıcısı",
-    "overlay_timer_desc": "Gösterge altında süre sayacı. Hatalar her zaman görünür.",
+    "overlay_card_title": "Arayüz",
+    "overlay_card_desc": "Kayıt görselleştirmesi ve gösterge altındaki sayaç. Hatalar her zaman görünür.",
+    "overlay_style_label": "Görselleştirme",
+    "overlay_style_wave": "Dalga",
+    "overlay_style_matrix": "Matris",
+    "overlay_style_scale": "Ölçek",
+    "overlay_style_tape": "Şerit",
+    "overlay_style_beam": "Işın",
+    "overlay_style_ribbon": "Akış",
     "overlay_timer_checkbox": "Arayüzde zamanlayıcıyı göster",
     "mic_meter_title": "Mikrofon",
     "mic_meter_desc": "Giriş aygıtı ve sinyal kontrolü",
@@ -2698,7 +2754,6 @@ const i18nDict = {
     "window_close": "Kapat",
     "history_copy_title": "Panoya kopyala",
     "history_search_clear": "Aramayı temizle",
-    "api_key_toggle_visibility": "Anahtarı göster/gizle",
     "clear_api_key_tooltip": "Kayıtlı anahtarı kaldır",
     "api_key_cleared": "API anahtarı kaldırıldı",
     "history_filters_label": "Geçmiş filtreleri",
@@ -3510,6 +3565,13 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  let selectedOverlayStyle = "wave";
+  let hoveredOverlayStyle = null;
+  let overlayPreviewRafId = null;
+  let overlayPreviewLastMs = 0;
+  let overlayPreviewSmoothE = 0;
+  const overlayStyleItems = [];
+
   function activateTab(tab, immediateIndicator = false) {
     const prevTab = activeTab;
     const isSameTab = tab === prevTab;
@@ -3562,6 +3624,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (tab.dataset.tab !== "speech" && isMicTesting) {
       stopMicTesting();
     }
+    syncOverlayPreviewLoop();
   }
 
   tabs.forEach((tab) => {
@@ -3622,19 +3685,9 @@ document.addEventListener("DOMContentLoaded", () => {
     if (targetTab) activateTab(targetTab, true);
   }
 
-  // Toggle API Key visibility
+  // API Key inputs
   const apiKeyInput = document.getElementById("input-api-key");
-  const toggleKeyBtn = document.getElementById("btn-toggle-key");
   const clearKeyBtn = document.getElementById("btn-clear-key");
-  toggleKeyBtn.addEventListener("click", () => {
-    if (apiKeyInput.type === "password") {
-      apiKeyInput.type = "text";
-      toggleKeyBtn.classList.add("visible");
-    } else {
-      apiKeyInput.type = "password";
-      toggleKeyBtn.classList.remove("visible");
-    }
-  });
 
   // Engine change (Cloud vs Local) toggling Whisper card visibility
 const radioCloud = document.getElementById("radio-cloud");
@@ -3888,7 +3941,6 @@ async function refreshEngineHealth() {
   const selectProvider = document.getElementById("select-provider");
   const selectEditCloudProvider = document.getElementById("select-edit-cloud-provider");
   const apiKeyInputEdit = document.getElementById("input-edit-api-key");
-  const toggleKeyEditBtn = document.getElementById("btn-toggle-key-edit");
   const clearKeyEditBtn = document.getElementById("btn-clear-key-edit");
   const inputCustomUrl = document.getElementById("input-custom-url");
   const inputCustomModel = document.getElementById("input-custom-model");
@@ -3944,15 +3996,188 @@ const btnSaveSettings = document.getElementById("btn-save-settings");
     settingsSynth.playStart(theme);
   }
 
+  // ============================================================
+  // Overlay visualization style picker (#card-overlay)
+  // ============================================================
+  const overlayStyleGrid = document.getElementById("overlay-style-grid");
+
+  const OVERLAY_PREVIEW_SYLLABLES = [
+    { t: 0.16, w: 0.08, a: 0.09 },
+    { t: 0.38, w: 0.11, a: 0.18 },
+    { t: 0.64, w: 0.09, a: 0.11 },
+    { t: 0.88, w: 0.13, a: 0.24 },
+    { t: 1.18, w: 0.09, a: 0.12 },
+    { t: 2.05, w: 0.10, a: 0.15 },
+    { t: 2.32, w: 0.13, a: 0.23 },
+    { t: 2.62, w: 0.10, a: 0.14 },
+    { t: 3.30, w: 0.12, a: 0.20 },
+    { t: 3.58, w: 0.09, a: 0.10 },
+  ];
+
+  function sampleOverlayPreviewSpeech(sec) {
+    const p = sec % 4.3;
+    let v = 0;
+    for (let i = 0; i < OVERLAY_PREVIEW_SYLLABLES.length; i++) {
+      const s = OVERLAY_PREVIEW_SYLLABLES[i];
+      const d = (p - s.t) / s.w;
+      if (Math.abs(d) < 3.2) {
+        v += s.a * Math.exp(-0.5 * d * d);
+      }
+    }
+    return Math.min(0.28, v * (0.88 + 0.12 * Math.sin(sec * 25)));
+  }
+
+  function applyOverlayStyleSelection(styleId, shouldSave = false) {
+    const normalized = normalizeOverlayStyle(styleId);
+    const changed = normalized !== selectedOverlayStyle;
+    selectedOverlayStyle = normalized;
+
+    for (let i = 0; i < overlayStyleItems.length; i++) {
+      const item = overlayStyleItems[i];
+      const isSelected = item.styleId === selectedOverlayStyle;
+      item.btn.classList.toggle("active", isSelected);
+      item.btn.setAttribute("aria-checked", String(isSelected));
+      item.btn.tabIndex = isSelected ? 0 : -1;
+    }
+
+    if (shouldSave && changed) {
+      autosave.mark(true);
+    }
+  }
+
+  function stopOverlayPreviewLoop() {
+    if (overlayPreviewRafId !== null) {
+      cancelAnimationFrame(overlayPreviewRafId);
+      overlayPreviewRafId = null;
+    }
+    overlayPreviewLastMs = 0;
+  }
+
+  function stepOverlayPreview(now) {
+    overlayPreviewRafId = null;
+    if (
+      !activeTab ||
+      activeTab.dataset.tab !== "hotkeys" ||
+      document.hidden ||
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    ) {
+      overlayPreviewLastMs = 0;
+      return;
+    }
+
+    const dt = overlayPreviewLastMs > 0
+      ? Math.min(0.05, Math.max(0.001, (now - overlayPreviewLastMs) / 1000))
+      : 1 / 60;
+    overlayPreviewLastMs = now;
+    const sec = now / 1000;
+    const vol = sampleOverlayPreviewSpeech(sec);
+    const normE = vol > 0.0001 ? Math.min(1, Math.sqrt(vol) * 2.05) : 0;
+    overlayPreviewSmoothE += (normE - overlayPreviewSmoothE) * (normE > overlayPreviewSmoothE ? 0.36 : 0.16);
+
+    for (let i = 0; i < overlayStyleItems.length; i++) {
+      const item = overlayStyleItems[i];
+      const isPreviewActive = hoveredOverlayStyle
+        ? hoveredOverlayStyle === item.styleId
+        : selectedOverlayStyle === item.styleId;
+      item.controller.update({
+        volume: vol,
+        energy: overlayPreviewSmoothE,
+        nowMs: now,
+        dt,
+        procFactor: 0,
+        state: "recording",
+        previewActive: isPreviewActive,
+      });
+    }
+
+    overlayPreviewRafId = requestAnimationFrame(stepOverlayPreview);
+  }
+
+  function syncOverlayPreviewLoop() {
+    const shouldRun = Boolean(
+      overlayStyleItems.length > 0 &&
+      activeTab &&
+      activeTab.dataset.tab === "hotkeys" &&
+      !document.hidden &&
+      !window.matchMedia("(prefers-reduced-motion: reduce)").matches,
+    );
+    if (!shouldRun) {
+      stopOverlayPreviewLoop();
+      return;
+    }
+    if (overlayPreviewRafId === null) {
+      overlayPreviewLastMs = 0;
+      overlayPreviewRafId = requestAnimationFrame(stepOverlayPreview);
+    }
+  }
+
+  if (overlayStyleGrid) {
+    const styleButtons = Array.from(overlayStyleGrid.querySelectorAll(".overlay-style-tile"));
+    styleButtons.forEach((btn, idx) => {
+      const styleId = normalizeOverlayStyle(btn.dataset.overlayStyle);
+      const previewSlot = btn.querySelector(".overlay-style-preview");
+      const { svg, controller } = createOverlayPreviewSvg(styleId, `cfg-${idx}`);
+      if (previewSlot) {
+        previewSlot.appendChild(svg);
+      }
+      controller.update({
+        volume: 0,
+        energy: 0,
+        nowMs: 0,
+        dt: 1 / 60,
+        procFactor: 0,
+        state: "recording",
+        previewActive: false,
+      });
+      overlayStyleItems.push({ styleId, btn, controller });
+
+      btn.addEventListener("click", () => {
+        applyOverlayStyleSelection(styleId, true);
+      });
+      btn.addEventListener("mouseenter", () => {
+        hoveredOverlayStyle = styleId;
+      });
+      btn.addEventListener("mouseleave", () => {
+        if (hoveredOverlayStyle === styleId) {
+          hoveredOverlayStyle = null;
+        }
+      });
+      btn.addEventListener("keydown", (event) => {
+        const key = event.key;
+        let nextIdx = -1;
+        if (key === "ArrowRight" || key === "ArrowDown") {
+          nextIdx = (idx + 1) % styleButtons.length;
+        } else if (key === "ArrowLeft" || key === "ArrowUp") {
+          nextIdx = (idx - 1 + styleButtons.length) % styleButtons.length;
+        } else if (key === "Home") {
+          nextIdx = 0;
+        } else if (key === "End") {
+          nextIdx = styleButtons.length - 1;
+        }
+        if (nextIdx >= 0) {
+          event.preventDefault();
+          const targetBtn = styleButtons[nextIdx];
+          targetBtn.focus();
+          applyOverlayStyleSelection(targetBtn.dataset.overlayStyle, true);
+        }
+      });
+    });
+    syncOverlayPreviewLoop();
+  }
+
   document.addEventListener("visibilitychange", () => {
     if (document.hidden) {
       settingsSynth.suspend();
+      stopOverlayPreviewLoop();
       if (engineFastPollTimer) {
         clearInterval(engineFastPollTimer);
         engineFastPollTimer = null;
       }
-    } else if (isSettingsLoaded && radioLocal && radioLocal.checked) {
-      refreshEngineHealth();
+    } else {
+      syncOverlayPreviewLoop();
+      if (isSettingsLoaded && radioLocal && radioLocal.checked) {
+        refreshEngineHealth();
+      }
     }
   });
 
@@ -4330,18 +4555,6 @@ const btnSaveSettings = document.getElementById("btn-save-settings");
     });
   }
 
-  if (toggleKeyEditBtn && apiKeyInputEdit) {
-    toggleKeyEditBtn.addEventListener("click", () => {
-      if (apiKeyInputEdit.type === "password") {
-        apiKeyInputEdit.type = "text";
-        toggleKeyEditBtn.classList.add("visible");
-      } else {
-        apiKeyInputEdit.type = "password";
-        toggleKeyEditBtn.classList.remove("visible");
-      }
-    });
-  }
-
   if (inputEditCustomUrl && inputCustomUrl) {
     inputEditCustomUrl.addEventListener("input", () => {
       inputCustomUrl.value = inputEditCustomUrl.value;
@@ -4349,16 +4562,6 @@ const btnSaveSettings = document.getElementById("btn-save-settings");
     });
     inputCustomUrl.addEventListener("input", () => {
       inputEditCustomUrl.value = inputCustomUrl.value;
-    });
-  }
-
-  if (inputEditCustomModel && inputCustomModel) {
-    inputEditCustomModel.addEventListener("input", () => {
-      inputCustomModel.value = inputEditCustomModel.value;
-      autosave.mark(false);
-    });
-    inputCustomModel.addEventListener("input", () => {
-      inputEditCustomModel.value = inputCustomModel.value;
     });
   }
 
@@ -4872,7 +5075,7 @@ const btnSaveSettings = document.getElementById("btn-save-settings");
         }
         const inputEditCustomModel = document.getElementById("input-edit-custom-model");
         if (inputEditCustomModel) {
-          inputEditCustomModel.value = settings.custom_model_name || "openai/whisper-large-v3-turbo";
+          inputEditCustomModel.value = settings.custom_edit_model_name || "meta-llama/Llama-3.3-70B-Instruct";
         }
         updateCustomProviderUI();
         if (selectHotkey) {
@@ -4931,6 +5134,7 @@ const btnSaveSettings = document.getElementById("btn-save-settings");
         if (checkboxOverlayTimer) {
           checkboxOverlayTimer.checked = settings.overlay_show_timer !== false;
         }
+        applyOverlayStyleSelection(settings.overlay_style || "wave", false);
         const checkboxGamingMode = document.getElementById("checkbox-gaming-mode");
         if (checkboxGamingMode) {
           checkboxGamingMode.checked = !!settings.gaming_mode_enabled;
@@ -5017,6 +5221,7 @@ const btnSaveSettings = document.getElementById("btn-save-settings");
         transcriptionMode: radioLocal.checked ? "local" : "cloud",
         apiProvider: selectProvider.value,
         localAcceleration: activeLocalAcceleration,
+        overlayStyle: selectedOverlayStyle,
         textReplacements: currentReplacements,
         completedOnboarding:
           hasCompletedOnboarding || localStorage.getItem("aura_onboarding_completed") === "true",
@@ -5829,20 +6034,6 @@ if (e.button === 0 && !e.target.closest(".window-control-btn") && !e.target.clos
       toastClose.setAttribute("aria-label", toastCloseText);
     }
 
-    const btnToggleKey = document.getElementById("btn-toggle-key");
-    if (btnToggleKey) {
-      const toggleKeyText = dict.api_key_toggle_visibility || "Show/hide key";
-      btnToggleKey.setAttribute("aria-label", toggleKeyText);
-      btnToggleKey.setAttribute("title", toggleKeyText);
-    }
-
-    const btnToggleKeyEdit = document.getElementById("btn-toggle-key-edit");
-    if (btnToggleKeyEdit) {
-      const toggleKeyText = dict.api_key_toggle_visibility || "Show/hide key";
-      btnToggleKeyEdit.setAttribute("aria-label", toggleKeyText);
-      btnToggleKeyEdit.setAttribute("title", toggleKeyText);
-    }
-
     const btnClearKey = document.getElementById("btn-clear-key");
     if (btnClearKey) {
       const clearKeyText = dict.clear_api_key_tooltip || "Remove saved key";
@@ -6151,10 +6342,26 @@ if (e.button === 0 && !e.target.closest(".window-control-btn") && !e.target.clos
             );
           }
           const current = await invoke("get_settings");
+          const optionalBackupKeys = new Set(["custom_edit_model_name", "overlay_style"]);
+          const requiredBackupKeys = Object.keys(current || {}).filter(
+            (key) => !optionalBackupKeys.has(key)
+          );
           const candidate = parseSettingsBackup(
             await file.text(),
-            Object.keys(current || {})
+            requiredBackupKeys
           );
+          if (candidate.custom_edit_model_name === undefined && current && typeof current.custom_edit_model_name === "string") {
+            candidate.custom_edit_model_name = current.custom_edit_model_name;
+          }
+          if (candidate.overlay_style === undefined) {
+            candidate.overlay_style =
+              current && typeof current.overlay_style === "string" && current.overlay_style
+                ? current.overlay_style
+                : "wave";
+          }
+          if (candidate.overlay_sound_theme === "rhodes" || candidate.overlay_sound_theme === "scifi") {
+            candidate.overlay_sound_theme = "zen";
+          }
           const importedCustomUrl = typeof candidate.custom_api_url === "string"
             ? candidate.custom_api_url.trim()
             : "";

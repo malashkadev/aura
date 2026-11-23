@@ -1,6 +1,6 @@
-# SourceForge Publication Kit — Aura v1.2.0
+# SourceForge Publication Kit — Aura v1.2.5
 
-Этот документ содержит все готовые тексты, метаданные и инструкции для публикации релиза **Aura v1.2.0** на платформе [SourceForge](https://sourceforge.net/projects/aura-voice-typing/).
+Этот документ содержит все готовые тексты, метаданные и инструкции для публикации релиза **Aura v1.2.5** на платформе [SourceForge](https://sourceforge.net/projects/aura-voice-typing/).
 
 ---
 
@@ -49,7 +49,7 @@ Unlike proprietary dictation software that locks you into paid subscriptions and
   - **1-Click NVIDIA CUDA GPU Acceleration**: Automatically downloads required CUDA runtime libraries on demand, enabling lightning-fast GPU transcription with automatic CPU fallback.
 
 - **Optional Cloud AI Providers**:
-  - Connect your own API keys to Google Gemini (multimodal 3.8 & 3.6 Flash), Groq (Whisper Large v3), OpenAI (Whisper-1), Hugging Face, or any custom OpenAI-compatible server URL.
+  - Connect your own API keys to Google Gemini (2.5 Flash, 2.5 Flash-Lite, 2.0 Flash), Groq (Whisper Large v3), OpenAI (Whisper-1), Hugging Face, or any custom OpenAI-compatible server URL.
   - Contextual text editing on selected text (translate / fix grammar) with an amber contour highlight around the target field.
 
 - **Gaming Mode (DirectX & Vulkan)**:
@@ -66,14 +66,14 @@ Unlike proprietary dictation software that locks you into paid subscriptions and
 
 - **Audio Engine & Stability**:
   - **WASAPI Audio Hotplug**: Dynamically detects USB/Bluetooth headset or microphone connections and disconnections without application restart.
-  - **450ms Tail Hold Buffer**: Extended recording grace margin combined with non-destructive Silero VAD prevents clipped word and sentence endings.
+  - **Adaptive Tail Hold Buffer**: Adaptive grace margin (`90 ms` in Toggle mode, `100–250 ms` in Hold mode with early silence exit) combined with non-destructive Silero VAD prevents clipped word and sentence endings.
   - **Focus Guard**: Prevents typing into unintended windows if focus changes mid-dictation, safely copying text to the Windows clipboard with an overlay notification.
 
 - **Polished User Experience**:
   - **6-Tab Modern Settings**: General, Speech, Text, Hotkeys, History, and About.
   - **High-DPI Custom Tray Menu**: Per-monitor DPI scaling, drill-down navigation, engine switching, and 10 recognition languages with auto-detect and keyboard-layout modes.
   - **300-Item Encrypted History**: Encrypted locally via Windows DPAPI (`CryptProtectData`), organized by day («Today», «Yesterday», calendar dates) with instant search and source filtering.
-  - **6 Procedural Audio Themes**: Web Audio synthesized feedback sounds (Zen, Rhodes, Sci-Fi, Classic Bell, Water Drop, Haptic Click) with adjustable volume.
+  - **6 Procedural Audio Themes**: Web Audio synthesized feedback sounds (Zen, Xylophone, Pebble, Classic Bell, Water Drop, Haptic Click) with adjustable volume.
   - **Full 9-Language Localization**: English, Russian, German, Spanish, French, Italian, Chinese, Portuguese, and Turkish.
 
 ---
@@ -103,16 +103,16 @@ Unlike proprietary dictation software that locks you into paid subscriptions and
 1. Direct voice-to-text typing right under the cursor in any active Windows application via global hotkey (`Alt + V`).
 2. 100% private offline speech recognition using resident Whisper.cpp and NVIDIA Parakeet TDT v3 neural networks.
 3. 1-click on-demand NVIDIA CUDA GPU hardware acceleration with automatic CPU fallback.
-4. Optional Cloud AI providers: Google Gemini (3.8/3.6 Flash), Groq, OpenAI, Hugging Face, and Custom OpenAI-compatible URLs.
+4. Optional Cloud AI providers: Google Gemini (2.5 Flash / 2.5 Flash-Lite / 2.0 Flash), Groq, OpenAI, Hugging Face, and Custom OpenAI-compatible URLs.
 5. Gaming Mode: automatic 3D game detection (DirectX/Vulkan), keyboard hook pause (`HOOK_PAUSED`), and 100% VRAM release.
 6. Standby VRAM Unloader: automatic GPU memory release on idle (15, 30, 60 minutes) with instant background pre-warming.
 7. Real-time streaming voice input with prefix stabilization and conjunction smoothing.
 8. Text expansion rules with dynamic macros for live dates and times (`{date}`, `{date_ru}`, `{time}`, `{datetime}`).
 9. Safe Focus Guard with automatic clipboard fallback if window focus shifts during transcription.
-10. Dynamic microphone selection with WASAPI device hotplugging and 450ms tail hold buffer.
+10. Dynamic microphone selection with WASAPI device hotplugging and adaptive tail hold buffer (90 ms Toggle / 100–250 ms Hold).
 11. 300-entry transcription history with day grouping and native Windows DPAPI (`CryptProtectData`) encryption.
 12. Minimalist High-DPI system tray menu with drill-down language and engine selectors.
-13. 6 procedural Web Audio sound themes (Zen, Rhodes, Sci-Fi, Bell, Water Drop, Haptic Switch).
+13. 6 procedural Web Audio sound themes (Zen, Xylophone, Pebble, Bell, Water Drop, Haptic Switch).
 14. Full 9-language UI localization (English, Russian, German, Spanish, French, Italian, Chinese, Portuguese, Turkish).
 15. 100% Free and Open Source under AGPL-3.0 with zero telemetry, zero analytics, and zero subscriptions.
 
@@ -133,8 +133,8 @@ Unlike proprietary dictation software that locks you into paid subscriptions and
 
 ## 6. Release File Details (Параметры файла для загрузки в раздел Files)
 
-- **Folder Path:** `/Aura 1.2.0/` (или `/v1.2.0/`)
-- **File Name:** `Aura_1.2.0_x64-setup.exe`
-- **File Size:** `23 776 584` bytes (22.68 MB)
-- **SHA-256 Checksum:** `46509A9B359E9664AFDEEBE4B3AA2C54EC584BD71FC1620945A5846CE1F1F64B`
+- **Folder Path:** `/Aura 1.2.5/` (или `/v1.2.5/`)
+- **File Name:** `Aura_1.2.5_x64-setup.exe`
+- **File Size:** `20 749 186` bytes (19.79 MB)
+- **SHA-256 Checksum:** `330D026851C0B31CAE12BF4FB12C2ABD465D264AB91AECCB644120023C15E4D0`
 - **Default Download Setting:** После загрузки файла нажать на иконку `(i)` рядом с файлом и выбрать чекбокс **"Default download for: Windows"**.

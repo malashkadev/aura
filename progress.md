@@ -1,12 +1,12 @@
 # Aura 2.0 — Progress
 
-**Updated:** 2026-11-18
-**Baseline:** `main` ahead of `fadd23d` (P1–P4 full-stack audit & speedup + explicit API-key clear landed; Phase 5 `feat-009` in progress)
-**Status:** green — desktop working tree verified across all frontend, static-audit, security, and Rust gates (`website/` untouched).
+**Updated:** 2026-11-23
+**Baseline:** `main` preparing `v1.2.5` (Edit mode overhaul `feat-013`, 6 HUD overlay visualizers, sound themes refresh, and pre-release P0/P1 fixes landed)
+**Status:** green — desktop working tree verified across frontend (`81/81`), static-audit (`10/10`), Rust (`278 passed`), and security audit gates (`cargo audit` / `osv-scanner`).
 
 ## Current state
 
-The program is at version 1.2.0 with the monochrome icon system, hardened single-process static-audit gates, Phase 2–4 correctness/security fixes, and the 2026-11-18 full-stack P1–P4 audit & latency speedup plus explicit DPAPI API-key clear controls landed. The desktop app is in scope; `website/` is intentionally out of scope.
+The program is bumped to version `1.2.5` with the monochrome icon system, 6 HUD overlay visualizers (`src/overlay-visualizers.js`, `#card-overlay`), refreshed procedural sound themes (`Xylophone`/`Pebble` replacing `Rhodes`/`Sci-Fi`), hardened single-process static-audit gates, Phase 2–4 correctness/security fixes, the full-stack P1–P4 audit & latency speedup, explicit DPAPI API-key clear controls, Edit Mode overhaul (`feat-013`), and pre-release P0/P1 fixes (`v1.2.0` backup import compatibility, `llm_runner` lock-free teardown, non-Russian Cyrillic `FixGrammar` preservation, RustSec upgrades, and refreshed `provenance.json`). `website/` preserves its current working tree state with updated `1.2.5` installer links and checksums.
 
 Completed in earlier commits:
 
@@ -46,21 +46,34 @@ Completed in the 2026-11-18 P1–P4 audit, speedup & UX cycle:
   - Converted `tests/settings-autosave.test.mjs` to deterministic `t.mock.timers` and added `tests/frontend-behavior.test.mjs` (`node:test` VM/DOM behavioral suite covering Gaming Mode isolation, tray rollback, uninstalled engine browsing, DPAPI key debounce protection + explicit `#btn-clear-key`/`#btn-clear-key-edit` sync, and hidden `overlay.js` zero idle `rAF`/timers).
   - Hardened `.github/workflows/{ci,release}.yml`: moved clean-workspace verification after `cargo test`, added `Swatinem/rust-cache` (`v2.9.3`), switched `cargo-audit` (`v0.22.2`) and `osv-scanner` (`v2.3.8`) to SHA-256-verified prebuilt binaries in `$RUNNER_TEMP`, and pruned stale `--ignore RUSTSEC-2026-0258` while documenting `RUSTSEC-2024-0429` (`glib 0.18.5` via Linux-only Tauri `wry`/`webkit2gtk`/`gtk`).
 
+Completed in the 2026-11-20 Edit Mode & Diagnostics Hardening (`feat-013`):
+
+- **Local & Cloud `Translate` / `FixGrammar` pipeline (`llm_runner.rs`, `edit_intent.rs`, `ai_client.rs`, `smart_insertion.rs`):**
+  - Eliminated conflicting `"на русском языке"` user-message tail on `EditIntent::Translate` and added explicit target-language + script rules (`lang_code_to_native_hint`) so `es`/`de`/`tr`/`uk`/etc. translate cleanly on `Qwen3-1.7B` instead of echoing Russian.
+  - Set `repeat_penalty = 1.0` for local editing, updated `FixGrammar` system prompt (requiring commas and terminal `. ? !` while keeping sentence boundaries per `ADR-026`), and added script-aligned few-shot + anti-prompt-injection demonstrations with recency reminders so grammar, spelling, commas, and terminal punctuation resolve in 1 pass.
+  - Added deterministic `adapt_edit_result_to_selection_context` and `restore_selection_edge_whitespace` (`smart_insertion.rs`) to preserve double/triple-click spaces/newlines and adapt inline mid-sentence selections via `CaretContext`.
+- **10-language command parser, extended languages & validation (`edit_intent.rs`, `edit_validate.rs`, `lib.rs`):**
+  - Fixed bare `"переведи"` / `"übersetzen"` / `"traduce"` / `"翻译"` / `"çevir"` self-translation across all 9 UI locales via `detect_selection_language`; expanded `detect_translation_target` to 32 languages and added `EditIntent::UnsupportedTranslateTarget` so unrecognized targets reject cleanly (`edit-failed`) without silent `"en"` fallback or overwriting selection.
+  - Fixed NFD combining diacritics, `ß`/`ñ`/`ü`, Turkish `"felemenkçe"` typo and SOV forms, French space-separated polite prefixes, Portuguese `tu` imperatives, Russian `"нем"` false positive (`has_word_prefix`) and `"вы"`/punctuation commands, CJK char-length bounds, symmetrical `effective_language` across all non-English UI locales, CJK character-level `is_repetition_loop`, full East-Asian script leakage checks in `edit_validate.rs`, and length-guarded `texts_resemble`.
+- **Dictation isolation, `Custom` edit model, settings preservation & log ACL healing (`lib.rs`, `settings_secure.rs`, `settings-form.js`, `main.js`, `secure_storage.rs`, `logger.rs`):**
+  - Split `EditOutcome::Edited` vs `PassThroughDictation` so `NotACommand` dictation over selected text keeps `executed_edit_target = None` and continues running `is_silence_hallucination`, text replacements, and `smart_insertion`; introduced `EditError` so validation rejects map to `"edit-failed"` and local timeouts map to `"edit-timeout"`.
+  - Split `custom_edit_model_name` from `custom_model_name` across `Settings`, `ai_client.rs`, `index.html`, `main.js`, and `settings-form.js`, and stopped overwriting `ai_edit_mode: "local"` when toggling selection editing off.
+  - Fixed `apply_restrictive_acl` to set `CONTAINER_INHERIT_ACE | OBJECT_INHERIT_ACE` on directories, added 2-step log self-healing (`repair_log_files_if_unreadable` / `open_log_for_append`), and added `Local LLM (llama-server & Qwen3)` status/files/hints to `generate_diagnostic_report`.
+
 ## Quality gates (last run)
 
 | Gate | Result |
 |---|---|
 | `npm ci` | 0 vulnerabilities |
-| `npm run check` | pass (`node --check` on 13 `src/*.js` + `tsc -p tsconfig.json` on 12/13 typed modules) |
-| `npm test` | 75/75 pass (deterministic `t.mock.timers` + VM/DOM behavioral suite) |
-| `npm run audit` | 10/10 checks PASS in ~140 ms (`scripts/run-all-audits.mjs`, 0 issues) |
-| `npm run verify:manifest` | 5/5 surfaces |
-| `npm audit --audit-level=high` | 0 vulnerabilities |
+| `npm run check` | pass (`node --check` on 14 `src/*.js` + `tsc -p tsconfig.json`) |
+| `npm test` | 81/81 pass (deterministic `t.mock.timers` + VM/DOM behavioral suite + backup compat) |
+| `npm run audit` | 10/10 checks PASS (`scripts/run-all-audits.mjs`, 0 issues) |
+| `npm run verify:manifest` | pass (all surfaces synced to `1.2.5`) |
 | `cargo fmt --check` | pass |
 | `cargo clippy --all-targets -- -D warnings` | pass (0 warnings) |
-| `cargo test --all-targets` | 264 passed, 0 failed, 2 ignored |
-| `cargo audit --file src-tauri/Cargo.lock --ignore RUSTSEC-2024-0429` | 0 CVE, 11 allowed warnings (`RUSTSEC-2026-0258` resolved and removed) |
-| Clean desktop tree | `website/` quarantined untouched; 0 untracked/temp artifacts in desktop scope |
+| `cargo test --all-targets` | 278 passed, 0 failed, 3 ignored |
+| `cargo audit` / `osv-scanner` | 0 CVEs / No issues found |
+| Clean workspace | ready for local `v1.2.5` release commit |
 
 ## Decisions
 

@@ -1,166 +1,169 @@
 {
-  "schema_version": 1,
-  "source_archive": {
-    "id": "whisper-cpp-v1.9.1-win-x64",
-    "version": "v1.9.1",
-    "url": "https://github.com/ggml-org/whisper.cpp/releases/download/v1.9.1/whisper-bin-x64.zip",
-    "expected_size": 7982101,
-    "sha256": "7d8be46ecd31828e1eb7a2ecdd0d6b314feafd82163038ab6092594b0a063539",
-    "digest_source": "https://api.github.com/repos/ggml-org/whisper.cpp/releases/tags/v1.9.1"
-  },
-  "artifacts": [
-    {
-      "filename": "whisper-sidecar-x86_64-pc-windows-msvc.exe",
-      "source_member": "Release/whisper-cli.exe",
-      "expected_size": 479232,
-      "sha256": "58245314fb73b30fbd0cf0542c5c172e23f02b6eb7cad7b51e792439cf5e1755",
-      "enabled": true,
-      "required_for_whisper": true,
-      "provenance_status": "verified-from-source-archive"
-    },
-    {
-      "filename": "whisper.dll",
-      "source_member": "Release/whisper.dll",
-      "expected_size": 1366016,
-      "sha256": "b31690c12461517fe9774e61318ab63a69972b948151feed98b913be35f708b6",
-      "enabled": true,
-      "required_for_whisper": true,
-      "provenance_status": "verified-from-source-archive"
-    },
-    {
-      "filename": "ggml.dll",
-      "source_member": "Release/ggml.dll",
-      "expected_size": 67584,
-      "sha256": "db753141098018ab482796052a61e727ee0106cbc280f28397f6a111b5e667d7",
-      "enabled": true,
-      "required_for_whisper": true,
-      "provenance_status": "verified-from-source-archive"
-    },
-    {
-      "filename": "ggml-base.dll",
-      "source_member": "Release/ggml-base.dll",
-      "expected_size": 656384,
-      "sha256": "8be6f3e06388b3a9aac75d29bec86363e2e2f5b0cee86ce6438866bcac0bcf86",
-      "enabled": true,
-      "required_for_whisper": true,
-      "provenance_status": "verified-from-source-archive"
-    },
-    {
-      "filename": "ggml-cpu-alderlake.dll",
-      "source_member": "Release/ggml-cpu-alderlake.dll",
-      "expected_size": 790528,
-      "sha256": "323408503da53ccc67248b26d711f16d73d2d6239f7703a00a6a18b60ed5b8b8",
-      "enabled": true,
-      "required_for_whisper": true,
-      "provenance_status": "verified-from-source-archive"
-    },
-    {
-      "filename": "ggml-cpu-cannonlake.dll",
-      "source_member": "Release/ggml-cpu-cannonlake.dll",
-      "expected_size": 833536,
-      "sha256": "0f659d98b823bb871c7845787bba7485facd220099cf58aa773652b9b842ab2e",
-      "enabled": true,
-      "required_for_whisper": true,
-      "provenance_status": "verified-from-source-archive"
-    },
-    {
-      "filename": "ggml-cpu-cascadelake.dll",
-      "source_member": "Release/ggml-cpu-cascadelake.dll",
-      "expected_size": 830976,
-      "sha256": "8116b0e516134139de29400c536ecf06fe708ce1a078a96d30b562b30d524fbe",
-      "enabled": true,
-      "required_for_whisper": true,
-      "provenance_status": "verified-from-source-archive"
-    },
-    {
-      "filename": "ggml-cpu-haswell.dll",
-      "source_member": "Release/ggml-cpu-haswell.dll",
-      "expected_size": 791552,
-      "sha256": "e5925923a47672392f9e9c8c92e4b9b65ea473948bf4f568a0300a3a42485135",
-      "enabled": true,
-      "required_for_whisper": true,
-      "provenance_status": "verified-from-source-archive"
-    },
-    {
-      "filename": "ggml-cpu-icelake.dll",
-      "source_member": "Release/ggml-cpu-icelake.dll",
-      "expected_size": 830976,
-      "sha256": "b726d528bee0c8116c2bad8775357379d651cabb487bbf800331697fe73da187",
-      "enabled": true,
-      "required_for_whisper": true,
-      "provenance_status": "verified-from-source-archive"
-    },
-    {
-      "filename": "ggml-cpu-sandybridge.dll",
-      "source_member": "Release/ggml-cpu-sandybridge.dll",
-      "expected_size": 783360,
-      "sha256": "1c49c64817233b2447ca305b41c66afa4bed31b058bc190a98af2a30cc703542",
-      "enabled": true,
-      "required_for_whisper": true,
-      "provenance_status": "verified-from-source-archive"
-    },
-    {
-      "filename": "ggml-cpu-skylakex.dll",
-      "source_member": "Release/ggml-cpu-skylakex.dll",
-      "expected_size": 833536,
-      "sha256": "06082dc62a09a82fbba4aab49b2c049b96db84c5fc561a446a8ddbfb9b20bf86",
-      "enabled": true,
-      "required_for_whisper": true,
-      "provenance_status": "verified-from-source-archive"
-    },
-    {
-      "filename": "ggml-cpu-sse42.dll",
-      "source_member": "Release/ggml-cpu-sse42.dll",
-      "expected_size": 772096,
-      "sha256": "9a8f55ff1dfad231aa6250ac52c330c5bfa5c4c37691c8b591a68b52090ce40c",
-      "enabled": true,
-      "required_for_whisper": true,
-      "provenance_status": "verified-from-source-archive"
-    },
-    {
-      "filename": "ggml-cpu-x64.dll",
-      "source_member": "Release/ggml-cpu-x64.dll",
-      "expected_size": 776704,
-      "sha256": "45ff644d301b8a1fffc7c5e3864205047360eb197814c7311f366d106bb5b19f",
-      "enabled": true,
-      "required_for_whisper": true,
-      "provenance_status": "verified-from-source-archive"
-    },
-    {
-      "filename": "SDL2.dll",
-      "source_member": "Release/SDL2.dll",
-      "expected_size": 2500096,
-      "sha256": "de23db1694a3c7a4a735e7ecd3d214b2023cc2267922c6c35d30c7fc7370d677",
-      "enabled": true,
-      "required_for_whisper": false,
-      "provenance_status": "verified-from-source-archive"
-    },
-    {
-      "filename": "parakeet.dll",
-      "source_member": "Release/parakeet.dll",
-      "expected_size": 536064,
-      "sha256": "6b95a072bdba1bdf1ad252f658c0fce6d21250951a99ef1898fbc737131f76d3",
-      "enabled": true,
-      "required_for_whisper": false,
-      "provenance_status": "verified-from-source-archive"
-    },
-    {
-      "filename": "sherpa-onnx-offline-x86_64-pc-windows-msvc.exe",
-      "source_member": null,
-      "expected_size": 13488128,
-      "sha256": "2d3cdd8bcf0fb2ed5c741dcae798b85dc4abeba5e0c781d9e3ac779ca1621697",
-      "enabled": false,
-      "required_for_whisper": false,
-      "provenance_status": "disabled-unverified-origin"
-    },
-    {
-      "filename": "sherpa-onnx-offline-websocket-server.exe",
-      "source_member": null,
-      "expected_size": 13823488,
-      "sha256": "a1c204043ad5ac01a5c773ca7ce35d970caa647fa746dcb856e7f8de70742ca8",
-      "enabled": false,
-      "required_for_whisper": false,
-      "provenance_status": "disabled-unverified-origin-and-unauthenticated-network-service"
-    }
-  ]
+    "schema_version":  1,
+    "recorded_at":  "2026-11-23",
+    "note":  "Exact sizes and SHA-256 digests recorded from the tracked src-tauri/binaries/ Windows binaries bundled by tauri.conf.json.",
+    "artifacts":  [
+                      {
+                          "filename":  "whisper-sidecar-x86_64-pc-windows-msvc.exe",
+                          "source_member":  "Release/whisper-cli.exe",
+                          "expected_size":  489984,
+                          "sha256":  "044bf84533e6cc86e407ac25f19299eba8c625a069aaf90e9d96574f2f5ee306",
+                          "enabled":  true,
+                          "required_for_whisper":  true,
+                          "provenance_status":  "recorded-from-repo-tree"
+                      },
+                      {
+                          "filename":  "whisper-server-x86_64-pc-windows-msvc.exe",
+                          "source_member":  "Release/whisper-server.exe",
+                          "expected_size":  725504,
+                          "sha256":  "2c1ef08694756eda280e79b8217da63ee2af33c87ac3d5f27d68f9f3f966fd32",
+                          "enabled":  true,
+                          "required_for_whisper":  true,
+                          "provenance_status":  "recorded-from-repo-tree"
+                      },
+                      {
+                          "filename":  "whisper.dll",
+                          "source_member":  "Release/whisper.dll",
+                          "expected_size":  1310208,
+                          "sha256":  "09c3ac78895532667b493c84c64da5109819e902ec500a87c34a86c359a58339",
+                          "enabled":  true,
+                          "required_for_whisper":  true,
+                          "provenance_status":  "recorded-from-repo-tree"
+                      },
+                      {
+                          "filename":  "ggml.dll",
+                          "source_member":  "Release/ggml.dll",
+                          "expected_size":  66560,
+                          "sha256":  "174fb3ef155b6e9854dd9f5d2bdc5f0a6439343d90e32366f43e230c4c73aa94",
+                          "enabled":  true,
+                          "required_for_whisper":  true,
+                          "provenance_status":  "recorded-from-repo-tree"
+                      },
+                      {
+                          "filename":  "ggml-base.dll",
+                          "source_member":  "Release/ggml-base.dll",
+                          "expected_size":  650752,
+                          "sha256":  "75abdb3a406ce010dcff57cd7cc2d1d88222b36ca166cb1f07ba692dc45fb67b",
+                          "enabled":  true,
+                          "required_for_whisper":  true,
+                          "provenance_status":  "recorded-from-repo-tree"
+                      },
+                      {
+                          "filename":  "ggml-cpu-alderlake.dll",
+                          "source_member":  "Release/ggml-cpu-alderlake.dll",
+                          "expected_size":  806400,
+                          "sha256":  "10ec757463301c7dd2d1cc75a26ed85f69f2984d66ecb8f99bafb51b42d89578",
+                          "enabled":  true,
+                          "required_for_whisper":  true,
+                          "provenance_status":  "recorded-from-repo-tree"
+                      },
+                      {
+                          "filename":  "ggml-cpu-cannonlake.dll",
+                          "source_member":  "Release/ggml-cpu-cannonlake.dll",
+                          "expected_size":  850944,
+                          "sha256":  "eb348311150a3ef0b2918631c32a0d21836d1ccd4b044412e7554d4ec83e8c63",
+                          "enabled":  true,
+                          "required_for_whisper":  true,
+                          "provenance_status":  "recorded-from-repo-tree"
+                      },
+                      {
+                          "filename":  "ggml-cpu-cascadelake.dll",
+                          "source_member":  "Release/ggml-cpu-cascadelake.dll",
+                          "expected_size":  848384,
+                          "sha256":  "28d95da9b1a8780e056b4f65300a4e937b0201b10fea68777ffaeeb965abb0cb",
+                          "enabled":  true,
+                          "required_for_whisper":  true,
+                          "provenance_status":  "recorded-from-repo-tree"
+                      },
+                      {
+                          "filename":  "ggml-cpu-haswell.dll",
+                          "source_member":  "Release/ggml-cpu-haswell.dll",
+                          "expected_size":  807424,
+                          "sha256":  "d223b60d4a8d8a08602ebeb0db3287f0ca9e3e33c4cf08b7386cc631a7874c18",
+                          "enabled":  true,
+                          "required_for_whisper":  true,
+                          "provenance_status":  "recorded-from-repo-tree"
+                      },
+                      {
+                          "filename":  "ggml-cpu-icelake.dll",
+                          "source_member":  "Release/ggml-cpu-icelake.dll",
+                          "expected_size":  848384,
+                          "sha256":  "144521922a19e45ee7822118473f72530250821e608735c5f723529e98b731ae",
+                          "enabled":  true,
+                          "required_for_whisper":  true,
+                          "provenance_status":  "recorded-from-repo-tree"
+                      },
+                      {
+                          "filename":  "ggml-cpu-sandybridge.dll",
+                          "source_member":  "Release/ggml-cpu-sandybridge.dll",
+                          "expected_size":  780800,
+                          "sha256":  "333975f74ccbc770f6cc556a83b739e62c925980fda408c8ef5074e0fdfd0b5a",
+                          "enabled":  true,
+                          "required_for_whisper":  true,
+                          "provenance_status":  "recorded-from-repo-tree"
+                      },
+                      {
+                          "filename":  "ggml-cpu-skylakex.dll",
+                          "source_member":  "Release/ggml-cpu-skylakex.dll",
+                          "expected_size":  850944,
+                          "sha256":  "00544ea678eb952fb0461569283b798cacfad69e33cf8502e76b1a5f9e1c3f1d",
+                          "enabled":  true,
+                          "required_for_whisper":  true,
+                          "provenance_status":  "recorded-from-repo-tree"
+                      },
+                      {
+                          "filename":  "ggml-cpu-sse42.dll",
+                          "source_member":  "Release/ggml-cpu-sse42.dll",
+                          "expected_size":  768000,
+                          "sha256":  "0ee6cbd9a9573811bb5513a3ec4a98e46d238e507976c46e83f132f53b9f3a00",
+                          "enabled":  true,
+                          "required_for_whisper":  true,
+                          "provenance_status":  "recorded-from-repo-tree"
+                      },
+                      {
+                          "filename":  "ggml-cpu-x64.dll",
+                          "source_member":  "Release/ggml-cpu-x64.dll",
+                          "expected_size":  769024,
+                          "sha256":  "80e34e90d4782fc33c2e2afbc45a00f3f7a5cc6b761cc440d6cd98284ee53cfd",
+                          "enabled":  true,
+                          "required_for_whisper":  true,
+                          "provenance_status":  "recorded-from-repo-tree"
+                      },
+                      {
+                          "filename":  "SDL2.dll",
+                          "source_member":  "Release/SDL2.dll",
+                          "expected_size":  2500096,
+                          "sha256":  "de23db1694a3c7a4a735e7ecd3d214b2023cc2267922c6c35d30c7fc7370d677",
+                          "enabled":  true,
+                          "required_for_whisper":  false,
+                          "provenance_status":  "recorded-from-repo-tree"
+                      },
+                      {
+                          "filename":  "parakeet.dll",
+                          "source_member":  "Release/parakeet.dll",
+                          "expected_size":  571392,
+                          "sha256":  "32324ada45f52c2f645261e6e366fa1df8e7ee1007d60305b223077df773d6cd",
+                          "enabled":  true,
+                          "required_for_whisper":  false,
+                          "provenance_status":  "recorded-from-repo-tree"
+                      },
+                      {
+                          "filename":  "sherpa-onnx-offline-x86_64-pc-windows-msvc.exe",
+                          "source_member":  null,
+                          "expected_size":  13488128,
+                          "sha256":  "2d3cdd8bcf0fb2ed5c741dcae798b85dc4abeba5e0c781d9e3ac779ca1621697",
+                          "enabled":  true,
+                          "required_for_whisper":  false,
+                          "provenance_status":  "bundled-upstream-prebuilt"
+                      },
+                      {
+                          "filename":  "sherpa-onnx-offline-websocket-server.exe",
+                          "source_member":  null,
+                          "expected_size":  13823488,
+                          "sha256":  "a1c204043ad5ac01a5c773ca7ce35d970caa647fa746dcb856e7f8de70742ca8",
+                          "enabled":  true,
+                          "required_for_whisper":  false,
+                          "provenance_status":  "bundled-upstream-prebuilt"
+                      }
+                  ]
 }

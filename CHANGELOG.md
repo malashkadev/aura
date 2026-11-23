@@ -3,14 +3,32 @@
 All notable changes to Aura are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/), versions follow [SemVer](https://semver.org/).
 
-## [Unreleased]
+## [1.2.5] — 2026-11-23
+
+_Latency, reliability, Edit Mode, and HUD overhaul release following v1.2.0._
+
+### Added
+- **6 HUD Overlay Visualizer Styles (`#card-overlay`, `src/overlay-visualizers.js`)**: Choose between `wave`, `matrix`, `scale`, `tape`, `beam`, and `ribbon` animated voice visualizers in Hotkeys settings alongside the recording timer toggle.
+- **32 Translation Languages & Custom Edit Model (`feat-013`)**: Expanded voice translation intent parsing to 32 target languages, added `UnsupportedTranslateTarget` safe rejection, and split `custom_edit_model_name` from speech `custom_model_name`.
+- **Explicit DPAPI API-Key Clear Controls**: Added quiet `.btn-clear-api-key` buttons (`#btn-clear-key`, `#btn-clear-key-edit`) across Speech and Text tabs in all 9 UI locales, while protecting stored DPAPI keys from accidental empty-input debounce wipes.
+- **Monochrome SVG Icon System (`src/icon-system.js`)**: Unified monochrome inline SVG icon registry across all settings panels and the custom tray menu.
+- **Local LLM Diagnostics Section (`logger.rs`)**: Added `Local LLM (llama-server & Qwen3)` health/paths/hints to exported diagnostic reports.
 
 ### Changed
+- **Hot-Path Latency Speedup (`-450..850 ms`)**: Persistent COM STA UIA worker (`aura-uia-caret`, `35 ms`), skipping synthetic `Ctrl+C` when authoritative Win32/UIA selection is present, non-destructive clipboard sequence probe, adaptive WASAPI tail hold (`90 ms` Toggle / `100–250 ms` Hold with early silence exit), single-pass `StreamingVad`, 16 kHz-only FIR `StreamingResampler` with recycled buffer pool, event-driven `IMMNotificationClient` audio hotplugging, and `O(1)` cached non-secret settings reads (`0` idle DPAPI calls).
+- **Edit Mode Accuracy & Safety (`edit_intent.rs`, `edit_validate.rs`, `llm_runner.rs`)**: Removed conflicting Russian tail on `Translate`, set `repeat_penalty = 1.0`, added script-aligned `FixGrammar` few-shot/anti-injection prompts, preserved original language for non-Russian Cyrillic (`uk`, `be`, `sr`, `kk`, etc.), separated `EditOutcome::Edited` vs `PassThroughDictation`, prevented local edit mode from falling back to cloud, and added `adapt_edit_result_to_selection_context` + UIPI elevation guard.
+- **Sound Themes Refresh (`src/sound-themes.js`)**: Replaced `Rhodes` and `Sci-Fi` with procedural `Xylophone` and `Pebble` themes, shared across windows with idle `AudioContext.suspend()`, and automatic migration for existing configs and `v1.2.0` backups.
 - **Transient clipboard writes** — dictation transcripts are now marked so they do not appear in Win+V history or the Windows cloud clipboard; the previous clipboard is still restored untouched.
 - **Model selection is validated** — switching to a model whose files are missing or truncated is refused with an actionable error instead of saving a broken selection, and the active model can no longer be deleted.
 - **Human-readable model errors** — model validation and deletion failures are shown as short translated sentences instead of Rust diagnostics, file names, and internal model IDs.
 - **Dismissible status toast** — every toast now has a close button, so an error can be dismissed immediately instead of waiting for the timer.
 - **Whisper prompt echo** — a transcript that is only the custom dictionary or priming prompt echoed back on silence is discarded instead of pasted. The same guard applies to OpenAI-compatible cloud transcription.
+
+### Fixed & Security
+- **v1.2.0 Settings Backup Compatibility**: `parseSettingsBackup` and `settings_secure::save_settings`/`update_settings` accept `v1.2.0` JSON backups without `overlay_style` or `custom_edit_model_name` and migrate legacy `rhodes`/`scifi` sound themes to `zen`.
+- **LLM Server Lifecycle Locking**: Released `state.llm_server` mutex before dropping `RunningLlmServer` across `start_llm_server_unlocked`, `stop_llm_server`, and `kill_hung_llm_server_if_alive`.
+- **Log ACL Self-Healing & Security Hygiene**: Added `CONTAINER_INHERIT_ACE | OBJECT_INHERIT_ACE` directory inheritance in `apply_restrictive_acl`, 2-step log self-healing, HTTPS-only custom endpoints outside loopback, narrowed `tray-menu` capabilities, `open_url` host allowlist, `log_frontend_event` sanitization, and `history.dpapi` corrupt-blob quarantine.
+- **Dependency Security Upgrades**: Updated `cookie` to `0.18.3` (`RUSTSEC-2026-0594`), `url` to `2.5.9` (`RUSTSEC-2026-0592`), `rustix` to `1.1.6` (`RUSTSEC-2026-0486`), `clipboard-win` to `5.4.3`, and `async-executor` to `1.14.1`; refreshed `src-tauri/binaries/provenance.json` and `osv-scanner.toml`.
 
 ## [1.2.0] — 2026-10-30
 

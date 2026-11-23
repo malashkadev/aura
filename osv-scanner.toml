@@ -3,8 +3,8 @@
 # that do not affect the Windows production application.
 
 [[IgnoredVulns]]
-id = "GHSA-qwgh-2vcv-g2f7"
-reason = "block-buffer: transitive dependency via digest/sha2; operates on internal memory buffers without remote vulnerability in Aura"
+id = "RUSTSEC-2026-0543"
+reason = "chrono: unmaintained upstream; transitive macOS-only dependency via serde_with/swift-rs, never compiled on Windows"
 
 [[IgnoredVulns]]
 id = "RUSTSEC-2024-0370"

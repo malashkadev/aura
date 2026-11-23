@@ -95,6 +95,8 @@
     "success": '<g transform="scale(1.5)" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 8 A6 6 0 0 1 2 8 A6 6 0 0 1 14 8 Z M6.95 10.77 L7.187 10.847 L7.435 10.821 L7.651 10.696 L7.702 10.645 L11.202 6.645 L11.298 6.494 L11.35 6.25 L11.298 6.006 L11.151 5.804 L10.935 5.679 L10.687 5.653 L10.45 5.73 L10.298 5.855 L7.221 9.372 L5.674 7.826 L5.651 7.804 L5.435 7.679 L5.187 7.653 L4.95 7.73 L4.765 7.897 L4.663 8.125 L4.663 8.375 L4.765 8.603 L4.826 8.674 L6.826 10.674 Z" fill="currentColor" fill-rule="evenodd" stroke="none"/><circle cx="8" cy="8" r="6" fill="none"/></g>',
     // Sound themes
     "zen": '<g transform="scale(1.5)" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3.5 C10 5.25 10.5 8.5 8 12.5 C5.5 8.5 6 5.25 8 3.5 Z" fill="currentColor"/><path d="M6.65 9.65 C5.5 8.25 4.25 7.25 2.25 7 C2.25 10.25 4.5 12.5 8 12.5 C11.5 12.5 13.75 10.25 13.75 7 C11.75 7.25 10.5 8.25 9.35 9.65" fill="currentColor"/></g>',
+    "xylophone": '<g transform="scale(1.5)" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><line x1="2.75" y1="3" x2="2.75" y2="13"/><line x1="5.75" y1="4" x2="5.75" y2="12"/><line x1="8.75" y1="5" x2="8.75" y2="11"/><line x1="14" y1="3.25" x2="12.704" y2="10.769"/><circle cx="12.5" cy="12" r="1.25" fill="currentColor"/></g>',
+    "pebbles": '<g transform="scale(1.5)" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="4.25" cy="11.5" rx="2.5" ry="2" fill="currentColor"/><ellipse cx="11.5" cy="11.75" rx="2.75" ry="1.75" fill="currentColor"/><ellipse cx="8" cy="5.25" rx="3" ry="1.75" fill="currentColor"/></g>',
     "music": '<g transform="scale(1.5)" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 12 L6 4.252 C6 3.962 6.208 3.713 6.495 3.662 L12.295 2.626 C12.662 2.56 13 2.843 13 3.217 L13 10.75"/><circle cx="4.25" cy="12" r="1.75" fill="currentColor"/><circle cx="11.25" cy="10.75" r="1.75" fill="currentColor"/></g>',
     "robot": '<g transform="scale(1.5)" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 5.5 L11.5 5.5 A2 2 0 0 1 13.5 7.5 L13.5 11.75 A2 2 0 0 1 11.5 13.75 L4.5 13.75 A2 2 0 0 1 2.5 11.75 L2.5 7.5 A2 2 0 0 1 4.5 5.5 Z M6.489 9.214 L6.335 8.966 L6.103 8.791 L5.823 8.711 L5.533 8.738 L5.273 8.868 L5.077 9.083 L4.971 9.354 L4.971 9.646 L5.077 9.917 L5.273 10.132 L5.533 10.262 L5.823 10.289 L6.103 10.209 L6.335 10.034 L6.489 9.786 L6.542 9.5 Z M10.989 9.214 L10.835 8.966 L10.603 8.791 L10.323 8.711 L10.033 8.738 L9.773 8.868 L9.577 9.083 L9.471 9.354 L9.471 9.646 L9.577 9.917 L9.773 10.132 L10.033 10.262 L10.323 10.289 L10.603 10.209 L10.835 10.034 L10.989 9.786 L11.042 9.5 Z" fill="currentColor" fill-rule="evenodd" stroke="none"/><rect x="2.5" y="5.5" width="11" height="8.25" rx="2" fill="none"/><line x1="8" y1="5.5" x2="8" y2="3.25"/><circle cx="8" cy="2.5" r="0.792" fill="currentColor" stroke="none"/></g>',
     "bell": '<g transform="scale(1.5)" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3.75 10.75 V6.5 A4.25 4.25 0 0 1 12.25 6.5 V10.75 L13.25 11.75 H2.75 Z" fill="currentColor"/><line x1="6.5" y1="13.75" x2="9.5" y2="13.75"/></g>',
@@ -199,8 +201,8 @@
 
     // Sound themes
     "sound-zen": "zen",
-    "sound-rhodes": "music",
-    "sound-scifi": "robot",
+    "sound-xylophone": "xylophone",
+    "sound-pebble": "pebbles",
     "sound-classic": "bell",
     "sound-bubble": "droplet",
     "sound-water": "droplet",
@@ -275,6 +277,8 @@
     "arrow-right": "Управление",
     success: "Состояния",
     zen: "Звук",
+    xylophone: "Звук",
+    pebbles: "Звук",
     music: "Звук",
     robot: "Звук",
     bell: "Звук",

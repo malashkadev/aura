@@ -6,9 +6,9 @@
   <meta name="description" content="Настройка параметров голосового ввода Aura" />
   <title>Aura</title>
 
-  <link rel="stylesheet" href="style.css?v=2.0.25" />
-  <script src="icon-system.js?v=2.0.25"></script>
-  <script type="module" src="main.js?v=2.0.25" defer></script>
+  <link rel="stylesheet" href="style.css?v=2.0.26" />
+  <script src="icon-system.js?v=2.0.26"></script>
+  <script type="module" src="main.js?v=2.0.26" defer></script>
 </head>
 <body>
   <div class="glass-container">
@@ -214,9 +214,6 @@
                 <input type="password" id="input-api-key" class="custom-input" placeholder="Введите ваш API-ключ..." autocomplete="off" />
                 <button type="button" class="btn-clear-api-key" id="btn-clear-key" title="Удалить сохранённый ключ" aria-label="Удалить сохранённый ключ" hidden>
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="clear-key-icon" aria-hidden="true"><path d="M4 7h16"></path></svg>
-                </button>
-                <button type="button" class="btn-toggle-visibility" id="btn-toggle-key" aria-label="Показать/скрыть ключ">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="eye-icon"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
                 </button>
               </div>
             </div>
@@ -746,7 +743,7 @@
                         </div>
                         <div class="form-group" id="edit-custom-provider-model-group" style="display: none; margin-top: 8px;">
                           <label for="input-edit-custom-model" class="field-label" data-i18n="api_custom_model">Имя модели</label>
-                          <input type="text" id="input-edit-custom-model" class="custom-input" placeholder="openai/whisper-large-v3-turbo" autocomplete="off" />
+                          <input type="text" id="input-edit-custom-model" class="custom-input" placeholder="meta-llama/Llama-3.3-70B-Instruct" autocomplete="off" />
                         </div>
 
                         <div class="form-group" style="margin-top: 8px;">
@@ -755,9 +752,6 @@
                             <input type="password" id="input-edit-api-key" class="custom-input" placeholder="Введите ваш API-ключ..." autocomplete="off" />
                             <button type="button" class="btn-clear-api-key" id="btn-clear-key-edit" title="Удалить сохранённый ключ" aria-label="Удалить сохранённый ключ" hidden>
                               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="clear-key-icon" aria-hidden="true"><path d="M4 7h16"></path></svg>
-                            </button>
-                            <button type="button" class="btn-toggle-visibility" id="btn-toggle-key-edit" aria-label="Показать/скрыть ключ">
-                              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="eye-icon"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
                             </button>
                           </div>
                           <p class="field-hint" id="hint-edit-api-key" data-i18n="api_key_shared_hint" style="margin-top: 6px;">Единый ключ для диктовки и редактирования.</p>
@@ -801,9 +795,39 @@
             </p>
           </div>
 
-          <div class="card" id="card-overlay-timer">
-            <h2 class="card-title" data-i18n="overlay_timer_title">Таймер оверлея</h2>
-            <p class="card-desc" data-i18n="overlay_timer_desc">Счётчик времени под индикатором. Ошибки отображаются всегда.</p>
+          <div class="card" id="card-overlay">
+            <h2 class="card-title" data-i18n="overlay_card_title">Оверлей</h2>
+            <p class="card-desc" data-i18n="overlay_card_desc">Визуализация записи и таймер под индикатором. Ошибки отображаются всегда.</p>
+            <div class="form-group">
+              <span class="field-label" id="overlay-style-label" data-i18n="overlay_style_label">Визуализация</span>
+              <div class="overlay-style-grid" id="overlay-style-grid" role="radiogroup" aria-labelledby="overlay-style-label">
+                <button type="button" class="overlay-style-tile active" data-overlay-style="wave" role="radio" aria-checked="true">
+                  <span class="overlay-style-preview" aria-hidden="true"></span>
+                  <span class="overlay-style-name" data-i18n="overlay_style_wave">Волна</span>
+                </button>
+                <button type="button" class="overlay-style-tile" data-overlay-style="matrix" role="radio" aria-checked="false" tabindex="-1">
+                  <span class="overlay-style-preview" aria-hidden="true"></span>
+                  <span class="overlay-style-name" data-i18n="overlay_style_matrix">Матрица</span>
+                </button>
+                <button type="button" class="overlay-style-tile" data-overlay-style="scale" role="radio" aria-checked="false" tabindex="-1">
+                  <span class="overlay-style-preview" aria-hidden="true"></span>
+                  <span class="overlay-style-name" data-i18n="overlay_style_scale">Шкала</span>
+                </button>
+                <button type="button" class="overlay-style-tile" data-overlay-style="tape" role="radio" aria-checked="false" tabindex="-1">
+                  <span class="overlay-style-preview" aria-hidden="true"></span>
+                  <span class="overlay-style-name" data-i18n="overlay_style_tape">Лента</span>
+                </button>
+                <button type="button" class="overlay-style-tile" data-overlay-style="beam" role="radio" aria-checked="false" tabindex="-1">
+                  <span class="overlay-style-preview" aria-hidden="true"></span>
+                  <span class="overlay-style-name" data-i18n="overlay_style_beam">Луч</span>
+                </button>
+                <button type="button" class="overlay-style-tile" data-overlay-style="ribbon" role="radio" aria-checked="false" tabindex="-1">
+                  <span class="overlay-style-preview" aria-hidden="true"></span>
+                  <span class="overlay-style-name" data-i18n="overlay_style_ribbon">Поток</span>
+                </button>
+              </div>
+            </div>
+            <hr class="divider" />
             <label class="toggle-switch">
               <input type="checkbox" id="checkbox-overlay-show-timer" checked />
               <span class="toggle-track"><span class="toggle-thumb"></span></span>
@@ -837,8 +861,8 @@
                   <div class="select-wrap">
                     <select id="select-sound-theme" class="custom-select" aria-haspopup="listbox" aria-expanded="false">
                       <option value="zen" data-i18n="sound_theme_zen">Дзен</option>
-                      <option value="rhodes" data-i18n="sound_theme_rhodes">Rhodes</option>
-                      <option value="scifi" data-i18n="sound_theme_scifi">Sci-Fi</option>
+                      <option value="xylophone" data-i18n="sound_theme_xylophone">Ксилофон</option>
+                      <option value="pebble" data-i18n="sound_theme_pebble">Галька</option>
                       <option value="classic" data-i18n="sound_theme_classic">Колокольчик</option>
                       <option value="bubble" data-i18n="sound_theme_bubble">Капля воды</option>
                       <option value="haptic" data-i18n="sound_theme_haptic">Тактильный свитч</option>
@@ -907,7 +931,7 @@
               </svg>
             </div>
             <h2 class="about-app-title">AURA</h2>
-            <p class="about-version" data-i18n="about_version">v1.2.0</p>
+            <p class="about-version" data-i18n="about_version">v1.2.5</p>
             <button type="button" id="update-badge" class="update-badge" style="display: none;">
               <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"></path></svg>
               <span id="update-badge-text" data-i18n="update_available">Доступно обновление</span>

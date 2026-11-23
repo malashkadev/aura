@@ -274,7 +274,7 @@ test("settings translations cover every supported locale without fallback gaps",
     "update_current", "update_available_pattern", "update_check_error_pattern",
     "update_installing", "update_installed_restarting", "update_install_error_open_release",
     "window_minimize", "window_close", "history_copy_title", "history_search_clear",
-    "api_key_toggle_visibility", "history_filters_label",
+    "history_filters_label",
     "smart_context_title", "smart_context_desc", "smart_context_checkbox", "smart_context_subdesc",
     "smart_context_trailing_period_checkbox", "smart_context_trailing_period_subdesc",
   ];
@@ -1030,3 +1030,33 @@ test("engine health polling avoids decrypting provider secrets", () => {
   assert.doesNotMatch(fnBlock, /load_secrets/);
 });
 
+test("write-only API key inputs omit eye toggle buttons and suppress Edge/WebView2 native reveal", () => {
+  const css = read("src/style.css");
+  const html = read("src/index.html");
+  assert.match(css, /\.custom-input::-ms-reveal,\s*\.custom-input::-ms-clear\s*\{\s*display:\s*none;\s*\}/);
+  assert.doesNotMatch(html, /id="btn-toggle-key(?:-edit)?"/);
+  assert.doesNotMatch(html, /class="btn-toggle-visibility"/);
+});
+
+
+test("settings backup import preserves backwards compatibility with v1.2.0 backups", async () => {
+  const { buildSettingsBackup, parseSettingsBackup } = await import("../src/settings-backup.js");
+  const main = read("src/main.js");
+  assert.match(main, /optionalBackupKeys\s*=\s*new Set\(\["custom_edit_model_name",\s*"overlay_style"\]\)/);
+  assert.match(main, /candidate\.overlay_style === undefined[\s\S]*?"wave"/);
+  assert.match(main, /candidate\.overlay_sound_theme === "rhodes" \|\| candidate\.overlay_sound_theme === "scifi"/);
+
+  const v120Backup = buildSettingsBackup({
+    transcription_mode: "local",
+    dictionary: "Aura",
+    overlay_sound_theme: "rhodes",
+  });
+  assert.deepEqual(
+    parseSettingsBackup(JSON.stringify(v120Backup), ["transcription_mode", "dictionary"]),
+    {
+      transcription_mode: "local",
+      dictionary: "Aura",
+      overlay_sound_theme: "rhodes",
+    },
+  );
+});

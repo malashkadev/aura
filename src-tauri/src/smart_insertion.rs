@@ -279,6 +279,133 @@ pub fn adapt_transcription_to_context(
     result
 }
 
+/// Preserves exact leading and trailing whitespace (e.g., a trailing space from
+/// double-clicking a word or trailing `\r\n`/`\n` from triple-clicking a paragraph)
+/// from `original_selection` around the trimmed LLM output.
+pub fn restore_selection_edge_whitespace(original_selection: &str, edited: &str) -> String {
+    let trimmed = edited.trim();
+    if trimmed.is_empty() {
+        return String::new();
+    }
+    let lead_len = original_selection
+        .len()
+        .saturating_sub(original_selection.trim_start().len());
+    let trail_len = original_selection
+        .len()
+        .saturating_sub(original_selection.trim_end().len());
+    let leading = &original_selection[..lead_len];
+    let trailing = if lead_len + trail_len <= original_selection.len() {
+        &original_selection[original_selection.len() - trail_len..]
+    } else {
+        ""
+    };
+    format!("{leading}{trimmed}{trailing}")
+}
+
+/// Deterministically reconciles LLM output (`FixGrammar` / `Translate`) with the
+/// surrounding sentence context (`CaretContext`) and exact edge whitespace of the
+/// selection.
+///
+/// - Standalone / end-of-line / multi-line selections keep the model's capitalization
+///   and terminal punctuation untouched.
+/// - Single-line inline selections inside an existing sentence (e.g. fixing `"севодня"`
+///   inside `"Я сделаю это [севодня] вечером."`) avoid unwanted capitalization or a
+///   stray period in the middle of the sentence, and never create duplicate `".."`.
+pub fn adapt_edit_result_to_selection_context(
+    original_selection: &str,
+    edited: &str,
+    caret_ctx: Option<&CaretContext>,
+) -> String {
+    let edited_trimmed = edited.trim();
+    if edited_trimmed.is_empty() {
+        return String::new();
+    }
+
+    let orig_trimmed = original_selection.trim();
+    let is_single_line = !orig_trimmed.contains('\n')
+        && !orig_trimmed.contains('\r')
+        && !edited_trimmed.contains('\n')
+        && !edited_trimmed.contains('\r');
+
+    let mut adjusted = edited_trimmed.to_string();
+
+    if is_single_line {
+        if let Some(ctx) = caret_ctx {
+            let has_context = !ctx.text_before.is_empty() || !ctx.text_after.is_empty();
+            if has_context {
+                // Check if `text_before` continues a sentence on the same line.
+                let before_h = ctx
+                    .text_before
+                    .trim_end_matches(is_horizontal_whitespace_or_invisible);
+                let before_continues_sentence = if before_h.is_empty()
+                    || before_h.ends_with('\n')
+                    || before_h.ends_with('\r')
+                {
+                    false
+                } else {
+                    let punct_candidate = before_h
+                        .trim_end_matches(['"', '\'', '»', '”', '’', ')', ']', '}', '›', '“', '‘']);
+                    !matches!(
+                        punct_candidate.chars().last(),
+                        None | Some('.' | '!' | '?' | '…' | '。' | '！' | '？' | ':')
+                    )
+                };
+
+                // If the selection sat mid-sentence and started lowercase, do not let
+                // sentence-mode proofreading capitalize the first word (acronyms & "I" stay safe).
+                let orig_starts_lowercase = orig_trimmed
+                    .chars()
+                    .find(|c| c.is_alphabetic())
+                    .is_some_and(|c| c.is_lowercase());
+                if before_continues_sentence && orig_starts_lowercase {
+                    adjusted = lowercase_first_char(&adjusted);
+                }
+
+                // Check if `text_after` continues the same sentence on the same line.
+                let orig_ended_terminal = matches!(
+                    orig_trimmed.chars().last(),
+                    Some('.' | '!' | '?' | '…' | '。' | '！' | '？')
+                );
+                if !orig_ended_terminal {
+                    let after_on_line = ctx
+                        .text_after
+                        .trim_start_matches(is_horizontal_whitespace_or_invisible);
+                    if !after_on_line.is_empty()
+                        && !after_on_line.starts_with('\n')
+                        && !after_on_line.starts_with('\r')
+                    {
+                        let first_after = after_on_line.chars().next().unwrap_or('\0');
+                        let after_is_dot = matches!(first_after, '.' | '。');
+                        let after_is_continuation_punct = matches!(
+                            first_after,
+                            ',' | ';' | ':' | '!' | '?' | ')' | ']' | '}' | '»' | '"' | '-' | '—'
+                        );
+                        let after_starts_lowercase = first_after.is_lowercase();
+
+                        let should_strip_added_terminal = after_is_dot
+                            || after_is_continuation_punct
+                            || after_starts_lowercase
+                            || before_continues_sentence;
+
+                        if should_strip_added_terminal
+                            && !ends_with_known_abbreviation(&adjusted)
+                            && !adjusted.ends_with("...")
+                            && matches!(
+                                adjusted.chars().last(),
+                                Some('.' | '?' | '!' | '。' | '？' | '！')
+                            )
+                        {
+                            adjusted.pop();
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    restore_selection_edge_whitespace(original_selection, &adjusted)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -590,5 +717,88 @@ mod tests {
             };
             assert_eq!(ctx.has_authoritative_selection(), expected, "{source:?}");
         }
+    }
+
+    #[test]
+    fn test_restore_selection_edge_whitespace_preserves_double_and_triple_click_bounds() {
+        assert_eq!(
+            restore_selection_edge_whitespace("превет ", "Привет"),
+            "Привет "
+        );
+        assert_eq!(
+            restore_selection_edge_whitespace("  hello  ", "Hello."),
+            "  Hello.  "
+        );
+        assert_eq!(
+            restore_selection_edge_whitespace("Строка без точки\r\n", "Строка без точки."),
+            "Строка без точки.\r\n"
+        );
+    }
+
+    #[test]
+    fn test_adapt_edit_result_inline_vs_standalone_sentence() {
+        // Standalone sentence at end of document: keeps capital and added final period.
+        let standalone = CaretContext {
+            text_before: String::new(),
+            selected_text: "Я скоро буду дома".to_string(),
+            text_after: String::new(),
+            source: CaretContextSource::Win32Edit,
+        };
+        assert_eq!(
+            adapt_edit_result_to_selection_context(
+                "Я скоро буду дома",
+                "Я скоро буду дома.",
+                Some(&standalone)
+            ),
+            "Я скоро буду дома."
+        );
+
+        // First sentence missing period before a new capitalized sentence: keeps added period!
+        let before_next_sentence = CaretContext {
+            text_before: String::new(),
+            selected_text: "Я скоро буду дома".to_string(),
+            text_after: " Завтра уеду.".to_string(),
+            source: CaretContextSource::Win32Edit,
+        };
+        assert_eq!(
+            adapt_edit_result_to_selection_context(
+                "Я скоро буду дома",
+                "Я скоро буду дома.",
+                Some(&before_next_sentence)
+            ),
+            "Я скоро буду дома."
+        );
+
+        // Single typo word mid-sentence (with double-click trailing space): lowercase + no period + space kept.
+        let mid_word = CaretContext {
+            text_before: "Я сделаю это ".to_string(),
+            selected_text: "севодня ".to_string(),
+            text_after: "вечером.".to_string(),
+            source: CaretContextSource::Win32Edit,
+        };
+        assert_eq!(
+            adapt_edit_result_to_selection_context("севодня ", "Сегодня.", Some(&mid_word)),
+            "сегодня "
+        );
+
+        // Fragment right before existing period: prevents double dot "..".
+        let before_dot = CaretContext {
+            text_before: "Он сказал, ".to_string(),
+            selected_text: "што придет".to_string(),
+            text_after: ".".to_string(),
+            source: CaretContextSource::Win32Edit,
+        };
+        assert_eq!(
+            adapt_edit_result_to_selection_context("што придет", "Что придёт.", Some(&before_dot)),
+            "что придёт"
+        );
+
+        // Multi-line text is never mutated by inline rules, only edge newlines preserved.
+        let multi_orig = "Строка 1\nСтрока 2\n";
+        let multi_edited = "Строка 1.\nСтрока 2.";
+        assert_eq!(
+            adapt_edit_result_to_selection_context(multi_orig, multi_edited, Some(&mid_word)),
+            "Строка 1.\nСтрока 2.\n"
+        );
     }
 }

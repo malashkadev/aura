@@ -1539,6 +1539,7 @@ function makeBaseSettings(overrides = {}) {
     api_provider: "gemini",
     custom_api_url: "https://api.deepinfra.com/v1/openai",
     custom_model_name: "openai/whisper-large-v3-turbo",
+    custom_edit_model_name: "meta-llama/Llama-3.3-70B-Instruct",
     model_name: "base",
     hotkey: "Alt+V",
     streaming_enabled: false,
@@ -1557,6 +1558,7 @@ function makeBaseSettings(overrides = {}) {
     audio_input_device: "default",
     log_speech_text: false,
     overlay_show_timer: true,
+    overlay_style: "wave",
     gaming_mode_enabled: false,
     gaming_mode_auto_detect: true,
     vram_standby_timeout_mins: 30,
@@ -2032,4 +2034,137 @@ test("hidden overlay.js runs zero rAF or timer callbacks at idle and stops both 
   if (harness.audioTracker.contexts.length > 0) {
     assert.equal(harness.audioTracker.contexts[0].state, "suspended");
   }
+});
+
+test("toggling selection editing off preserves strict local ai_edit_mode instead of resetting to off/auto", async () => {
+  const harness = await bootSettingsWindow({
+    initialSettings: makeBaseSettings({
+      copy_context_on_start: true,
+      ai_edit_mode: "local",
+    }),
+  });
+
+  const checkbox = harness.document.getElementById("checkbox-selection-edit-enabled");
+  const modeSelect = harness.document.getElementById("select-ai-edit-mode");
+  assert.equal(checkbox.checked, true);
+  assert.equal(modeSelect.value, "local");
+
+  // Disable selection editing -> saves copy_context_on_start=false while keeping ai_edit_mode="local"
+  checkbox.checked = false;
+  checkbox.dispatchEvent(new harness.window.Event("change", { bubbles: true }));
+  await harness.clock.advance(400);
+  await flushAsync(12);
+
+  const saves = harness.invokeCalls.filter((c) => c.cmd === "set_settings");
+  assert.ok(saves.length >= 1, "expected set_settings call after toggling selection edit");
+  const saved = saves[saves.length - 1].args.settings;
+  assert.equal(saved.copy_context_on_start, false);
+  assert.equal(
+    saved.ai_edit_mode,
+    "local",
+    "Disabling selection editing must never wipe the saved private ai_edit_mode='local' preference",
+  );
+});
+
+test("custom ASR model and custom text-edit model inputs stay independent and persist separately", async () => {
+  const harness = await bootSettingsWindow({
+    initialSettings: makeBaseSettings({
+      api_provider: "custom",
+      custom_model_name: "openai/whisper-large-v3-turbo",
+      custom_edit_model_name: "meta-llama/Llama-3.3-70B-Instruct",
+      copy_context_on_start: true,
+      ai_edit_mode: "cloud",
+    }),
+  });
+
+  const asrInput = harness.document.getElementById("input-custom-model");
+  const editInput = harness.document.getElementById("input-edit-custom-model");
+  assert.equal(asrInput.value, "openai/whisper-large-v3-turbo");
+  assert.equal(editInput.value, "meta-llama/Llama-3.3-70B-Instruct");
+
+  // Changing the text-edit model must NOT overwrite the speech ASR model
+  editInput.value = "Qwen/Qwen2.5-72B-Instruct";
+  editInput.dispatchEvent(new harness.window.Event("input", { bubbles: true }));
+  await harness.clock.advance(800);
+  await flushAsync(12);
+
+  assert.equal(asrInput.value, "openai/whisper-large-v3-turbo");
+  const saves = harness.invokeCalls.filter((c) => c.cmd === "set_settings");
+  assert.ok(saves.length >= 1, "expected set_settings call after editing custom edit model");
+  const saved = saves[saves.length - 1].args.settings;
+  assert.equal(saved.custom_model_name, "openai/whisper-large-v3-turbo");
+  assert.equal(saved.custom_edit_model_name, "Qwen/Qwen2.5-72B-Instruct");
+});
+
+test("overlay visualization style picker saves selected style and pauses preview rAF off-tab", async () => {
+  const harness = await bootSettingsWindow({
+    initialSettings: makeBaseSettings({
+      overlay_style: "scale",
+    }),
+  });
+
+  const hotkeysTab = harness.document.getElementById("tab-btn-hotkeys");
+  const generalTab = harness.document.getElementById("tab-btn-general");
+  const scaleTile = harness.document.querySelector('.overlay-style-tile[data-overlay-style="scale"]');
+  const ribbonTile = harness.document.querySelector('.overlay-style-tile[data-overlay-style="ribbon"]');
+  assert.ok(hotkeysTab && generalTab && scaleTile && ribbonTile);
+
+  // Flush one-shot startup indicator layout rAFs
+  await harness.clock.advance(32, { runFrames: true, frameStepMs: 16 });
+
+  // Loaded from settings with zero active preview rAF while on General tab
+  assert.equal(scaleTile.classList.contains("active"), true);
+  assert.equal(scaleTile.getAttribute("aria-checked"), "true");
+  assert.equal(harness.clock.activeRafCount(), 0);
+
+  // Switching to Hotkeys tab starts live preview rAF
+  hotkeysTab.dispatchEvent(new harness.window.Event("click", { bubbles: true }));
+  await flushAsync(6);
+  assert.ok(harness.clock.activeRafCount() >= 1);
+
+  // Clicking a different visualization tile updates UI and saves overlay_style
+  ribbonTile.dispatchEvent(new harness.window.Event("click", { bubbles: true }));
+  await harness.clock.advance(800);
+  await flushAsync(12);
+
+  assert.equal(ribbonTile.classList.contains("active"), true);
+  assert.equal(ribbonTile.getAttribute("aria-checked"), "true");
+  assert.equal(scaleTile.classList.contains("active"), false);
+
+  const saves = harness.invokeCalls.filter((c) => c.cmd === "set_settings");
+  assert.ok(saves.length >= 1, "expected set_settings call after changing overlay style");
+  assert.equal(saves[saves.length - 1].args.settings.overlay_style, "ribbon");
+
+  // Switching away from Hotkeys stops the preview rAF loop completely
+  generalTab.dispatchEvent(new harness.window.Event("click", { bubbles: true }));
+  await flushAsync(6);
+  assert.equal(harness.clock.activeRafCount(), 0);
+});
+
+test("overlay.js switches between all 6 visualization styles cleanly without leaking idle rAF", async () => {
+  const harness = createWindowHarness({
+    htmlPath: "src/overlay.html",
+    includeIcons: false,
+    entryModule: "overlay.js",
+    reducedMotion: false,
+    invokeHandler: async () => null,
+  });
+
+  await flushAsync(8);
+  const barsGroup = harness.document.getElementById("bars-group");
+  assert.ok(barsGroup);
+  assert.equal(harness.clock.activeRafCount(), 0);
+
+  for (const style of ["matrix", "scale", "tape", "beam", "ribbon", "wave"]) {
+    await harness.emitTauriEvent("overlay-preferences", { overlay_style: style });
+    assert.ok(barsGroup.childNodes.length > 0, `expected rendered nodes for overlay style ${style}`);
+    assert.equal(harness.clock.activeRafCount(), 0, `idle overlay must stay at 0 rAF for ${style}`);
+  }
+
+  // Activate recording on a non-wave style and drive audio volume frames
+  await harness.emitTauriEvent("overlay-preferences", { overlay_style: "matrix" });
+  await harness.emitTauriEvent("recording-state", "recording");
+  await harness.emitTauriEvent("volume-level", 0.14);
+  await harness.clock.advance(200, { runFrames: true, frameStepMs: 32 });
+  assert.equal(barsGroup.childNodes.length, 30, "matrix visualizer must render 10x3 LED cells");
 });

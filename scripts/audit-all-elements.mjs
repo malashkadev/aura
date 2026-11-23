@@ -141,7 +141,10 @@ for (const { htmlFile, controllerJs } of surfaces) {
       continue;
     }
 
-    if (placeholder && (placeholder.startsWith("http") || placeholder.startsWith("openai/"))) {
+    if (
+      placeholder &&
+      (placeholder.startsWith("http") || /^[a-z0-9._-]+\/[a-zA-Z0-9._-]+$/.test(placeholder))
+    ) {
       continue;
     }
 

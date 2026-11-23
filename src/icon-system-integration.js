@@ -27,7 +27,6 @@ const SINGLE_ICONS = [
   // Speech / engine
   ["#label-cloud .engine-segment-icon", "engine-cloud"],
   ["#label-local .engine-segment-icon", "engine-local"],
-  [".eye-icon", "eye"],
   [".clear-key-icon", "trash"],
 
   // Accordions and actions
@@ -119,7 +118,7 @@ const CARD_TITLES = [
   ["#card-smart-context", "sparkles"],
   ["#card-selection-edit", "pencil"],
   ["#card-hotkey", "keyboard"],
-  ["#card-overlay-timer", "clock"],
+  ["#card-overlay", "waveform"],
   ["#card-sounds", "volume-2"],
   [".card-history", "clock"],
   ["#card-update-checks", "download"],

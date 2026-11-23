@@ -1,8 +1,8 @@
 # Session Handoff — Aura 2.0
 
-**Date:** 2026-11-18
-**Baseline:** `main` ahead of `fadd23d` (P1–P4 audit/speedup + explicit API-key clear landed; `feat-009` in progress)
-**Scope:** desktop program only; `website/` is out of scope and untouched.
+**Date:** 2026-11-23
+**Baseline:** `main` prepared for `v1.2.5` release (`feat-013`, 6 HUD overlay visualizers, `Xylophone`/`Pebble` sound themes, and pre-release audit fixes committed)
+**Scope:** desktop program `v1.2.5` release prep (`website/` keeps its current UI state with updated `1.2.5` installer links/checksums).
 
 ## What changed
 
@@ -21,19 +21,22 @@
 - **2026-11-18 P4 (Quality gates, behavioral tests & CI):**
   - All 10 `scripts/*.mjs` gates expanded to all `src/*.js` modules and all 3 windows, unified under single-process `scripts/run-all-audits.mjs` (`~140 ms` vs `~1225 ms`).
   - `tests/settings-autosave.test.mjs` migrated to `t.mock.timers`; added `tests/frontend-behavior.test.mjs` (`node:test` VM/DOM behavioral suite); hardened `.github/workflows/{ci,release}.yml` (`Swatinem/rust-cache`, post-test clean-tree check, SHA-256 prebuilt `cargo-audit` `v0.22.2` & `osv-scanner` `v2.3.8`, stale `RUSTSEC-2026-0258` removed).
+- **2026-11-20 Edit Mode & Diagnostics Hardening (`feat-013`):**
+  - Removed conflicting Russian user-prompt tail on `Translate`; set `repeat_penalty = 1.0`, updated `FixGrammar` prompts + script-aligned few-shot/anti-injection examples, and added `adapt_edit_result_to_selection_context` (`smart_insertion.rs`).
+  - Expanded `edit_intent.rs` (32 target languages, `UnsupportedTranslateTarget`, bare translate language detection across 9 UI locales, 10-language grammar stems, NFD/CJK length/Turkish SOV/French/Portuguese/Russian fixes), `edit_validate.rs` (East Asian script leaks on any length), and `llm_runner.rs` (CJK `is_repetition_loop`, length-guarded `texts_resemble`).
+  - Split `EditOutcome` (`Edited` vs `PassThroughDictation`) & `EditError` (`edit-failed`/`edit-timeout`/`edit-local-failed`), separated `custom_edit_model_name` from `custom_model_name`, preserved `ai_edit_mode` when toggling selection edit off, fixed directory `apply_restrictive_acl` inheritance, added log self-healing + `Local LLM` diagnostics in `logger.rs`, and verified 29/29 live cases on `Qwen3-1.7B`.
 
 ## Verification
 
 Run `./init.sh` (Git Bash) or `.\init.ps1` (PowerShell). Last recorded result:
 
-- `npm run check` PASS (`lint` on 13 `src/*.js` + `tsc -p tsconfig.json` on 12/13 typed modules)
-- `npm test` 75/75 PASS
-- `npm run audit` 10/10 PASS (~140 ms via `scripts/run-all-audits.mjs`, 0 issues)
-- `npm audit --audit-level=high` 0 vulnerabilities
-- `npm run verify:manifest` 5/5 PASS
+- `npm run check` PASS (`lint` on 14 `src/*.js` + `tsc -p tsconfig.json`)
+- `npm test` 81/81 PASS
+- `npm run audit` 10/10 PASS (`scripts/run-all-audits.mjs`, 0 issues)
+- `npm run verify:manifest` PASS (`1.2.5`)
 - `cargo fmt --check` & `cargo clippy --all-targets -- -D warnings` PASS (0 warnings)
-- `cargo test --all-targets` 264 passed, 0 failed, 2 ignored
-- `cargo audit --file src-tauri/Cargo.lock --ignore RUSTSEC-2024-0429` 0 CVE, 11 allowed warnings
+- `cargo test --all-targets` 278 passed, 0 failed, 3 ignored
+- `cargo audit --ignore RUSTSEC-2024-0429` & `osv-scanner` PASS (`0` CVEs / `No issues found`)
 
 ## Next task
 
@@ -51,6 +54,5 @@ Run `./init.sh` (Git Bash) or `.\init.ps1` (PowerShell). Last recorded result:
 
 ## Known gaps
 
-- `cargo audit` keeps `--ignore RUSTSEC-2024-0429` for `glib 0.18.5` (pulled into `Cargo.lock` by Tauri v2's Linux-only `wry`/`webkit2gtk`/`gtk` target dependencies; never compiled on Windows) and reports 11 allowed warnings, 0 CVEs.
-- Local `osv-scanner` (`v2.3.8`) flags new upstream `RUSTSEC-2026-0543` (`chrono 0.4.45` unmaintained) and `RUSTSEC-2026-0486` (`rustix 1.1.4` -> `1.1.6`) plus unused ignore `GHSA-qwgh-2vcv-g2f7` in `osv-scanner.toml`; bump `rustix` and refresh `osv-scanner.toml` before pushing to GitHub.
+- `cargo audit` keeps `--ignore RUSTSEC-2024-0429` for `glib 0.18.5` (pulled into `Cargo.lock` by Tauri v2's Linux-only `wry`/`webkit2gtk`/`gtk` target dependencies; never compiled on Windows) and reports 10 allowed warnings, 0 CVEs; `cookie 0.18.3`, `url 2.5.9`, and `rustix 1.1.6` are upgraded, and `osv-scanner.toml` filters `RUSTSEC-2026-0543` (`chrono`, macOS-only transitive dependency).
 - `tests/icon-legacy-catalog.test.mjs` remains intentionally separate from `tests/icon-system.test.mjs`.

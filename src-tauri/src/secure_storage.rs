@@ -164,9 +164,10 @@ pub fn apply_restrictive_acl(path: &Path) -> Result<(), String> {
     };
     let system_sid = well_known_sid_bytes(WinLocalSystemSid)?;
 
+    let is_dir = path.is_dir();
     let entries = [
-        explicit_grant_ace(&user_sid),
-        explicit_grant_ace(&system_sid),
+        explicit_grant_ace(&user_sid, is_dir),
+        explicit_grant_ace(&system_sid, is_dir),
     ];
     let mut new_acl: *mut windows_sys::Win32::Security::ACL = std::ptr::null_mut();
     let acl_result = unsafe {
@@ -209,14 +210,21 @@ pub fn apply_restrictive_acl(path: &Path) -> Result<(), String> {
 #[cfg(target_os = "windows")]
 fn explicit_grant_ace(
     sid: &[u8],
+    inherit_to_children: bool,
 ) -> windows_sys::Win32::Security::Authorization::EXPLICIT_ACCESS_W {
     use windows_sys::Win32::Security::Authorization::{
         EXPLICIT_ACCESS_W, GRANT_ACCESS, TRUSTEE_IS_SID, TRUSTEE_W,
     };
+    use windows_sys::Win32::Security::{CONTAINER_INHERIT_ACE, OBJECT_INHERIT_ACE};
+    let inheritance = if inherit_to_children {
+        CONTAINER_INHERIT_ACE | OBJECT_INHERIT_ACE
+    } else {
+        0
+    };
     EXPLICIT_ACCESS_W {
         grfAccessPermissions: 0x1F_01FF, // FILE_ALL_ACCESS
         grfAccessMode: GRANT_ACCESS,
-        grfInheritance: 0,
+        grfInheritance: inheritance,
         Trustee: TRUSTEE_W {
             pMultipleTrustee: std::ptr::null_mut(),
             MultipleTrusteeOperation: 0,
@@ -524,6 +532,32 @@ mod tests {
             2,
             "the DACL must contain exactly the current-user and SYSTEM ACEs"
         );
+        let _ = fs::remove_dir_all(directory);
+    }
+
+    #[cfg(target_os = "windows")]
+    #[test]
+    fn directory_restrictive_acl_inherits_to_existing_child_files() {
+        let directory = test_dir("restrictive-dir-acl");
+        fs::create_dir_all(&directory).expect("create test dir");
+        let child = directory.join("aura_diagnostics.log");
+        fs::write(&child, b"initial log line\n").expect("create existing child file");
+
+        apply_restrictive_acl(&directory).expect("apply directory ACL");
+
+        assert!(
+            file_dacl_ace_count(&child) >= 2,
+            "existing child file must inherit current-user and SYSTEM ACEs instead of losing all ACEs"
+        );
+        let read_back = fs::read_to_string(&child).expect("child file must remain readable");
+        assert_eq!(read_back, "initial log line\n");
+        let mut append_file = fs::OpenOptions::new()
+            .append(true)
+            .open(&child)
+            .expect("child file must remain appendable");
+        use std::io::Write;
+        writeln!(append_file, "second line").expect("append should succeed");
+
         let _ = fs::remove_dir_all(directory);
     }
 }

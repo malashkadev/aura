@@ -165,6 +165,7 @@ struct OverlayPreferences {
     overlay_sound_theme: String,
     overlay_sound_volume: f32,
     overlay_show_timer: bool,
+    overlay_style: String,
     ui_language: String,
 }
 
@@ -175,6 +176,7 @@ impl From<&settings::Settings> for OverlayPreferences {
             overlay_sound_theme: settings.overlay_sound_theme.clone(),
             overlay_sound_volume: settings.overlay_sound_volume,
             overlay_show_timer: settings.overlay_show_timer,
+            overlay_style: settings.overlay_style.clone(),
             ui_language: settings.ui_language.clone(),
         }
     }
@@ -1115,22 +1117,27 @@ fn provider_from(settings: &settings::Settings) -> ai_client::ApiProvider {
 }
 
 /// Resolves the language to send to the recognizer from settings + detected layout.
-/// When editing selected text, if the setting is "layout", we prefer auto-detect ("")
-/// so that a foreign active keyboard layout (e.g. English keyboard while speaking Russian
-/// commands) does not poison Whisper's decoder priors.
+/// When editing selected text, we bias short voice commands symmetrically for all
+/// non-English UI/layout languages while falling back to auto-detect (`""`) whenever
+/// an English keyboard is active on a non-English UI (so bilingual users can speak
+/// commands in either language without poisoning Whisper's decoder priors).
 fn effective_language(
     settings: &settings::Settings,
     layout_language: &str,
     has_selection: bool,
 ) -> String {
+    const SUPPORTED_NON_EN: &[&str] = &["ru", "de", "es", "fr", "it", "zh", "pt", "tr", "nl"];
+
     match settings.language.as_str() {
         "ru" | "en" | "de" | "es" | "fr" | "it" | "zh" | "pt" | "tr" | "nl" => {
             settings.language.clone()
         }
         "layout" => {
             if has_selection {
-                if layout_language == "ru" {
-                    "ru".to_string()
+                if SUPPORTED_NON_EN.contains(&layout_language)
+                    || (layout_language == "en" && settings.ui_language == "en")
+                {
+                    layout_language.to_string()
                 } else {
                     String::new()
                 }
@@ -1139,8 +1146,11 @@ fn effective_language(
             }
         }
         _ => {
-            if has_selection && layout_language == "ru" {
-                "ru".to_string()
+            if has_selection
+                && SUPPORTED_NON_EN.contains(&layout_language)
+                && layout_language == settings.ui_language
+            {
+                layout_language.to_string()
             } else {
                 String::new()
             }
@@ -4620,6 +4630,9 @@ async fn finalize_recording(app_handle: tauri::AppHandle, is_toggle: bool) {
                     edit_failed = true;
                     final_notice = Some("elevated-paste-blocked");
                 }
+                let session_caret_ctx = app_handle_clone
+                    .try_state::<AppState>()
+                    .and_then(|s| s.caret_context.lock().ok().and_then(|g| g.clone()));
                 let needs_edit_pass = !edit_failed
                     && llm_runner::needs_edit_pass(
                         has_selection,
@@ -4651,7 +4664,13 @@ async fn finalize_recording(app_handle: tauri::AppHandle, is_toggle: bool) {
                                 )
                                 .await
                                 {
-                                    Ok(edited) => {
+                                    Ok(llm_runner::EditOutcome::Edited(edited)) => {
+                                        let adapted =
+                                            smart_insertion::adapt_edit_result_to_selection_context(
+                                                &selected_text,
+                                                &edited,
+                                                session_caret_ctx.as_ref(),
+                                            );
                                         crate::logger::log(
                                             "INFO",
                                             "LLM",
@@ -4660,12 +4679,20 @@ async fn finalize_recording(app_handle: tauri::AppHandle, is_toggle: bool) {
                                                 "Local edit pass succeeded in {} ms ({} -> {} chars, model={})",
                                                 edit_started.elapsed().as_millis(),
                                                 text.chars().count(),
-                                                edited.chars().count(),
+                                                adapted.chars().count(),
                                                 settings.llm_model
                                             ),
                                         );
-                                        text = edited;
+                                        text = adapted;
                                         executed_edit_target = Some(EditExecutionTarget::Local);
+                                    }
+                                    Ok(llm_runner::EditOutcome::PassThroughDictation(
+                                        dictation,
+                                    )) => {
+                                        text = dictation;
+                                        // Leave executed_edit_target = None so ordinary dictation
+                                        // spoken over a selection still runs silence-hallucination
+                                        // filtering, text replacements, caret markers, and smart context.
                                     }
                                     Err(error) => {
                                         crate::logger::log(
@@ -4679,8 +4706,8 @@ async fn finalize_recording(app_handle: tauri::AppHandle, is_toggle: bool) {
                                         } else {
                                             settings.active_api_key()
                                         };
-                                        let can_cloud_fallback =
-                                            llm_runner::can_cloud_edit_fallback(
+                                        let can_cloud_fallback = error.allows_cloud_fallback()
+                                            && llm_runner::can_cloud_edit_fallback(
                                                 &settings.ai_edit_mode,
                                                 active_key,
                                             );
@@ -4707,13 +4734,18 @@ async fn finalize_recording(app_handle: tauri::AppHandle, is_toggle: bool) {
                                                     &settings.translate_default_target,
                                                     &settings.ui_language,
                                                     Some(&settings.custom_api_url),
-                                                    Some(&settings.custom_model_name),
+                                                    Some(&settings.custom_edit_model_name),
                                                     &settings.disabled_edit_commands,
                                                 ),
                                             )
                                             .await
                                             {
-                                                Ok(Ok(edited)) => {
+                                                Ok(Ok(llm_runner::EditOutcome::Edited(edited))) => {
+                                                    let adapted = smart_insertion::adapt_edit_result_to_selection_context(
+                                                        &selected_text,
+                                                        &edited,
+                                                        session_caret_ctx.as_ref(),
+                                                    );
                                                     crate::logger::log(
                                                         "INFO",
                                                         "LLM",
@@ -4722,12 +4754,19 @@ async fn finalize_recording(app_handle: tauri::AppHandle, is_toggle: bool) {
                                                             "Cloud fallback edit pass succeeded in {} ms ({} -> {} chars)",
                                                             edit_started.elapsed().as_millis(),
                                                             text.chars().count(),
-                                                            edited.chars().count(),
+                                                            adapted.chars().count(),
                                                         ),
                                                     );
-                                                    text = edited;
+                                                    text = adapted;
                                                     executed_edit_target =
                                                         Some(EditExecutionTarget::Cloud);
+                                                }
+                                                Ok(Ok(
+                                                    llm_runner::EditOutcome::PassThroughDictation(
+                                                        dictation,
+                                                    ),
+                                                )) => {
+                                                    text = dictation;
                                                 }
                                                 Ok(Err(cloud_error)) => {
                                                     crate::logger::log(
@@ -4739,7 +4778,8 @@ async fn finalize_recording(app_handle: tauri::AppHandle, is_toggle: bool) {
                                                         ),
                                                     );
                                                     edit_failed = true;
-                                                    final_notice = Some("edit-cloud-failed");
+                                                    final_notice =
+                                                        Some(cloud_error.overlay_notice(true));
                                                 }
                                                 Err(_) => {
                                                     crate::logger::log(
@@ -4754,19 +4794,7 @@ async fn finalize_recording(app_handle: tauri::AppHandle, is_toggle: bool) {
                                             }
                                         } else {
                                             edit_failed = true;
-                                            let lower_err = error.to_lowercase();
-                                            let is_too_large = lower_err.contains("too long")
-                                                || lower_err.contains("limit");
-                                            let is_model_missing = lower_err.contains("missing")
-                                                || lower_err.contains("download")
-                                                || lower_err.contains("incomplete");
-                                            final_notice = Some(if is_too_large {
-                                                "edit-too-large"
-                                            } else if is_model_missing {
-                                                "edit-model-missing"
-                                            } else {
-                                                "edit-local-failed"
-                                            });
+                                            final_notice = Some(error.overlay_notice(false));
                                         }
                                     }
                                 }
@@ -4800,13 +4828,19 @@ async fn finalize_recording(app_handle: tauri::AppHandle, is_toggle: bool) {
                                             &settings.translate_default_target,
                                             &settings.ui_language,
                                             Some(&settings.custom_api_url),
-                                            Some(&settings.custom_model_name),
+                                            Some(&settings.custom_edit_model_name),
                                             &settings.disabled_edit_commands,
                                         ),
                                     )
                                     .await
                                     {
-                                        Ok(Ok(edited)) => {
+                                        Ok(Ok(llm_runner::EditOutcome::Edited(edited))) => {
+                                            let adapted =
+                                                smart_insertion::adapt_edit_result_to_selection_context(
+                                                    &selected_text,
+                                                    &edited,
+                                                    session_caret_ctx.as_ref(),
+                                                );
                                             crate::logger::log(
                                                 "INFO",
                                                 "LLM",
@@ -4815,11 +4849,16 @@ async fn finalize_recording(app_handle: tauri::AppHandle, is_toggle: bool) {
                                                     "Cloud edit pass succeeded in {} ms ({} -> {} chars)",
                                                     edit_started.elapsed().as_millis(),
                                                     text.chars().count(),
-                                                    edited.chars().count()
+                                                    adapted.chars().count()
                                                 ),
                                             );
-                                            text = edited;
+                                            text = adapted;
                                             executed_edit_target = Some(EditExecutionTarget::Cloud);
+                                        }
+                                        Ok(Ok(llm_runner::EditOutcome::PassThroughDictation(
+                                            dictation,
+                                        ))) => {
+                                            text = dictation;
                                         }
                                         Ok(Err(error)) => {
                                             crate::logger::log(
@@ -4831,15 +4870,7 @@ async fn finalize_recording(app_handle: tauri::AppHandle, is_toggle: bool) {
                                                 ),
                                             );
                                             edit_failed = true;
-                                            let lower_err = error.to_lowercase();
-                                            let is_too_large = lower_err.contains("too long")
-                                                || lower_err.contains("context_length_exceeded")
-                                                || lower_err.contains("maximum context length");
-                                            final_notice = Some(if is_too_large {
-                                                "edit-too-large"
-                                            } else {
-                                                "edit-cloud-failed"
-                                            });
+                                            final_notice = Some(error.overlay_notice(true));
                                         }
                                         Err(_) => {
                                             crate::logger::log(
@@ -4858,10 +4889,8 @@ async fn finalize_recording(app_handle: tauri::AppHandle, is_toggle: bool) {
                         }
                     }
                 }
-                let session_caret_ctx = if settings.smart_context_enabled {
-                    app_handle_clone
-                        .try_state::<AppState>()
-                        .and_then(|s| s.caret_context.lock().ok().and_then(|g| g.clone()))
+                let postprocess_caret_ctx = if settings.smart_context_enabled {
+                    session_caret_ctx.as_ref()
                 } else {
                     None
                 };
@@ -4871,7 +4900,7 @@ async fn finalize_recording(app_handle: tauri::AppHandle, is_toggle: bool) {
                     &language,
                     &settings.text_replacements,
                     settings.smart_context_enabled,
-                    session_caret_ctx.as_ref(),
+                    postprocess_caret_ctx,
                     settings.smart_context_trailing_period,
                     executed_edit_target,
                 );
@@ -8434,6 +8463,37 @@ mod tests {
             "ru",
             &[],
         ));
+    }
+
+    #[test]
+    fn effective_language_handles_selection_symmetrically_across_all_locales() {
+        let mut s = settings::Settings {
+            language: "auto".to_string(),
+            ui_language: "de".to_string(),
+            ..Default::default()
+        };
+        // Native German layout on German UI with selection -> biases Whisper to "de"
+        assert_eq!(effective_language(&s, "de", true), "de");
+        // English layout on German UI with selection -> auto-detect "" so user can speak DE or EN
+        assert_eq!(effective_language(&s, "en", true), "");
+        // Without selection in "auto" -> always ""
+        assert_eq!(effective_language(&s, "de", false), "");
+
+        // Same symmetry for Russian and Turkish UI
+        s.ui_language = "ru".to_string();
+        assert_eq!(effective_language(&s, "ru", true), "ru");
+        assert_eq!(effective_language(&s, "en", true), "");
+
+        s.ui_language = "tr".to_string();
+        assert_eq!(effective_language(&s, "tr", true), "tr");
+
+        // In "layout" mode with selection, any supported non-English layout is respected
+        s.language = "layout".to_string();
+        assert_eq!(effective_language(&s, "fr", true), "fr");
+        assert_eq!(effective_language(&s, "es", true), "es");
+        assert_eq!(effective_language(&s, "en", true), "");
+        s.ui_language = "en".to_string();
+        assert_eq!(effective_language(&s, "en", true), "en");
     }
 
     #[test]

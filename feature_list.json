@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "updated": "2026-11-18",
-  "source": "AUDIT_2026-11-18",
+  "updated": "2026-11-23",
+  "source": "RELEASE_AUDIT_1.2.5",
   "features": [
     {
       "id": "feat-001",
@@ -107,6 +107,14 @@
       "priority": "P0",
       "evidence": "",
       "depends_on": ["feat-009", "feat-010", "feat-011"]
+    },
+    {
+      "id": "feat-013",
+      "title": "Edit mode overhaul: Translate/FixGrammar accuracy, 10-language + extended commands, dictation isolation, custom edit model, and log ACL self-healing",
+      "status": "done",
+      "priority": "P0",
+      "evidence": "Removed conflicting Russian user-prompt tail on Translate; set repeat_penalty=1.0 + script-aligned few-shot & anti-injection prompts for 1-pass FixGrammar; expanded edit_intent.rs (32 translate targets + UnsupportedTranslateTarget + bare translate across 9 UI locales + 10-language grammar stems, NFD/CJK); hardened edit_validate.rs & CJK is_repetition_loop; split EditOutcome::Edited vs PassThroughDictation & EditError taxonomy; separated custom_edit_model_name from custom_model_name; preserved ai_edit_mode across selection-edit toggle; fixed directory ACL inheritance + aura_diagnostics.log self-healing & LLM diagnostic section; added v1.2.5 pre-release fixes (v1.2.0 backup compatibility, lock-free llm_runner teardown, non-Russian Cyrillic FixGrammar preservation, RustSec upgrades). Verified: npm run check, npm test 81/81, npm run audit 10/10, verify:manifest, cargo fmt/clippy/test (278 passed), cargo audit & osv-scanner.",
+      "depends_on": ["feat-011"]
     }
   ]
 }

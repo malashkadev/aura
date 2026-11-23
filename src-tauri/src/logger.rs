@@ -35,6 +35,51 @@ pub fn format_session_tag(session_id: u64) -> String {
     format!("#session-{}", session_id)
 }
 
+/// Attempts to restore access to a log file locked by an empty inherited DACL
+/// (for example from a prior elevated run): first rewrites the file's own DACL
+/// via `apply_restrictive_acl` (preserving existing log history when the process
+/// has `WRITE_DAC`), and if opening still returns `PermissionDenied`, removes the
+/// unreadable file using parent-directory `FILE_DELETE_CHILD` so logging resumes.
+fn open_log_for_append(log_path: &Path) -> std::io::Result<File> {
+    let try_open = || OpenOptions::new().create(true).append(true).open(log_path);
+    match try_open() {
+        Ok(file) => Ok(file),
+        Err(err) if err.kind() == std::io::ErrorKind::PermissionDenied => {
+            let _ = crate::secure_storage::apply_restrictive_acl(log_path);
+            match try_open() {
+                Ok(file) => Ok(file),
+                Err(retry_err) if retry_err.kind() == std::io::ErrorKind::PermissionDenied => {
+                    let _ = fs::remove_file(log_path);
+                    try_open()
+                }
+                Err(other) => Err(other),
+            }
+        }
+        Err(other) => Err(other),
+    }
+}
+
+fn repair_log_files_if_unreadable(log_dir: &Path) {
+    let candidates = [
+        log_dir.join(LOG_FILE_NAME),
+        log_dir.join(format!("{LOG_FILE_NAME}.1")),
+        log_dir.join(format!("{LOG_FILE_NAME}.2")),
+    ];
+    for path in candidates {
+        if !path.exists() {
+            continue;
+        }
+        if let Err(err) = File::open(&path) {
+            if err.kind() == std::io::ErrorKind::PermissionDenied {
+                let _ = crate::secure_storage::apply_restrictive_acl(&path);
+                if File::open(&path).is_err() {
+                    let _ = fs::remove_file(&path);
+                }
+            }
+        }
+    }
+}
+
 pub fn init(log_dir: PathBuf) {
     if INITIALIZED.swap(true, Ordering::SeqCst) {
         return;
@@ -46,6 +91,7 @@ pub fn init(log_dir: PathBuf) {
         return;
     }
     let _ = crate::secure_storage::apply_restrictive_acl(&log_dir);
+    repair_log_files_if_unreadable(&log_dir);
 
     let (tx, rx) = mpsc::sync_channel::<String>(LOGGER_QUEUE_CAPACITY);
     let dir = log_dir.clone();
@@ -58,7 +104,7 @@ pub fn init(log_dir: PathBuf) {
             }
             let log_path = dir.join(LOG_FILE_NAME);
             let existed = log_path.exists();
-            if let Ok(mut file) = OpenOptions::new().create(true).append(true).open(&log_path) {
+            if let Ok(mut file) = open_log_for_append(&log_path) {
                 let _ = writeln!(file, "{}", msg);
                 drop(file);
                 if (!existed || !acl_applied)
@@ -377,6 +423,7 @@ struct DiagnosticSnapshot {
     speech_text_included: bool,
     whisper_status: SidecarRuntimeStatus,
     parakeet_status: SidecarRuntimeStatus,
+    llm_status: SidecarRuntimeStatus,
     recording_active: Option<bool>,
     hook_paused: bool,
     gaming_mode_active: Option<bool>,
@@ -386,6 +433,9 @@ struct DiagnosticSnapshot {
     cuda_files: Vec<FileCheck>,
     whisper_models: Vec<FileCheck>,
     selected_model_file: Option<FileCheck>,
+    llm_runtimes: Vec<FileCheck>,
+    llm_models: Vec<FileCheck>,
+    selected_llm_model_file: Option<FileCheck>,
     partial_downloads: Vec<FileCheck>,
     recent_issues: Vec<String>,
     logs: Vec<String>,
@@ -479,6 +529,7 @@ fn collect_partial_downloads(app_local_data: &Path) -> Vec<FileCheck> {
     let candidate_directories = [
         app_local_data.join("models"),
         app_local_data.join("models").join("parakeet-v3"),
+        app_local_data.join("binaries"),
         app_local_data.join("binaries").join("cuda-archives"),
     ];
     let mut partials = Vec::new();
@@ -654,6 +705,22 @@ fn troubleshooting_hints(snapshot: &DiagnosticSnapshot) -> Vec<String> {
                 );
             }
         }
+        if settings.copy_context_on_start && settings.ai_edit_mode == "local" {
+            if let Some(file) = snapshot.selected_llm_model_file.as_ref() {
+                if !file.is_expected() {
+                    push_hint(format!(
+                        "Local text editing is selected, but the Qwen3 model '{}' is missing or incomplete. Download it in Settings -> Text.",
+                        file.label
+                    ));
+                }
+            }
+            if !snapshot.llm_runtimes.iter().any(FileCheck::is_present) {
+                push_hint(
+                    "Local text editing is enabled, but no llama-server runtime (Vulkan or CPU) was found yet. Run an edit command while online or re-download the local edit model in Settings -> Text."
+                        .to_string(),
+                );
+            }
+        }
     }
 
     if !snapshot.partial_downloads.is_empty() {
@@ -666,6 +733,7 @@ fn troubleshooting_hints(snapshot: &DiagnosticSnapshot) -> Vec<String> {
     for (label, status) in [
         ("Whisper", &snapshot.whisper_status),
         ("Parakeet", &snapshot.parakeet_status),
+        ("Local LLM (llama-server)", &snapshot.llm_status),
     ] {
         match status {
             SidecarRuntimeStatus::Exited { code } => push_hint(format!(
@@ -831,6 +899,28 @@ pub fn generate_diagnostic_report<R: tauri::Runtime>(
         ))
     });
 
+    let llm_runtimes: Vec<FileCheck> = crate::llm_runner::llm_runtime_exe_paths(&app_local_data)
+        .into_iter()
+        .map(|(label, path)| FileCheck::inspect(label, &path, None))
+        .collect();
+
+    let llm_inventory = crate::llm_runner::llm_model_inventory();
+    let llm_models: Vec<FileCheck> = llm_inventory
+        .iter()
+        .map(|(id, filename, expected_size)| {
+            FileCheck::inspect(*id, &models_dir.join(filename), Some(*expected_size))
+        })
+        .collect();
+
+    let selected_llm_model_file = settings.as_ref().and_then(|settings| {
+        llm_inventory
+            .iter()
+            .find(|(id, _, _)| *id == settings.llm_model)
+            .map(|(id, filename, expected_size)| {
+                FileCheck::inspect(*id, &models_dir.join(filename), Some(*expected_size))
+            })
+    });
+
     let partial_downloads = collect_partial_downloads(&app_local_data);
 
     let runtime_state = app_handle.try_state::<crate::AppState>();
@@ -845,6 +935,7 @@ pub fn generate_diagnostic_report<R: tauri::Runtime>(
 
     let whisper_status = crate::whisper_runner::whisper_runtime_status(app_handle);
     let parakeet_status = crate::whisper_runner::parakeet_runtime_status(app_handle);
+    let llm_status = crate::llm_runner::llm_runtime_status(app_handle);
 
     let raw_logs = get_recent_logs(DIAGNOSTIC_LOG_SAMPLE_LINES);
     let signals = analyze_log_signals(&raw_logs);
@@ -903,6 +994,7 @@ pub fn generate_diagnostic_report<R: tauri::Runtime>(
         speech_text_included,
         whisper_status,
         parakeet_status,
+        llm_status,
         recording_active,
         hook_paused,
         gaming_mode_active,
@@ -912,6 +1004,9 @@ pub fn generate_diagnostic_report<R: tauri::Runtime>(
         cuda_files,
         whisper_models,
         selected_model_file,
+        llm_runtimes,
+        llm_models,
+        selected_llm_model_file,
         partial_downloads,
         recent_issues,
         logs,
@@ -1134,6 +1229,11 @@ fn format_diagnostic_report(snapshot: &DiagnosticSnapshot) -> String {
     );
     let _ = writeln!(
         report,
+        "- **Selection Editing Enabled**: {}",
+        settings_bool(settings, |settings| settings.copy_context_on_start)
+    );
+    let _ = writeln!(
+        report,
         "- **AI Edit Mode**: {}",
         settings_text(settings, |settings| settings.ai_edit_mode.clone())
     );
@@ -1144,9 +1244,40 @@ fn format_diagnostic_report(snapshot: &DiagnosticSnapshot) -> String {
     );
     let _ = writeln!(
         report,
+        "- **Default Translate Target**: {}",
+        settings_text(settings, |settings| settings
+            .translate_default_target
+            .clone())
+    );
+    let _ = writeln!(
+        report,
+        "- **UI Language**: {}",
+        settings_text(settings, |settings| settings.ui_language.clone())
+    );
+    let _ = writeln!(
+        report,
+        "- **Recognition Language**: {}",
+        settings_text(settings, |settings| settings.language.clone())
+    );
+    let _ = writeln!(
+        report,
         "- **Cloud Provider**: {}",
         settings_text(settings, |settings| settings.api_provider.clone())
     );
+    if let Some(s) = settings {
+        if s.api_provider == "custom" {
+            let _ = writeln!(
+                report,
+                "- **Custom ASR Model**: {}",
+                single_line_text(&s.custom_model_name)
+            );
+            let _ = writeln!(
+                report,
+                "- **Custom Edit Model**: {}",
+                single_line_text(&s.custom_edit_model_name)
+            );
+        }
+    }
     let _ = writeln!(
         report,
         "- **Active API Key**: {}",
@@ -1192,6 +1323,11 @@ fn format_diagnostic_report(snapshot: &DiagnosticSnapshot) -> String {
         report,
         "- **Parakeet Sidecar**: {}",
         format_sidecar_status(&snapshot.parakeet_status)
+    );
+    let _ = writeln!(
+        report,
+        "- **Local LLM Sidecar (llama-server)**: {}",
+        format_sidecar_status(&snapshot.llm_status)
     );
     let _ = writeln!(
         report,
@@ -1268,6 +1404,35 @@ fn format_diagnostic_report(snapshot: &DiagnosticSnapshot) -> String {
             .unwrap_or_else(|| "Unavailable".to_string()),
     };
     let _ = writeln!(report, "- **Selected Local Model File**: {selected_model}");
+
+    let _ = writeln!(report, "- **Local LLM Runtimes (llama-server)**:");
+    append_file_checks(&mut report, &snapshot.llm_runtimes, "  ");
+
+    let installed_llm_count = snapshot
+        .llm_models
+        .iter()
+        .filter(|file| file.is_present())
+        .count();
+    let _ = writeln!(
+        report,
+        "- **Local LLM Models (Qwen3 GGUF)**: {} installed of {} pinned",
+        installed_llm_count,
+        snapshot.llm_models.len()
+    );
+    append_file_checks(&mut report, &snapshot.llm_models, "  ");
+
+    let selected_llm_model = match settings {
+        None => "Unavailable".to_string(),
+        Some(_) => snapshot
+            .selected_llm_model_file
+            .as_ref()
+            .map(|file| format!("`{}`: {}", file.label, file.summary()))
+            .unwrap_or_else(|| "Unavailable".to_string()),
+    };
+    let _ = writeln!(
+        report,
+        "- **Selected Local Edit Model File**: {selected_llm_model}"
+    );
 
     let _ = writeln!(report, "\n## Interrupted Downloads");
     if snapshot.partial_downloads.is_empty() {
@@ -1442,6 +1607,7 @@ mod tests {
                 pid: 4243,
             },
             parakeet_status: SidecarRuntimeStatus::NotRunning,
+            llm_status: SidecarRuntimeStatus::NotRunning,
             recording_active: Some(false),
             hook_paused: false,
             gaming_mode_active: Some(false),
@@ -1454,6 +1620,17 @@ mod tests {
             ],
             whisper_models: vec![present_check("base", 147_951_465, Some(147_951_465))],
             selected_model_file: None,
+            llm_runtimes: vec![present_check("llm-vulkan/llama-server", 5_000_000, None)],
+            llm_models: vec![present_check(
+                "qwen3-1.7b",
+                1_282_439_712,
+                Some(1_282_439_712),
+            )],
+            selected_llm_model_file: Some(present_check(
+                "qwen3-1.7b",
+                1_282_439_712,
+                Some(1_282_439_712),
+            )),
             partial_downloads: Vec::new(),
             recent_issues: vec![
                 "2026-07-20 00:00:01.000Z [WARN] [Audio] Test log line 2".to_string(),

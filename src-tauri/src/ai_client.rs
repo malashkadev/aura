@@ -1128,11 +1128,15 @@ pub async fn edit_text_with_provider(
     default_target_lang: &str,
     ui_language: &str,
     custom_endpoint_url: Option<&str>,
-    custom_model_name: Option<&str>,
+    custom_edit_model_name: Option<&str>,
     disabled_commands: &[String],
-) -> Result<String, String> {
+) -> Result<crate::llm_runner::EditOutcome, crate::llm_runner::EditError> {
+    use crate::llm_runner::{EditError, EditOutcome};
+
     if selected_text.trim().is_empty() {
-        return Ok(transcribed_text.to_string());
+        return Ok(EditOutcome::PassThroughDictation(
+            transcribed_text.to_string(),
+        ));
     }
 
     let intent = crate::edit_intent::parse_edit_intent(
@@ -1180,7 +1184,21 @@ pub async fn edit_text_with_provider(
             None,
             "Speech is normal dictation; skipping cloud LLM edit pass and keeping speech text",
         );
-        return Ok(transcribed_text.to_string());
+        return Ok(EditOutcome::PassThroughDictation(
+            transcribed_text.to_string(),
+        ));
+    }
+
+    if intent == crate::edit_intent::EditIntent::UnsupportedTranslateTarget {
+        crate::logger::log(
+            "WARN",
+            "LLM",
+            None,
+            "Cloud translation command specified an unsupported target language; leaving selection unchanged",
+        );
+        return Err(EditError::UnsupportedTarget(
+            "Unsupported translation target language; keeping the original text".to_string(),
+        ));
     }
 
     let client = get_shared_http_client();
@@ -1189,9 +1207,21 @@ pub async fn edit_text_with_provider(
         .unwrap_or_else(|| build_clean_instructions(language, dictionary, true));
 
     let nonce = crate::llm_runner::generate_prompt_nonce();
-    let user_content = format!(
-        "Text to process:\n<<<SELECTED_TEXT_{nonce}_START>>>\n{selected_text}\n<<<SELECTED_TEXT_{nonce}_END>>>\n\nOutput ONLY the processed replacement text. Do NOT wrap output in tags or markers."
-    );
+    let user_content = crate::llm_runner::build_edit_user_content(&intent, selected_text, &nonce);
+
+    let map_cloud_err = |err: String| {
+        let lower = err.to_lowercase();
+        if lower.contains("too long")
+            || lower.contains("context_length_exceeded")
+            || lower.contains("maximum context length")
+        {
+            EditError::TooLarge(err)
+        } else if lower.contains("timed out") {
+            EditError::Timeout(err)
+        } else {
+            EditError::EngineFailure(err)
+        }
+    };
 
     let raw_answer = match provider {
         ApiProvider::Gemini => {
@@ -1209,32 +1239,32 @@ pub async fn edit_text_with_provider(
                     ],
                 }],
             };
-            gemini_generate_content(client, api_key, &gemini_body, "text editing").await?
+            gemini_generate_content(client, api_key, &gemini_body, "text editing")
+                .await
+                .map_err(map_cloud_err)?
         }
-        ApiProvider::OpenAi => {
-            chat_completion_raw(
-                client,
-                "https://api.openai.com/v1/chat/completions",
-                api_key,
-                OPENAI_CHAT_MODEL,
-                &system_prompt,
-                &user_content,
-                "OpenAI",
-            )
-            .await?
-        }
-        ApiProvider::Groq => {
-            chat_completion_raw(
-                client,
-                "https://api.groq.com/openai/v1/chat/completions",
-                api_key,
-                GROQ_CHAT_MODEL,
-                &system_prompt,
-                &user_content,
-                "Groq",
-            )
-            .await?
-        }
+        ApiProvider::OpenAi => chat_completion_raw(
+            client,
+            "https://api.openai.com/v1/chat/completions",
+            api_key,
+            OPENAI_CHAT_MODEL,
+            &system_prompt,
+            &user_content,
+            "OpenAI",
+        )
+        .await
+        .map_err(map_cloud_err)?,
+        ApiProvider::Groq => chat_completion_raw(
+            client,
+            "https://api.groq.com/openai/v1/chat/completions",
+            api_key,
+            GROQ_CHAT_MODEL,
+            &system_prompt,
+            &user_content,
+            "Groq",
+        )
+        .await
+        .map_err(map_cloud_err)?,
         ApiProvider::HuggingFace => {
             let candidate_models = [
                 "meta-llama/Llama-3.3-70B-Instruct",
@@ -1277,7 +1307,7 @@ pub async fn edit_text_with_provider(
                             &format!("Hugging Face model '{model}' failed: {err}"),
                         );
                         if matches!(status_code_from_error(&err), Some(401 | 403)) {
-                            return Err(err);
+                            return Err(map_cloud_err(err));
                         }
                         last_error = err;
                     }
@@ -1285,7 +1315,9 @@ pub async fn edit_text_with_provider(
             }
 
             succeeded.ok_or_else(|| {
-                format!("All Hugging Face models failed for text editing: {last_error}")
+                map_cloud_err(format!(
+                    "All Hugging Face models failed for text editing: {last_error}"
+                ))
             })?
         }
         ApiProvider::Custom => {
@@ -1293,7 +1325,7 @@ pub async fn edit_text_with_provider(
                 .filter(|u| !u.trim().is_empty())
                 .unwrap_or("https://api.deepinfra.com/v1/openai")
                 .trim_end_matches('/');
-            validate_custom_endpoint(base_url)?;
+            validate_custom_endpoint(base_url).map_err(EditError::EngineFailure)?;
             let chat_url = if base_url.ends_with("/audio/transcriptions") {
                 let root = base_url
                     .strip_suffix("/audio/transcriptions")
@@ -1302,9 +1334,9 @@ pub async fn edit_text_with_provider(
             } else {
                 format!("{base_url}/chat/completions")
             };
-            let model = custom_model_name
+            let model = custom_edit_model_name
                 .filter(|m| !m.trim().is_empty())
-                .unwrap_or("openai/whisper-large-v3-turbo");
+                .unwrap_or("meta-llama/Llama-3.3-70B-Instruct");
 
             chat_completion_raw(
                 client,
@@ -1315,22 +1347,23 @@ pub async fn edit_text_with_provider(
                 &user_content,
                 "Custom",
             )
-            .await?
+            .await
+            .map_err(map_cloud_err)?
         }
     };
 
     let edited = crate::llm_runner::strip_output_label(&raw_answer);
     if edited.trim().is_empty() {
-        return Err(
+        return Err(EditError::RejectedOutput(
             "Cloud editing model returned an empty answer; keeping the original text".to_string(),
-        );
+        ));
     }
 
     if crate::llm_runner::is_repetition_loop(&edited) {
-        return Err(format!(
+        return Err(EditError::RejectedOutput(format!(
             "Cloud editing model fell into a repetition loop ({} chars); keeping the original text",
             edited.chars().count()
-        ));
+        )));
     }
 
     // Output quality gate: ensure result conforms to intent, is not an echo, and has correct script/length
@@ -1349,10 +1382,12 @@ pub async fn edit_text_with_provider(
                 intent
             ),
         );
-        return Err(format!("{err}; keeping the original text"));
+        return Err(EditError::RejectedOutput(format!(
+            "{err}; keeping the original text"
+        )));
     }
 
-    Ok(edited)
+    Ok(EditOutcome::Edited(edited))
 }
 
 #[cfg(test)]
@@ -1559,16 +1594,21 @@ mod tests {
             &[],
         )
         .await;
-        assert_eq!(res.unwrap(), "Привет это обычная диктовка для проверки");
+        assert_eq!(
+            res.unwrap(),
+            crate::llm_runner::EditOutcome::PassThroughDictation(
+                "Привет это обычная диктовка для проверки".to_string()
+            )
+        );
     }
 
     #[tokio::test]
     async fn test_edit_text_with_provider_disabled_command_passthrough() {
-        // When a command like 'shorten' is disabled in settings, it must pass through as speech
+        // When a command like 'translate' is disabled in settings, it must pass through as speech
         let res = edit_text_with_provider(
             ApiProvider::Gemini,
             "invalid_dummy_key",
-            "сократи",
+            "переведи на английский",
             "Некоторый выделенный текст в документе",
             "ru",
             "",
@@ -1576,9 +1616,36 @@ mod tests {
             "ru",
             None,
             None,
-            &["shorten".to_string()],
+            &["translate".to_string()],
         )
         .await;
-        assert_eq!(res.unwrap(), "сократи");
+        assert_eq!(
+            res.unwrap(),
+            crate::llm_runner::EditOutcome::PassThroughDictation(
+                "переведи на английский".to_string()
+            )
+        );
+    }
+
+    #[tokio::test]
+    async fn test_edit_text_with_provider_unsupported_target_fails_cleanly_without_network() {
+        let res = edit_text_with_provider(
+            ApiProvider::Gemini,
+            "invalid_dummy_key",
+            "переведи на суахили",
+            "Некоторый выделенный текст в документе",
+            "ru",
+            "",
+            "en",
+            "ru",
+            None,
+            None,
+            &[],
+        )
+        .await;
+        assert!(matches!(
+            res,
+            Err(crate::llm_runner::EditError::UnsupportedTarget(_))
+        ));
     }
 }

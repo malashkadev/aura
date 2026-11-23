@@ -3,13 +3,13 @@
 /**
  * Shared Web Audio synthesizer for Aura overlay cues and settings previews.
  *
- * Centralizes all six acoustic themes ("zen", "rhodes", "scifi", "classic",
+ * Centralizes all six acoustic themes ("zen", "xylophone", "pebble", "classic",
  * "bubble", "haptic"), tracks multi-note chord timers so rapid transitions
  * never overlap, and exposes `suspend()` so hidden windows release their
  * WASAPI audio render stream while idle.
  */
 
-/** @typedef {"zen" | "rhodes" | "scifi" | "classic" | "bubble" | "haptic"} SoundThemeName */
+/** @typedef {"zen" | "xylophone" | "pebble" | "classic" | "bubble" | "haptic"} SoundThemeName */
 
 /**
  * @typedef {Object} SoundSynth
@@ -24,8 +24,8 @@
 /** @type {readonly SoundThemeName[]} */
 export const SOUND_THEMES = [
   "zen",
-  "rhodes",
-  "scifi",
+  "xylophone",
+  "pebble",
   "classic",
   "bubble",
   "haptic",
@@ -149,77 +149,117 @@ export function createSoundSynth({ initialVolume = 0.8 } = {}) {
   }
 
   /**
+   * @param {AudioContext} ctx
+   * @param {number} durationSec
+   * @returns {AudioBuffer}
+   */
+  function makeNoiseBuffer(ctx, durationSec) {
+    const bufferSize = Math.max(1, Math.floor(ctx.sampleRate * durationSec));
+    const noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const output = noiseBuffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+      output[i] = Math.random() * 2 - 1;
+    }
+    return noiseBuffer;
+  }
+
+  /**
+   * Warm rosewood bar (fundamental + 3.98x arch-cut overtone + mallet transient).
    * @param {number} freq
    * @param {number} duration
    * @param {number} [gainStart]
    */
-  function playRhodes(freq, duration, gainStart = 0.08) {
+  function playXylophone(freq, duration, gainStart = 0.15) {
     if (!ensureContext() || !audioCtx || !globalGain) return;
-    const now = audioCtx.currentTime;
-    const osc1 = audioCtx.createOscillator();
-    const osc2 = audioCtx.createOscillator();
-    const gain1 = audioCtx.createGain();
-    const gain2 = audioCtx.createGain();
+    const ctx = audioCtx;
+    const now = ctx.currentTime;
+    const lowpass = ctx.createBiquadFilter();
+    lowpass.type = "lowpass";
+    lowpass.frequency.setValueAtTime(5200, now);
+    lowpass.connect(globalGain);
 
-    osc1.type = "triangle";
+    const osc1 = ctx.createOscillator();
+    const gain1 = ctx.createGain();
+    osc1.type = "sine";
     osc1.frequency.setValueAtTime(freq, now);
-    osc2.type = "sine";
-    osc2.frequency.setValueAtTime(freq, now);
-
-    const attack = 0.01;
     gain1.gain.setValueAtTime(0.0001, now);
-    gain1.gain.linearRampToValueAtTime(gainStart * 0.4, now + attack);
+    gain1.gain.linearRampToValueAtTime(gainStart, now + 0.004);
     gain1.gain.exponentialRampToValueAtTime(0.0001, now + duration);
-
-    gain2.gain.setValueAtTime(0.0001, now);
-    gain2.gain.linearRampToValueAtTime(gainStart * 0.7, now + attack);
-    gain2.gain.exponentialRampToValueAtTime(0.0001, now + duration);
-
     osc1.connect(gain1);
-    gain1.connect(globalGain);
-    osc2.connect(gain2);
-    gain2.connect(globalGain);
-
+    gain1.connect(lowpass);
     osc1.start(now);
-    osc1.stop(now + duration + 0.1);
+    osc1.stop(now + duration + 0.03);
+
+    const osc2 = ctx.createOscillator();
+    const gain2 = ctx.createGain();
+    osc2.type = "sine";
+    osc2.frequency.setValueAtTime(freq * 3.98, now);
+    const overtoneDecay = Math.min(duration * 0.28, 0.065);
+    gain2.gain.setValueAtTime(0.0001, now);
+    gain2.gain.linearRampToValueAtTime(gainStart * 0.28, now + 0.002);
+    gain2.gain.exponentialRampToValueAtTime(0.0001, now + overtoneDecay);
+    osc2.connect(gain2);
+    gain2.connect(lowpass);
     osc2.start(now);
-    osc2.stop(now + duration + 0.1);
+    osc2.stop(now + overtoneDecay + 0.02);
+
+    const noise = ctx.createBufferSource();
+    noise.buffer = makeNoiseBuffer(ctx, 0.01);
+    const bandpass = ctx.createBiquadFilter();
+    bandpass.type = "bandpass";
+    bandpass.frequency.value = 1800;
+    bandpass.Q.value = 2.2;
+    const noiseGain = ctx.createGain();
+    noiseGain.gain.setValueAtTime(gainStart * 0.26, now);
+    noiseGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.009);
+    noise.connect(bandpass);
+    bandpass.connect(noiseGain);
+    noiseGain.connect(lowpass);
+    noise.start(now);
   }
 
   /**
-   * @param {number} freqStart
-   * @param {number} freqEnd
-   * @param {number} duration
+   * Smooth river stone / porcelain tap (coupled modal pings + high-Q ceramic impulse).
+   * @param {number} freq
    * @param {number} [gainStart]
    */
-  function playSciFi(freqStart, freqEnd, duration, gainStart = 0.06) {
+  function playPebble(freq, gainStart = 0.17) {
     if (!ensureContext() || !audioCtx || !globalGain) return;
-    const now = audioCtx.currentTime;
-    const osc1 = audioCtx.createOscillator();
-    const osc2 = audioCtx.createOscillator();
-    const gainNode = audioCtx.createGain();
+    const ctx = audioCtx;
+    const masterGain = globalGain;
+    const now = ctx.currentTime;
+    const modes = [
+      { f: freq, amp: 0.85, decay: 0.042 },
+      { f: freq * 1.71, amp: 0.42, decay: 0.024 },
+    ];
 
-    osc1.type = "sine";
-    osc1.frequency.setValueAtTime(freqStart, now);
-    osc1.frequency.exponentialRampToValueAtTime(freqEnd, now + duration);
+    modes.forEach((mode) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(mode.f, now);
+      gain.gain.setValueAtTime(0.0001, now);
+      gain.gain.linearRampToValueAtTime(gainStart * mode.amp, now + 0.0015);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + mode.decay);
+      osc.connect(gain);
+      gain.connect(masterGain);
+      osc.start(now);
+      osc.stop(now + mode.decay + 0.015);
+    });
 
-    osc2.type = "sine";
-    osc2.frequency.setValueAtTime(freqStart + 3.0, now);
-    osc2.frequency.exponentialRampToValueAtTime(freqEnd + 3.0, now + duration);
-
-    const attack = 0.012;
-    gainNode.gain.setValueAtTime(0.0001, now);
-    gainNode.gain.linearRampToValueAtTime(gainStart, now + attack);
-    gainNode.gain.exponentialRampToValueAtTime(0.0001, now + duration);
-
-    osc1.connect(gainNode);
-    osc2.connect(gainNode);
-    gainNode.connect(globalGain);
-
-    osc1.start(now);
-    osc1.stop(now + duration + 0.1);
-    osc2.start(now);
-    osc2.stop(now + duration + 0.1);
+    const noise = ctx.createBufferSource();
+    noise.buffer = makeNoiseBuffer(ctx, 0.014);
+    const bandpass = ctx.createBiquadFilter();
+    bandpass.type = "bandpass";
+    bandpass.frequency.value = freq * 2.6;
+    bandpass.Q.value = 8.0;
+    const noiseGain = ctx.createGain();
+    noiseGain.gain.setValueAtTime(gainStart * 0.5, now);
+    noiseGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.012);
+    noise.connect(bandpass);
+    bandpass.connect(noiseGain);
+    noiseGain.connect(masterGain);
+    noise.start(now);
   }
 
   /**
@@ -350,11 +390,11 @@ export function createSoundSynth({ initialVolume = 0.8 } = {}) {
     if (soundVolume <= 0) return;
     clearNoteTimers();
     try {
-      if (theme === "rhodes") {
-        playRhodes(440.0, 0.65, 0.07);
-        scheduleNote(() => playRhodes(554.37, 0.8, 0.07), 90);
-      } else if (theme === "scifi") {
-        playSciFi(440.0, 880.0, 0.22, 0.055);
+      if (theme === "xylophone") {
+        playXylophone(587.33, 0.22, 0.15);
+        scheduleNote(() => playXylophone(880.0, 0.28, 0.13), 65);
+      } else if (theme === "pebble") {
+        playPebble(920, 0.17);
       } else if (theme === "classic") {
         playBell(440.0, 0.45, 0.06);
         scheduleNote(() => playBell(659.25, 0.6, 0.06), 90);
@@ -373,15 +413,13 @@ export function createSoundSynth({ initialVolume = 0.8 } = {}) {
     if (soundVolume <= 0) return;
     clearNoteTimers();
     try {
-      if (theme === "rhodes") {
-        playRhodes(220.0, 0.45, 0.06);
-        scheduleNote(() => playRhodes(329.63, 0.45, 0.06), 70);
-        scheduleNote(() => playRhodes(440.0, 0.45, 0.06), 140);
-        scheduleNote(() => playRhodes(554.37, 0.45, 0.06), 210);
-        scheduleNote(() => playRhodes(659.25, 0.85, 0.06), 280);
-      } else if (theme === "scifi") {
-        playSciFi(523.25, 1046.5, 0.18, 0.05);
-        scheduleNote(() => playSciFi(783.99, 1567.98, 0.18, 0.045), 65);
+      if (theme === "xylophone") {
+        playXylophone(587.33, 0.22, 0.13);
+        scheduleNote(() => playXylophone(739.99, 0.24, 0.13), 65);
+        scheduleNote(() => playXylophone(880.0, 0.36, 0.15), 130);
+      } else if (theme === "pebble") {
+        playPebble(860, 0.15);
+        scheduleNote(() => playPebble(1280, 0.17), 60);
       } else if (theme === "classic") {
         playBell(440.0, 0.35, 0.05);
         scheduleNote(() => playBell(554.37, 0.35, 0.05), 70);
@@ -405,11 +443,12 @@ export function createSoundSynth({ initialVolume = 0.8 } = {}) {
     if (soundVolume <= 0) return;
     clearNoteTimers();
     try {
-      if (theme === "rhodes") {
-        playRhodes(554.37, 0.35, 0.07);
-        scheduleNote(() => playRhodes(440.0, 0.55, 0.07), 120);
-      } else if (theme === "scifi") {
-        playSciFi(587.33, 293.66, 0.28, 0.06);
+      if (theme === "xylophone") {
+        playXylophone(440.0, 0.18, 0.14);
+        scheduleNote(() => playXylophone(329.63, 0.24, 0.14), 95);
+      } else if (theme === "pebble") {
+        playPebble(490, 0.16);
+        scheduleNote(() => playPebble(360, 0.17), 85);
       } else if (theme === "classic") {
         playBell(659.25, 0.35, 0.06);
         scheduleNote(() => playBell(440.0, 0.5, 0.06), 120);
