@@ -2168,3 +2168,81 @@ test("overlay.js switches between all 6 visualization styles cleanly without lea
   await harness.clock.advance(200, { runFrames: true, frameStepMs: 32 });
   assert.equal(barsGroup.childNodes.length, 30, "matrix visualizer must render 10x3 LED cells");
 });
+
+test("selection-edit setup notice warns when Qwen3 and cloud API key are missing and opens Editing Engine", async () => {
+  let currentDownloaded = ["base"];
+  const harness = await bootSettingsWindow({
+    initialSettings: makeBaseSettings({
+      ui_language: "en",
+      copy_context_on_start: false,
+      ai_edit_mode: "auto",
+    }),
+    downloadedModels: currentDownloaded,
+    onInvoke: async (cmd) => {
+      if (cmd === "get_downloaded_models") {
+        return [...currentDownloaded];
+      }
+      return undefined;
+    },
+  });
+
+  const checkbox = harness.document.getElementById("checkbox-selection-edit-enabled");
+  const notice = harness.document.getElementById("edit-setup-notice");
+  const noticeText = harness.document.getElementById("edit-setup-notice-text");
+  const modeSelect = harness.document.getElementById("select-ai-edit-mode");
+  const openBtn = harness.document.getElementById("btn-edit-setup-open");
+  const editEngineBody = harness.document.getElementById("edit-engine-body");
+  const apiKeyEditInput = harness.document.getElementById("input-edit-api-key");
+
+  assert.ok(checkbox && notice && noticeText && modeSelect && openBtn && editEngineBody && apiKeyEditInput);
+  assert.equal(notice.hidden, true, "notice must stay hidden when selection editing is off");
+
+  // Enabling selection editing without Qwen3 or API key shows the auto notice
+  checkbox.checked = true;
+  checkbox.dispatchEvent(new harness.window.Event("change", { bubbles: true }));
+  await flushAsync(6);
+  assert.equal(notice.hidden, false);
+  assert.match(noticeText.textContent, /Qwen3/);
+  assert.match(noticeText.textContent, /API key/);
+
+  // Switching to local / cloud updates the notice copy
+  modeSelect.value = "local";
+  modeSelect.dispatchEvent(new harness.window.Event("change", { bubbles: true }));
+  assert.equal(notice.hidden, false);
+  assert.match(noticeText.textContent, /No local model downloaded/);
+
+  modeSelect.value = "cloud";
+  modeSelect.dispatchEvent(new harness.window.Event("change", { bubbles: true }));
+  assert.equal(notice.hidden, false);
+  assert.match(noticeText.textContent, /No API key set/);
+
+  // Clicking Set up expands Editing Engine
+  assert.equal(editEngineBody.classList.contains("is-expanded"), false);
+  openBtn.dispatchEvent(new harness.window.Event("click", { bubbles: true }));
+  assert.equal(editEngineBody.classList.contains("is-expanded"), true);
+
+  // Entering an API key hides cloud and auto notices, while local still warns without Qwen3
+  apiKeyEditInput.value = "sk-test-1234";
+  apiKeyEditInput.dispatchEvent(new harness.window.Event("input", { bubbles: true }));
+  assert.equal(notice.hidden, true);
+
+  modeSelect.value = "auto";
+  modeSelect.dispatchEvent(new harness.window.Event("change", { bubbles: true }));
+  assert.equal(notice.hidden, true);
+
+  modeSelect.value = "local";
+  modeSelect.dispatchEvent(new harness.window.Event("change", { bubbles: true }));
+  assert.equal(notice.hidden, false);
+
+  // Once a Qwen3 model is downloaded, even local mode hides the notice
+  currentDownloaded = ["base", "qwen3-1.7b"];
+  const harnessWithQwen = await bootSettingsWindow({
+    initialSettings: makeBaseSettings({
+      ui_language: "en",
+      copy_context_on_start: true,
+      ai_edit_mode: "local",
+    }),
+    downloadedModels: currentDownloaded,
+  });
+  assert.equal(harnessWithQwen.document.getElementById("edit-setup-notice").hidden, true);
+});

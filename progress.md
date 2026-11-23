@@ -2,7 +2,7 @@
 
 **Updated:** 2026-11-23
 **Baseline:** `main` preparing `v1.2.5` (Edit mode overhaul `feat-013`, 6 HUD overlay visualizers, sound themes refresh, and pre-release P0/P1 fixes landed)
-**Status:** green — desktop working tree verified across frontend (`81/81`), static-audit (`10/10`), Rust (`278 passed`), and security audit gates (`cargo audit` / `osv-scanner`).
+**Status:** green — desktop working tree verified across frontend (`83/83`), static-audit (`10/10`), Rust (`278 passed`), and security audit gates (`cargo audit` / `osv-scanner`).
 
 ## Current state
 
@@ -66,7 +66,7 @@ Completed in the 2026-11-20 Edit Mode & Diagnostics Hardening (`feat-013`):
 |---|---|
 | `npm ci` | 0 vulnerabilities |
 | `npm run check` | pass (`node --check` on 14 `src/*.js` + `tsc -p tsconfig.json`) |
-| `npm test` | 81/81 pass (deterministic `t.mock.timers` + VM/DOM behavioral suite + backup compat) |
+| `npm test` | 83/83 pass (deterministic `t.mock.timers` + VM/DOM behavioral suite + backup compat + overlay/edit notice) |
 | `npm run audit` | 10/10 checks PASS (`scripts/run-all-audits.mjs`, 0 issues) |
 | `npm run verify:manifest` | pass (all surfaces synced to `1.2.5`) |
 | `cargo fmt --check` | pass |

@@ -31,7 +31,7 @@
 Run `./init.sh` (Git Bash) or `.\init.ps1` (PowerShell). Last recorded result:
 
 - `npm run check` PASS (`lint` on 14 `src/*.js` + `tsc -p tsconfig.json`)
-- `npm test` 81/81 PASS
+- `npm test` 83/83 PASS
 - `npm run audit` 10/10 PASS (`scripts/run-all-audits.mjs`, 0 issues)
 - `npm run verify:manifest` PASS (`1.2.5`)
 - `cargo fmt --check` & `cargo clippy --all-targets -- -D warnings` PASS (0 warnings)

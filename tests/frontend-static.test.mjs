@@ -1060,3 +1060,15 @@ test("settings backup import preserves backwards compatibility with v1.2.0 backu
     },
   );
 });
+
+test("overlay window and status pill allow multi-word localized error messages without 136px clipping", () => {
+  const tauri = json("src-tauri/tauri.conf.json");
+  const overlayWin = tauri.app.windows.find((win) => win.label === "overlay");
+  assert.ok(overlayWin && overlayWin.width >= 320, "overlay window width must be >= 320px");
+
+  const overlayHtml = read("src/overlay.html");
+  const statusMaxW = Number(overlayHtml.match(/#overlay-status\s*\{[\s\S]*?max-width:\s*(\d+)px/)?.[1] || 0);
+  const textMaxW = Number(overlayHtml.match(/#overlay-status-text\s*\{[\s\S]*?max-width:\s*(\d+)px/)?.[1] || 0);
+  assert.ok(statusMaxW >= 300, `#overlay-status max-width (${statusMaxW}) must be >= 300px`);
+  assert.ok(textMaxW >= 300, `#overlay-status-text max-width (${textMaxW}) must be >= 300px`);
+});

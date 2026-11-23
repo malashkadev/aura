@@ -3201,9 +3201,9 @@ async fn show_overlay_error(app_handle: &tauri::AppHandle, my_gen: u64, error_ms
             let monitor_width = size.width as f64 / scale_factor;
             let monitor_height = size.height as f64 / scale_factor;
 
-            let overlay_width = 160.0;
-            let overlay_height = 80.0;
-            const TASKBAR_MARGIN: f64 = 95.0;
+            let overlay_width = 360.0;
+            let overlay_height = 92.0;
+            const TASKBAR_MARGIN: f64 = 83.0;
 
             let x = (monitor_width - overlay_width) / 2.0;
             let y = monitor_height - overlay_height - TASKBAR_MARGIN;
@@ -3743,9 +3743,9 @@ async fn start_recording_session(app_handle: tauri::AppHandle) {
                 let monitor_width = size.width as f64 / scale_factor;
                 let monitor_height = size.height as f64 / scale_factor;
 
-                let overlay_width = 160.0;
-                let overlay_height = 80.0;
-                const TASKBAR_MARGIN: f64 = 95.0;
+                let overlay_width = 360.0;
+                let overlay_height = 92.0;
+                const TASKBAR_MARGIN: f64 = 83.0;
 
                 let x = (monitor_width - overlay_width) / 2.0;
                 let y = monitor_height - overlay_height - TASKBAR_MARGIN;

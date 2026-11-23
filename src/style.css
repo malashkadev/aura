@@ -3942,6 +3942,43 @@ body {
   gap: 4px;
 }
 
+.edit-setup-notice {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  margin-bottom: 6px;
+  border-radius: var(--radius-md);
+  background: rgba(255, 66, 0, 0.06);
+  border: 1px solid rgba(255, 66, 0, 0.24);
+  color: var(--text-primary);
+  font-size: 12.5px;
+  line-height: 1.4;
+}
+
+.edit-setup-notice[hidden] {
+  display: none;
+}
+
+.edit-setup-notice-icon {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent-color);
+}
+
+.edit-setup-notice-text {
+  flex: 1 1 auto;
+  min-width: 0;
+  color: var(--text-secondary);
+}
+
+.edit-setup-notice-btn {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
 .selection-groups .summary-block {
   background: transparent;
   border: 0;
@@ -3952,7 +3989,8 @@ body {
   padding-top: 4px;
 }
 
-.selection-groups .summary-block:first-child {
+.selection-groups .summary-block:first-child,
+.selection-groups > .edit-setup-notice[hidden] + .summary-block {
   border-top: 0;
   padding-top: 0;
 }

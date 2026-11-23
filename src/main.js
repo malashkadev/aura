@@ -214,6 +214,10 @@ const i18nDict = {
     "fallback_checkbox": "Включить автопереключение на локальную модель",
     "copy_context_title": "Редактирование выделенного текста",
     "copy_context_desc": "Команды над выделенным текстом.",
+    "edit_setup_notice_auto": "Для работы скачайте модель Qwen3 или укажите API-ключ в «Движок редактирования».",
+    "edit_setup_notice_local": "Локальная модель не скачана — загрузите Qwen3 в «Движок редактирования».",
+    "edit_setup_notice_cloud": "Не указан API-ключ — введите ключ облачного сервиса в «Движок редактирования».",
+    "edit_setup_action": "Настроить",
     "copy_context_checkbox": "Разрешить редактирование выделенного текста",
     "ai_edit_mode_label": "Режим",
     "ai_edit_mode_auto": "Авто",
@@ -520,6 +524,10 @@ const i18nDict = {
     "fallback_checkbox": "Enable automatic fallback to local model",
     "copy_context_title": "Edit selected text",
     "copy_context_desc": "Commands for selected text.",
+    "edit_setup_notice_auto": "Download a Qwen3 model or enter an API key in Editing Engine to enable editing.",
+    "edit_setup_notice_local": "No local model downloaded — install Qwen3 in Editing Engine.",
+    "edit_setup_notice_cloud": "No API key set — enter a cloud provider key in Editing Engine.",
+    "edit_setup_action": "Set up",
     "copy_context_checkbox": "Enable selected text editing",
     "ai_edit_mode_label": "Mode",
     "ai_edit_mode_auto": "Auto",
@@ -837,6 +845,10 @@ const i18nDict = {
     "fallback_checkbox": "Automatischen Fallback auf lokales Modell aktivieren",
     "copy_context_title": "Ausgewählten Text bearbeiten",
     "copy_context_desc": "Befehle für markierten Text.",
+    "edit_setup_notice_auto": "Laden Sie ein Qwen3-Modell herunter oder geben Sie im Bearbeitungs-Engine einen API-Schlüssel ein.",
+    "edit_setup_notice_local": "Kein lokales Modell heruntergeladen — installieren Sie Qwen3 im Bearbeitungs-Engine.",
+    "edit_setup_notice_cloud": "Kein API-Schlüssel festgelegt — geben Sie im Bearbeitungs-Engine einen Cloud-Schlüssel ein.",
+    "edit_setup_action": "Einrichten",
     "copy_context_checkbox": "Bearbeitung des ausgewählten Texts aktivieren",
     "ai_edit_mode_label": "Modus",
     "ai_edit_mode_auto": "Auto",
@@ -1143,6 +1155,10 @@ const i18nDict = {
     "fallback_checkbox": "Activar cambio automático al modelo local",
     "copy_context_title": "Editar texto seleccionado",
     "copy_context_desc": "Comandos para el texto seleccionado.",
+    "edit_setup_notice_auto": "Descarga un modelo Qwen3 o introduce una clave API en Motor de edición para activar la edición.",
+    "edit_setup_notice_local": "No hay ningún modelo local descargado — instala Qwen3 en Motor de edición.",
+    "edit_setup_notice_cloud": "No hay clave API configurada — introduce una clave en la nube en Motor de edición.",
+    "edit_setup_action": "Configurar",
     "copy_context_checkbox": "Permitir edición del texto seleccionado",
     "ai_edit_mode_label": "Modo",
     "ai_edit_mode_auto": "Auto",
@@ -1449,6 +1465,10 @@ const i18nDict = {
     "fallback_checkbox": "Activer le basculement automatique vers le modèle local",
     "copy_context_title": "Modifier le texte sélectionné",
     "copy_context_desc": "Commandes sur le texte sélectionné.",
+    "edit_setup_notice_auto": "Téléchargez un modèle Qwen3 ou saisissez une clé API dans Moteur d'édition pour activer l'édition.",
+    "edit_setup_notice_local": "Aucun modèle local téléchargé — installez Qwen3 dans Moteur d'édition.",
+    "edit_setup_notice_cloud": "Aucune clé API définie — saisissez une clé cloud dans Moteur d'édition.",
+    "edit_setup_action": "Configurer",
     "copy_context_checkbox": "Activer la modification du texte sélectionné",
     "ai_edit_mode_label": "Mode",
     "ai_edit_mode_auto": "Auto",
@@ -1755,6 +1775,10 @@ const i18nDict = {
     "fallback_checkbox": "Attiva il fallback automatico al modello locale",
     "copy_context_title": "Modifica testo selezionato",
     "copy_context_desc": "Comandi sul testo selezionato.",
+    "edit_setup_notice_auto": "Scarica un modello Qwen3 o inserisci una chiave API in Motore di modifica per attivare la modifica.",
+    "edit_setup_notice_local": "Nessun modello locale scaricato — installa Qwen3 in Motore di modifica.",
+    "edit_setup_notice_cloud": "Nessuna chiave API impostata — inserisci una chiave cloud in Motore di modifica.",
+    "edit_setup_action": "Configura",
     "copy_context_checkbox": "Abilita modifica del testo selezionato",
     "ai_edit_mode_label": "Modalità",
     "ai_edit_mode_auto": "Auto",
@@ -2061,6 +2085,10 @@ const i18nDict = {
     "fallback_checkbox": "启用自动回退至本地模型",
     "copy_context_title": "编辑选中文本",
     "copy_context_desc": "对选中文本执行指令。",
+    "edit_setup_notice_auto": "请下载 Qwen3 模型或在「编辑引擎」中输入 API 密钥以启用编辑。",
+    "edit_setup_notice_local": "尚未下载本地模型 — 请在「编辑引擎」中安装 Qwen3。",
+    "edit_setup_notice_cloud": "未设置 API 密钥 — 请在「编辑引擎」中输入云服务密钥。",
+    "edit_setup_action": "去设置",
     "copy_context_checkbox": "启用选中文本编辑",
     "ai_edit_mode_label": "模式",
     "ai_edit_mode_auto": "自动",
@@ -2367,6 +2395,10 @@ const i18nDict = {
     "fallback_checkbox": "Ativar fallback automático para modelo local",
     "copy_context_title": "Editar texto selecionado",
     "copy_context_desc": "Comandos para o texto selecionado.",
+    "edit_setup_notice_auto": "Baixe um modelo Qwen3 ou insira uma chave de API em Motor de edição para ativar a edição.",
+    "edit_setup_notice_local": "Nenhum modelo local baixado — instale o Qwen3 em Motor de edição.",
+    "edit_setup_notice_cloud": "Nenhuma chave de API definida — insira uma chave na nuvem em Motor de edição.",
+    "edit_setup_action": "Configurar",
     "copy_context_checkbox": "Ativar edição de texto selecionado",
     "ai_edit_mode_label": "Modo",
     "ai_edit_mode_auto": "Auto",
@@ -2673,6 +2705,10 @@ const i18nDict = {
     "fallback_checkbox": "Yerel modele otomatik geçişi etkinleştir",
     "copy_context_title": "Seçili metni düzenle",
     "copy_context_desc": "Seçili metin için komutlar.",
+    "edit_setup_notice_auto": "Düzenlemeyi etkinleştirmek için bir Qwen3 modeli indirin veya Düzenleme Motoru'na bir API anahtarı girin.",
+    "edit_setup_notice_local": "Yerel model indirilmedi — Düzenleme Motoru'ndan Qwen3 yükleyin.",
+    "edit_setup_notice_cloud": "API anahtarı ayarlanmadı — Düzenleme Motoru'na bir bulut sağlayıcı anahtarı girin.",
+    "edit_setup_action": "Ayarla",
     "copy_context_checkbox": "Seçili metni düzenlemeyi etkinleştir",
     "ai_edit_mode_label": "Mod",
     "ai_edit_mode_auto": "Otomatik",
@@ -3302,6 +3338,7 @@ document.addEventListener("DOMContentLoaded", () => {
     },
     onRefreshComplete: () => {
       updateFirstRunCard();
+      updateEditSetupNotice();
       refreshEngineHealth();
     },
   });
@@ -3966,6 +4003,7 @@ const btnSaveSettings = document.getElementById("btn-save-settings");
     if (selectionEditInner && checkboxCopyContext) {
       selectionEditInner.classList.toggle("is-expanded", !!checkboxCopyContext.checked);
     }
+    updateEditSetupNotice();
   };
   const checkboxSmartContext = document.getElementById("checkbox-smart-context-enabled");
   const checkboxSmartContextTrailingPeriod = document.getElementById("checkbox-smart-context-trailing-period");
@@ -4473,6 +4511,7 @@ const btnSaveSettings = document.getElementById("btn-save-settings");
       apiKeyDirty[provider] = false;
       apiKeys[provider] = "";
       renderProviderKeyInput();
+      updateEditSetupNotice();
       showStatus(getTranslation("api_key_cleared"), "neutral");
       if (targetInput && typeof targetInput.focus === "function") {
         targetInput.focus({ preventScroll: true });
@@ -4516,6 +4555,7 @@ const btnSaveSettings = document.getElementById("btn-save-settings");
     updateApiKeyLink();
     updateCustomProviderUI();
     updateEngineUI(true);
+    updateEditSetupNotice();
     autosave.mark(true);
   }
 
@@ -4543,6 +4583,7 @@ const btnSaveSettings = document.getElementById("btn-save-settings");
       if (syncEditedApiKeyValue(provider, apiKeyInput.value, apiKeyInput)) {
         autosave.mark(false);
       }
+      updateEditSetupNotice();
     });
   }
 
@@ -4552,16 +4593,19 @@ const btnSaveSettings = document.getElementById("btn-save-settings");
       if (syncEditedApiKeyValue(provider, apiKeyInputEdit.value, apiKeyInputEdit)) {
         autosave.mark(false);
       }
+      updateEditSetupNotice();
     });
   }
 
   if (inputEditCustomUrl && inputCustomUrl) {
     inputEditCustomUrl.addEventListener("input", () => {
       inputCustomUrl.value = inputEditCustomUrl.value;
+      updateEditSetupNotice();
       autosave.mark(false);
     });
     inputCustomUrl.addEventListener("input", () => {
       inputEditCustomUrl.value = inputCustomUrl.value;
+      updateEditSetupNotice();
     });
   }
 
@@ -4802,8 +4846,29 @@ const btnSaveSettings = document.getElementById("btn-save-settings");
       selectAiEditMode.addEventListener("change", () => {
         syncLlmGroupVisibility();
         updateEditEngineSummary();
+        updateEditSetupNotice();
       });
       syncLlmGroupVisibility();
+    }
+    const btnEditSetupOpen = document.getElementById("btn-edit-setup-open");
+    if (btnEditSetupOpen) {
+      btnEditSetupOpen.addEventListener("click", () => {
+        const editEngineBtn = document.getElementById("btn-edit-engine-summary");
+        const editEngineBody = document.getElementById("edit-engine-body");
+        if (editEngineBody && !editEngineBody.classList.contains("is-expanded")) {
+          editEngineBody.classList.add("is-expanded");
+          if (editEngineBtn) editEngineBtn.setAttribute("aria-expanded", "true");
+          const block = editEngineBody.closest(".summary-block");
+          if (block) block.classList.add("is-open");
+        }
+        const mode = selectAiEditMode ? selectAiEditMode.value : "auto";
+        const target = mode === "cloud"
+          ? document.getElementById("group-edit-cloud-provider")
+          : document.getElementById("group-llm-models");
+        if (target && typeof target.scrollIntoView === "function") {
+          target.scrollIntoView({ behavior: "smooth", block: "nearest" });
+        }
+      });
     }
     if (checkboxCopyContext) {
       checkboxCopyContext.addEventListener("change", syncSelectionEditInner);
@@ -4954,6 +5019,7 @@ const btnSaveSettings = document.getElementById("btn-save-settings");
       });
       updateEditEngineSummary();
       modelCardsView.syncActions();
+      updateEditSetupNotice();
       return;
     }
     if (model !== "parakeet-v3") {
@@ -5176,6 +5242,7 @@ const btnSaveSettings = document.getElementById("btn-save-settings");
         disabledEditCommands = Array.isArray(settings.disabled_edit_commands) ? [...settings.disabled_edit_commands] : [];
         renderSupportedCommandsGuide();
         updateAllSummaries();
+        updateEditSetupNotice();
         
         isSettingsLoaded = true;
         autosave.markClean();
@@ -5256,6 +5323,7 @@ const btnSaveSettings = document.getElementById("btn-save-settings");
         }
       }
       renderProviderKeyInput();
+      updateEditSetupNotice();
       if (radioLocal.checked) {
         refreshEngineHealth().then(() => {
           if (lastHealthState && lastHealthState.starting) {
@@ -5361,6 +5429,51 @@ const btnSaveSettings = document.getElementById("btn-save-settings");
     }
     if (modeEl) modeEl.textContent = modeLabel;
     if (modelEl) modelEl.textContent = engineLabel || "—";
+  }
+
+  function updateEditSetupNotice() {
+    const noticeEl = document.getElementById("edit-setup-notice");
+    const textEl = document.getElementById("edit-setup-notice-text");
+    if (!noticeEl || !textEl) return;
+
+    if (!checkboxCopyContext || !checkboxCopyContext.checked) {
+      noticeEl.hidden = true;
+      return;
+    }
+
+    const hasLocalQwen = modelCardsView.getDownloadedModels().some((id) => id.startsWith("qwen3-"));
+    const provider = (selectEditCloudProvider && selectEditCloudProvider.value)
+      || (selectProvider && selectProvider.value)
+      || "gemini";
+    const hasCustomUrl = provider === "custom" && Boolean(
+      (inputEditCustomUrl && inputEditCustomUrl.value.trim())
+      || (inputCustomUrl && inputCustomUrl.value.trim())
+    );
+    const hasCloudKey = Boolean(
+      apiKeyPresent[provider]
+      || (apiKeys[provider] && apiKeys[provider].trim().length > 0)
+      || hasCustomUrl
+    );
+    const mode = selectAiEditMode ? selectAiEditMode.value : "auto";
+
+    let key = "edit_setup_notice_auto";
+    let isMissing = false;
+    if (mode === "local") {
+      isMissing = !hasLocalQwen;
+      key = "edit_setup_notice_local";
+    } else if (mode === "cloud") {
+      isMissing = !hasCloudKey;
+      key = "edit_setup_notice_cloud";
+    } else {
+      isMissing = !hasLocalQwen && !hasCloudKey;
+      key = "edit_setup_notice_auto";
+    }
+
+    noticeEl.hidden = !isMissing;
+    if (isMissing) {
+      textEl.dataset.i18n = key;
+      textEl.textContent = getTranslation(key);
+    }
   }
 
   function updateCommandsSummary() {
@@ -6123,6 +6236,7 @@ if (e.button === 0 && !e.target.closest(".window-control-btn") && !e.target.clos
     updateGpuCardStates();
     renderSupportedCommandsGuide();
     updateAllSummaries();
+    updateEditSetupNotice();
     
     // Reload history list if the active panel is panel-history
     const historyTab = document.getElementById("tab-btn-history");
