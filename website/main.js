@@ -18,7 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
   startTypingSimulator();
   initInterfaceShowcase();
   initEngineTabs();
-  initBenchmarkAnimation();
+  initScrollReveals();
   initFluidGradientCanvas();
   initHeroScrollTransition();
   initNavCapsule();
@@ -27,6 +27,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initBackToTop();
   initFooterAuraLetters();
   initDownloadModal();
+  initTeaserModal();
   
   if (window.location.hash) {
     const target = document.querySelector(window.location.hash);
@@ -112,7 +113,7 @@ function startTypingSimulator() {
     {
       type: 'edit',
       initialBefore: "",
-      initialSelected: "Вся история транскрипций храница в открытом виде на локальном диске.",
+      initialSelected: "Вся история транскрипцый храница в зашифрованом виде на локальном диске.",
       initialAfter: "",
       command: "«Исправь грамматику»",
       finalText: "Вся история транскрипций хранится в зашифрованном виде на локальном диске."
@@ -143,6 +144,19 @@ function startTypingSimulator() {
       initialAfter: "",
       command: "“Translate to French”",
       finalText: "La fonction doit valider le jeton d'accès et le délai d'expiration."
+    },
+    {
+      type: 'dictation',
+      raw: "Idea for the next update — add an adaptive pause while the user thinks",
+      clean: "Idea for the next update — add an adaptive pause while the user thinks."
+    },
+    {
+      type: 'edit',
+      initialBefore: "",
+      initialSelected: "All transcripton histroy is stored encripted on your local drive.",
+      initialAfter: "",
+      command: "“Fix grammar”",
+      finalText: "All transcription history is stored encrypted on your local drive."
     }
   ];
 
@@ -546,7 +560,9 @@ function initInterfaceShowcase() {
         exportedToast: "Настройки экспортированы в JSON (без API-ключей)",
         importToast: "Импорт конфигурации из JSON доступен в программе",
         savedStatus: "Сохранено",
-        savedToast: "Настройки сохранены"
+        savedToast: "Настройки сохранены",
+        keyCleared: "API-ключ удалён",
+        overlayStyleSelected: "Стиль оверлея: "
       }
     : {
         demoInfo: "Interactive preview of Aura settings",
@@ -608,7 +624,9 @@ function initInterfaceShowcase() {
         exportedToast: "Settings exported as JSON (without API keys)",
         importToast: "Importing JSON configuration is available in the desktop app",
         savedStatus: "Saved",
-        savedToast: "Settings saved"
+        savedToast: "Settings saved",
+        keyCleared: "API key cleared",
+        overlayStyleSelected: "Overlay style: "
       };
 
   function getIcon(name, opts) {
@@ -757,6 +775,9 @@ function initInterfaceShowcase() {
       requestAnimationFrame(() => updateEngineIndicator(true));
     } else if (tabName === "history") {
       requestAnimationFrame(() => updateHistoryFilterIndicator(true));
+    }
+    if (typeof syncOverlayPreviewLoop === "function") {
+      syncOverlayPreviewLoop();
     }
   }
 
@@ -1111,19 +1132,25 @@ function initInterfaceShowcase() {
     }
   });
 
-  function bindKeyVisibility(btnId, inputId) {
+  function bindClearKey(btnId, inputId) {
     const btn = $id(btnId);
     const input = $id(inputId);
     if (!btn || !input) return;
+    const syncBtn = () => {
+      const hasVal = Boolean(input.value && input.value.trim().length > 0);
+      if (hasVal) btn.removeAttribute("hidden");
+      else btn.setAttribute("hidden", "");
+    };
+    input.addEventListener("input", syncBtn);
     btn.addEventListener("click", () => {
-      const show = input.type === "password";
-      input.type = show ? "text" : "password";
-      btn.classList.toggle("visible", show);
-      btn.innerHTML = getIcon(show ? "eye-off" : "eye", { size: 18, className: "eye-icon" });
+      input.value = "";
+      syncBtn();
+      showToast(L.keyCleared, "info");
     });
+    syncBtn();
   }
-  bindKeyVisibility("btn-toggle-key", "input-api-key");
-  bindKeyVisibility("btn-toggle-key-edit", "input-edit-api-key");
+  bindClearKey("btn-clear-key", "input-api-key");
+  bindClearKey("btn-clear-key-edit", "input-edit-api-key");
 
   // ---------- Disclosure Accordions ----------
   function bindDisclosure(btnId, bodyId, initialOpen) {
@@ -1472,6 +1499,29 @@ function initInterfaceShowcase() {
   const editCustomUrl = $id("edit-custom-provider-url-group");
   const editCustomModel = $id("edit-custom-provider-model-group");
   const linkGetKeyEdit = $id("link-get-key-edit");
+  const editSetupNotice = $id("edit-setup-notice");
+  const btnEditSetupOpen = $id("btn-edit-setup-open");
+
+  function updateEditNotice() {
+    if (!editSetupNotice) return;
+    const mode = selectAiEditMode?.value || "auto";
+    const hasQwen = ["qwen3-0.6b", "qwen3-1.7b", "qwen3-4b"].some((id) => installedModels.has(id));
+    const hasApiKey = Boolean($id("input-edit-api-key")?.value?.trim() || $id("input-api-key")?.value?.trim());
+    let needsSetup = false;
+    if (mode === "local") needsSetup = !hasQwen;
+    else if (mode === "cloud") needsSetup = false;
+    else needsSetup = !hasQwen && !hasApiKey;
+    if (needsSetup) editSetupNotice.removeAttribute("hidden");
+    else editSetupNotice.setAttribute("hidden", "");
+  }
+
+  btnEditSetupOpen?.addEventListener("click", () => {
+    const btn = $id("btn-edit-engine-summary");
+    const body = $id("edit-engine-body");
+    if (btn && body && !body.classList.contains("is-expanded")) {
+      btn.click();
+    }
+  });
 
   function updateEditEngineSummary() {
     const mode = selectAiEditMode?.value || "auto";
@@ -1488,7 +1538,11 @@ function initInterfaceShowcase() {
     }
     if (groupLlmModels) groupLlmModels.style.display = mode === "cloud" ? "none" : "flex";
     if (groupEditCloud) groupEditCloud.style.display = mode === "local" ? "none" : "flex";
+    updateEditNotice();
   }
+
+  $id("input-api-key")?.addEventListener("input", updateEditNotice);
+  $id("input-edit-api-key")?.addEventListener("input", updateEditNotice);
 
   selectAiEditMode?.addEventListener("change", updateEditEngineSummary);
   selectEditCloudProvider?.addEventListener("change", () => {
@@ -1552,14 +1606,126 @@ function initInterfaceShowcase() {
     showToast(L.hotkeyReset);
   });
 
+  // ---------- Overlay Style Visualizer Picker (#card-overlay) ----------
+  const overlayGrid = $id("overlay-style-grid");
+  const overlayTiles = overlayGrid ? Array.from(overlayGrid.querySelectorAll(".overlay-style-tile[data-overlay-style]")) : [];
+  const overlayPreviewControllers = [];
+  let selectedOverlayStyle = "wave";
+  let hoveredOverlayStyle = null;
+  let overlayPreviewRaf = null;
+  let overlayLastTick = 0;
+  let showcaseInView = true;
+
+  if (overlayTiles.length && window.AuraOverlayVisualizers) {
+    const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    overlayTiles.forEach((tile) => {
+      const styleId = window.AuraOverlayVisualizers.normalizeOverlayStyle(tile.dataset.overlayStyle);
+      const previewSlot = tile.querySelector(".overlay-style-preview");
+      if (previewSlot) {
+        previewSlot.textContent = "";
+        const { svg, controller } = window.AuraOverlayVisualizers.createOverlayPreviewSvg(styleId, "site-" + styleId);
+        previewSlot.appendChild(svg);
+        controller.applyReducedMotion("recording", 0.16);
+        overlayPreviewControllers.push({ styleId, controller });
+      }
+
+      tile.addEventListener("click", () => {
+        selectedOverlayStyle = styleId;
+        overlayTiles.forEach((t) => {
+          const active = t === tile;
+          t.classList.toggle("active", active);
+          t.setAttribute("aria-checked", active ? "true" : "false");
+          t.tabIndex = active ? 0 : -1;
+        });
+        const label = tile.querySelector(".overlay-style-name")?.textContent.trim() || styleId;
+        showToast(L.overlayStyleSelected + label);
+      });
+
+      tile.addEventListener("mouseenter", () => {
+        hoveredOverlayStyle = styleId;
+      });
+      tile.addEventListener("mouseleave", () => {
+        if (hoveredOverlayStyle === styleId) hoveredOverlayStyle = null;
+      });
+    });
+
+    if (!prefersReducedMotion && "IntersectionObserver" in window) {
+      const obs = new IntersectionObserver(
+        (entries) => {
+          showcaseInView = entries[0]?.isIntersecting ?? true;
+          syncOverlayPreviewLoop();
+        },
+        { threshold: 0.05 }
+      );
+      obs.observe(showcase);
+    }
+  }
+
+  function tickOverlayPreviews(nowMs) {
+    const dt = overlayLastTick ? Math.min(0.05, (nowMs - overlayLastTick) / 1000) : 0.016;
+    overlayLastTick = nowMs;
+    const t = nowMs * 0.001;
+    const synthVol = 0.05 + Math.max(0, Math.sin(t * 2.8) * 0.04 + Math.cos(t * 5.3) * 0.025);
+    const energy = Math.min(1, Math.sqrt(synthVol) * 2.05);
+
+    overlayPreviewControllers.forEach(({ styleId, controller }) => {
+      const isActive = styleId === selectedOverlayStyle || styleId === hoveredOverlayStyle;
+      controller.update({
+        volume: synthVol,
+        energy,
+        nowMs,
+        dt,
+        procFactor: 0,
+        state: "recording",
+        previewActive: isActive
+      });
+    });
+
+    overlayPreviewRaf = requestAnimationFrame(tickOverlayPreviews);
+  }
+
+  function syncOverlayPreviewLoop() {
+    const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const hotkeysPanel = $id("panel-hotkeys");
+    const isHotkeysActive = Boolean(hotkeysPanel && hotkeysPanel.classList.contains("active"));
+    const shouldRun = Boolean(
+      overlayPreviewControllers.length &&
+        !prefersReducedMotion &&
+        !document.hidden &&
+        showcaseInView &&
+        isHotkeysActive
+    );
+
+    if (shouldRun && !overlayPreviewRaf) {
+      overlayLastTick = 0;
+      overlayPreviewRaf = requestAnimationFrame(tickOverlayPreviews);
+    } else if (!shouldRun && overlayPreviewRaf) {
+      cancelAnimationFrame(overlayPreviewRaf);
+      overlayPreviewRaf = null;
+    }
+  }
+
+  document.addEventListener("visibilitychange", syncOverlayPreviewLoop);
+
+  // ---------- Sounds (Web Audio Preview via AuraSoundThemes) ----------
   const cbSounds = $id("checkbox-sounds");
   const soundSub = $id("sound-suboptions");
   const rangeVol = $id("range-sound-volume");
   const volLabel = $id("volume-value-label");
+  const selectSoundTheme = $id("select-sound-theme");
+  const soundSynth = window.AuraSoundThemes ? window.AuraSoundThemes.createSoundSynth({ initialVolume: 0.8 }) : null;
+  let volumePreviewTimer = null;
+
   if (cbSounds) cbSounds.checked = true;
   if (soundSub) soundSub.classList.add("is-expanded");
   cbSounds?.addEventListener("change", () => {
     soundSub?.classList.toggle("is-expanded", cbSounds.checked);
+    if (cbSounds.checked && soundSynth) {
+      soundSynth.setVolume(Number(rangeVol?.value || 80) / 100);
+      soundSynth.playStart(selectSoundTheme?.value || "zen");
+    } else if (!cbSounds.checked && soundSynth) {
+      soundSynth.suspend();
+    }
   });
   function syncSlider() {
     if (!rangeVol) return;
@@ -1568,8 +1734,24 @@ function initInterfaceShowcase() {
     rangeVol.style.background =
       "linear-gradient(to right, var(--accent-color) 0%, var(--accent-color) " +
       v + "%, hsl(0, 0%, 20%) " + v + "%, hsl(0, 0%, 20%) 100%)";
+    if (soundSynth) soundSynth.setVolume(v / 100);
   }
-  rangeVol?.addEventListener("input", syncSlider);
+  rangeVol?.addEventListener("input", () => {
+    syncSlider();
+    if (!cbSounds?.checked || !soundSynth) return;
+    if (volumePreviewTimer) clearTimeout(volumePreviewTimer);
+    volumePreviewTimer = setTimeout(() => {
+      soundSynth.playStart(selectSoundTheme?.value || "zen");
+    }, 120);
+  });
+  selectSoundTheme?.addEventListener("change", () => {
+    if (!cbSounds?.checked || !soundSynth) return;
+    soundSynth.setVolume(Number(rangeVol?.value || 80) / 100);
+    soundSynth.playStart(selectSoundTheme.value || "zen");
+  });
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden && soundSynth) soundSynth.suspend();
+  });
   syncSlider();
 
   // ---------- History ----------
@@ -1663,7 +1845,6 @@ function initInterfaceShowcase() {
 
   // ---------- About & Footer Actions ----------
   $id("btn-replay-onboarding")?.addEventListener("click", () => showToast(L.onboardingToast, "info"));
-  $id("btn-whats-new")?.addEventListener("click", () => showToast(L.whatsNewToast, "info"));
   $id("btn-exit-app")?.addEventListener("click", () => showToast(L.exitToast, "info"));
   $id("btn-check-updates")?.addEventListener("click", (e) => {
     const btn = e.currentTarget;
@@ -1676,19 +1857,6 @@ function initInterfaceShowcase() {
   $id("btn-copy-diagnostics")?.addEventListener("click", () => showToast(L.diagCopied));
   $id("btn-export-settings")?.addEventListener("click", () => showToast(L.exportedToast));
   $id("btn-import-settings")?.addEventListener("click", () => showToast(L.importToast, "info"));
-
-  const btnSave = $id("btn-save-settings");
-  const footerStatusText = $id("footer-status-text");
-  if (btnSave && footerStatusText) {
-    btnSave.addEventListener("click", () => {
-      const originalText = footerStatusText.textContent;
-      footerStatusText.textContent = L.savedStatus;
-      showToast(L.savedToast);
-      setTimeout(() => {
-        footerStatusText.textContent = originalText;
-      }, 1500);
-    });
-  }
 
   // ---------- Init ----------
   if (typeof window.hydrateAppIcons === "function") {
@@ -1766,29 +1934,33 @@ function initEngineTabs() {
 }
 
 /* ==========================================================================
-   Benchmark Visual Progress Fill
+   Gradual Scroll Reveals (One-Shot IntersectionObserver)
    ========================================================================== */
-function initBenchmarkAnimation() {
-  const fills = document.querySelectorAll('.bench-bar-fill');
-  if (!fills.length) return;
+function initScrollReveals() {
+  const targets = Array.from(document.querySelectorAll('[data-reveal]'));
+  if (!targets.length) return;
 
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        fills.forEach(fill => {
-          const width = fill.getAttribute('data-width') || '100%';
-          fill.style.width = width;
-          fill.style.transition = 'width 800ms cubic-bezier(0.16, 1, 0.3, 1)';
-        });
-        observer.disconnect();
-      }
-    });
-  }, { threshold: 0.2 });
+  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  document.documentElement.classList.add('has-scroll-reveal');
 
-  const benchmarkCard = document.querySelector('.benchmark-widget');
-  if (benchmarkCard) {
-    observer.observe(benchmarkCard);
+  if (prefersReducedMotion || !('IntersectionObserver' in window)) {
+    targets.forEach((el) => el.classList.add('is-revealed'));
+    return;
   }
+
+  const observer = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('is-revealed');
+          observer.unobserve(entry.target);
+        }
+      });
+    },
+    { threshold: 0.08, rootMargin: '0px 0px -6% 0px' }
+  );
+
+  targets.forEach((el) => observer.observe(el));
 }
 
 /* ==========================================================================
@@ -1990,24 +2162,11 @@ function initFluidGradientCanvas() {
   window.addEventListener('resize', resize, { passive: true });
   resize();
 
-  // Check if hero section is currently visible in viewport
-  function isHeroVisible() {
-    const heroSection = document.querySelector('.hero-section');
-    if (!heroSection) return window.scrollY < 200;
-    const rect = heroSection.getBoundingClientRect();
-    // Hero is active only when its bottom is still prominently visible in the upper viewport.
-    // When snapped to how-it-works, rect.bottom is ~72px (behind header), so rect.bottom <= 120 means hero is off-screen.
-    return rect.bottom > 140;
-  }
-
-  // Check if footer/download section is currently in view
-  function isFooterVisible() {
-    const finaleEl = document.getElementById('download') || document.querySelector('.site-finale-footer');
-    if (!finaleEl) return false;
-    const rect = finaleEl.getBoundingClientRect();
-    // Only active when the download section has actually entered the viewport
-    return rect.top < window.innerHeight * 0.75 && rect.bottom > 0;
-  }
+  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const heroSection = document.querySelector('.hero-section');
+  const finaleEl = document.getElementById('download') || document.querySelector('.site-finale-footer');
+  let heroInView = true;
+  let footerInView = false;
 
   // Smooth scroll handler: updates u_shield and targetFooter in real-time
   function updateScroll() {
@@ -2018,11 +2177,11 @@ function initFluidGradientCanvas() {
     currentShield = 1.0 - shieldProgress;
 
     // Footer undarkening bloom: smoothly increases from 0.0 to 1.0 as user enters footer
-    const finaleEl = document.getElementById('download') || document.querySelector('.site-finale-footer');
     if (finaleEl) {
       const rect = finaleEl.getBoundingClientRect();
       const enterDist = window.innerHeight * 0.85;
       targetFooter = Math.max(0, Math.min(1, (enterDist - rect.top) / (enterDist * 0.75)));
+      if (prefersReducedMotion) currentFooter = targetFooter;
     } else {
       targetFooter = 0.0;
     }
@@ -2033,16 +2192,23 @@ function initFluidGradientCanvas() {
   window.addEventListener('scroll', updateScroll, { passive: true });
   updateScroll();
 
+  function startLoop() {
+    if (prefersReducedMotion || isHidden || animFrame) return;
+    if (!heroInView && !footerInView) return;
+    lastTime = performance.now();
+    animFrame = requestAnimationFrame(render);
+  }
+
+  function stopLoop() {
+    if (animFrame) {
+      cancelAnimationFrame(animFrame);
+      animFrame = null;
+    }
+  }
+
   function render(now) {
-    if (isHidden) return;
-
-    const isInHero = isHeroVisible();
-    const isInFooter = isFooterVisible();
-
-    // Run animation ONLY when actually inside Hero or Footer (pauses in How-it-Works, Advantages, Interface, Comparison)
-    if (!isInHero && !isInFooter) {
-      lastTime = now;
-      animFrame = requestAnimationFrame(render);
+    if (isHidden || prefersReducedMotion || (!heroInView && !footerInView)) {
+      animFrame = null;
       return;
     }
 
@@ -2060,22 +2226,38 @@ function initFluidGradientCanvas() {
     animFrame = requestAnimationFrame(render);
   }
 
-  animFrame = requestAnimationFrame(render);
+  if (!prefersReducedMotion) {
+    if ('IntersectionObserver' in window) {
+      const viewObserver = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.target === heroSection) heroInView = entry.isIntersecting;
+            if (entry.target === finaleEl) footerInView = entry.isIntersecting;
+          });
+          if (heroInView || footerInView) startLoop();
+          else stopLoop();
+        },
+        { rootMargin: '120px 0px' }
+      );
+      if (heroSection) viewObserver.observe(heroSection);
+      if (finaleEl) viewObserver.observe(finaleEl);
+    }
+    startLoop();
+  }
 
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) {
       isHidden = true;
-      if (animFrame) cancelAnimationFrame(animFrame);
+      stopLoop();
     } else {
       isHidden = false;
-      lastTime = performance.now();
-      animFrame = requestAnimationFrame(render);
+      startLoop();
     }
   });
 }
 
 /* ==========================================================================
-   Hero ↔ How-it-Works Kinetic Snap Transition (Instant 0ms-Latency Response)
+   Hero Kinetic Smooth-Snap Scroll Transition (Instant 0ms-Latency Response)
    ========================================================================== */
 function initHeroScrollTransition() {
   const howItWorks = document.getElementById('how-it-works');
@@ -2870,6 +3052,91 @@ function initDownloadModal() {
     if (e.target === modal) {
       closeModal();
     }
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && modal.classList.contains('is-active')) {
+      closeModal();
+    }
+  });
+
+  const wingetCopyBtn = document.getElementById('modal-winget-copy');
+  const wingetCmdEl = document.getElementById('modal-winget-cmd');
+  if (wingetCopyBtn && wingetCmdEl) {
+    const copySvg = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
+    const checkSvg = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>';
+    let resetTimer = null;
+    wingetCopyBtn.addEventListener('click', () => {
+      const cmdText = wingetCmdEl.textContent.trim();
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(cmdText).catch(() => {});
+      }
+      wingetCopyBtn.classList.add('is-copied');
+      wingetCopyBtn.innerHTML = checkSvg;
+      if (resetTimer) clearTimeout(resetTimer);
+      resetTimer = setTimeout(() => {
+        wingetCopyBtn.classList.remove('is-copied');
+        wingetCopyBtn.innerHTML = copySvg;
+      }, 1600);
+    });
+  }
+}
+
+/* ==========================================================================
+   Teaser Video Modal
+   ========================================================================== */
+function initTeaserModal() {
+  const modal = document.getElementById('teaser-modal');
+  if (!modal) return;
+
+  const closeBtn = document.getElementById('teaser-modal-close');
+  const video = document.getElementById('teaser-video');
+  const triggers = document.querySelectorAll('[data-teaser-trigger]');
+  let lastActiveElement = null;
+
+  function openModal(triggerElement) {
+    lastActiveElement = triggerElement || document.activeElement;
+    modal.classList.add('is-active');
+    modal.setAttribute('aria-hidden', 'false');
+    document.body.classList.add('modal-open');
+    if (video) {
+      if (video.readyState === 0) {
+        video.load();
+      }
+      video.play().catch(() => {});
+    }
+    if (closeBtn) {
+      setTimeout(() => closeBtn.focus(), 60);
+    }
+  }
+
+  function closeModal() {
+    modal.classList.remove('is-active');
+    modal.setAttribute('aria-hidden', 'true');
+    document.body.classList.remove('modal-open');
+    if (video) {
+      video.pause();
+      try { video.currentTime = 0; } catch (_) {}
+    }
+    if (lastActiveElement && typeof lastActiveElement.focus === 'function') {
+      lastActiveElement.focus();
+    }
+  }
+
+  triggers.forEach((trigger) => {
+    trigger.addEventListener('click', (e) => {
+      e.preventDefault();
+      openModal(trigger);
+    });
+  });
+
+  closeBtn?.addEventListener('click', (e) => {
+    e.preventDefault();
+    closeModal();
+  });
+
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) closeModal();
   });
 
   document.addEventListener('keydown', (e) => {

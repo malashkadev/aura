@@ -5,16 +5,49 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Aura — Free Voice Typing for Windows | Local AI & Privacy</title>
   <meta name="description" content="Free high-speed voice typing for Windows directly under your cursor in any application. 100% offline, local AI models.">
-  
+  <meta name="theme-color" content="#030305">
+
   <!-- Fonts: Onest Neo-Grotesque -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  
-  <!-- Canonical & Alternate Hreflang for SEO -->
-  <link rel="alternate" hreflang="ru" href="index_ru.html">
-  <link rel="alternate" hreflang="en" href="index.html">
-  <link rel="alternate" hreflang="x-default" href="index.html">
+
+  <!-- Canonical, Hreflang & Social Metadata -->
+  <link rel="canonical" href="https://aura-beryl-five.vercel.app/">
+  <link rel="alternate" hreflang="ru" href="https://aura-beryl-five.vercel.app/index_ru.html">
+  <link rel="alternate" hreflang="en" href="https://aura-beryl-five.vercel.app/">
+  <link rel="alternate" hreflang="x-default" href="https://aura-beryl-five.vercel.app/">
+
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Aura">
+  <meta property="og:locale" content="en_US">
+  <meta property="og:title" content="Aura — Free Voice Typing for Windows">
+  <meta property="og:description" content="Open-source voice typing directly under your cursor in any Windows app. Local Whisper.cpp, NVIDIA Parakeet, Qwen3, and optional cloud AI.">
+  <meta property="og:url" content="https://aura-beryl-five.vercel.app/">
+  <meta property="og:image" content="https://aura-beryl-five.vercel.app/assets/og-cover.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Aura — Free Voice Typing for Windows">
+  <meta name="twitter:description" content="Fast, private voice typing directly under your cursor in any Windows app. 100% offline or cloud, DPAPI encrypted, AGPL-3.0.">
+  <meta name="twitter:image" content="https://aura-beryl-five.vercel.app/assets/og-cover.png">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "Aura",
+    "applicationCategory": "UtilitiesApplication",
+    "operatingSystem": "Windows 10, Windows 11",
+    "softwareVersion": "1.2.5",
+    "license": "https://www.gnu.org/licenses/agpl-3.0.html",
+    "url": "https://aura-beryl-five.vercel.app/",
+    "downloadUrl": "https://aura-beryl-five.vercel.app/Aura_1.2.5_x64-setup.exe",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    }
+  }
+  </script>
 
   <!-- Favicon -->
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
@@ -22,7 +55,7 @@
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
 
   <!-- Styles -->
-  <link rel="stylesheet" href="style.css?v=7.0.0">
+  <link rel="stylesheet" href="style.css?v=8.0.0">
 </head>
 <body>
 
@@ -87,6 +120,11 @@
               <svg class="icon-download" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path class="dl-tray" d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><g class="dl-arrow"><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></g></svg>
               <span data-i18n="hero_btn_download">Download for&nbsp;Windows</span>
             </a>
+
+            <button type="button" class="btn btn-secondary btn-lg" id="btn-watch-teaser" data-teaser-trigger>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><polygon points="10 8.5 16 12 10 15.5 10 8.5" fill="currentColor" stroke="none"/></svg>
+              <span>Watch Teaser</span>
+            </button>
             
             <a href="https://github.com/malashkadev/aura" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-lg">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg>
@@ -156,10 +194,9 @@
   </section>
 
   <!-- How it Works Section -->
-  <!-- How it Works Section -->
   <section id="how-it-works" class="section">
     <div class="container">
-      <div class="section-head">
+      <div class="section-head" data-reveal>
         <h2 class="section-title" data-i18n="how_it_works_title">How it works</h2>
         <p class="section-desc" data-i18n="how_it_works_desc">Voice typing built directly into the system: no&nbsp;extra windows, clipboard hops, or&nbsp;context switching.</p>
       </div>
@@ -181,7 +218,7 @@
       </svg>
 
       <div class="pipeline-grid">
-        <div class="pipeline-card-wrap">
+        <div class="pipeline-card-wrap" data-reveal>
           <div class="pipeline-num-canvas" aria-hidden="true">
             <svg class="pipeline-step-svg step-svg-base" viewBox="0 0 160 240" fill="none" xmlns="http://www.w3.org/2000/svg">
               <text x="50%" y="195" text-anchor="middle" font-family="'Onest', system-ui, -apple-system, sans-serif" font-weight="900" font-size="220" letter-spacing="-0.06em" fill="url(#pipeline-num-grad)">1</text>
@@ -193,8 +230,8 @@
           <div class="pipeline-card card-keycap">
             <div class="pipeline-header">
               <div class="pipeline-icon-wrap keycap-wrap">
-                <img src="assets/keycap_base.png" class="keycap-base-img" alt="Switch Base" aria-hidden="true">
-                <img src="assets/keycap_cap.png" class="keycap-cap-img" alt="Global hotkey">
+                <img src="assets/keycap_base.webp" width="56" height="53" class="keycap-base-img" alt="Switch Base" aria-hidden="true" loading="lazy" decoding="async">
+                <img src="assets/keycap_cap.webp" width="50" height="38" class="keycap-cap-img" alt="Global hotkey" loading="lazy" decoding="async">
               </div>
               <h3 class="pipeline-title" data-i18n="step1_title">Global Hotkey</h3>
             </div>
@@ -202,7 +239,7 @@
           </div>
         </div>
 
-        <div class="pipeline-card-wrap">
+        <div class="pipeline-card-wrap" data-reveal data-reveal-delay="1">
           <div class="pipeline-num-canvas" aria-hidden="true">
             <svg class="pipeline-step-svg step-svg-base" viewBox="0 0 160 240" fill="none" xmlns="http://www.w3.org/2000/svg">
               <text x="50%" y="195" text-anchor="middle" font-family="'Onest', system-ui, -apple-system, sans-serif" font-weight="900" font-size="220" letter-spacing="-0.06em" fill="url(#pipeline-num-grad)">2</text>
@@ -214,8 +251,8 @@
           <div class="pipeline-card card-chip">
             <div class="pipeline-header">
               <div class="pipeline-icon-wrap chip-wrap">
-                <img src="assets/chip_base.png" class="chip-base-img" alt="Socket Base" aria-hidden="true">
-                <img src="assets/chip_die.png" class="chip-die-img" alt="Local processing">
+                <img src="assets/chip_base.webp" width="62" height="41" class="chip-base-img" alt="Socket Base" aria-hidden="true" loading="lazy" decoding="async">
+                <img src="assets/chip_die.webp" width="62" height="35" class="chip-die-img" alt="Local processing" loading="lazy" decoding="async">
               </div>
               <h3 class="pipeline-title" data-i18n="step2_title">Local Processing</h3>
             </div>
@@ -223,7 +260,7 @@
           </div>
         </div>
 
-        <div class="pipeline-card-wrap">
+        <div class="pipeline-card-wrap" data-reveal data-reveal-delay="2">
           <div class="pipeline-num-canvas" aria-hidden="true">
             <svg class="pipeline-step-svg step-svg-base" viewBox="0 0 160 240" fill="none" xmlns="http://www.w3.org/2000/svg">
               <text x="50%" y="195" text-anchor="middle" font-family="'Onest', system-ui, -apple-system, sans-serif" font-weight="900" font-size="220" letter-spacing="-0.06em" fill="url(#pipeline-num-grad)">3</text>
@@ -235,8 +272,8 @@
           <div class="pipeline-card card-cursor">
             <div class="pipeline-header">
               <div class="pipeline-icon-wrap cursor-wrap">
-                <img src="assets/cursor_letter_a.png" class="cursor-letter-a-img" alt="A" aria-hidden="true">
-                <img src="assets/cursor_caret.png" class="cursor-caret-img" alt="Typing under the cursor">
+                <img src="assets/cursor_letter_a.webp" width="21" height="46" class="cursor-letter-a-img" alt="A" aria-hidden="true" loading="lazy" decoding="async">
+                <img src="assets/cursor_caret.webp" width="26" height="46" class="cursor-caret-img" alt="Typing under the cursor" loading="lazy" decoding="async">
               </div>
               <h3 class="pipeline-title" data-i18n="step3_title">Direct Cursor Typing</h3>
             </div>
@@ -250,12 +287,12 @@
   <!-- Key Advantages Bento Section -->
   <section id="features" class="section">
     <div class="container">
-      <div class="section-head">
+      <div class="section-head" data-reveal>
         <h2 class="section-title" data-i18n="bento_title">Architecture Advantages</h2>
         <p class="section-desc" data-i18n="bento_desc">Engineered for maximum performance, data privacy, and instant response.</p>
       </div>
 
-      <div class="features-deck-container" id="features-deck" role="region" aria-label="Architecture advantages">
+      <div class="features-deck-container" id="features-deck" role="region" aria-label="Architecture advantages" data-reveal>
         
         <!-- Card 1: Local Processing & Privacy -->
         <article class="deck-card is-active" data-deck-index="0" id="deck-card-0">
@@ -267,7 +304,7 @@
             <div class="deck-card-visual">
               <div class="bento-privacy-plates">
                 <div class="privacy-plate">
-                  <img src="assets/privacy_shield.png" class="privacy-plate-img" alt="100% Offline" width="34" height="34">
+                  <img src="assets/privacy_shield.webp" class="privacy-plate-img" alt="100% Offline" width="34" height="34" loading="lazy" decoding="async">
                   <div class="privacy-plate-info">
                     <span class="privacy-plate-title" data-i18n="bento1_p1_title">100% Offline</span>
                     <span class="privacy-plate-sub" data-i18n="bento1_p1_sub">No cloud transfers</span>
@@ -275,7 +312,7 @@
                 </div>
 
                 <div class="privacy-plate">
-                  <img src="assets/privacy_lock.png" class="privacy-plate-img" alt="0% Telemetry" width="34" height="34">
+                  <img src="assets/privacy_lock.webp" class="privacy-plate-img" alt="0% Telemetry" width="34" height="34" loading="lazy" decoding="async">
                   <div class="privacy-plate-info">
                     <span class="privacy-plate-title" data-i18n="bento1_p2_title">0% Telemetry</span>
                     <span class="privacy-plate-sub" data-i18n="bento1_p2_sub">DPAPI Encrypted</span>
@@ -296,27 +333,27 @@
             <div class="deck-card-visual">
               <div class="bento-apps-grid grid-1row" role="list" aria-label="Supported applications">
                 <div class="app-logo-item" data-app="Telegram" role="listitem">
-                  <img src="assets/app_telegram.png" alt="Telegram" class="app-logo-img" width="28" height="28">
+                  <img src="assets/app_telegram.png" alt="Telegram" class="app-logo-img" width="28" height="28" decoding="async">
                   <span class="app-logo-tooltip">Telegram</span>
                 </div>
                 <div class="app-logo-item" data-app="Discord" role="listitem">
-                  <img src="assets/app_discord.png" alt="Discord" class="app-logo-img" width="28" height="28">
+                  <img src="assets/app_discord.png" alt="Discord" class="app-logo-img" width="28" height="28" decoding="async">
                   <span class="app-logo-tooltip">Discord</span>
                 </div>
                 <div class="app-logo-item" data-app="VS Code" role="listitem">
-                  <img src="assets/app_vscode.png" alt="VS Code" class="app-logo-img" width="28" height="28">
+                  <img src="assets/app_vscode.png" alt="VS Code" class="app-logo-img" width="28" height="28" decoding="async">
                   <span class="app-logo-tooltip">VS Code</span>
                 </div>
                 <div class="app-logo-item" data-app="Notion" role="listitem">
-                  <img src="assets/app_notion.png" alt="Notion" class="app-logo-img" width="28" height="28">
+                  <img src="assets/app_notion.png" alt="Notion" class="app-logo-img" width="28" height="28" decoding="async">
                   <span class="app-logo-tooltip">Notion</span>
                 </div>
                 <div class="app-logo-item" data-app="Obsidian" role="listitem">
-                  <img src="assets/app_obsidian.png" alt="Obsidian" class="app-logo-img" width="28" height="28">
+                  <img src="assets/app_obsidian.png" alt="Obsidian" class="app-logo-img" width="28" height="28" decoding="async">
                   <span class="app-logo-tooltip">Obsidian</span>
                 </div>
                 <div class="app-logo-item" data-app="Google Chrome" role="listitem">
-                  <img src="assets/app_chrome.png" alt="Google Chrome" class="app-logo-img" width="28" height="28">
+                  <img src="assets/app_chrome.png" alt="Google Chrome" class="app-logo-img" width="28" height="28" decoding="async">
                   <span class="app-logo-tooltip">Google Chrome</span>
                 </div>
                 <div class="app-logo-item app-logo-more" data-app="Any App" role="listitem">
@@ -345,9 +382,9 @@
                 <!-- CPU Plate -->
                 <div class="hw-plate">
                   <div class="hw-plate-logos">
-                    <img src="assets/hw_intel.png" alt="Intel" class="hw-brand-img img-intel">
+                    <img src="assets/hw_intel.webp" width="38" height="15" alt="Intel" class="hw-brand-img img-intel" decoding="async">
                     <span class="hw-brand-sep">/</span>
-                    <img src="assets/hw_amd.png" alt="AMD" class="hw-brand-img img-amd">
+                    <img src="assets/hw_amd.webp" width="59" height="14" alt="AMD" class="hw-brand-img img-amd" decoding="async">
                   </div>
                   <div class="hw-plate-info">
                     <span class="hw-plate-title" data-i18n="bento3_p1_title">Processor</span>
@@ -358,7 +395,7 @@
                 <!-- GPU Plate -->
                 <div class="hw-plate">
                   <div class="hw-plate-logos">
-                    <img src="assets/hw_nvidia.png" alt="NVIDIA" class="hw-brand-img img-nvidia">
+                    <img src="assets/hw_nvidia.webp" width="81" height="15" alt="NVIDIA" class="hw-brand-img img-nvidia" decoding="async">
                   </div>
                   <div class="hw-plate-info">
                     <span class="hw-plate-title" data-i18n="bento3_p2_title">Graphics Card</span>
@@ -375,7 +412,7 @@
           <div class="deck-card-body">
             <div class="deck-card-content">
               <h3 class="deck-card-title" data-i18n="bento4_title">Voice Editing</h3>
-              <p class="deck-card-desc" data-i18n="bento4_body">Select text in&nbsp;any window and speak a&nbsp;command — Aura fixes errors or translates the selection.</p>
+              <p class="deck-card-desc" data-i18n="bento4_body">Select text in&nbsp;any window and&nbsp;speak a&nbsp;command&nbsp;— Aura fixes errors or&nbsp;translates into 32&nbsp;languages offline (Qwen3) or&nbsp;via cloud.</p>
             </div>
             <div class="deck-card-visual">
               <div class="bento-edit-plates">
@@ -404,7 +441,7 @@
                   </div>
                   <div class="edit-plate-info">
                     <span class="edit-plate-title">Translate</span>
-                    <span class="edit-plate-sub">Into any language by voice</span>
+                    <span class="edit-plate-sub">Into 32&nbsp;languages by voice</span>
                   </div>
                 </div>
               </div>
@@ -442,7 +479,7 @@
       </div>
 
       <!-- Segment Controller Dock (Option 1: Prev / Segment Pills / Next) -->
-      <div class="deck-controls-dock" aria-label="Advantages Navigation">
+      <div class="deck-controls-dock" aria-label="Advantages Navigation" data-reveal>
         <button type="button" class="deck-nav-btn btn-deck-prev" id="deck-btn-prev" aria-label="Previous advantage" title="Previous advantage">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <polyline points="15 18 9 12 15 6"></polyline>
@@ -469,7 +506,7 @@
   <!-- App Interface Showcase Section -->
   <section id="interface" class="section">
     <div class="container">
-      <div class="section-head">
+      <div class="section-head" data-reveal>
         <h2 class="section-title" data-i18n="interface_title">App Interface</h2>
         <p class="section-desc" data-i18n="interface_desc">Clean and focused settings dashboard. Full control over models, audio capture, and hotkeys.</p>
       </div>
@@ -676,8 +713,8 @@
                       <label for="input-api-key" class="field-label" data-i18n="api_key">API Key</label>
                       <div class="api-key-input-wrapper">
                         <input type="password" id="input-api-key" class="custom-input" placeholder="Enter your API key..." autocomplete="off" />
-                        <button type="button" class="btn-toggle-visibility" id="btn-toggle-key" aria-label="Show/hide key">
-                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="eye-icon"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                        <button type="button" class="btn-clear-api-key" id="btn-clear-key" title="Clear saved key" aria-label="Clear saved key" hidden>
+                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="clear-key-icon" aria-hidden="true"><path d="M4 7h16"></path></svg>
                         </button>
                       </div>
                     </div>
@@ -1057,6 +1094,13 @@
         
                     <div id="selection-edit-inner" class="collapsible-wrapper">
                       <div class="collapsible-content selection-groups">
+                        <div class="edit-setup-notice" id="edit-setup-notice" role="status" aria-live="polite" hidden>
+                          <span class="edit-setup-notice-icon" aria-hidden="true">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                          </span>
+                          <span class="edit-setup-notice-text" id="edit-setup-notice-text" data-i18n="edit_setup_notice_auto">Download a Qwen3 model or enter an API key in Edit Engine to enable editing.</span>
+                          <button type="button" class="btn btn-secondary btn-sm edit-setup-notice-btn" id="btn-edit-setup-open" data-i18n="edit_setup_action">Set up</button>
+                        </div>
                         <div class="summary-block">
                           <button type="button" class="summary-row" id="btn-commands-summary" aria-expanded="false" aria-controls="commands-body">
                             <span class="summary-left">
@@ -1207,15 +1251,15 @@
                                 </div>
                                 <div class="form-group" id="edit-custom-provider-model-group" style="display: none; margin-top: 8px;">
                                   <label for="input-edit-custom-model" class="field-label" data-i18n="api_custom_model">Model Name</label>
-                                  <input type="text" id="input-edit-custom-model" class="custom-input" placeholder="openai/whisper-large-v3-turbo" autocomplete="off" />
+                                  <input type="text" id="input-edit-custom-model" class="custom-input" placeholder="meta-llama/Llama-3.3-70B-Instruct" autocomplete="off" />
                                 </div>
         
                                 <div class="form-group" style="margin-top: 8px;">
                                   <label for="input-edit-api-key" class="field-label" data-i18n="api_key">API Key</label>
                                   <div class="api-key-input-wrapper">
                                     <input type="password" id="input-edit-api-key" class="custom-input" placeholder="Enter your API key..." autocomplete="off" />
-                                    <button type="button" class="btn-toggle-visibility" id="btn-toggle-key-edit" aria-label="Show/hide key">
-                                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="eye-icon"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                                    <button type="button" class="btn-clear-api-key" id="btn-clear-key-edit" title="Clear saved key" aria-label="Clear saved key" hidden>
+                                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="clear-key-icon" aria-hidden="true"><path d="M4 7h16"></path></svg>
                                     </button>
                                   </div>
                                   <p class="field-hint" id="hint-edit-api-key" data-i18n="api_key_shared_hint" style="margin-top: 6px;">One key for dictation and editing.</p>
@@ -1257,9 +1301,39 @@
                     <p class="switch-desc" data-i18n="hotkey_toggle_mode_desc">Short tap starts/stops recording without holding key down.</p>
                   </div>
         
-                  <div class="card" id="card-overlay-timer">
-                    <h2 class="card-title" data-i18n="overlay_timer_title">Overlay timer</h2>
-                    <p class="card-desc" data-i18n="overlay_timer_desc">Time counter below the indicator. Errors are always shown.</p>
+                  <div class="card" id="card-overlay">
+                    <h2 class="card-title" data-i18n="overlay_card_title">Overlay</h2>
+                    <p class="card-desc" data-i18n="overlay_card_desc">Recording visualizer and timer below the indicator. Errors are always shown.</p>
+                    <div class="form-group">
+                      <span class="field-label" id="overlay-style-label" data-i18n="overlay_style_label">Visualization</span>
+                      <div class="overlay-style-grid" id="overlay-style-grid" role="radiogroup" aria-labelledby="overlay-style-label">
+                        <button type="button" class="overlay-style-tile active" data-overlay-style="wave" role="radio" aria-checked="true">
+                          <span class="overlay-style-preview" aria-hidden="true"></span>
+                          <span class="overlay-style-name" data-i18n="overlay_style_wave">Wave</span>
+                        </button>
+                        <button type="button" class="overlay-style-tile" data-overlay-style="matrix" role="radio" aria-checked="false" tabindex="-1">
+                          <span class="overlay-style-preview" aria-hidden="true"></span>
+                          <span class="overlay-style-name" data-i18n="overlay_style_matrix">Matrix</span>
+                        </button>
+                        <button type="button" class="overlay-style-tile" data-overlay-style="scale" role="radio" aria-checked="false" tabindex="-1">
+                          <span class="overlay-style-preview" aria-hidden="true"></span>
+                          <span class="overlay-style-name" data-i18n="overlay_style_scale">Scale</span>
+                        </button>
+                        <button type="button" class="overlay-style-tile" data-overlay-style="tape" role="radio" aria-checked="false" tabindex="-1">
+                          <span class="overlay-style-preview" aria-hidden="true"></span>
+                          <span class="overlay-style-name" data-i18n="overlay_style_tape">Tape</span>
+                        </button>
+                        <button type="button" class="overlay-style-tile" data-overlay-style="beam" role="radio" aria-checked="false" tabindex="-1">
+                          <span class="overlay-style-preview" aria-hidden="true"></span>
+                          <span class="overlay-style-name" data-i18n="overlay_style_beam">Beam</span>
+                        </button>
+                        <button type="button" class="overlay-style-tile" data-overlay-style="ribbon" role="radio" aria-checked="false" tabindex="-1">
+                          <span class="overlay-style-preview" aria-hidden="true"></span>
+                          <span class="overlay-style-name" data-i18n="overlay_style_ribbon">Ribbon</span>
+                        </button>
+                      </div>
+                    </div>
+                    <hr class="divider" />
                     <label class="toggle-switch">
                       <input type="checkbox" id="checkbox-overlay-show-timer" checked />
                       <span class="toggle-track"><span class="toggle-thumb"></span></span>
@@ -1514,12 +1588,12 @@
   <!-- Engine Architecture Section -->
   <section id="engines" class="section">
     <div class="container">
-      <div class="section-head">
+      <div class="section-head" data-reveal>
         <h2 class="section-title" data-i18n="engines_title">Supported Engines</h2>
         <p class="section-desc" data-i18n="engines_desc">Flexible architecture supports both local neural networks and high-performance cloud APIs.</p>
       </div>
 
-      <div class="engine-matrix-wrap">
+      <div class="engine-matrix-wrap" data-reveal>
         <div class="engine-tabs">
           <button class="engine-tab-btn active" data-tab="whisper">
             <svg class="engine-logo-openai" width="18" height="18" viewBox="0 0 20 20" fill="currentColor">
@@ -1532,6 +1606,12 @@
               <path d="M101.3 53.6V37.4c1.6-.1 3.2-.2 4.8-.2 44.4-1.4 73.5 38.2 73.5 38.2S148.2 119 114.5 119c-4.5 0-8.9-.7-13.1-2.1V67.7c17.3 2.1 20.8 9.7 31.1 27l23.1-19.4s-16.9-22.1-45.3-22.1c-3-.1-6 .1-9 .4m0-53.6v24.2l4.8-.3c61.7-2.1 102 50.6 102 50.6s-46.2 56.2-94.3 56.2c-4.2 0-8.3-.4-12.4-1.1v15c3.4.4 6.9.7 10.3.7 44.8 0 77.2-22.9 108.6-49.9 5.2 4.2 26.5 14.3 30.9 18.7-29.8 25-99.3 45.1-138.7 45.1-3.8 0-7.4-.2-11-.6v21.1h170.2V0H101.3zm0 116.9v12.8c-41.4-7.4-52.9-50.5-52.9-50.5s19.9-22 52.9-25.6v14h-.1c-17.3-2.1-30.9 14.1-30.9 14.1s7.7 27.3 31 35.2M27.8 77.4s24.5-36.2 73.6-40V24.2C47 28.6 0 74.6 0 74.6s26.6 77 101.3 84v-14c-54.8-6.8-73.5-67.2-73.5-67.2z"/>
             </svg>
             <span>NVIDIA Parakeet</span>
+          </button>
+          <button class="engine-tab-btn" data-tab="qwen3">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M9.16 2.10Q9.26 1.94 9.45 1.94L11.81 1.94Q12.00 1.94 12.10 2.10L13.28 4.14Q13.37 4.31 13.56 4.31L18.66 4.31Q18.86 4.31 18.95 4.48L20.13 6.52Q20.23 6.69 20.13 6.85L18.95 8.90Q18.86 9.06 18.66 9.06L8.08 9.06Q7.89 9.06 7.79 8.90L6.61 6.85Q6.51 6.69 6.61 6.52ZM22.15 14.77Q22.25 14.94 22.15 15.10L20.97 17.15Q20.88 17.31 20.69 17.31L18.33 17.31Q18.14 17.31 18.04 17.48L15.49 21.90Q15.39 22.06 15.20 22.06L12.84 22.06Q12.65 22.06 12.55 21.90L11.38 19.86Q11.28 19.69 11.38 19.52L16.67 10.35Q16.76 10.19 16.96 10.19L19.32 10.19Q19.51 10.19 19.60 10.35ZM4.68 19.69Q4.49 19.69 4.40 19.52L3.22 17.48Q3.12 17.31 3.22 17.15L4.40 15.10Q4.49 14.94 4.40 14.77L1.85 10.35Q1.75 10.19 1.85 10.02L3.03 7.98Q3.12 7.81 3.31 7.81L5.67 7.81Q5.86 7.81 5.96 7.98L11.25 17.15Q11.35 17.31 11.25 17.48L10.07 19.52Q9.98 19.69 9.79 19.69Z"/>
+            </svg>
+            <span>Qwen3 Local</span>
           </button>
           <button class="engine-tab-btn" data-tab="cloud">
             <svg class="engine-logo-cloud" width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
@@ -1550,8 +1630,8 @@
             </div>
             <div class="engine-feat-item">
               <span class="engine-feat-label" data-i18n="engine_whisper_feat2_label">Supported Models</span>
-              <span class="engine-feat-val" data-i18n="engine_whisper_feat2_val">Base → Large v3 Turbo</span>
-              <p class="engine-feat-desc" data-i18n="engine_whisper_feat2_desc">From lightweight Base for any PC to high-accuracy Large v3 Turbo.</p>
+              <span class="engine-feat-val" data-i18n="engine_whisper_feat2_val">Tiny → Large v3 Turbo</span>
+              <p class="engine-feat-desc" data-i18n="engine_whisper_feat2_desc">From lightweight Tiny and Base for any PC to Large v3 Turbo (Q5).</p>
             </div>
             <div class="engine-feat-item">
               <span class="engine-feat-label" data-i18n="engine_whisper_feat3_label">Languages</span>
@@ -1570,8 +1650,8 @@
             </div>
             <div class="engine-feat-item">
               <span class="engine-feat-label" data-i18n="engine_parakeet_feat2_label">Response Time</span>
-              <span class="engine-feat-val" data-i18n="engine_parakeet_feat2_val">Real-time Streaming</span>
-              <p class="engine-feat-desc" data-i18n="engine_parakeet_feat2_desc">Ultra-low latency streaming voice input without perceptible lag.</p>
+              <span class="engine-feat-val" data-i18n="engine_parakeet_feat2_val">Ultra-Fast Offline</span>
+              <p class="engine-feat-desc" data-i18n="engine_parakeet_feat2_desc">Resident local server with no cold start and zero network wait.</p>
             </div>
             <div class="engine-feat-item">
               <span class="engine-feat-label" data-i18n="engine_parakeet_feat3_label">CUDA Setup</span>
@@ -1581,12 +1661,32 @@
           </div>
         </div>
 
+        <div id="engine-panel-qwen3" class="engine-tab-content">
+          <div class="engine-feature-grid">
+            <div class="engine-feat-item">
+              <span class="engine-feat-label">Local LLM</span>
+              <span class="engine-feat-val">Qwen3 0.6B / 1.7B / 4B</span>
+              <p class="engine-feat-desc">Runs on a resident llama-server on your PC with zero subscriptions.</p>
+            </div>
+            <div class="engine-feat-item">
+              <span class="engine-feat-label">Voice Editing</span>
+              <span class="engine-feat-val">Grammar &amp; 32&nbsp;Languages</span>
+              <p class="engine-feat-desc">Fixes typos or translates selected text in a single voice command.</p>
+            </div>
+            <div class="engine-feat-item">
+              <span class="engine-feat-label">Strict Privacy</span>
+              <span class="engine-feat-val">100% Offline</span>
+              <p class="engine-feat-desc">In local mode, selected text never leaves your computer or hits the cloud.</p>
+            </div>
+          </div>
+        </div>
+
         <div id="engine-panel-cloud" class="engine-tab-content">
           <div class="engine-feature-grid">
             <div class="engine-feat-item">
               <span class="engine-feat-label" data-i18n="engine_cloud_feat1_label">Providers</span>
-              <span class="engine-feat-val" data-i18n="engine_cloud_feat1_val">Gemini, Groq, OpenAI</span>
-              <p class="engine-feat-desc" data-i18n="engine_cloud_feat1_desc">Support for any OpenAI-compatible API endpoint.</p>
+              <span class="engine-feat-val" data-i18n="engine_cloud_feat1_val">Gemini, Groq, OpenAI, HF</span>
+              <p class="engine-feat-desc" data-i18n="engine_cloud_feat1_desc">Supports Google Gemini, Groq, OpenAI, Hugging Face, and custom OpenAI-compatible servers.</p>
             </div>
             <div class="engine-feat-item">
               <span class="engine-feat-label" data-i18n="engine_cloud_feat2_label">Universal Support</span>
@@ -1607,12 +1707,12 @@
   <!-- Comparison Section -->
   <section id="comparison" class="section">
     <div class="container">
-      <div class="section-head">
+      <div class="section-head" data-reveal>
         <h2 class="section-title" data-i18n="comparison_title">Comparison with Alternatives</h2>
         <p class="section-desc" data-i18n="comparison_desc">How Aura compares to proprietary cloud tools and built-in Windows voice typing.</p>
       </div>
 
-      <div class="comparison-table-wrap">
+      <div class="comparison-table-wrap" data-reveal>
         <table class="comparison-table">
           <thead>
             <tr>
@@ -1663,7 +1763,7 @@
   <footer class="site-finale-footer" id="download">
     <div class="container finale-content-wrap">
       <!-- Punchy Closing CTA -->
-      <div class="finale-cta-block">
+      <div class="finale-cta-block" data-reveal>
         <h2 class="finale-title" data-i18n="download_title">Try Aura in Action</h2>
 
         <div class="finale-actions">
@@ -1773,12 +1873,46 @@
         </a>
       </div>
 
+      <div class="download-modal-winget-box">
+        <span class="download-modal-winget-label">WinGet</span>
+        <code class="download-modal-winget-code" id="modal-winget-cmd">winget install Malashka.Aura</code>
+        <button type="button" class="download-modal-winget-copy" id="modal-winget-copy" aria-label="Copy WinGet command" title="Copy">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        </button>
+      </div>
+
       <div class="download-modal-mirror-row">
         <span>Mirror:</span>
         <a href="https://sourceforge.net/projects/aura-voice-typing/files/latest/download" target="_blank" rel="noopener noreferrer" class="download-modal-mirror-link" title="Download from SourceForge">
           <svg class="sf-icon" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.4z"/></svg>
           <span>SourceForge Mirror</span>
         </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Teaser Video Modal (Obsidian Glass) -->
+  <div class="download-modal-backdrop" id="teaser-modal" role="dialog" aria-modal="true" aria-labelledby="teaser-modal-title" aria-hidden="true">
+    <div class="teaser-modal-card">
+      <div class="teaser-modal-header">
+        <div class="teaser-modal-title-wrap">
+          <span class="download-modal-brand-badge">
+            <svg class="site-logo" width="20" height="20" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <path class="logo-outer" d="M398.114 421C445.533 380.876 474.714 322.514 474.714 256.857C474.714 136.486 376.229 38 255.857 38C135.486 38 37 136.486 37 256.857C37 322.514 66.1809 380.876 113.6 421" stroke="currentColor" stroke-width="73.1573" />
+              <path class="logo-inner" d="M181.963 176.024L42.0293 511.651H142.825L200.192 352.952L247.909 233.927C250.769 226.064 253.45 222.132 255.952 222.132C258.096 222.132 260.598 226.064 263.458 233.927L311.175 352.952L368.542 511.651H469.874L329.404 176.024C322.255 158.867 312.783 147.25 300.988 141.174C289.55 135.098 274.538 132.06 255.952 132.06C234.148 132.06 217.885 135.455 207.162 142.246C196.797 149.038 188.397 160.297 181.963 176.024Z" fill="currentColor" />
+            </svg>
+          </span>
+          <h3 class="teaser-modal-title" id="teaser-modal-title">Aura v1.2.5 — Product Teaser</h3>
+        </div>
+        <button type="button" class="download-modal-close" id="teaser-modal-close" aria-label="Close video">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+      <div class="teaser-video-wrap">
+        <video id="teaser-video" class="teaser-video" controls playsinline preload="metadata" poster="assets/teaser-poster.jpg" src="assets/aura-teaser.mp4"></video>
       </div>
     </div>
   </div>
@@ -1791,8 +1925,10 @@
   </button>
 
   <!-- Scripts -->
-  <script src="icon-system.js?v=7.0.0"></script>
-  <script src="icon-system-integration.js?v=7.0.0"></script>
-  <script src="main.js?v=7.0.0"></script>
+  <script src="icon-system.js?v=8.0.0"></script>
+  <script src="icon-system-integration.js?v=8.0.0"></script>
+  <script src="overlay-visualizers.js?v=8.0.0"></script>
+  <script src="sound-themes.js?v=8.0.0"></script>
+  <script src="main.js?v=8.0.0"></script>
 </body>
 </html>

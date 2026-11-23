@@ -1,3 +1,5 @@
+// @ts-check
+
 /**
  * Aura Icon System — strictly monochrome, hand-drawn for the desktop app.
  *
@@ -14,6 +16,7 @@
 (function () {
   "use strict";
 
+  /** @type {Record<string, string>} */
   const D = {
     // Navigation & window
     "general": '<g transform="scale(1.5)" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3.607 2.234 L3.738 2.204 L4.187 2.153 L4.25 2.15 L11.75 2.15 L11.817 2.154 L12.262 2.204 L12.38 2.23 L12.816 2.382 L12.937 2.44 L13.316 2.678 L13.398 2.74 L13.421 2.762 L13.738 3.079 L13.822 3.184 L14.06 3.563 L14.1 3.638 L14.118 3.684 L14.266 4.107 L14.296 4.238 L14.346 4.683 L14.35 4.75 L14.35 11.25 L14.346 11.317 L14.296 11.762 L14.266 11.893 L14.118 12.316 L14.1 12.362 L14.06 12.437 L13.822 12.816 L13.738 12.921 L13.421 13.238 L13.398 13.26 L13.316 13.322 L12.937 13.56 L12.816 13.618 L12.38 13.77 L12.262 13.796 L11.817 13.846 L11.75 13.85 L4.25 13.85 L4.187 13.847 L3.738 13.796 L3.607 13.766 L3.184 13.618 L3.082 13.572 L3.063 13.56 L2.684 13.322 L2.579 13.238 L2.262 12.921 L2.201 12.85 L2.178 12.816 L1.94 12.437 L1.882 12.316 L1.734 11.893 L1.713 11.82 L1.704 11.762 L1.654 11.317 L1.65 11.25 L1.65 4.75 L1.654 4.683 L1.704 4.238 L1.713 4.18 L1.734 4.107 L1.882 3.684 L1.94 3.563 L2.178 3.184 L2.201 3.15 L2.262 3.079 L2.579 2.762 L2.684 2.678 L3.063 2.44 L3.082 2.428 L3.184 2.382 Z M7.4 2.75 L7.4 7.4 L2.25 7.4 L2.187 7.403 L1.95 7.48 L1.765 7.647 L1.663 7.875 L1.663 8.125 L1.765 8.353 L1.95 8.52 L2.187 8.597 L2.25 8.6 L7.4 8.6 L7.4 13.25 L7.413 13.375 L7.515 13.603 L7.7 13.77 L7.937 13.847 L8.185 13.821 L8.401 13.696 L8.548 13.494 L8.6 13.25 L8.6 8.6 L13.75 8.6 L13.935 8.571 L14.151 8.446 L14.298 8.244 L14.35 8 L14.298 7.756 L14.151 7.554 L13.935 7.429 L13.75 7.4 L8.6 7.4 L8.6 2.75 L8.548 2.506 L8.401 2.304 L8.185 2.179 L7.937 2.153 L7.7 2.23 L7.515 2.397 L7.413 2.625 Z" fill="currentColor" fill-rule="evenodd" stroke="none"/></g>',
@@ -101,6 +104,7 @@
     "pulse": '<g transform="scale(1.5)" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M1.75 8 L4.5 8 L6.25 3 L9.75 13 L11.5 8 L14.25 8"/></g>'
   };
 
+  /** @type {Record<string, string>} */
   const ALIASES = {
     // Navigation tabs
     "nav-general": "general",
@@ -205,6 +209,7 @@
     "sound-haptic": "pulse"
   };
 
+  /** @type {Record<string, string>} */
   const CATEGORIES = {
     general: "Навигация",
     settings: "Навигация",
@@ -272,6 +277,8 @@
     "arrow-right": "Управление",
     success: "Состояния",
     zen: "Звук",
+    xylophone: "Звук",
+    pebbles: "Звук",
     music: "Звук",
     robot: "Звук",
     bell: "Звук",
@@ -279,6 +286,7 @@
     pulse: "Звук"
   };
 
+  /** @type {Record<string, { body: string }>} */
   const BRAND = {
     "provider-gemini": {
       body:
@@ -414,6 +422,20 @@
 
   let brandSerial = 0;
 
+  /**
+   * @typedef {Object} AuraIconRenderOptions
+   * @property {number} [size]
+   * @property {string} [className]
+   * @property {number} [strokeWidth]
+   * @property {string} [title]
+   * @property {boolean} [accent]
+   */
+
+  /**
+   * @param {string} name
+   * @param {AuraIconRenderOptions} [opts]
+   * @returns {string}
+   */
   function brandSvg(name, opts) {
     const options = opts || {};
     const key = String(name || "").trim();
@@ -431,6 +453,10 @@
     );
   }
 
+  /**
+   * @param {string | null | undefined} name
+   * @returns {string | null}
+   */
   function resolve(name) {
     if (!name) return null;
     const key = String(name).trim();
@@ -443,7 +469,7 @@
    * Render one icon as an inline SVG string.
    *
    * @param {string} name  canonical name or surface alias
-   * @param {{size?: number, className?: string, strokeWidth?: number, title?: string}} [opts]
+   * @param {AuraIconRenderOptions} [opts]
    * @returns {string}
    */
   function svg(name, opts) {
@@ -462,11 +488,19 @@
     );
   }
 
+  /**
+   * @param {string} name
+   * @returns {string}
+   */
   function body(name) {
     const key = resolve(name);
     return key ? D[key] : "";
   }
 
+  /**
+   * @param {ParentNode} [root]
+   * @returns {void}
+   */
   function hydrate(root) {
     const host = root || document;
     host.querySelectorAll("[data-aura-icon]").forEach((el) => {
@@ -483,18 +517,19 @@
         el.setAttribute("stroke-linecap", "round");
         el.setAttribute("stroke-linejoin", "round");
         if (size) {
-          el.setAttribute("width", size);
-          el.setAttribute("height", size);
+          el.setAttribute("width", String(size));
+          el.setAttribute("height", String(size));
         }
       } else {
-        const branded = BRAND[name] ? brandSvg(name, { size: size || 20 }) : "";
-        el.innerHTML = branded || svg(name, { size: size || 20 });
+        const iconName = name || key;
+        const branded = BRAND[iconName] ? brandSvg(iconName, { size: size || 20 }) : "";
+        el.innerHTML = branded || svg(iconName, { size: size || 20 });
       }
       el.removeAttribute("data-aura-icon");
     });
   }
 
-  window.AuraIcons = {
+  /** @type {Window & typeof globalThis & { AuraIcons?: Record<string, unknown> }} */ (window).AuraIcons = {
     defs: D,
     aliases: ALIASES,
     categories: CATEGORIES,
