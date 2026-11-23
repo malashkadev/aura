@@ -1071,4 +1071,5 @@ test("overlay window and status pill allow multi-word localized error messages w
   const textMaxW = Number(overlayHtml.match(/#overlay-status-text\s*\{[\s\S]*?max-width:\s*(\d+)px/)?.[1] || 0);
   assert.ok(statusMaxW >= 300, `#overlay-status max-width (${statusMaxW}) must be >= 300px`);
   assert.ok(textMaxW >= 300, `#overlay-status-text max-width (${textMaxW}) must be >= 300px`);
+  assert.match(overlayHtml, /#overlay-status\s*\{[\s\S]*?width:\s*max-content/);
 });
